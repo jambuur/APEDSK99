@@ -10,7 +10,7 @@ An 8Kx8 RAM contains the DSR code, uploaded by the Arduino when powered up (batt
 CRU is not used but where necessary emulated through 2 memory mapped addresses; this both simplifies the shield design and streamlines the DSR code. 
 
 The DSR is a modified version of the original TI Disk Controller DSR but with CRU comms removed and optimised for reliable 
-SD card access instead of wonky floppies. At present there is about 0.5K of free DSR space available; some things planned for future versions are utilising the realtime clock access on the SD card and mapping DOAD's from TI BASIC.
+SD card access instead of wonky floppies. At present there is about 0.5K of free DSR space available; some things planned for future versions are utilising the realtime clock on the SD card, dynamically mapping DOAD's and switching DSR's from main menu / TI BASIC.
 
 The Arduino UNO controls the TI interface, has R/W access to RAM and can halt the TI. Due to the limited number of GPIO pins, R/W to RAM is a serial-to-parallel scheme via a couple of 74HC595 shift registers. This idea is neither new or mine but I have gratefully used part of this excellent project by Mario Keller: https://github.com/mkeller0815/MEEPROMMER
 
