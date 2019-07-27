@@ -6,7 +6,7 @@ for the TI99/4a home computer.
 
 For nostaligic, authentic and I-just-don't-enjoy-SMD-soldering reasons, APEDSK99 is based on good old through-hole technology.
 
-The interface to the TI is through the classic signaling/buffering with 74LS244 (74LS541 for PCB layout reasons) and 74LS251. 
+The interface to the TI is through the classic signaling/buffering with 74LS244 (74LS541 for PCB layout reasons) and 74LS245. 
 An 8Kx8 RAM contains the DSR code, uploaded by the Arduino at powerup.
 
 CRU is emulated through 2 memory mapped addresses; this both simplifies the shield design and streamlines the DSR code. 
