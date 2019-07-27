@@ -16,18 +16,18 @@ SD card access instead of wonky floppies.
 
 The Arduino UNO controls the TI interface, has R/W access to RAM and can halt the TI. Due to the limited number of GPIO pins available on the Arduino UNO, R/W to RAM is a serial-to-parallel scheme through 74HC595 shift registers. This idea is neither new or mine but I have gratefully used part of this excellent project by Mario Keller: https://github.com/mkeller0815/MEEPROMMER
 
-When the TI issues a disk controller command by writing to the relevant registers or emulated CRU addresses an interrupt is generated through a 74LS138. The Arduino then:
+When the TI issues a disk controller command, the Arduino receives an interrupt through a 74LS138. The Arduino then:
 
 1 disables the TI interface
 2 halts the TI
 3 enables Arduino RAM access
-4 executes the command including updating the relevant registers/CRU addresses
+4 executes the command including updating the relevant registers/emulated CRU
 5 executes the opposite of steps 3,2 and 1 in that order
 
 This project owes a lot to Thierry Nouspikel's marvelous TI Tech Pages website which has a wealth of information on the TI Disk Controller, including a commented disassembly of its DSR ROM: http://www.unige.ch/medecine/nouspikel/ti99/disks.htm
 
-Another valuable source of information continues to be Monthy Schmidt's excellent book "Technical Drive". 
+Another valuable source of information has been Monthy Schmidt's excellent book "Technical Drive". 
 
-Streamlining/optimisug the DSR code has left about 0.5K of free DSR space available; some things planned for future versions are utilising the realtime clock on the SD card, dynamically mapping DOAD's and switching DSR's from main menu / TI BASIC. The latter would enable loading DSR images for other Arduino peripherals such as the Ethernet shield. A basic TCP/IP stack would easily fit into the DSR space.
+Streamlining/optimisug the DSR code has left about 0.5K of free DSR space available; some things planned for future APEDSK DSR versions are utilising the realtime clock on the SD card, dynamically mapping Disk-On-A-Disk images and switching DSR's from the main menu or TI BASIC. Switching DSR's would enable other Arduino peripherals such as the Ethernet shield. A basic TCP/IP stack would easily fit into the DSR space.
 
 
