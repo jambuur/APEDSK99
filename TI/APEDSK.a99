@@ -652,13 +652,13 @@ K006	BYTE	>01
 K003	BYTE	>00			sectors per track
 K007	BYTE	>09			
 	BYTE	>00			
-K008	BYTE	>06			
-	DATA	>0003			
+*K008	BYTE	>06			
+*	DATA	>0003			
 K004	BYTE	>F0			
-K015 	BYTE	>FE			
-	DATA	>01F7			
-	DATA	>FFFF			
-	DATA	>FFFF			
+*K015 	BYTE	>FE			
+*	DATA	>01F7			
+*	DATA	>FFFF			
+*	DATA	>FFFF			
 K012	DATA	>FFFF			
 	DATA	>FFFF			
 	DATA	>FFFF			
@@ -682,7 +682,7 @@ CALSUB	DECT	@>0066(R9)		call subroutine, return address in stack
 	B	*R10			branch to address in data word
 					
 RTURN1	MOV	@>0066(R9),R11		get return address from VDP stack
-	BLWP	@>005A(R9)		---------------------------------
+	BLWP	@>005A(R9)		
 	DATA	>0162			set VDP to read from address in R11
 	MOVB	@-1026(R15),R11			
 	SWPB	R11			
@@ -751,7 +751,7 @@ H073	INCT	R10			next register
 H071	RTWP				
 					
 SVDPWR	A	R13,R9			2: set VDP for a write
-	MOV	*R9,R8			-------------------
+	MOV	*R9,R8			
 	ORI	R8,>4000		get address from reg in >..p2 (*2)
 	JMP	H075			
 					
@@ -877,7 +877,7 @@ H080	MOVB	R2,@-2(R15)		write >00
 	JMP	H081			write FDR to disk return to caller
 					
 H082	MOV	@>0056(R9),R5		check if FDR must be updated
-	BLWP	@>005A(R9)		---------------------------- set VDP to read
+	BLWP	@>005A(R9)		set VDP to read
 	DATA	>00A2			address in R5
 	MOVB	@-1026(R15),R4		get filename in file ctrl block
 	JLT	H083			flag: FDR was modified, update it
@@ -902,7 +902,7 @@ CLRFBT	MOV	@>0056(R9),R5
 	B	@RWVIB			
 					
 UPDBF	MOV	@>0056(R9),R4		check if data buffer must be updated
-	DEC	R4			------------------------------------
+	DEC	R4			
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0082			address in R4
 	MOVB	@-1026(R15),R1		get drive #
@@ -925,7 +925,7 @@ H085	ANDI	R1,>7F00		erase flag
 H086	B	@RTURN1			return to caller
 					
 FFSVIB	MOV	@>0056(R9),R2		free file sectors in VIB bitmap
-	AI	R2,12			-------------------------------
+	AI	R2,12			
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0042			address in R2
 	MOVB	@-1026(R15),R0		get file status byte from FDR
@@ -953,7 +953,7 @@ H089	BL	@DECDCI			decode cluster info: sector in R1, offset in R2
 H088	B	@RTURN1			return to caller
 					
 RDOFSC	BL	@FDR2B1			read a sector from offset in file
-	DATA	14			--------------------------------- get # of sectors
+	DATA	14			get # of sectors
 	C	R0,R3			is desired sector in file?
 	JH	H090			yes
 	BL	@ERROR5			no: update data, then return with error
@@ -966,7 +966,7 @@ H091	MOV	R7,R5			buffer ptr
 	B	@RWSEC0			read/write sector
 					
 WROFSC	BLWP	@>005A(R9)		write sector to offset in file offset in R3
-	DATA	>8100			------------------------------ save R0 and R7
+	DATA	>8100			save R0 and R7
 	BL	@CALSUB			call subroutine
 	DATA	APSCTS			append enough sectors to reach that offset
 	BLWP	@>005A(R9)		retrieve R0 and R7
@@ -975,7 +975,7 @@ WROFSC	BLWP	@>005A(R9)		write sector to offset in file offset in R3
 	JMP	H091			write sector
 					
 APSCTS	BL	@FDR2B1			append sector(s) to a file to get offset in R3
-	DATA	14			-------------------------- get # of sect from FDR
+	DATA	14			get # of sect from FDR
 					
 	C	R0,R3			is desired sector in file?
 	JH	H092			yes: find it and return
@@ -1043,7 +1043,7 @@ H092	BL	@CALSUB			call subroutine
 H101	B	@RTURN1			return to caller
 					
 ADDSEC	MOV	R11,R10			add sector to FDR
-	MOV	R1,R4			-----------------
+	MOV	R1,R4			
 	BLWP	@>005A(R9)		retrieve R1
 	DATA	>4001			
 	MOV	R1,R1			sector #
@@ -1067,7 +1067,7 @@ ADDSEC	MOV	R11,R10			add sector to FDR
 H102	B	*R10			
 					
 FSCTOF	MOV	@>0056(R9),R8		find sector from offset in file
-	AI	R8,28			------------------------------- cluster list
+	AI	R8,28			cluster list
 	MOV	R3,R4			desired sector offset is in R3
 H105	BL	@DECDCI			decode info: sector in R1, offset in R2
 	C	R2,R3			reached yet?
@@ -1092,7 +1092,7 @@ H104	B	@RTURN1			return to caller
 *     8:
 *---------------------------------					
 DELETE	BL	@CALSUB			delete file
-	DATA	FFFDRV			----------- find file FDR in VDP buffers
+	DATA	FFFDRV			find file FDR in VDP buffers
 	MOV	R4,R4			found?
 	JEQ	H106			yes
 	BL	@CALSUB			no: call subroutine
@@ -1134,7 +1134,7 @@ H107	BLWP	@>005A(R9)		save R8
 * Each pointer is 2 bytes long and contains the sector # of this FDR
 * The list must end with a >0000 mark. Thus there can be 127 files at most
 RMFPTR	MOV	@>0056(R9),R5		remove FDR ptr from sector 1
-	AI	R5,256			----------------------------
+	AI	R5,256			
 	MOV	R5,R3			pointer to data buffer
 	AI	R3,256			point to next ctrl block
 	MOV	R8,R2			shift up FDR list, erasing FDR pointed by R8
@@ -1152,7 +1152,7 @@ H109	BLWP	@>005A(R9)		set VDP to read
 	B	*R11			
 					
 INSFDR	MOV	R11,R10			insert a FDR in sector 1
-	MOV	R8,R1			------------------------
+	MOV	R8,R1			
 	BL	@FDR2B1			get 2 bytes from VDP at >8356+offset
 	DATA	508			i.e. last FDR slot in sector 1 (list ends with 0)
 	MOV	R0,R0			
@@ -1172,7 +1172,7 @@ H110	DEC	R8			previous byte
 	B	*R10			
 					
 CMPFN	MOV	@>0058(R9),R2		compare filenames
-	AI	R2,256			-----------------
+	AI	R2,256			
 H111	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R1 (ptr to filename)
 	MOVB	@-1026(R15),R0		get 1 char
@@ -1189,13 +1189,13 @@ H111	BLWP	@>005A(R9)		set VDP to read
 H112	B	*R11			if complete match: ret with EQ set
 					
 PABR2B	MOV	@>0054(R9),R8		get two bytes from PAB
-	JMP	FDR2B2			----------------------
+	JMP	FDR2B2			
 					
 FDR2B1	MOV	@>0056(R9),R8		get two bytes from FDR
-FDR2B2	A	*R11+,R8		---------------------- offset in data word
+FDR2B2	A	*R11+,R8		offset in data word
 					
 VPDR2B	BLWP	@>005A(R9)		get two byte from VDP at R8
-	DATA	>0102			--------------------------- set VDP to read at R8
+	DATA	>0102			set VDP to read at R8
 	MOVB	@-1026(R15),R0		get two bytes of data
 	SWPB	R0			
 	MOVB	@-1026(R15),R0			
@@ -1203,7 +1203,7 @@ VPDR2B	BLWP	@>005A(R9)		get two byte from VDP at R8
 	B	*R11			
 					
 FDSKDR	MOV	@>0058(R9),R1		find disk from name (ptr in R3)
-	AI	R1,256			-------------------
+	AI	R1,256			
 	BL	@CPCKFN			copy filename from VDP at R3 to compare buffer
 	BLWP	@>005A(R9)		save R2 + R3
 	DATA	>3000			
@@ -1259,7 +1259,7 @@ ERROR7	BL	@RETERR			return with error
 	DATA	>E000			file error
 					
 H119	LI	R0,>2000		copy (+check) filename in VDP from R3 to R1 (space)
-	BLWP	@>005A(R9)			---------------------- set VDP to write
+	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
 	LI	R8,10			10 chars per filename
 H120	MOVB	R0,@-2(R15)		fill filename with spaces
@@ -1291,7 +1291,7 @@ H121	CI	R8,>000B		name can't be 0 chars long
 K014	DATA	>AA00			
 					
 ERROR5	MOV	R11,R0			update data, then error
-	MOV	@>0056(R9),R3		-----------------------
+	MOV	@>0056(R9),R3		
 	DEC	R3			see what >8356 is pointing at
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0062			address in R3
@@ -1401,7 +1401,7 @@ H130	ANDI	R7,>00FF
 	B	@RTURN1			return to caller
 					
 FFFDRV	MOV	@>0058(R9),R1		save filename in compare buffer and find its FDR
-	AI	R1,256			------------------------------------------------
+	AI	R1,256			
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1: filename compare buffer
 	MOVB	R5,@-2(R15)		write drive #
@@ -1412,7 +1412,7 @@ FFFDRV	MOV	@>0058(R9),R1		save filename in compare buffer and find its FDR
 H136	B	@ERROR7			return with file error
 					
 FFDRVB	MOV	@>0056(R9),R1		find filename in buffered FDRs
-	AI	R1,3			------------------------------
+	AI	R1,3			
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R1
 	MOVB	@-1026(R15),R2		get # of files
@@ -1505,7 +1505,7 @@ H142	SRL	R2,2			divide distance by 2
 * 3 nibbles specify the total file offset in sectors, including this cluster.
 * The nibbles are arranged as EG SB OF, to be combined as BEG OFS
 DECDCI	MOV	R11,R10			decode cluster info
-	BL	@VPDR2B			------------------- read 2 bytes VDP at R8 in R0
+	BL	@VPDR2B			read 2 bytes VDP at R8 in R0
 	SWPB	R0			
 	MOVB	@-1026(R15),R2		get third byte from cluster list
 	MOV	R0,R1			
@@ -1517,7 +1517,7 @@ DECDCI	MOV	R11,R10			decode cluster info
 	B	*R10			
 					
 UPDCLI	SRC	R2,4			write info for 1 cluster
-	MOV	R2,R0			------------------------
+	MOV	R2,R0			
 	ANDI	R0,>F000		sector in R1, offset in R2
 	SOC	R0,R1			copy nibble 3 of offset before nibble 1 of sector
 	BLWP	@>005A(R9)		set VDP to write
@@ -1533,7 +1533,7 @@ UPDCLI	SRC	R2,4			write info for 1 cluster
 * The sector bitmap is located in the VIB (i.e. sector 0) at bytes >38 to >FF
 * In each byte a bit defines a sector, from right to left: "0"=free, "1"=used					
 FFSBMP	BLWP	@>005A(R9)		find a free sector in bitmap
-	DATA	>7800			----------------------------
+	DATA	>7800			
 	BL	@CALSUB			call subroutine
 	DATA	RWVIB			load VIB for drive in R6
 	MOV	R1,1			first sector specified in R1 ?
@@ -1610,7 +1610,7 @@ H149	BLWP	@>005A(R9)		retrieve R1-R4
 	B	@RTURN1			return to caller
 					
 FFSBM	MOV	R0,R1			free sector(s) in bitmap
-	LI	R2,1			------------------------ 1 sector only
+	LI	R2,1			1 sector only
 FRSCB1	BLWP	@>005A(R9)		entry point if more than 1 sector
 	DATA	>7800			save R1-R4
 	BL	@CALSUB			call subroutine
@@ -1891,7 +1891,7 @@ H174	BL	@UPDFCB			update current record offset in file ctrl block
 	B	@RTURN1			return to caller
 					
 PRFDRS	BLWP	@>005A(R9)		prepare file status byte for FDR
-	DATA	>8001			-------------------------------- access mode in R0
+	DATA	>8001			access mode in R0
 	BLWP	@>005A(R9)			
 	DATA	>8000			save it back
 	LI	R2,2			int in FDR status byte
@@ -1907,7 +1907,7 @@ H176	AI	R4,12			point at file status byte in FDR
 	B	*R11			
 					
 UPDFCB	MOV	@>0056(R9),R4		update sect + rec offsets in file control block
-	AI	R4,-6			-----------------------------------------------
+	AI	R4,-6			
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0083			address in R4
 	MOVB	R3,@-2(R15)		write current sect offset
@@ -2007,7 +2007,7 @@ H184	BLWP	@>005A(R9)		set VDP to read
 H183	B	@RTURN1			return to caller
 					
 RRSEC	BL	@RCOFCB			load sector, point to record in it
-	MOV	R3,R3			----------------------------------- sector offset
+	MOV	R3,R3			sector offset
 	JLT	H185			-1: top of file
 	JMP	H186			in file
 H185	MOV	R3,R0			
@@ -2157,7 +2157,7 @@ H191	MOV	R2,R3			invert source and dest
 	B	@WFDRPB			to read-write loop
 					
 FFDRVP	BL	@CALSUB			find FDR in VDP buffer
-	DATA	FFFDRV			---------------------- find file FDR
+	DATA	FFFDRV			find file FDR
 	MOV	R4,R4			found?
 	JEQ	AFPGPF			yes
 	BL	@ERROR5			no: return with error
@@ -2173,14 +2173,14 @@ AFPGPF	INC	R1			point to filename in FDR
 	B	@RTURN1			return to caller
 					
 RFDRST	MOV	@>0056(R9),R4		get status byte from FDR
-	AI	R4,12			------------------------ point to status byte
+	AI	R4,12			point to status byte
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0082			address in R4
 	MOVB	@-1026(R15),R0		read status byte
 	B	*R11			
 					
 RRNPAB	MOVB	@-1026(R15),R5		get record # from PAB, check if valid
-	SRL	R5,8			-------------------------------------
+	SRL	R5,8			
 	JNE	H195			get # of rec/sector from FDR
 	LI	R5,256			0: default to 256
 H195	MOV	@>0054(R9),R3		PAB ptr
@@ -2216,7 +2216,7 @@ RNFISE	MOV	@>0056(R9),R2		FDR ptr
 	B	*R11			
 					
 RRFDR	BLWP	@>005A(R9)		fetch record into FDR data buffer area
-	DATA	>4000			-------------------------------------- save R1
+	DATA	>4000			save R1
 	AI	R4,-18			ptr to top of control block
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0082			address in R4
@@ -2256,7 +2256,7 @@ AFDRPT	A	@>0056(R9),R2		add FDR ptr
 	B	@RTURN1			return
 					
 UCOFCB	MOV	@>0056(R9),R7		update sect + rec offsets in control block
-	MOV	R7,R1			------------------------------------------ FDR ptr
+	MOV	R7,R1			FDR ptr
 	AI	R1,-6			top of file control block
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
@@ -2271,7 +2271,7 @@ UCOFCB	MOV	@>0056(R9),R7		update sect + rec offsets in control block
 	B	*R11			
 					
 URFFDR	MOV	@>0056(R9),R2		update # of rec/file in FDR
-	BLWP	@>005A(R9)		--------------------------- set VDP to read
+	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0042			address in R2 (FDR ptr)
 	MOVB	@-1026(R15),R10		get first char of filename
 	ORI	R10,>8000		set was modified flag
@@ -2289,7 +2289,7 @@ URFFDR	MOV	@>0056(R9),R2		update # of rec/file in FDR
 	B	*R11			
 					
 RCOFCB	MOV	@>0056(R9),R8		get rec offset, compare sect with total
-	MOV	R8,R4			--------------------------------------- FDR ptr
+	MOV	R8,R4			FDR ptr
 	AI	R4,256			point to data buffer area
 	DECT	R8			point to var record offset
 	BLWP	@>005A(R9)		set VDP to read
@@ -2456,7 +2456,7 @@ H209	BLWP	@>005A(R9)
 	B	@UPDFDR			update FDR, data buffer, VIB then return to caller
 					
 RBANB	MOV	@>0054(R9),R0		get buffer address + # of bytes
-	INCT	R0			------------------------------- data buffer in PAB
+	INCT	R0			data buffer in PAB
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0002			address in R0
 	MOVB	@-1026(R15),R7		get data buffer address
@@ -2764,7 +2764,7 @@ H233	BLWP	@>005A(R9)		set VDP to write
 	B	@RTURN1			return to caller
 					
 CFSVIB	AI	R8,46			count free sectors in VIB bitmap
-	LI	R2,200			-------------------------------- bitmap size
+	LI	R2,200			bitmap size
 	CLR	R3			free sectors counter
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0102			address in R8
@@ -2787,7 +2787,7 @@ H237	DEC	R2			next bitmap byte
 	B	*R11			
 					
 FNDRV	MOV	*R11+,R10		find drive in file control blocks
-	MOV	R11,R5			--------------------------------- save 2 returns
+	MOV	R11,R5			save 2 returns
 	MOV	@>0056(R9),R8		top of mem word in VDP buffers header
 	AI	R8,3			point to max # of files
 	BLWP	@>005A(R9)		set VDP to read
@@ -2830,7 +2830,7 @@ H242	INC	R8			drive matches: point to FDR
 *           43 01 02 03 04 05 06 07 is 1020304.050607
 *--------------------------------------					
 INT2FP	LI	R2,>0800		write an integer in floating point format
-	MOVB	R2,@-2(R15)		----------------------------------------- size=8
+	MOVB	R2,@-2(R15)		size=8
 	MOV	R1,R5			integer is in R1: save it for sign processing
 	ANDI	R1,>7FFF		clear sign bit
 	CI	R1,100			is it less than 100?
@@ -2983,7 +2983,7 @@ H250	BL	@FDR2B1			get 2 bytes from FDR
 	B	@RTURN1			return to caller
 					
 RFDRVB	CLR	R6			put FDR in VDP buffer
-	MOVB	@>004C(R9),R6		--------------------- get drive #
+	MOVB	@>004C(R9),R6		get drive #
 	BL	@UFNCB			update filename compare buffer
 	BL	@CALSUB			call subroutine
 	DATA	FFDRVB			look if FDR already in VDP buffer
@@ -3235,7 +3235,7 @@ H264	SETO	@>0050(R9)		set error flag
 H272	B	@RTURN1			return to caller
 					
 UFNCB	CLR	@>0054(R9)		write drive # and filename in compare buffer
-	MOV	@>0058(R9),R1		--------------------------------------------
+	MOV	@>0058(R9),R1		
 	AI	R1,256			ptr to filename compare buffer
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
@@ -3254,7 +3254,7 @@ H273	INC	R1			next char in compare buffer
 	B	*R11			
 					
 RFNPTR	MOV	R11,R10			load compare buffer and ptrs
-	CLR	R6			----------------------------
+	CLR	R6			
 	MOVB	@>004C(R9),R6		drive #
 	MOV	@>004E(R9),R0		ptr to filename
 	BL	@UFNCB			write them in compare buffer
@@ -3288,14 +3288,14 @@ H274	BL	@FDR2B1			get two bytes from FDR into R0
 	B	*R11			
 					
 VDP2SP	BLWP	@>005A(R9)		copy VDP bytes to scratch-pad
-	DATA	>0102			----------------------------- read from VDP at R8
+	DATA	>0102			read from VDP at R8
 H275	MOVB	@-1026(R15),*R4+	read bytes into scratch-pad at R4
 	DEC	R2			# of byte in R2
 	JNE	H275			next byte
 	B	*R11			
 					
 SP2VDP	MOV	*R11+,R2		copy scratch-pad bytes to VDP
-	A	R2,R8			-----------------------------
+	A	R2,R8			
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0103			address in R8 + offset in data word
 H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
