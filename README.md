@@ -9,7 +9,7 @@ For nostaligic, authentic and I-just-don't-enjoy-SMD-soldering reasons, APEDSK99
 
 The interface to the TI is the classic design with 2x 74LS541 for address/control and a 74LS245 for the databus. An 8Kx8 RAM contains the DSR code, uploaded by the Arduino at powerup.
 
-The DSR is a modified TI Disk Controller version. CRU is emulated through 2 memory mapped addresses, simplifying shield design (well, I ran out of GPIO pins). Optimising for reliable SD card access instead of wonky floppies saw quite some code removed, freeing up valuable DSR space for future enhancements.
+The DSR is a modified TI Disk Controller version. CRU is emulated through 2 memory mapped addresses, simplifying shield design (well, I ran out of GPIO pins). Optimising for reliable SD cards instead of wonky floppies saw quite some code removed, freeing up valuable DSR space for future enhancements.
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. Due to the limited number of GPIO pins available, R/W to RAM is a serial-to-parallel scheme through 74HC595 shift registers. This idea is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER) by Mario Keller.
 
