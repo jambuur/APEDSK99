@@ -30,7 +30,7 @@ When the TI issues a disk controller command, the Arduino receives an interrupt 
 This project owes a lot to Thierry Nouspikel's marvelous [TI Tech Pages website](http://www.unige.ch/medecine/nouspikel/ti99/disks.htm) which has a wealth of information on the TI Disk Controller, including a commented disassembly of its DSR ROM.
 
 Another valuable source of information has been Monthy Schmidt's excellent book "Technical Drive"
-!MSTechDrive](img/MS-TechnicalDrive.jpg)
+![MSTechDrive](img/MS-Technical Drive.jpg)
 
 Streamlining/optimisug the DSR code has left about 0.5K of free DSR space available; some things planned for future APEDSK DSR versions are utilising the realtime clock on the SD card, dynamically mapping Disk-On-A-Disk images and switching DSR's from the main menu or TI BASIC. Switching DSR's would enable other Arduino peripherals such as the Ethernet shield. A basic TCP/IP stack would easily fit into the DSR space.
 
