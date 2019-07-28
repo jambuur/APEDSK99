@@ -1,8 +1,8 @@
 # APEDSK99
 ### *Arduino DSKx emulator shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that, in combination with a compatible SD card shield, emulates 3 DS/SD floppy drives 
-for the TI99/4a home computer. 
+APEDSK99 is an Arduino shield emulating, in combination with a compatible SD card shield, 3 DS/SD floppy drives 
+for the TI99/4a home computer. The SD card contains the required Disk-On-A-Disk (DOAD) floppy images.
 
 ![KiCAD 3D view](img/APEDSK-AU-GH.jpg)
 
@@ -27,6 +27,6 @@ This project owes a lot to Thierry Nouspikel's marvelous [TI Tech Pages website]
 
 Another valuable source of information has been Monthy Schmidt's excellent book "Technical Drive".
 
-Some things dreamed up for possible future APEDSK DSR versions are utilising the realtime clock on the SD card, dynamically mapping Disk-On-A-Disk images and switching DSR's from the main menu or TI BASIC. Switching DSR's would allow other Arduino peripherals to be used such as the Ethernet shield (tinytcp!)
+Some things dreamed up for possible future APEDSK DSR versions are utilising the realtime clock on the SD card, dynamically mapping DOAD images and switching DSR's from the main menu or TI BASIC. Switching DSR's would allow other Arduino peripherals to be used such as the Ethernet shield (tinytcp!)
 
 
