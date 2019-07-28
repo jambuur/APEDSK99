@@ -2,7 +2,7 @@
 ### *Arduino DSKx emulator shield for the TI99/4a*
 
 APEDSK99 is an Arduino shield emulating, in combination with a compatible SD card shield, 3 DS/SD floppy drives 
-for the TI99/4a home computer. The SD card is used to store Disk-On-A-Disk (DOAD) floppy images.
+for the TI99/4a home computer. The SD card is used for storing Disk-On-A-Disk (DOAD) floppy images.
 
 ![KiCAD 3D view](img/APEDSK-AU-GH.jpg)
 
