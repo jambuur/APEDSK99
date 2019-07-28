@@ -8,7 +8,7 @@ for the TI99/4a home computer. The SD card is used to store Disk-On-A-Disk (DOAD
 
 For nostaligic, authentic and I-just-don't-enjoy-SMD-soldering reasons, APEDSK99 is based on good old through-hole technology.
 
-The interface to the TI is a classic with 2x 74LS541 for address/control and a 74LS245 for the databus. An 8Kx8 RAM contains the DSR code, uploaded by the Arduino at powerup.
+The interface to the TI is the classic design with 2x 74LS541 for address/control and a 74LS245 for the databus. An 8Kx8 RAM contains the DSR code, uploaded by the Arduino at powerup.
 
 The DSR is a modified TI Disk Controller version. CRU is emulated through 2 memory mapped addresses, simplifying shield design (well, I ran out of GPIO pins). Optimising for reliable SD card access instead of wonky floppies saw quite some code removed, freeing up valuable DSR space for future enhancements.
 
