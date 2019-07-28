@@ -19,7 +19,7 @@ When the TI issues a disk controller command, the Arduino receives an interrupt 
 2. halts the TI
 3. enables Arduino RAM access
 4. executes the command including updating the relevant registers/emulated CRU
-5. executes the opposite of steps 3,2 and 1
+5. executes the opposite of steps 3, 2 and 1
 
 This project owes a lot to Thierry Nouspikel's marvelous [TI Tech Pages website](http://www.unige.ch/medecine/nouspikel/ti99/disks.htm) which has a wealth of information on the TI Disk Controller, including a commented disassembly of its DSR ROM.
 
