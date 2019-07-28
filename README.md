@@ -19,7 +19,6 @@ The Arduino UNO controls the TI interface, has R/W access to RAM and can halt th
 When the TI issues a disk controller command, the Arduino receives an interrupt through a 74LS138. The Arduino then:
 
 1 disables the TI interface
-
 2 halts the TI
 3 enables Arduino RAM access
 4 executes the command including updating the relevant registers/emulated CRU
