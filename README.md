@@ -8,16 +8,12 @@ for the TI99/4a home computer.
 
 For nostaligic, authentic and I-just-don't-enjoy-SMD-soldering reasons, APEDSK99 is based on good old through-hole technology.
 
-The interface to the TI is through the classic signaling/buffering with 74LS244 (74LS541 for PCB layout reasons) and 74LS245. 
+The interface to the TI is through the classic signaling/buffering with 2 74LS244 (74LS541 for PCB layout reasons) and a 74LS245. 
 An 8Kx8 RAM contains the DSR code, uploaded by the Arduino at powerup.
 
-CRU is emulated through 2 memory mapped addresses; this both simplifies the shield design and streamlines the DSR code. 
+The DSR is a modified version from the original TI Disk Controller. CRU is emulated through 2 memory mapped addresses, simplifying shield design (well, I ran out of GPIO pins). Optimising for reliable SD card access instead of wonky floppies saw quite some code removed, freeing up DSR space for future enhancements.
 
-The DSR is a modified version of the original TI Disk Controller DSR but with CRU comms removed and optimised for reliable 
-SD card access instead of wonky floppies. 
-
-The Arduino UNO controls the TI interface, has R/W access to RAM and can halt the TI. Due to the limited number of GPIO pins available on the Arduino UNO, R/W to RAM is a serial-to-parallel scheme through 74HC595 shift registers. This idea is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER
-) by Mario Keller.
+The Arduino UNO controls the TI interface, has R/W access to RAM and can halt the TI. Due to the limited number of GPIO pins available, R/W to RAM is a serial-to-parallel scheme through 74HC595 shift registers. This idea is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER) by Mario Keller.
 
 When the TI issues a disk controller command, the Arduino receives an interrupt through a 74LS138. The Arduino then:
 
@@ -29,9 +25,8 @@ When the TI issues a disk controller command, the Arduino receives an interrupt 
 
 This project owes a lot to Thierry Nouspikel's marvelous [TI Tech Pages website](http://www.unige.ch/medecine/nouspikel/ti99/disks.htm) which has a wealth of information on the TI Disk Controller, including a commented disassembly of its DSR ROM.
 
-Another valuable source of information has been Monthy Schmidt's excellent book "Technical Drive"
-![MSTechDrive](img/MS-Technical Drive.jpg)
+Another valuable source of information has been Monthy Schmidt's excellent book "Technical Drive".
 
-Streamlining/optimisug the DSR code has left about 0.5K of free DSR space available; some things planned for future APEDSK DSR versions are utilising the realtime clock on the SD card, dynamically mapping Disk-On-A-Disk images and switching DSR's from the main menu or TI BASIC. Switching DSR's would enable other Arduino peripherals such as the Ethernet shield. A basic TCP/IP stack would easily fit into the DSR space.
+Some things dreamed up for possible future APEDSK DSR versions are utilising the realtime clock on the SD card, dynamically mapping Disk-On-A-Disk images and switching DSR's from the main menu or TI BASIC. Switching DSR's would allow other Arduino peripherals to be used such as the Ethernet shield (tinytcp!)
 
 
