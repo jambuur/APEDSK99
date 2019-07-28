@@ -15,7 +15,8 @@ CRU is emulated through 2 memory mapped addresses; this both simplifies the shie
 The DSR is a modified version of the original TI Disk Controller DSR but with CRU comms removed and optimised for reliable 
 SD card access instead of wonky floppies. 
 
-The Arduino UNO controls the TI interface, has R/W access to RAM and can halt the TI. Due to the limited number of GPIO pins available on the Arduino UNO, R/W to RAM is a serial-to-parallel scheme through 74HC595 shift registers. This idea is neither new or mine but I have gratefully used part of this excellent project by Mario Keller: https://github.com/mkeller0815/MEEPROMMER
+The Arduino UNO controls the TI interface, has R/W access to RAM and can halt the TI. Due to the limited number of GPIO pins available on the Arduino UNO, R/W to RAM is a serial-to-parallel scheme through 74HC595 shift registers. This idea is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER
+) by Mario Keller.
 
 When the TI issues a disk controller command, the Arduino receives an interrupt through a 74LS138. The Arduino then:
 
