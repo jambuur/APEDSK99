@@ -4,7 +4,7 @@
 APEDSK99 is an Arduino shield that, in combination with a compatible SD card shield, emulates 3 DS/SD floppy drives 
 for the TI99/4a home computer. 
 
-![KiCAS render](img/MS-TechnicalDrive.jpg)
+![](IMG/APEDSK-AU-GH.jpg)
 For nostaligic, authentic and I-just-don't-enjoy-SMD-soldering reasons, APEDSK99 is based on good old through-hole technology.
 
 The interface to the TI is through the classic signaling/buffering with 74LS244 (74LS541 for PCB layout reasons) and 74LS245. 
