@@ -11,6 +11,7 @@
 *
 *====================================
 
+RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits
 CRUWRI	EQU	>5FEE			emulated 8 CRU output bits
 RSTAT	EQU	>5FF0			read FD1771 Status register
@@ -195,10 +196,12 @@ H007	BL	@SNDCMD			send command
 *	SBO	2			enable hold
 	MOVB	@RDATA,R0		skip track #
 	LI	R6,4		
+	MOV	R6,@RDINT		APEDSK: interrupt Arduino for read operation
 	MOVB	@RDATA,R5		side #
 *	INV	R5			APEDSK: none of this inverted databus rubbish
 H009	MOVB	@RDATA,R0		skip next 4 bytes
-	DEC	R6			
+*	DEC	R6			
+	DEC	@RDINT			APEDSK:
 	JNE	H009			
 	BL	@WTCPT2			SBZ 2, wait for command completion
 	SLA	R0,13			test status bits
@@ -254,7 +257,7 @@ H016	MOVB	@RDATA,R0		get 1 byte from FDC
 *	INV	R0			APEDSK: none of that inverted databus rubbish
 *	MOVB	R0,@-2(R15)			
 *	DECT	R6			
-	DEC	R6			APEDSK:
+	DEC	@RDINT			APEDSK:
 	JNE	H016			next byte
 H019	CLR	R5			clear flag
 H018	BL	@WTCPT2			SBZ 2, wait for command completion
@@ -359,14 +362,16 @@ READID	BL	@SKTRK0			seek track 0
 *	DATA	>3F00			read ID (E=0)
 	DATA	>C000			APEDSK: read ID (E=0)
 	LI	R6,6			read 6 bytes
+	MOV	R6,@RDINT		APEDSK:
 *	SBO	2			enable wait states
 H032	MOVB	@RDATA,R0		read data register
 *	INV	R0			APEDSK: none of that inverted databus rubbish
 	MOVB	R0,@-2(R15)		write it to data buffer
-	MOVB	@RDATA,R0		again, why write this twice ?
+*	MOVB	@RDATA,R0		again, why write this twice ?
 *	INV	R0			APEDSK: none of that inverted databus rubbish
-	MOVB	R0,@-2(R15)			
-	DECT	R6			
+*	MOVB	R0,@-2(R15)			
+*	DECT	R6			
+	DEC	@RDINT			APEDSK:
 	JNE	H032			
 	BL	@WTCPT2			SBZ 2 then wait for command completion
 	SLA	R0,13			check status bits
@@ -455,7 +460,7 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	MOVB	R0,@WDATA		send next byte
 *	DECT	R6			
 	DEC	R6			APEDSK:
-	JGT	H041			next pair of bytes
+	JGT	H041			next (pair of bytes) byte
 	BL	@WTCPT2			SBZ 2, then wait for command completion
 	SLA	R0,11			check write protect bit
 	JNC	H042			
