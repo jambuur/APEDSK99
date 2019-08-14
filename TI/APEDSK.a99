@@ -89,7 +89,7 @@ DSR04	DATA	>0000			no more
 * Power-up routine
 *=====================================					
 EPWRUP	MOV	R12,R7			Dhr. F.G. Kaal check: are we powering up CRU >1000 peripheral?
-	CI	R7,>2000
+	CI	R7,>1F00
 	JNE	NOCRU	
 
 	MOV	R11,R7			save return address
@@ -671,10 +671,12 @@ K012	DATA	>FFFF
 	DATA	>0000			
 	DATA	>0000			
 	DATA	>00FB			
-K010	BYTE	>F7			code for CRC
-K009	BYTE	0,7,5,3,1,8,6,4		sector interlace pattern
+*K010	BYTE	>F7			code for CRC
+*K009	BYTE	0,7,5,3,1,8,6,4		sector interlace pattern
 K005	BYTE	2			
-					
+	
+	EVEN
+				
 CALSUB	DECT	@>0066(R9)		call subroutine, return address in stack
 	MOV	@>0066(R9),R10		---------------
 	BLWP	@>005A(R9)		set VDP to write to address in R10
