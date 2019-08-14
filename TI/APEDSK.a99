@@ -792,7 +792,7 @@ H076	INCT	R8			point to end-of-buffer word
 	MOV	R8,R2			save current R8
 	MOV	R0,R8			get end-of-buffer word
 *					APEDSK: we don't need to check for additional controllers
-*	MOVB	@-1026(R15),R1		get CRU of controller that reserved this mem				
+	MOVB	@-1026(R15),R1		get CRU of controller that reserved this mem				
 *	CB	R12,R1			same as ours?
 *	JNE	H076			no: use end-of-buffer to link to next buffer
 	AI	R8,-266			yes: point to volume information block
@@ -3223,16 +3223,16 @@ H269	MOV	R1,@>0070(R9)		new first free address
 H271	INCT	R8			point to end of buffer word
 	BL	@VPDR2B			read it in R0
 	MOVB	@-1026(R15),R1		get CRU base byte
-	CB	R12,R1			same as current controller?
-	JEQ	H265			yes: return with no error
-	A	R4,R0			no: coin address of next buffer
-	BLWP	@>005A(R9)		set VDP to write
-	DATA	>0103			address in R8
-	MOVB	R0,@-2(R15)		write new end of buffer word
-	MOV	R0,R8			and make it new address
-	SWPB	R0			
-	MOVB	R0,@-2(R15)			
-	JMP	H271			now, try again
+*	CB	R12,R1			same as current controller?
+*	JEQ	H265			yes: return with no error
+*	A	R4,R0			no: coin address of next buffer
+*	BLWP	@>005A(R9)		set VDP to write
+*	DATA	>0103			address in R8
+*	MOVB	R0,@-2(R15)		write new end of buffer word
+*	MOV	R0,R8			and make it new address
+*	SWPB	R0			
+*	MOVB	R0,@-2(R15)			
+*	JMP	H271			now, try again
 					
 H265	CLR	@>0050(R9)		clear error flag
 	JMP	H272			
