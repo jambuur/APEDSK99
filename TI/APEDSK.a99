@@ -1,4 +1,4 @@
-*====================================
+3*====================================
 *
 * TI DISK CONTROLLER ROM   >4000-5FFF
 * 
@@ -89,7 +89,7 @@ DSR04	DATA	>0000			no more
 * Power-up routine
 *=====================================					
 EPWRUP	MOV	R12,R7			Dhr. F.G. Kaal check: are we powering up CRU >1000 peripheral?
-	CI	R7,>1F00
+	CI	R7,>1000
 	JNE	NOCRU	
 
 	MOV	R11,R7			save return address
@@ -207,7 +207,7 @@ H009	MOVB	@RDATA,R0		skip next 4 bytes
 	SLA	R0,13			test status bits
 	JOC	H010			not found: try again, then error 21
 *	JLT	H011			crc error: try again, then error 22
-	SLA	R0,2			
+*	SLA	R0,2			
 *	JOC	H012			lost data: try again, then error 23
 	CB	R7,R5			side # matches?
 	JEQ	H013			yes: sector found, now access it
@@ -220,10 +220,10 @@ H003	BL	@ERROR1			error 7
 	DATA	>0700			
 H010	BL	@ERROR2			gracefull error 21
 	DATA	>2100			
-H011	BL	@ERROR2			gracefull error 22
-	DATA	>2200			
-H012	BL	@ERROR2			gracefull error 23
-	DATA	>2300			
+*H011	BL	@ERROR2			gracefull error 22
+*	DATA	>2200			
+*H012	BL	@ERROR2			gracefull error 23
+*	DATA	>2300			
 					
 H013	MOVB	R1,@WSECTR		load sector register
 	MOV	@>004E(R9),R2		data buffer address
@@ -264,21 +264,21 @@ H018	BL	@WTCPT2			SBZ 2, wait for command completion
 	SLA	R0,13			test status bits
 	JOC	H020			not found: try again, then error 21
 *	JLT	H021			crc error: try again, then error 22
-	MOV	R5,R5			
-	JNE	H022			try again, then error 28
-	SLA	R0,2			
+*	MOV	R5,R5			
+*	JNE	H022			try again, then error 28
+*	SLA	R0,2			
 *	JOC	H023			lost data: try again, then error 23
 	B	@RTURN1			return
 					
 H020	BL	@ERROR2			gracefull error 21
 	DATA	>2100			
 					
-H021	BL	@ERROR2			gracefull error 22
-	DATA	>2200			
-H023	BL	@ERROR2			gracefull error 23
-	DATA	>2300			
-H022	BL	@ERROR2			gracefull error 28
-	DATA	>2800			
+*H021	BL	@ERROR2			gracefull error 22
+*	DATA	>2200			
+*H023	BL	@ERROR2			gracefull error 23
+*	DATA	>2300			
+*H022	BL	@ERROR2			gracefull error 28
+*	DATA	>2800			
 					
 H014	BL	@VDPRD			write to FD = read from VDP buffer
 	BL	@SNDCMD			send command
@@ -298,9 +298,9 @@ H024	MOVB	@-1026(R15),R0		get a byte from data buffer
 	BL	@WTCPT2			SBZ 2, wait for command completion
 	SLA	R0,11			test status bits
 	JOC	ERROR3			write protect: error 34
-	SLA	R0,2			
+*	SLA	R0,2			
 *	JOC	H025			not found: try again, then error 31
-	SLA	R0,2			
+*	SLA	R0,2			
 *	JOC	H026			lost data: try again, then error 33
 *	BL	@VDPRD			now, set VDP to read
 *	JMP	H015			and verify sector
@@ -308,10 +308,10 @@ H024	MOVB	@-1026(R15),R0		get a byte from data buffer
 					
 ERROR3	BL	@ERROR1			error 34
 	DATA	>3400			
-H025	BL	@ERROR2			gracefull error 31
-	DATA	>3100			
-H026	BL	@ERROR2			gracefull error 33
-	DATA	>3300			
+*H025	BL	@ERROR2			gracefull error 31
+*	DATA	>3100			
+*H026	BL	@ERROR2			gracefull error 33
+*	DATA	>3300			
 
 *---------------------------------------
 * Format disk
@@ -377,7 +377,7 @@ H032	MOVB	@RDATA,R0		read data register
 	SLA	R0,13			check status bits
 	JOC	H033			not found
 *	JLT	H034			CRC error
-	SLA	R0,2			
+*	SLA	R0,2			
 *	JOC	H035			lost data
 	MOV	@>004E(R9),R2		address of data buffer
 	INC	R2			skip track #
@@ -398,10 +398,10 @@ H036	SRL	R0,8			make it a word
 					
 H033	BL	@ERROR2			try again, or error >21
 	DATA	>2101			
-H034	BL	@ERROR2			try again, or error >22
-	DATA	>2201			
-H035	BL	@ERROR2			try again, or error >23
-	DATA	>2301			
+*H034	BL	@ERROR2			try again, or error >22
+*	DATA	>2201			
+*H035	BL	@ERROR2			try again, or error >23
+*	DATA	>2301			
 					
 FMTTRK	MOV	R11,R8			format a track
 	MOV	@>004E(R9),R2		
