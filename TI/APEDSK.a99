@@ -1,4 +1,4 @@
-3*====================================
+*====================================
 *
 * TI DISK CONTROLLER ROM   >4000-5FFF
 * 
@@ -6,13 +6,13 @@
 * (see http://www.unige.ch/medecine/nouspikel/ti99/titechpages.htm)
 *
 * adapted for APEDSK by Jochen Buur
-* (see github ...)
+* (see github.com/jambuur/APEDSK99)
 *
 *
 *====================================
 
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
-CRURD	EQU	>5FEC			emulated 8 CRU input bits
+CRURD	EQU	>5FEC			APEDSK: we don't seem to need emulated 8 CRU input bits
 CRUWRI	EQU	>5FEE			emulated 8 CRU output bits
 RSTAT	EQU	>5FF0			read FD1771 Status register
 RTRACK	EQU	>5FF2			read FD1771 Track register
@@ -187,7 +187,7 @@ H005	SWPB	R0
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
 	DATA	>1E00			APEDSK: seek h=1 V=1 r1r0=10
-	BL	@WTCPT1			wait for command completion
+*	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	SLA	R0,13			test seek error bit
 *	JOC	H008			try again, then error 11
 H007	BL	@SNDCMD			send command
@@ -203,7 +203,8 @@ H009	MOVB	@RDATA,R0		skip next 4 bytes
 *	DEC	R6			
 	DEC	@RDINT			APEDSK:
 	JNE	H009			
-	BL	@WTCPT2			SBZ 2, wait for command completion
+*	BL	@WTCPT2			SBZ 2, wait for command completion
+*	BL	@WTCPT1			APEDSK not relevant: no need to wait for command completion and error check
 	SLA	R0,13			test status bits
 	JOC	H010			not found: try again, then error 21
 *	JLT	H011			crc error: try again, then error 22
@@ -234,6 +235,7 @@ H015	BL	@SNDCMD			send command
 *	DATA	>7700			read sector m=0 S=1 E=0 C=0
 	DATA	>8800			APEDSK: read sector m=0 S=1 E=0 C=0
 	LI	R6,256			256 bytes / sector
+	MOV	R6,@RDINT		APEDSK: generate read interrupt
 	SETO	R5			
 *	SBO	2	
 *	MOVB	@>004D(R9),R0		read or write?
@@ -260,7 +262,8 @@ H016	MOVB	@RDATA,R0		get 1 byte from FDC
 	DEC	@RDINT			APEDSK:
 	JNE	H016			next byte
 H019	CLR	R5			clear flag
-H018	BL	@WTCPT2			SBZ 2, wait for command completion
+*H018	BL	@WTCPT2			SBZ 2, wait for command completion
+H018	BL	@WTCPT1			APEDSK: no need to wait for command completion
 	SLA	R0,13			test status bits
 	JOC	H020			not found: try again, then error 21
 *	JLT	H021			crc error: try again, then error 22
@@ -295,7 +298,8 @@ H024	MOVB	@-1026(R15),R0		get a byte from data buffer
 *	DECT	R6			
 	DEC	R6			APEDSK:
 	JNE	H024			next
-	BL	@WTCPT2			SBZ 2, wait for command completion
+*	BL	@WTCPT2			SBZ 2, wait for command completion
+	BL	@WTCPT1			APEDSK: no need to wait for command completion
 	SLA	R0,11			test status bits
 	JOC	ERROR3			write protect: error 34
 *	SLA	R0,2			
@@ -346,7 +350,7 @@ H029	SZCB	@SIDE01,@CRUWRI		APEDSK: set CRU bit for side 0
 	BL	@SNDCMD			send command
 *	DATA	>A500			step-in (T=1, h=1, V=0, r0r1=10)
 	DATA	>5A00			APEDSK: step-in (T=1, h=1, V=0, r0r1=10)
-	BL	@WTCPT1			wait for command completion
+*	BL	@WTCPT1			APEDSK not relevant: wait for command completion and error check
 	AI	R3,>0100		one more track
 	CB	R3,@>004D(R9)		all done?
 	JNE	H030			no: format next one
@@ -373,7 +377,8 @@ H032	MOVB	@RDATA,R0		read data register
 *	DECT	R6			
 	DEC	@RDINT			APEDSK:
 	JNE	H032			
-	BL	@WTCPT2			SBZ 2 then wait for command completion
+*	BL	@WTCPT2			SBZ 2 then wait for command completion
+	BL	@WTCPT1			APEDSK: no need to wait for command completion
 	SLA	R0,13			check status bits
 	JOC	H033			not found
 *	JLT	H034			CRC error
@@ -461,7 +466,8 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	DECT	R6			
 	DEC	R6			APEDSK:
 	JGT	H041			next (pair of bytes) byte
-	BL	@WTCPT2			SBZ 2, then wait for command completion
+*	BL	@WTCPT2			SBZ 2, then wait for command completion
+	BL	@WTCPT1			APEDSK: no need to wait for command completion
 	SLA	R0,11			check write protect bit
 	JNC	H042			
 	B	@ERROR3			error code >34 ??
@@ -474,13 +480,12 @@ H042	SLA	R0,4			test lost data bit
 H043	B	*R8			return
 					
 VDPRPW	MOV	*R11+,R6		VDP repeated write
-H044	MOVB	R0,@-2(R15)		------------------
+H044	MOVB	R0,@-2(R15)
 	DEC	R6			byte in R0
 	JNE	H044			number of repeats in data word
 	B	*R11			
 
 *WTCPT2	SBZ	2			wait for command completion				
-WTCPT2	EQU	$
 WTCPT1	MOVB	@RSTAT,R0		get status. APEDSK: Not Ready bit set when SD DSK file is unavailable
 *	INV	R0			APEDSK: none of that inverted databus rubbish
 	JLT	ERROR4			drive not ready
@@ -491,7 +496,7 @@ ERROR4	BL	@ERROR1			exit with error code 6, reseting all drives
 	DATA	>0600			
 					
 SELDRV	MOV	R11,R7			select a drive
-	MOV	@>0058(R9),R2		--------------
+	MOV	@>0058(R9),R2
 	AI	R2,-10			point to drive info
 	BL	@VDPRD			set VDP to read
 	MOVB	@-1026(R15),R0		get # of last drive accessed
@@ -547,11 +552,11 @@ H056	BL	@ERROR1			exit with error #7
 	DATA	>0700			
 					
 SKTRK0	MOV	R11,R8			seek track 0
-	BL	@SNDCMD			------------
+	BL	@SNDCMD
 *	DATA	>F500			send restore command (h=1, V=0, r0r1=10)
 	DATA	>0A00			APEDSK: send restore command (h=1, V=0, r0r1=10)
-	BL	@WTCPT1			wait for command completion
-*	BL	@CKTRK0			APEDSK - not relevant: test if track 0 reached, error it not
+*	BL	@WTCPT1			APEDSK not relevant: wait for command completion
+*	BL	@CKTRK0			APEDSK not relevant: test if track 0 reached, error it not
 	BL	@LASTRK			set VDP to read last track #
 	BL	@VDPWRI			set VDP to write at same address
 	MOVB	@K012,@-2(R15)		set last track # as >FF for this drive
@@ -566,7 +571,7 @@ SKTRK0	MOV	R11,R8			seek track 0
 
 *RSTDRV	AI	R12,8			reset all drives
 RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK: reset all drives including side
-*	LDCR	@K002,4			---------------- no drive selected
+*	LDCR	@K002,4			no drive selected
 *	AI	R12,-8			
 *	SBZ	1			motor strobe
 *	SBO	1			
@@ -578,7 +583,8 @@ RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK: reset all drives including side
 H061	MOVB	R0,@-2(R15)		write four >00 (i.e. clear drive info)
 	DEC	R0			
 	JNE	H061			
-	BL	@WTCPT2			test status, reset drives if not ready
+*	BL	@WTCPT2			test status, reset drives if not ready
+*	BL	@WTCPT1			APEDSK: no need to wait for command completion and error check
 	MOVB	@K002,@>0050(R9)	no error
 	B	@RTURN1			get return address from stack
 					
@@ -678,7 +684,7 @@ K005	BYTE	2
 	EVEN
 				
 CALSUB	DECT	@>0066(R9)		call subroutine, return address in stack
-	MOV	@>0066(R9),R10		---------------
+	MOV	@>0066(R9),R10
 	BLWP	@>005A(R9)		set VDP to write to address in R10
 	DATA	>0143			
 	MOV	*R11+,R10		get next data word
@@ -719,7 +725,7 @@ VECRTN	DATA	SVRVDP			save registers to VDP stack
 	DATA	SVDPWR			set VDP address to write
 					
 SVRVDP	AI	R10,22			0: save registers in VDP mem
-H072	SRL	R9,1			-------------- start with R12
+H072	SRL	R9,1			start with R12
 	JNC	H070			bits in >ppp tell which register to save (R0-R11)
 	DECT	R12			previous address in VDP stack (grows down)
 	MOV	*R10,R8			get register contents
@@ -738,7 +744,7 @@ H070	DECT	R10			point to previous register
 	JMP	H072			
 					
 RVRVDP	SLA	R9,4			1: retrieve registers from VDP mem
-H074	SLA	R9,1			------------------ each bit tells whether to load
+H074	SLA	R9,1			each bit tells whether to load
 	JNC	H073			don't retrieve that one
 	SWPB	R12			set VDP address to read
 	MOVB	R12,*R11		R12 is >8366: VDP stack ptr
@@ -763,7 +769,7 @@ SVDPWR	A	R13,R9			2: set VDP for a write
 	JMP	H075			
 					
 SVDPRD	A	R13,R9			3: set VDP for a read
-	MOV	*R9,R8			------------------
+	MOV	*R9,R8
 	ANDI	R8,>3FFF		get register from reg in >..p3 (*2)
 H075	SWPB	R8			set VDP address
 	MOVB	R8,*R11			
@@ -898,7 +904,7 @@ H081	CLR	R2			code for write
 H084	B	@RTURN1			return to caller
 					
 UPDFDR	BL	@CALSUB			update FDR + data
-	DATA	UPDBF			----------------- update data buffer if necessary
+	DATA	UPDBF			update data buffer if necessary
 	BL	@CALSUB			call subroutine
 	DATA	H082			update FDR if necessary
 CLRFBT	MOV	@>0056(R9),R5			
@@ -1314,7 +1320,7 @@ ERROR5	MOV	R11,R0			update data, then error
 H123	MOV	R0,R11			
 					
 RETERR	MOV	@>0054(R9),R1		annouce error
-	JEQ	H124			------------- no PAB
+	JEQ	H124			no PAB
 	INC	R1			for DSRs: ptr to status byte
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R2
@@ -1331,7 +1337,7 @@ H125	MOV	@>0058(R9),R8		get stack ptr
 	B	@RTURN1			return to caller
 					
 RWVIB	BLWP	@>005A(R9)		read VIB (drive # in R6)
-	DATA	>3000			-------- save R2 + R3
+	DATA	>3000			save R2 + R3
 	MOV	@>0058(R9),R5		pointer to VIB in ctrl block
 	DEC	R5			ptr to drive #
 	BLWP	@>005A(R9)		set VDP for read
@@ -1368,7 +1374,7 @@ H126	INC	R5			point back to FDR
 	B	@RTURN1			branch to address on stack
 					
 RDSEC1	SETO	R2			read sector 1
-WRISR1	LI	R4,1			-------------
+WRISR1	LI	R4,1
 	LI	R5,>0100		into data buffer area of current ctrl block
 	JMP	RDFDR1			
 					
@@ -1376,7 +1382,7 @@ WRFDR	BL	@FDR2B1			read FDR
 	DATA	-4			-------- get sector # of FDR from control block
 					
 RDFDR2	MOV	R0,R4			sector read/write
-	CLR	R5			-----------------
+	CLR	R5
 RDFDR1	A	@>0056(R9),R5		point to FDR or data buffer
 RWSEC0	CLR	R7			
 RWSEC1	MOVB	R5,R2			add drive # for r/w flag
@@ -1443,7 +1449,7 @@ FNDFDR	BL	@CALSUB
 	DATA	FFFDRV			save name in comp buffer, find FDR in VDP buffers
 					
 FFDROD	MOV	R4,R4			find FDR on disk (from filename)
-	JEQ	H136			---------------- file error
+	JEQ	H136			file error
 FFDRDK	MOV	@>0056(R9),R5		ptr to top of disk buffer in VDP mem
 	AI	R5,10			ptr to drive # in first file control block
 H138	BLWP	@>005A(R9)		set VDP to read
@@ -2339,7 +2345,7 @@ H200	BL	@CALSUB			call subroutine
 	JNE	H201			reloc: don't do anything, return
 					
 RWIND2	CLR	R2			rewind file: record offset = 0
-	SETO	R3			----------- current record = -1 (none)
+	SETO	R3			current record = -1 (none)
 	BL	@UPDFCB			update file control block
 	CLR	R0			record 0
 	MOV	@>0054(R9),R8		get PAB ptr
@@ -3137,7 +3143,7 @@ ESUB08	MOV	R11,R7
 	MOVB	R0,@>004C(R9)		put new # of files in scratch-pad memory
 	BL	@CALSUB			call subroutine
 	DATA	PESB07			subprogram >16 (private entry point)
-	MOVB	@>0050(R9),@>0050(R9)			test result
+	MOVB	@>0050(R9),@>0050(R9)	test result
 	JNE	H263			error
 	MOV	@>002C(R9),R8		ok: get ptr to Basic token
 	AI	R8,12			skip the whole statement
@@ -3221,10 +3227,10 @@ H270	BLWP	@>005A(R9)		set VDP to read
 	JNE	H270			not yet
 					
 H269	MOV	R1,@>0070(R9)		new first free address
-	MOV	R1,R8			
-H271	INCT	R8			point to end of buffer word
-	BL	@VPDR2B			read it in R0
-	MOVB	@-1026(R15),R1		get CRU base byte
+*	MOV	R1,R8			
+*H271	INCT	R8			point to end of buffer word
+*	BL	@VPDR2B			read it in R0
+*	MOVB	@-1026(R15),R1		get CRU base byte
 *	CB	R12,R1			same as current controller?
 *	JEQ	H265			yes: return with no error
 *	A	R4,R0			no: coin address of next buffer
@@ -3275,7 +3281,7 @@ RFNPTR	MOV	R11,R10			load compare buffer and ptrs
 	B	*R10			EQ set for get file info
 					
 FFFDR	BLWP	@>005A(R9)		find file FDR
-	DATA	>8010			------------- save R0 + R11
+	DATA	>8010			save R0 + R11
 	BL	@CALSUB			call subroutine
 	DATA	FFDRVB			find file FDR in VDP buffers
 	BL	@CALSUB			call subroutine
@@ -3317,7 +3323,8 @@ SIDE01	DATA	>8000			floppy side select
 
 *-----------------------------------------
 *
-* The remaining bytes (>5F52 to >5FEB) all contain >FFFF
+* The remaining bytes (>5D68 to >5FEB) all contain >00
+* Word >5FEA maps to the read counter (to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers
 * Bytes >5FF0 to >5FFE map to the FDC emulation registers
 *
