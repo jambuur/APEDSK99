@@ -71,48 +71,22 @@ Text Label 1350 3300 0    50   ~ 0
 D6
 Text Label 1350 3400 0    50   ~ 0
 D7
-Text Label 1350 3600 0    50   ~ 0
-A1
 Text Label 1350 3700 0    50   ~ 0
 ~MBE
 Text Label 1350 3800 0    50   ~ 0
 ~WE
-Text Label 1350 4100 0    50   ~ 0
-A2
-Text Label 1350 4200 0    50   ~ 0
-A9
-Text Label 1350 4400 0    50   ~ 0
-A8
 Text Label 1350 4500 0    50   ~ 0
 READY
-Text Label 1350 4600 0    50   ~ 0
-A3
-Text Label 1350 4700 0    50   ~ 0
-A11
-Text Label 1350 4800 0    50   ~ 0
-A10
 Text Label 850  3100 2    50   ~ 0
 D2
 Text Label 850  3200 2    50   ~ 0
 D0
 Text Label 850  3300 2    50   ~ 0
 D4
-Text Label 850  3500 2    50   ~ 0
-A0
 Text Label 850  3600 2    50   ~ 0
 A6
-Text Label 850  4100 2    50   ~ 0
-A15
-Text Label 850  4200 2    50   ~ 0
-A7
-Text Label 850  4500 2    50   ~ 0
-A12
 Text Label 850  4600 2    50   ~ 0
 DBIN
-Text Label 850  4700 2    50   ~ 0
-A4
-Text Label 850  4800 2    50   ~ 0
-A5
 $Comp
 L Connector_Generic:240-44-44Pins J1
 U 1 1 5D2D3848
@@ -281,47 +255,47 @@ F 3 "" H 2450 2750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text Label 1950 3600 2    50   ~ 0
-A0
+A15
 Text Label 1950 3700 2    50   ~ 0
-A1
+A14
 Text Label 1950 3800 2    50   ~ 0
-A2
+A13
 Text Label 1950 3900 2    50   ~ 0
-A3
-Text Label 1950 4000 2    50   ~ 0
-A4
-Text Label 1950 4100 2    50   ~ 0
-A5
-Text Label 1950 4200 2    50   ~ 0
-A6
-Text Label 1950 4300 2    50   ~ 0
-A7
-Text Label 2000 6000 2    50   ~ 0
-A8
-Text Label 2000 6100 2    50   ~ 0
-A9
-Text Label 2000 6200 2    50   ~ 0
-A10
-Text Label 2000 6300 2    50   ~ 0
-A11
-Text Label 2000 6400 2    50   ~ 0
 A12
+Text Label 1950 4000 2    50   ~ 0
+A11
+Text Label 1950 4100 2    50   ~ 0
+A10
+Text Label 1950 4200 2    50   ~ 0
+A9
+Text Label 1950 4300 2    50   ~ 0
+A8
+Text Label 2000 6000 2    50   ~ 0
+A7
+Text Label 2000 6100 2    50   ~ 0
+A6
+Text Label 2000 6200 2    50   ~ 0
+A5
+Text Label 2000 6300 2    50   ~ 0
+A4
+Text Label 2000 6400 2    50   ~ 0
+A3
 Text Label 3600 1250 2    50   ~ 0
-D0
-Text Label 3600 1350 2    50   ~ 0
-D1
-Text Label 3600 1450 2    50   ~ 0
-D2
-Text Label 3600 1550 2    50   ~ 0
-D3
-Text Label 3600 1650 2    50   ~ 0
-D4
-Text Label 3600 1750 2    50   ~ 0
-D5
-Text Label 3600 1850 2    50   ~ 0
-D6
-Text Label 3600 1950 2    50   ~ 0
 D7
+Text Label 3600 1350 2    50   ~ 0
+D6
+Text Label 3600 1450 2    50   ~ 0
+D5
+Text Label 3600 1550 2    50   ~ 0
+D4
+Text Label 3600 1650 2    50   ~ 0
+D3
+Text Label 3600 1750 2    50   ~ 0
+D2
+Text Label 3600 1850 2    50   ~ 0
+D1
+Text Label 3600 1950 2    50   ~ 0
+D0
 $Comp
 L power:GND #PWR0108
 U 1 1 5D2D38B8
@@ -357,8 +331,6 @@ Text Label 3000 6300 0    50   ~ 0
 AD_A11
 Text Label 3000 6400 0    50   ~ 0
 AD_A12
-Text Label 3000 6500 0    50   ~ 0
-AD_A15
 Text Label 3000 6200 0    50   ~ 0
 AD_A10
 Text Label 2000 6600 2    50   ~ 0
@@ -366,11 +338,11 @@ Text Label 2000 6600 2    50   ~ 0
 Text Label 2000 6700 2    50   ~ 0
 ~WE
 Text Label 3000 6600 0    50   ~ 0
-~AD_MBE
+~AD_CE
 Text Label 3000 6700 0    50   ~ 0
 ~AD_WE
 Text Label 4850 4300 0    50   ~ 0
-~AD_MBE
+~AD_CE
 Text Label 4850 4400 0    50   ~ 0
 ~AD_WE
 Wire Wire Line
@@ -434,14 +406,10 @@ Text Label 3850 4500 2    50   ~ 0
 AD_A11
 Text Label 3850 4600 2    50   ~ 0
 AD_A12
-Text Label 5800 6950 2    50   ~ 0
-~AD_MBE
 Text Label 5800 6850 2    50   ~ 0
+~AD_CE
+Text Label 5800 6950 2    50   ~ 0
 ~AD_WE
-Text Label 5800 6750 2    50   ~ 0
-AD_A15
-Text Label 2000 6500 2    50   ~ 0
-A15
 Text Label 7350 4150 2    50   ~ 0
 AD_D7
 Text Label 7350 4050 2    50   ~ 0
@@ -458,7 +426,7 @@ Text Label 7350 3450 2    50   ~ 0
 AD_D1
 Text Label 7350 3250 2    50   ~ 0
 AD_D0
-Text Label 8150 3250 0    50   ~ 0
+Text Label 8150 3550 0    50   ~ 0
 ~TIBUF
 Text Label 4850 3400 0    50   ~ 0
 AD_D0
@@ -500,13 +468,13 @@ F 3 "~" H 3900 950 50  0001 C CNN
 	1    3900 950 
 	0    -1   1    0   
 $EndComp
-Text Label 8150 3150 0    50   ~ 0
-~AD_WE
-Text Label 8150 3650 0    50   ~ 0
-DS
-Text Label 8150 3550 0    50   ~ 0
-LATCH
 Text Label 8150 3450 0    50   ~ 0
+~AD_WE
+Text Label 8150 3350 0    50   ~ 0
+DS
+Text Label 8150 3250 0    50   ~ 0
+LATCH
+Text Label 8150 3150 0    50   ~ 0
 CLOCK
 $Comp
 L power:+5V #PWR0110
@@ -619,12 +587,6 @@ Wire Wire Line
 	3450 2500 3450 6050
 Wire Wire Line
 	3450 6050 4000 6050
-Wire Bus Line
-	3000 7500 5800 7500
-Wire Bus Line
-	5800 7500 5800 6750
-Wire Bus Line
-	3000 6500 3000 7500
 Text Label 7350 3350 2    50   ~ 0
 TI_INT
 Wire Wire Line
@@ -642,7 +604,7 @@ L Device:R_Small_US R2
 U 1 1 5D2D397E
 P 6750 3050
 F 0 "R2" H 6818 3096 50  0000 L CNN
-F 1 "10K" H 6818 3005 50  0000 L CNN
+F 1 "5.1K" H 6818 3005 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 6750 3050 50  0001 C CNN
 F 3 "~" H 6750 3050 50  0001 C CNN
 	1    6750 3050
@@ -651,97 +613,92 @@ $EndComp
 $Comp
 L Device:R_Small_US R3
 U 1 1 5D2D3984
-P 8700 3050
-F 0 "R3" H 8768 3096 50  0000 L CNN
-F 1 "10K" H 8768 3005 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 8700 3050 50  0001 C CNN
-F 3 "~" H 8700 3050 50  0001 C CNN
-	1    8700 3050
+P 8700 3350
+F 0 "R3" H 8768 3396 50  0000 L CNN
+F 1 "5.1K" H 8768 3305 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 8700 3350 50  0001 C CNN
+F 3 "~" H 8700 3350 50  0001 C CNN
+	1    8700 3350
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:R_Small_US R4
 U 1 1 5D2D398A
-P 9000 3150
-F 0 "R4" H 9068 3196 50  0000 L CNN
-F 1 "10K" H 9068 3105 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9000 3150 50  0001 C CNN
-F 3 "~" H 9000 3150 50  0001 C CNN
-	1    9000 3150
+P 9000 3450
+F 0 "R4" H 9068 3496 50  0000 L CNN
+F 1 "5.1K" H 9068 3405 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9000 3450 50  0001 C CNN
+F 3 "~" H 9000 3450 50  0001 C CNN
+	1    9000 3450
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:R_Small_US R5
 U 1 1 5D2D3990
-P 9300 3150
-F 0 "R5" H 9368 3196 50  0000 L CNN
-F 1 "10K" H 9368 3105 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9300 3150 50  0001 C CNN
-F 3 "~" H 9300 3150 50  0001 C CNN
-	1    9300 3150
+P 9300 3450
+F 0 "R5" H 9368 3496 50  0000 L CNN
+F 1 "5.1K" H 9368 3405 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9300 3450 50  0001 C CNN
+F 3 "~" H 9300 3450 50  0001 C CNN
+	1    9300 3450
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	8150 3150 8700 3150
+	8150 3450 8700 3450
 $Comp
 L Device:LED_Small_ALT D1
 U 1 1 5D2D3997
-P 9650 3250
-F 0 "D1" V 9702 3182 50  0000 R CNN
-F 1 "~CE" V 9604 3182 50  0000 R CNN
-F 2 "LED_THT:LED_D1.8mm_W3.3mm_H2.4mm" V 9650 3250 50  0001 C CNN
-F 3 "~" V 9650 3250 50  0001 C CNN
-	1    9650 3250
+P 9650 3550
+F 0 "D1" V 9702 3482 50  0000 R CNN
+F 1 "~CE" V 9604 3482 50  0000 R CNN
+F 2 "LED_THT:LED_D1.8mm_W3.3mm_H2.4mm" V 9650 3550 50  0001 C CNN
+F 3 "~" V 9650 3550 50  0001 C CNN
+	1    9650 3550
 	0    -1   -1   0   
 $EndComp
 $Comp
 L Device:R_Small_US R6
 U 1 1 5D2D399D
-P 9650 3050
-F 0 "R6" H 9718 3096 50  0000 L CNN
-F 1 "68R" H 9718 3005 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9650 3050 50  0001 C CNN
-F 3 "~" H 9650 3050 50  0001 C CNN
-	1    9650 3050
+P 9650 3350
+F 0 "R6" H 9718 3396 50  0000 L CNN
+F 1 "68R" H 9718 3305 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9650 3350 50  0001 C CNN
+F 3 "~" H 9650 3350 50  0001 C CNN
+	1    9650 3350
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	8700 2950 9000 2950
+	8700 3250 9000 3250
 Wire Wire Line
-	9000 3050 9000 2950
-Connection ~ 9000 2950
+	9000 3350 9000 3250
+Connection ~ 9000 3250
 Wire Wire Line
-	9000 2950 9150 2950
+	9300 3350 9300 3250
+Connection ~ 9300 3250
 Wire Wire Line
-	9300 3050 9300 2950
-Connection ~ 9300 2950
+	9300 3250 9650 3250
+Text Label 8150 3650 0    50   ~ 0
+~AD_CE
 Wire Wire Line
-	9300 2950 9650 2950
-Text Label 8150 3350 0    50   ~ 0
-~AD_MBE
+	8150 3550 9000 3550
 Wire Wire Line
-	8150 3250 9000 3250
+	8150 3650 9300 3650
 Wire Wire Line
-	8150 3350 9300 3350
+	9300 3550 9300 3650
+Connection ~ 9300 3650
 Wire Wire Line
-	9300 3250 9300 3350
-Connection ~ 9300 3350
-Wire Wire Line
-	9300 3350 9650 3350
+	9300 3650 9650 3650
 $Comp
 L power:+5V #PWR0114
 U 1 1 5D2D39B0
-P 9150 2950
-F 0 "#PWR0114" H 9150 2800 50  0001 C CNN
-F 1 "+5V" H 9165 3123 50  0000 C CNN
-F 2 "" H 9150 2950 50  0001 C CNN
-F 3 "" H 9150 2950 50  0001 C CNN
-	1    9150 2950
+P 9150 3250
+F 0 "#PWR0114" H 9150 3100 50  0001 C CNN
+F 1 "+5V" H 9150 3400 50  0000 C CNN
+F 2 "" H 9150 3250 50  0001 C CNN
+F 3 "" H 9150 3250 50  0001 C CNN
+	1    9150 3250
 	-1   0    0    -1  
 $EndComp
-Connection ~ 9150 2950
-Wire Wire Line
-	9150 2950 9300 2950
 Wire Wire Line
 	7350 3150 6750 3150
 $Comp
@@ -760,7 +717,7 @@ L Device:R_Small_US R1
 U 1 1 5D2D39BF
 P 6550 3150
 F 0 "R1" V 6345 3150 50  0000 C CNN
-F 1 "100R" V 6436 3150 50  0000 C CNN
+F 1 "68R" V 6436 3150 50  0000 C CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 6550 3150 50  0001 C CNN
 F 3 "~" H 6550 3150 50  0001 C CNN
 	1    6550 3150
@@ -796,8 +753,6 @@ Text Label 2050 2200 2    50   ~ 0
 ~AR_BUF
 Text Label 4000 6650 2    50   ~ 0
 ~AR_BUF
-NoConn ~ 850  4300
-NoConn ~ 1350 4300
 Wire Wire Line
 	4100 900  4100 950 
 Wire Wire Line
@@ -1127,4 +1082,73 @@ F 3 "" H 5300 4200 50  0001 C CNN
 	1    5300 4200
 	1    0    0    -1  
 $EndComp
+Text Label 850  4100 2    50   ~ 0
+A15
+Text Label 1350 4300 0    50   ~ 0
+A14
+Text Label 850  4300 2    50   ~ 0
+A13
+Text Label 850  4500 2    50   ~ 0
+A12
+Text Label 1350 4700 0    50   ~ 0
+A11
+Text Label 1350 4800 0    50   ~ 0
+A10
+Text Label 1350 4400 0    50   ~ 0
+A8
+Text Label 850  4200 2    50   ~ 0
+A7
+Text Label 1350 4200 0    50   ~ 0
+A9
+Text Label 850  4800 2    50   ~ 0
+A5
+Text Label 850  4700 2    50   ~ 0
+A4
+Text Label 1350 4600 0    50   ~ 0
+A3
+NoConn ~ 850  3500
+NoConn ~ 1350 3600
+NoConn ~ 1350 4100
+NoConn ~ 3100 6450
+NoConn ~ 3000 6500
+Wire Wire Line
+	3000 6600 3450 6600
+Wire Wire Line
+	3450 6600 3450 7400
+Wire Wire Line
+	3450 7400 5200 7400
+Wire Wire Line
+	5200 7400 5200 6850
+Wire Wire Line
+	5200 6850 5800 6850
+Wire Wire Line
+	3000 6700 3400 6700
+Wire Wire Line
+	3400 6700 3400 7450
+Wire Wire Line
+	3400 7450 5250 7450
+Wire Wire Line
+	5250 7450 5250 6950
+Wire Wire Line
+	5250 6950 5800 6950
+Text Label 5800 6750 2    50   ~ 0
+AD_A0
+Wire Wire Line
+	2000 6500 1700 6500
+$Comp
+L power:GND #PWR0132
+U 1 1 5D4DF201
+P 1700 6500
+F 0 "#PWR0132" H 1700 6250 50  0001 C CNN
+F 1 "GND" H 1705 6327 50  0000 C CNN
+F 2 "" H 1700 6500 50  0001 C CNN
+F 3 "" H 1700 6500 50  0001 C CNN
+	1    1700 6500
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	9000 3250 9150 3250
+Connection ~ 9150 3250
+Wire Wire Line
+	9150 3250 9300 3250
 $EndSCHEMATC
