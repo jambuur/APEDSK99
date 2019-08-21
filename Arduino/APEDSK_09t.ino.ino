@@ -283,7 +283,7 @@ void Wbyte(unsigned int address, byte data)
 }
 
 //flash error code
-void ferror(byte error)
+void eflash(byte error)
 {
   //TI still usable but no APEDSK for you
   TIbuf(HIGH);
@@ -307,7 +307,7 @@ void ferror(byte error)
       delay(LED_off);
     } 
       //allow human error interpretation
-      delay(error_repeat);
+      delay(LED_repeat);
   }
 }
 
@@ -329,7 +329,7 @@ void setup() {
   //see if the SD card is present and can be initialized
   if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
-    ferror(1);
+    eflash(1);
   }
 
   //put TI on hold and enable 74HC595 shift registers
@@ -353,14 +353,14 @@ void setup() {
     }
     else {
       //couldn't open SD DSR file -> flash LED error 2
-      ferror(2);
+      eflash(2);
     }
   }
 
   //open DSK1 (error if doesn't exist)
   InDSK1 = SD.open("/DISKS/001.DSK", FILE_READ);
     if (!InDSK1) {
-      ferror(3);
+      eflash(3);
     }
   //try to open DSK2 and flag if exists
   InDSK2 = SD.open("/DISKS/002.DSK", FILE_READ);
@@ -384,12 +384,12 @@ void setup() {
   TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 }
 
 void loop() {
 
-  if (cmd_FD1771 == 0xBB) {
+  if (FD1771 == 0xBB) {
 
 /*
 
@@ -436,12 +436,12 @@ void loop() {
 		while sector <  sectors p/t
 */    
 
-  cmd_FD1771 = 0;  
+  FD1771 = 0;  
   interrupts(); 
   } 
 }
 
 void listen1771() {
   noInterrupts();
-  cmd_FD1771=0xBB;
+  FD1771=0xBB;
 }
