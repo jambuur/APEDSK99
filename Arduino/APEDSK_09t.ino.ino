@@ -1,18 +1,23 @@
-/**
- * ** project Arduino EEPROM programmer **
- * 
- * This sketch can be used to read and write data to a
- * AT28C64 or AT28C256 parallel EEPROM
- *
- * $Author: mario $
- * $Date: 2013/05/05 11:01:54 $
- * $Revision: 1.2 $
- *
- * This software is freeware and can be modified, reused or thrown away without any restrictions.
- *
- * Use this code at your own risk. I'm not responsible for any bad effect or damages caused by this software!!!
- *
- **/
+/* APEDISK99
+* 
+* This sketch emulates 3 TI99/4a disk drives. It will need:
+*
+* 	- Arduino Uno
+*	- SD shield (RTC optional but potentially super handy)
+*	- APEDSK99 shield
+*
+* The Arduino RAM interface is based on Mario's EEPROM programmer:
+* https://github.com/mkeller0815/MEEPROMMER
+*
+* $Author: Jochen Buur $
+* $Date: Aug 2019 $
+* $Revision: 0.12k $
+*
+* This software is freeware and can be modified, re-used or thrown away without any restrictions.
+*
+* Use this code at your own risk. 
+* I'm not responsible for any bad effect or damages caused by this software
+*/
 
 //SPI and SD card functions
 #include <SPI.h>
@@ -22,13 +27,13 @@
 #define SPI_CS 10
 
 //74HC595 shift-out definitions
-#define DS      A3
-#define LATCH   A4
-#define CLOCK   A5
+#define DS	A3
+#define LATCH	A4
+#define CLOCK	A5
 
-#define PORTC_DS      3
-#define PORTC_LATCH   4
-#define PORTC_CLOCK   5
+#define PORTC_DS	3
+#define PORTC_LATCH	4
+#define PORTC_CLOCK	5
 
 //define IO lines for RAM databus
 //skip 2 as we need it for interrupts
@@ -42,18 +47,18 @@
 #define D7 9
 
 //define IO lines for RAM control
-#define CE A0 //LED lights up for both Arduino CE* and TI MBE*
-#define WE A2
-#define PORTC_CE   0
-#define PORTC_WE   2
+#define CE		A0	//LED flashes for both Arduino CE* and TI MBE*
+#define WE		A2
+#define PORTC_CE   	0
+#define PORTC_WE   	2
 
-//define IO lines for Arduino -> TI99/4a control
-#define TI_BUFFERS A1  //74LS244 buffers enable/disable
-#define TI_READY 0     //TI READY line; also enables/disables 74HC595 shift registers
-#define TI_INT 2       //74LS138 interrupt (MBE*, WE* and A15) 
+//define IO lines for TI99/4a control
+#define TI_BUFFERS 	A1	//74LS541 buffers enable/disable
+#define TI_READY    	0	//TI READY line + enable/disable 74HC595 shift registers
+#define TI_INT      	2	//74LS138 interrupt (MBE*, WE* and A15) 
 
 //flag from interrupt routine to signal possible new FD1771 command
-volatile byte cmd_FD1771 = 0;
+volatile byte FD1771 = 0;
 
 //generic variable for r/w DSRAM
 byte DSRAM = 0;
@@ -66,22 +71,16 @@ byte DSRAM = 0;
 #define RSECTR  0x1FF4     //read FD1771 Sector register
 #define RDATA   0x1FF6     //read FD1771 Data register
 #define WCOMND  0x1FF8     //write FD1771 Command register
-byte wcomnd = 0;
 #define WTRACK  0x1FFA     //write FD1771 Track register
-boolean curdir = LOW;
 #define WSECTR  0x1FFC     //write FD1771 Sector register
 #define WDATA   0x1FFE     //write FD1771 Data register
-
-//sector buffer for TI disk file operations
-#define BUFFERSIZE 256
-byte sector[BUFFERSIZE];
 
 //error blinking parameters: on, off, delay between sequence
 #define LED_on  350
 #define LED_off 250
-#define error_repeat 1500
+#define LED_repeat 1500
 
-// input and output file pointers
+//input and output file pointers
 File InDSR;
 File InDSK1;
 File OutDSK1;
@@ -90,17 +89,14 @@ File OutDSK2;
 File InDSK3;
 File OutDSK3;
 
-boolean DSK2_present = LOW;
-boolean DSK3_present = LOW;
+//flags for additional "drives" available
+boolean DSK2 = LOW;
+boolean DSK3 = LOW;
 
-/*****************************************************************
- *
- *  CONTROL and DATA functions
- *
- ****************************************************************/
+//----- RAM, I/O data and control functions
 
-// switch databus to INPUT state
-void databus_input() {
+//switch databus to INPUT state
+void dbus_in() {
   pinMode(D0, INPUT);
   pinMode(D1, INPUT);
   pinMode(D2, INPUT);
@@ -112,7 +108,7 @@ void databus_input() {
 }
 
 //switch databus to OUTPUT state
-void databus_output() {
+void dbus_out() {
   pinMode(D0, OUTPUT);
   pinMode(D1, OUTPUT);
   pinMode(D2, OUTPUT);
@@ -123,35 +119,35 @@ void databus_output() {
   pinMode(D7, OUTPUT);
 }
 
-//switch control bus to INPUT state
-void cbus_input() {
+//disable Arduino control bus
+void dis_cbus() {
   pinMode(CE, INPUT);
   pinMode(WE, INPUT);
 }
  
-//switch control bus to OUTPUT state
-void cbus_output() {
+//enable Arduino control bus
+void ena_cbus() {
   pinMode(CE, OUTPUT);
   pinMode(WE, OUTPUT);
 }
 
 //read a complete byte from the databus
-//!be sure to set databus to input first
-byte read_databus()
+//be sure to set databus to input first!
+byte dbus_read()
 {
   return ((digitalRead(D7) << 7) +
-    (digitalRead(D6) << 6) +
-    (digitalRead(D5) << 5) +
-    (digitalRead(D4) << 4) +
-    (digitalRead(D3) << 3) +
-    (digitalRead(D2) << 2) +
-    (digitalRead(D1) << 1) +
-    digitalRead(D0));
+          (digitalRead(D6) << 6) +
+          (digitalRead(D5) << 5) +
+          (digitalRead(D4) << 4) +
+          (digitalRead(D3) << 3) +
+          (digitalRead(D2) << 2) +
+          (digitalRead(D1) << 1) +
+           digitalRead(D0));
 }
 
 //write a byte to the databus
-//!be sure to set databus to output first 
-void write_databus(byte data)
+//be sure to set databus to output first!
+void dbus_write(byte data)
 {
   digitalWrite(D7, (data >> 7) & 0x01);
   digitalWrite(D6, (data >> 6) & 0x01);
@@ -163,21 +159,21 @@ void write_databus(byte data)
   digitalWrite(D0, data & 0x01);  
 }
 
-//shift out the given address to the 74hc595 registers
-void set_addressbus(unsigned int address)
+//shift out the given address to the 74HC595 registers
+void set_abus(unsigned int address)
 {
   //get MSB of 16 bit address
-  byte hi = address >> 8;
+  byte MSB = address >> 8;
   //get LSB of 16 bit address
-  byte low = address & 0xff;
+  byte LSB = address & 0xFF;
 
   //disable latch line
   bitClear(PORTC,PORTC_LATCH);
 
   //shift out MSB byte
-  fastShiftOut(hi);
+  fastShiftOut(MSB);
   //shift out LSB byte
-  fastShiftOut(low);
+  fastShiftOut(LSB);
 
   //enable latch and set address
   bitSet(PORTC,PORTC_LATCH);
@@ -187,11 +183,11 @@ void set_addressbus(unsigned int address)
 void fastShiftOut(byte data) {
   //clear data pin
   bitClear(PORTC,PORTC_DS);
-  //Send each bit of the myDataOut byte; MSB first
+  //send each bit of the data byte; MSB first
   for (int i=7; i>=0; i--)  {
     bitClear(PORTC,PORTC_CLOCK);
     //Turn data on or off based on value of bit
-    if ( bitRead(data,i) == 1) {
+    if ( bitRead(data,i) == 1 ) {
       bitSet(PORTC,PORTC_DS);
     }
     else {      
@@ -206,142 +202,117 @@ void fastShiftOut(byte data) {
   bitClear(PORTC,PORTC_CLOCK);
 }
 
-//short function to set RAM CE* (other 2 RAM enable/enable lines (OE* and CE) are permanenty enabled)
-void set_ce (byte state)
+//short function to set RAM CE* (OE* and CS) are permanenty enabled)
+void set_CE (byte state)
 {
   digitalWrite(CE, state);
 }
 
 //short function to set RAM WE* (Write Enable)
-void set_we (byte state)
+void set_WE (byte state)
 {
   digitalWrite(WE, state);
 }
 
-//short function to enable/disable TI interface 74LS244 buffers
-void set_tibuffers (byte state)
+//short function to enable/disable TI interface 74LS541 buffers
+void TIbuf (byte state)
 {
   digitalWrite(TI_BUFFERS, state);
 }
 
-//short function to set TI READY line (pause TI); 74HC595 buffers are set the opposite at the same time
-void set_tiready (byte state)
+//short function to set TI READY line (pause/resume TI); 74HC595 buffers are !set at the same time
+void TIready (byte state)
 {
   digitalWrite(TI_READY, state);
 }
 
 //short function to disable TI I/O
-void set_tistop()
+void TIstop()
 {
-  set_tibuffers(HIGH);
-  delayMicroseconds(5);
-  set_tiready(LOW);
-  delayMicroseconds(5);
+  TIready(LOW);
+  TIbuf(HIGH);
 }
 
 //short function to enable TI I/O
-void set_tigo()
+void TIgo()
 {
-  set_tibuffers(LOW);
-  delayMicroseconds(5);
-  set_tiready(HIGH);
-  delayMicroseconds(5);
+  TIbuf(LOW);
+  TIready(HIGH);
 }
 
 //highlevel function to read a byte from a given address
-byte read_byte(unsigned int address)
+byte Rbyte(unsigned int address)
 {
   byte data = 0;
  
   //disable RAM write
-  set_we(HIGH);
+  set_WE(HIGH);
   //set address bus
-  set_addressbus(address);
+  set_abus(address);
   //set databus for reading
-  databus_input();
+  dbus_in();
   //enable RAM chip select
-  set_ce(LOW);
-  //get databus
-  data = read_databus();
+  set_CE(LOW);
+  //get databus value
+  data = dbus_read();
   //disable RAM chip select
-  set_ce(HIGH);
+  set_CE(HIGH);
  
   return data;
 }
 
 //highlevel function to write a byte to a given address
-void fast_write(unsigned int address, byte data)
+void Wbyte(unsigned int address, byte data)
 {
   //set address bus
-  set_addressbus(address);
+  set_abus(address);
   //set databus for writing
-  databus_output();
-  //enable chip select
-  set_ce(LOW);
+  dbus_out();
+  //enable RAM chip select
+  set_CE(LOW);
   //enable write
-  set_we(LOW);
-  //set data bus
-  write_databus(data);
+  set_WE(LOW);
+  //set data bus value
+  dbus_write(data);
   //disable write
-  set_we(HIGH);
+  set_WE(HIGH);
   //disable chip select
-  set_ce(HIGH);
+  set_CE(HIGH);
   //set databus to input
-  databus_input();
+  dbus_in();
 }
 
 //flash error code
-void flash_error(byte error)
+void ferror(byte error)
 {
-  //get into working TI state ...
-  cbus_input();
-  set_tigo();
-  //... but disable DSR I/O for TI ...
-  set_tibuffers(HIGH);
-  //... and make sure we can toggle Arduino CE*
+  //TI still usable but no APEDSK for you
+  TIbuf(HIGH);
+  TIready(HIGH);
+    
+  //make sure we can toggle Arduino CE* to flash the error code
   pinMode(CE, OUTPUT);
 
   //stuck in error flashing loop until reset
   while (1) {
 
-    for (byte flash =0; flash < error; flash++)
+    for (byte flash = 0; flash < error; flash++)
     {
       //enable RAM for Arduino, turns on LED
-      set_ce(LOW);
+      set_CE(LOW);
       //LED is on for a bit
       delay(LED_on);
       //disable RAM for Arduino, turns off LED
-      set_ce(HIGH);
+      set_CE(HIGH);
       //LED is off for a bit
       delay(LED_off);
     } 
-    delay(error_repeat);
+      //allow human error interpretation
+      delay(error_repeat);
   }
 }
+
+//----- Main
   
- /************************************************
- *
- * INPUT / OUTPUT Functions
- *
- *************************************************/
-
-/*
- * write a data block to the eeprom
- * @param address  startaddress to write on eeprom
- * @param buffer   data buffer to get the data from
- * @param len      number of bytes to be written
- **/
-void write_block(unsigned int address, byte* buffer, int len) {
-  for (unsigned int i = 0; i < len; i++) {
-    fast_write(address+i,buffer[i]);
-  }   
-}
-
-/************************************************
- *
- * MAIN
- *
- *************************************************/
 void setup() {
 
   //74HC595 shift register control
@@ -352,22 +323,22 @@ void setup() {
   //TI99/4a I/O control
   pinMode(TI_READY, OUTPUT);
   pinMode(TI_BUFFERS, OUTPUT);
-  //74LS138 interrupt: write to DSR space (aka FD1771 registers)
+  //74LS138 interrupt: write to DSR space (aka CRU or FD1771 registers)
   pinMode(TI_INT, INPUT);
 
   //see if the SD card is present and can be initialized
   if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
-    flash_error(1);
+    ferror(1);
   }
 
   //put TI on hold and enable 74HC595 shift registers
-  set_tistop();
-  //enable Arduino control bus signals (CE* and WE*)
-  cbus_output();
+  TIstop();
+  //enable Arduino control bus
+  ena_cbus();
   
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
-  byte DSRAM = read_byte(0x0000);
+  byte DSRAM = Rbyte(0x0000);
   
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
@@ -376,46 +347,41 @@ void setup() {
     if (InDSR) {
       for (int CByte =0; CByte < 0x2000; CByte++) {
         DSRAM = InDSR.read();
-        fast_write(CByte,DSRAM);
+        Wbyte(CByte,DSRAM);
       }
     InDSR.close();
     }
     else {
       //couldn't open SD DSR file -> flash LED error 2
-      flash_error(2);
+      ferror(2);
     }
   }
 
   //open DSK1 (error if doesn't exist)
   InDSK1 = SD.open("/DISKS/001.DSK", FILE_READ);
     if (!InDSK1) {
-      flash_error(3);
+      ferror(3);
     }
   //try to open DSK2 and flag if exists
   InDSK2 = SD.open("/DISKS/002.DSK", FILE_READ);
     if (InDSK2) {
-      DSK2_present = HIGH;
+      DSK2 = HIGH;
     }
   //try top open DSK3 and flag if exists
   InDSK3 = SD.open("/DISKS/003.DSK", FILE_READ);  
     if (InDSK3) {
-      DSK3_present = HIGH;
+      DSK3 = HIGH;
     }
 
-  //initialise FD1771 (clear all CRU and FD1771 registers)
+  //initialise FD1771 (clear CRU and FD1771 registers)
   for (int CByte = CRURD; CByte <= WDATA+2; CByte++) {
-    fast_write(CByte,0);
+    Wbyte(CByte,0);
   }
-  /*
-  //disable Arduino control bus signals (CE* and WE*)
-  cbus_input();
+ 
+  //disable Arduino control bus 
+  dis_cbus();
   //enable TI buffers, disable 74HC595 shift registers
-  set_tigo(); 
-*/
-   //put TI on hold and enable 74HC595 shift registers
-    set_tistop();
-    //enable Arduino control bus signals (CE* and WE*)
-    cbus_output();
+  TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
@@ -423,27 +389,56 @@ void setup() {
 
 void loop() {
 
- /*
-
   if (cmd_FD1771 == 0xBB) {
 
-    //delayMicroseconds(3);
-    //delay(1); */
-
-    /*for (int CByte = 0x0000; CByte <= 0x1FFF; CByte++) {
-      fast_write(CByte,0xAA);
-    }
-
-    for (int CByte = 0x0000; CByte <= 0x1FFF; CByte++) {
-      read_byte(CByte);
-    }
-
-
 /*
-    cmd_FD1771 = 0;
-    
-    interrupts(); 
-  } */
+
+  //pseudo
+	Step	
+		determine current direction
+		execute Step-in or Step-out
+	Step In	
+		set direction inward
+		if T then update Treg
+	Step Out	
+		set direction outward
+		if T then update Treg
+	Seek	
+		WTRACK = WDATA
+	Restore	
+		WTRACK, WDATA = 0
+	Read Sector	
+		while m is set AND WSECTR < max
+			while RDINT >= 0
+			sector byte -> RDATA
+			update mark type
+		update RSECTR
+	Write Sector	
+		if P then
+			set p bit, abort
+		else
+		while m is set AND WSECTR < max
+			while RDINT >= 0
+			RDATA -> sector byte
+		update RSECTR
+	Read ID	
+		RTRACK -> WDATA
+		SIDE -> WDATA
+		RSECTR -> WDATA
+		sector length -> WDATA
+		CRC x2 -> WDATA
+	Read Track	
+		while sector <  sectors p/t
+			while bytes < 256
+				sector byte -> RDATA
+		next sector
+	Write Track	
+		while sector <  sectors p/t
+*/    
+
+  cmd_FD1771 = 0;  
+  interrupts(); 
+  } 
 }
 
 void listen1771() {
