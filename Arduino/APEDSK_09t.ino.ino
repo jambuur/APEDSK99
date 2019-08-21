@@ -338,7 +338,7 @@ void setup() {
   ena_cbus();
   
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
-  byte DSRAM = Rbyte(0x0000);
+  DSRAM = Rbyte(0x0000);
   
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
@@ -374,7 +374,7 @@ void setup() {
     }
 
   //initialise FD1771 (clear CRU and FD1771 registers)
-  for (int CByte = CRURD; CByte <= WDATA+2; CByte++) {
+  for (int CByte = CRURD; CByte < WDATA+2; CByte++) {
     Wbyte(CByte,0);
   }
  
