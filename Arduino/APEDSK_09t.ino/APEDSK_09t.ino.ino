@@ -297,16 +297,12 @@ void eflash(byte error)
 
     for (byte flash = 0; flash < error; flash++)
     {
-      //enable RAM for Arduino, turns on LED
-      
-      //set_CE(LOW);
-      //LED is on for a bit
-      //delay(LED_on);
+      //poor man's PWM, reduce mA's through LED to prolong its life
       for (int ppwm =0; ppwm < LED_on; ppwm++) {
-        set_CE(LOW);
-        set_CE(HIGH);
+        set_CE(LOW);  //turn on RAM CE* and thus LED
+        set_CE(HIGH); //turn it off
       }
-      //disable RAM for Arduino, turns off LED
+      //disable RAM CE*, turning off LED
       set_CE(HIGH);
       //LED is off for a bit
       delay(LED_off);
