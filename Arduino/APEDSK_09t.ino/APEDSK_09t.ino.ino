@@ -76,7 +76,7 @@ byte DSRAM = 0;
 #define WDATA   0x1FFE     //write FD1771 Data register
 
 //error blinking parameters: on, off, delay between sequence
-#define LED_on  350
+#define LED_on  32767
 #define LED_off 250
 #define LED_repeat 1500
 
@@ -298,9 +298,14 @@ void eflash(byte error)
     for (byte flash = 0; flash < error; flash++)
     {
       //enable RAM for Arduino, turns on LED
-      set_CE(LOW);
+      
+      //set_CE(LOW);
       //LED is on for a bit
-      delay(LED_on);
+      //delay(LED_on);
+      for (int ppwm =0; ppwm < LED_on; ppwm++) {
+        set_CE(LOW);
+        set_CE(HIGH);
+      }
       //disable RAM for Arduino, turns off LED
       set_CE(HIGH);
       //LED is off for a bit
@@ -397,7 +402,7 @@ void loop() {
 
   if (FD1771 == 0xBB) {
 
-    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
+    /*ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
     
     switch (ccmd) {
 	    case 0: //restore
@@ -459,10 +464,11 @@ void loop() {
 	    case 240: //write track
         while sector <  sectors p/t
 	      break;
-
+  */
   FD1771 = 0;  
   interrupts(); 
   } 
+}
 void listen1771() {
   noInterrupts();
   FD1771=0xBB;
