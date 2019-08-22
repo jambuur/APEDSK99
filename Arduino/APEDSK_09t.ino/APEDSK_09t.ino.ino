@@ -390,6 +390,7 @@ void setup() {
 byte ccmd = 0;
 byte lcmd =  0;
 byte lcruw = 0;
+boolean curdir = LOW; //step in by default
 int lr6val = 0;
 
 void loop() {
@@ -399,82 +400,65 @@ void loop() {
     ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
     
     switch (ccmd) {
-	case 0: //restore
-	break;
-	case 16: //seek
-	break;
-	case 32: //step
-		determine current direction
-		execute Step-in or Step-out
-	case 48: //step+T
-		if 
-	break;
-	case 64: //step-in
-	break;
-	case 80: //step-in+T
-	break;
-	case 96: //step-out
-	break;
-	case 112: //step-out+T
-	break;
-	case 128: //read sector
-	break;
-	case 144: //read multiple sectors
-	break;
-	case 160: //write sector
-	break;
-	case 176: //write multiple sectors
-	break;
-	case 192: //read ID
-	break;
-	case 208: //force interrupt
-	break;
-	case 224: //read track
-	break;
-	case 240: //write track
-	break;
-
-
-
-
-
-	Step In	
-		set direction inward
-		if T then update Treg
-	Step Out	
-		set direction outward
-		if T then update Treg
-	Seek	
-		WTRACK = WDATA
-	Restore	
-		WTRACK, WDATA = 0
-	Read Sector	
-		while m is set AND WSECTR < max
-			while RDINT >= 0
-			sector byte -> RDATA
-			update mark type
-		update RSECTR
-	Write Sector	
-		if P then
-			set p bit, abort
-		else
-		while m is set AND WSECTR < max
-			while RDINT >= 0
-			RDATA -> sector byte
-		update RSECTR
-	Read ID	
-		RTRACK -> WDATA
-		SIDE -> WDATA
-		RSECTR -> WDATA
-		sector length -> WDATA
-		CRC x2 -> WDATA
-	Read Track	
-		while sector <  sectors p/t
-			while bytes < 256
-				sector byte -> RDATA
-		next sector
-	Write Track	
-		while sector <  sectors p/t
+	    case 0: //restore
+        WTRACK, WDATA = 0
+	      break;
+	    case 16: //seek
+        WTRACK = WDATA
+        break;
+	    case 32: //step
+        determine current direction
+        execute Step-in or Step-out
+	    case 48: //step+T
+      	break;
+	    case 64: //step-in
+        set direction inward
+	    case 80: //step-in+T
+	      if T then update Treg
+	      break;
+      case 96: //step-out
+        set direction outward
+	    case 112: //step-out+T
+        if T then update Treg
+	      break;
+	    case 128: //read sector
+        while m is set AND WSECTR < max
+          while RDINT >= 0
+          sector byte -> RDATA
+        update mark type
+        update RSECTR
+	      break;
+	    case 144: //read multiple sectors
+	      break;
+	    case 160: //write sector
+        if P then
+         set p bit, abort
+       else
+        while m is set AND WSECTR < max
+          while RDINT >= 0
+          RDATA -> sector byte
+        update RSECTR
+	      break;
+	    case 176: //write multiple sectors
+	      break;
+	    case 192: //read ID
+        RTRACK -> WDATA
+        SIDE -> WDATA
+        RSECTR -> WDATA
+        sector length -> WDATA
+        CRC x2 -> WDATA
+	      break;
+	    case 208: //force interrupt
+	      break;
+	    case 224: //read track
+        while sector <  sectors p/t
+          while bytes < 256
+          sector byte -> RDATA
+        next sector
+	      break;
+	    case 240: //write track
+        while sector <  sectors p/t
+	      break;
 
   FD1771 = 0;  
   interrupts(); 
