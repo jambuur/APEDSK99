@@ -387,16 +387,57 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 }
 
+byte ccmd = 0;
+byte lcmd =  0;
+byte lcruw = 0;
+int lr6val = 0;
+
 void loop() {
 
   if (FD1771 == 0xBB) {
 
-/*
-
-  //pseudo
-	Step	
+    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
+    
+    switch (ccmd) {
+	case 0: //restore
+	break;
+	case 16: //seek
+	break;
+	case 32: //step
 		determine current direction
 		execute Step-in or Step-out
+	case 48: //step+T
+		if 
+	break;
+	case 64: //step-in
+	break;
+	case 80: //step-in+T
+	break;
+	case 96: //step-out
+	break;
+	case 112: //step-out+T
+	break;
+	case 128: //read sector
+	break;
+	case 144: //read multiple sectors
+	break;
+	case 160: //write sector
+	break;
+	case 176: //write multiple sectors
+	break;
+	case 192: //read ID
+	break;
+	case 208: //force interrupt
+	break;
+	case 224: //read track
+	break;
+	case 240: //write track
+	break;
+
+
+
+
+
 	Step In	
 		set direction inward
 		if T then update Treg
@@ -434,13 +475,10 @@ void loop() {
 		next sector
 	Write Track	
 		while sector <  sectors p/t
-*/    
 
   FD1771 = 0;  
   interrupts(); 
   } 
-}
-
 void listen1771() {
   noInterrupts();
   FD1771=0xBB;
