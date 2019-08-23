@@ -388,42 +388,78 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 }
 
-byte ccmd = 0;
-byte lcmd =  0;
-byte lcruw = 0;
-boolean curdir = LOW; //step in by default
-int lr6val = 0;
+byte ccmd =  0; //current command
+byte lcmd =  0; //former command
+byte lcruw = 0; //former CRUWRI value
+int lr6val = 0; //byte counter for sector/track R/W
+int secval = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
+
+boolean curdir = LOW; //current step direction, step in by default
 
 void loop() {
 
   if (FD1771 == 0xBB) {
 
-    /*ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
+    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
     
     switch (ccmd) {
-	    case 0: //restore
-        WTRACK, WDATA = 0
-	      break;
-	    case 16: //seek
-        WTRACK = WDATA
-        break;
-	    case 32: //step
-        determine current direction
-        execute Step-in or Step-out
-	    case 48: //step+T
-      	break;
-	    case 64: //step-in
-        set direction inward
-	    case 80: //step-in+T
-	      if T then update Treg
-	      break;
-      case 96: //step-out
-        set direction outward
+	
+	case 0: //restore
+		Wbyte(WTRACK,0);	//clear write track register        
+		Wbyte(WDATA,0); 	//clear write data register
+		Wbyte(RTRACK,0);	//clear read track register
+	   	break;
+	
+	case 16: //seek
+		//2 comparisons because if RTRACK == WDATA curdir doesn't change
+		if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { curdir == LOW;  }	//step-in towards track 40
+		if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { curdir == HIGH; }	//step-out towards track 0
+	`	Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
+        	break;
+	
+	case 32: //step
+        	//don't have to do anything for just step
+		break;	    
+	
+	case 48: //step+T
+		DSRAM = Rbyte(RTRACK);	//read current track #
+		//is current direction inwards and track # still within limits?
+		if ( Rbyte(RTRACK) < 39 AND curdir == LOW ) { Wbyte(RTRACK,Rbyte(RTRACK)++); }	//yes, increase track #
+		//is current direction outwards and track # still within limits?
+		if ( Rbyte(RTRACK) >  0 AND curdir == HIGH) { Wbyte(RTRACK,Rbyte(RTRACK)--); }	//yes, decrease track #		
+      		break;
+	
+	case 64: //step-in
+		curdir == LOW; //set current direction		
+      		break;
+	
+	case 80: //step-in+T
+		//if track # still within limits update track register
+		if ( Rbyte(RTRACK) < 39) { Wbyte(RTRACK,Rbyte(RTRACK)++); }
+		curdir == LOW; //set current direction		
+      		break;
+
+	    case 96: //step-out
+		curdir == HIGH; //set current direction		
+      		break;
+
 	    case 112: //step-out+T
-        if T then update Treg
-	      break;
+       		//if track # still within limits update track register
+		if ( Rbyte(RTRACK) > 0) { Wbyte(RTRACK,Rbyte(RTRACK)--); }
+		curdir == LOW; //set current direction		
+      		break;
+
 	    case 128: //read sector
-        while m is set AND WSECTR < max
+       		if ( ccmd != lcmd ) { //new sector read
+			secval = (side * 359) + (track * 9) + WSECTR
+			
+			
+			
+
+
+
+
+ while m is set AND WSECTR < max
           while RDINT >= 0
           sector byte -> RDATA
         update mark type
