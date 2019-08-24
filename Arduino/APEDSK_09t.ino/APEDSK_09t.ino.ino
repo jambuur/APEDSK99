@@ -414,7 +414,7 @@ void loop() {
 		//2 comparisons because if RTRACK == WDATA curdir doesn't change
 		if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { curdir == LOW;  }	//step-in towards track 40
 		if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { curdir == HIGH; }	//step-out towards track 0
-	`	Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
+	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
         	break;
 	
 	case 32: //step
@@ -424,9 +424,9 @@ void loop() {
 	case 48: //step+T
 		DSRAM = Rbyte(RTRACK);	//read current track #
 		//is current direction inwards and track # still within limits?
-		if ( Rbyte(RTRACK) < 39 AND curdir == LOW ) { Wbyte(RTRACK,Rbyte(RTRACK)++); }	//yes, increase track #
+		if ( Rbyte(RTRACK) < 39 && curdir == LOW ) { Wbyte(RTRACK,Rbyte(RTRACK)++); }	//yes, increase track #
 		//is current direction outwards and track # still within limits?
-		if ( Rbyte(RTRACK) >  0 AND curdir == HIGH) { Wbyte(RTRACK,Rbyte(RTRACK)--); }	//yes, decrease track #		
+		if ( Rbyte(RTRACK) >  0 && curdir == HIGH) { Wbyte(RTRACK,Rbyte(RTRACK)--); }	//yes, decrease track #		
       		break;
 	
 	case 64: //step-in
@@ -442,7 +442,7 @@ void loop() {
 	    case 96: //step-out
 		curdir == HIGH; //set current direction		
       		break;
-
+/*
 	    case 112: //step-out+T
        		//if track # still within limits update track register
 		if ( Rbyte(RTRACK) > 0) { Wbyte(RTRACK,Rbyte(RTRACK)--); }
@@ -453,12 +453,6 @@ void loop() {
        		if ( ccmd != lcmd ) { //new sector read
 			secval = (side * 359) + (track * 9) + WSECTR
 			
-			
-			
-
-
-
-
  while m is set AND WSECTR < max
           while RDINT >= 0
           sector byte -> RDATA
@@ -497,6 +491,7 @@ void loop() {
         while sector <  sectors p/t
 	      break;
   */
+    }
   FD1771 = 0;  
   interrupts(); 
   } 
