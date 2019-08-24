@@ -375,7 +375,7 @@ void setup() {
     }
 
   //initialise FD1771 (clear CRU and FD1771 registers)
-  for (int CByte = CRURD; CByte < WDATA+2; CByte++) {
+  for (int CByte = CRURD; CByte = WDATA; CByte++) {
     Wbyte(CByte,0);
   }
  
@@ -404,51 +404,53 @@ void loop() {
     
     switch (ccmd) {
 	
-	case 0: //restore
-		Wbyte(WTRACK,0);	//clear write track register        
-		Wbyte(WDATA,0); 	//clear write data register
-		Wbyte(RTRACK,0);	//clear read track register
-	   	break;
+    	case 0: //restore
+    		Wbyte(WTRACK,0);	//clear write track register        
+    		Wbyte(WDATA,0); 	//clear write data register
+    		Wbyte(RTRACK,0);	//clear read track register
+    	break;
 	
-	case 16: //seek
-		//2 comparisons because if RTRACK == WDATA curdir doesn't change
-		if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { curdir == LOW;  }	//step-in towards track 40
-		if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { curdir == HIGH; }	//step-out towards track 0
-	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
-        	break;
+    	case 16: //seek
+    		//2 comparisons because if RTRACK == WDATA curdir doesn't change
+    		if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { curdir == LOW;  }	//step-in towards track 40
+    		if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { curdir == HIGH; }	//step-out towards track 0
+    	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
+      break;
 	
-	case 32: //step
-        	//don't have to do anything for just step
-		break;	    
+	    case 32: //step
+	      //don't have to do anything for just step
+		  break;	    
 	
-	case 48: //step+T
-		DSRAM = Rbyte(RTRACK);	//read current track #
-		//is current direction inwards and track # still within limits?
-		if ( Rbyte(RTRACK) < 39 && curdir == LOW ) { Wbyte(RTRACK,Rbyte(RTRACK)++); }	//yes, increase track #
-		//is current direction outwards and track # still within limits?
-		if ( Rbyte(RTRACK) >  0 && curdir == HIGH) { Wbyte(RTRACK,Rbyte(RTRACK)--); }	//yes, decrease track #		
-      		break;
+    	case 48: //step+T
+    		DSRAM = Rbyte(RTRACK);	//read current track #
+    		//is current direction inwards and track # still within limits?
+    		if ( DSRAM < 39 && curdir == LOW ) { Wbyte(RTRACK,DSRAM++); }	//yes, increase track #
+    		//is current direction outwards and track # still within limits?
+    		if ( DSRAM >  0 && curdir == HIGH) { Wbyte(RTRACK,DSRAM--); }	//yes, decrease track #		
+      break;
 	
-	case 64: //step-in
-		curdir == LOW; //set current direction		
-      		break;
+  	  case 64: //step-in
+  		  curdir == LOW; //set current direction		
+      break;
 	
-	case 80: //step-in+T
-		//if track # still within limits update track register
-		if ( Rbyte(RTRACK) < 39) { Wbyte(RTRACK,Rbyte(RTRACK)++); }
-		curdir == LOW; //set current direction		
-      		break;
+    	case 80: //step-in+T
+    		DSRAM = Rbyte(RTRACK);  //read current track #
+    		//if track # still within limits update track register
+    		if ( DSRAM < 39) { Wbyte(RTRACK,DSRAM++); }
+    		curdir == LOW; //set current direction		
+      break;
 
-	    case 96: //step-out
-		curdir == HIGH; //set current direction		
-      		break;
+      case 96: //step-out
+  		  curdir == HIGH; //set current direction		
+      break;
+  
+      case 112: //step-out+T
+        DSRAM = Rbyte(RTRACK);  //read current track #
+        //if track # still within limits update track register
+    		if ( DSRAM > 0) { Wbyte(RTRACK,DSRAM--); }
+    		curdir == LOW; //set current direction		
+      break;
 /*
-	    case 112: //step-out+T
-       		//if track # still within limits update track register
-		if ( Rbyte(RTRACK) > 0) { Wbyte(RTRACK,Rbyte(RTRACK)--); }
-		curdir == LOW; //set current direction		
-      		break;
-
 	    case 128: //read sector
        		if ( ccmd != lcmd ) { //new sector read
 			secval = (side * 359) + (track * 9) + WSECTR
