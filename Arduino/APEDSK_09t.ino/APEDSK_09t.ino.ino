@@ -374,10 +374,10 @@ void setup() {
       DSK3 = HIGH;
     }
 
-  //initialise FD1771 (clear CRU and FD1771 registers)
+  /*//initialise FD1771 (clear CRU and FD1771 registers)
   for (int CByte = CRURD; CByte = WDATA; CByte++) {
     Wbyte(CByte,0);
-  }
+  }*/
  
   //disable Arduino control bus 
   dis_cbus();
@@ -400,7 +400,7 @@ void loop() {
 
   if (FD1771 == 0xBB) {
 
-    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
+/*    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
     
     switch (ccmd) {
 	
@@ -492,8 +492,8 @@ void loop() {
 	    case 240: //write track
         while sector <  sectors p/t
 	      break;
-  */
-    }
+  
+    }*/
   FD1771 = 0;  
   interrupts(); 
   } 
