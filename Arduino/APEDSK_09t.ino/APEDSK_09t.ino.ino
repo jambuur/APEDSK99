@@ -244,9 +244,6 @@ void TIgo()
 byte Rbyte(unsigned int address)
 {
   byte data = 0;
- 
-  //disable RAM write
-  set_WE(HIGH);
   //set address bus
   set_abus(address);
   //set databus for reading
@@ -257,7 +254,6 @@ byte Rbyte(unsigned int address)
   data = dbus_read();
   //disable RAM chip select
   set_CE(HIGH);
- 
   return data;
 }
 
@@ -340,7 +336,6 @@ void setup() {
   
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
   DSRAM = Rbyte(0x0000);
-  
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
@@ -375,11 +370,10 @@ void setup() {
     }
 
   //initialise FD1771 (clear CRU and FD1771 registers)
-  for (unsigned int CByte = CRURD; CByte = WDATA; CByte++) {
-    Rbyte(CByte);
-    delay(50);
+  for (unsigned int CByte = CRURD; CByte < (WDATA+1) ; CByte++) {
+    Wbyte(CByte,0);
   } 
-
+  
   //disable Arduino control bus 
   dis_cbus();
   //enable TI buffers, disable 74HC595 shift registers
