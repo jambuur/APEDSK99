@@ -53,8 +53,8 @@
 #define PORTC_WE   	2
 
 //define IO lines for TI99/4a control
-#define TI_BUFFERS 	A1	//74LS541 buffers enable/disable
-#define TI_READY    	0	//TI READY line + enable/disable 74HC595 shift registers
+#define TI_BUFFERS 	  A1	//74LS541 buffers enable/disable
+#define TI_READY      0	//TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	//74LS138 interrupt (MBE*, WE* and A15) 
 
 //flag from interrupt routine to signal possible new FD1771 command
@@ -346,7 +346,7 @@ void setup() {
     //didn't find header so read DSR binary from SD and write into DSR RAM
     InDSR = SD.open("/APEDSK.DSR", FILE_READ);
     if (InDSR) {
-      for (int CByte =0; CByte < 0x2000; CByte++) {
+      for (unsigned int CByte =0; CByte < 0x2000; CByte++) {
         DSRAM = InDSR.read();
         Wbyte(CByte,DSRAM);
       }
@@ -374,11 +374,12 @@ void setup() {
       DSK3 = HIGH;
     }
 
-  /*//initialise FD1771 (clear CRU and FD1771 registers)
-  for (int CByte = CRURD; CByte = WDATA; CByte++) {
-    Wbyte(CByte,0);
-  }*/
- 
+  //initialise FD1771 (clear CRU and FD1771 registers)
+  for (unsigned int CByte = CRURD; CByte = WDATA; CByte++) {
+    Rbyte(CByte);
+    delay(50);
+  } 
+
   //disable Arduino control bus 
   dis_cbus();
   //enable TI buffers, disable 74HC595 shift registers
