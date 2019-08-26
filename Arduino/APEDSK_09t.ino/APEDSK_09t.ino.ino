@@ -27,11 +27,11 @@
 #define SPI_CS 10
 
 //74HC595 shift-out definitions
-#define DS	A3
+#define DS	  A3
 #define LATCH	A4
 #define CLOCK	A5
 
-#define PORTC_DS	3
+#define PORTC_DS	  3
 #define PORTC_LATCH	4
 #define PORTC_CLOCK	5
 
@@ -47,15 +47,15 @@
 #define D7 9
 
 //define IO lines for RAM control
-#define CE		A0	//LED flashes for both Arduino CE* and TI MBE*
-#define WE		A2
+#define CE		      A0	//LED flashes for both Arduino CE* and TI MBE*
+#define WE		      A2
 #define PORTC_CE   	0
 #define PORTC_WE   	2
 
 //define IO lines for TI99/4a control
 #define TI_BUFFERS 	  A1	//74LS541 buffers enable/disable
-#define TI_READY      0	//TI READY line + enable/disable 74HC595 shift registers
-#define TI_INT      	2	//74LS138 interrupt (MBE*, WE* and A15) 
+#define TI_READY      0	  //TI READY line + enable/disable 74HC595 shift registers
+#define TI_INT      	2	  //74LS138 interrupt (MBE*, WE* and A15) 
 
 //flag from interrupt routine to signal possible new FD1771 command
 volatile byte FD1771 = 0;
@@ -76,9 +76,9 @@ byte DSRAM = 0;
 #define WDATA   0x1FFE     //write FD1771 Data register
 
 //error blinking parameters: on, off, delay between sequence
-#define LED_on  32767
-#define LED_off 250
-#define LED_repeat 1500
+#define LED_on      32767
+#define LED_off     250
+#define LED_repeat  1500
 
 //input and output file pointers
 File InDSR;
@@ -244,10 +244,10 @@ void TIgo()
 byte Rbyte(unsigned int address)
 {
   byte data = 0;
-  //set address bus
-  set_abus(address);
   //set databus for reading
   dbus_in();
+  //set address bus
+  set_abus(address);
   //enable RAM chip select
   set_CE(LOW);
   //get databus value
@@ -264,18 +264,19 @@ void Wbyte(unsigned int address, byte data)
   set_abus(address);
   //set databus for writing
   dbus_out();
+  //set data bus value
+  dbus_write(data);
   //enable RAM chip select
   set_CE(LOW);
   //enable write
   set_WE(LOW);
-  //set data bus value
-  dbus_write(data);
+  //delayMicroseconds(2);
   //disable write
   set_WE(HIGH);
+   //set databus to input
+  dbus_in();
   //disable chip select
   set_CE(HIGH);
-  //set databus to input
-  dbus_in();
 }
 
 //flash error code
@@ -336,6 +337,7 @@ void setup() {
   
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
   DSRAM = Rbyte(0x0000);
+  /*
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
@@ -390,7 +392,8 @@ int lr6val = 0; //byte counter for sector/track R/W
 int secval = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
 
 boolean curdir = LOW; //current step direction, step in by default
-
+*/
+}
 void loop() {
 
   if (FD1771 == 0xBB) {
