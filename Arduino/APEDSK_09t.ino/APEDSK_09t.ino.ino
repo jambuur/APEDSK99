@@ -266,11 +266,12 @@ void Wbyte(unsigned int address, byte data)
   dbus_out();
   //set data bus value
   dbus_write(data);
+  delayMicroseconds(50);
   //enable RAM chip select
   set_CE(LOW);
   //enable write
   set_WE(LOW);
-  //delayMicroseconds(2);
+  delayMicroseconds(2);
   //disable write
   set_WE(HIGH);
    //set databus to input
@@ -336,7 +337,8 @@ void setup() {
   ena_cbus();
   
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
-  DSRAM = Rbyte(0x0000);
+  //DSRAM = 
+  Wbyte(0x0000,0xAA);
   /*
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
@@ -383,17 +385,18 @@ void setup() {
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+
+
+  byte ccmd =  0; //current command
+  byte lcmd =  0; //former command
+  byte lcruw = 0; //former CRUWRI value
+  int lr6val = 0; //byte counter for sector/track R/W
+  int secval = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
+  
+  boolean curdir = LOW; //current step direction, step in by default
+  */
 }
 
-byte ccmd =  0; //current command
-byte lcmd =  0; //former command
-byte lcruw = 0; //former CRUWRI value
-int lr6val = 0; //byte counter for sector/track R/W
-int secval = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
-
-boolean curdir = LOW; //current step direction, step in by default
-*/
-}
 void loop() {
 
   if (FD1771 == 0xBB) {
