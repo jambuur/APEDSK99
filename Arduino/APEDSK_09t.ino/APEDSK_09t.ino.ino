@@ -244,10 +244,10 @@ void TIgo()
 byte Rbyte(unsigned int address)
 {
   byte data = 0;
-  //set databus for reading
-  dbus_in();
   //set address bus
   set_abus(address);
+  //set databus for reading
+  dbus_in();
   //enable RAM chip select
   set_CE(LOW);
   //get databus value
@@ -264,20 +264,18 @@ void Wbyte(unsigned int address, byte data)
   set_abus(address);
   //set databus for writing
   dbus_out();
-  //set data bus value
-  dbus_write(data);
-  delayMicroseconds(50);
   //enable RAM chip select
   set_CE(LOW);
+  //set data bus value
+  dbus_write(data);
   //enable write
   set_WE(LOW);
-  delayMicroseconds(2);
-  //disable write
-  set_WE(HIGH);
-   //set databus to input
-  dbus_in();
   //disable chip select
   set_CE(HIGH);
+  //disable write
+  set_WE(HIGH);
+  //set databus to input
+  dbus_in();
 }
 
 //flash error code
@@ -337,8 +335,9 @@ void setup() {
   ena_cbus();
   
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
-  //DSRAM = 
-  Wbyte(0x0000,0xAA);
+  Wbyte(0x0000,0xFF);
+  //delay(500);
+  //DSRAM = Rbyte(0x0000);
   /*
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
@@ -496,7 +495,7 @@ void loop() {
   
     }*/
   FD1771 = 0;  
-  interrupts(); 
+  //interrupts(); 
   } 
 }
 void listen1771() {
