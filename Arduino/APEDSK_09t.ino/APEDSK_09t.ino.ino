@@ -138,7 +138,7 @@ void ena_cbus() {
 //be sure to set databus to input first!
 byte dbus_read()
 {
-  return ((digitalRead(D7) << 7) +
+  /*return ((digitalRead(D7) << 7) +
           (digitalRead(D6) << 6) +
           (digitalRead(D5) << 5) +
           (digitalRead(D4) << 4) +
@@ -146,7 +146,7 @@ byte dbus_read()
           (digitalRead(D2) << 2) +
           (digitalRead(D1) << 1) +
            digitalRead(D0)); 
-  /*return (  (bitRead(PORTB,1) << 7) + //D7
+  return (  (bitRead(PORTB,1) << 7) + //D7
             (bitRead(PORTB,0) << 6) + //D6
             (bitRead(PORTD,7) << 5) + //D5
             (bitRead(PORTD,6) << 4) + //D4
@@ -154,7 +154,16 @@ byte dbus_read()
             (bitRead(PORTD,4) << 2) + //D2
             (bitRead(PORTD,3) << 1) + //D1
              bitRead(PORTD,1) );      //D0 */
-}
+            
+   return ( (bitRead(PORTD,1)       +
+            (bitRead(PORTD,3) << 1) + //D1
+            (bitRead(PORTD,4) << 2) + //D2
+            (bitRead(PORTD,5) << 3) + //D3
+            (bitRead(PORTD,6) << 4) + //D4
+            (bitRead(PORTD,7) << 5) + //D5
+            (bitRead(PORTB,0) << 6) + //D6
+            bitRead(PORTB,1) << 7) );
+} 
 
 //write a byte to the databus
 //be sure to set databus to output first!
@@ -170,8 +179,8 @@ void dbus_write(byte data)
   digitalWrite(D0, data & 0x01);  */
 
   PORTB = PORTB | ( (data >> 6) & B00000011); //D7, D6
-  PORTD = PORTD | ( (data << 2) & B10111000); //D5-D1
-  PORTD = PORTD | ( (data << 1) & B01000010); //D0 
+  PORTD = PORTD | ( (data << 2) & B11111000); //D5-D1
+  PORTD = PORTD | ( (data << 1) & B00000010); //D0 
 }
 
 //shift out the given address to the 74HC595 registers
