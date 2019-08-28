@@ -128,7 +128,10 @@ void dis_cbus() {
 //enable Arduino control bus
 void ena_cbus() {
   pinMode(CE, OUTPUT);
+  set_CE(HIGH);
+  delayMicroseconds(10);
   pinMode(WE, OUTPUT);
+  set_WE(HIGH);
 }
 
 //read a complete byte from the databus
@@ -142,21 +145,33 @@ byte dbus_read()
           (digitalRead(D3) << 3) +
           (digitalRead(D2) << 2) +
           (digitalRead(D1) << 1) +
-           digitalRead(D0));
+           digitalRead(D0)); 
+  /*return (  (bitRead(PORTB,1) << 7) + //D7
+            (bitRead(PORTB,0) << 6) + //D6
+            (bitRead(PORTD,7) << 5) + //D5
+            (bitRead(PORTD,6) << 4) + //D4
+            (bitRead(PORTD,5) << 3) + //D3
+            (bitRead(PORTD,4) << 2) + //D2
+            (bitRead(PORTD,3) << 1) + //D1
+             bitRead(PORTD,1) );      //D0 */
 }
 
 //write a byte to the databus
 //be sure to set databus to output first!
 void dbus_write(byte data)
 {
-  digitalWrite(D7, (data >> 7) & 0x01);
+  /*digitalWrite(D7, (data >> 7) & 0x01);
   digitalWrite(D6, (data >> 6) & 0x01);
   digitalWrite(D5, (data >> 5) & 0x01);
   digitalWrite(D4, (data >> 4) & 0x01);
   digitalWrite(D3, (data >> 3) & 0x01);
   digitalWrite(D2, (data >> 2) & 0x01);
   digitalWrite(D1, (data >> 1) & 0x01);
-  digitalWrite(D0, data & 0x01);  
+  digitalWrite(D0, data & 0x01);  */
+
+  PORTB = PORTB | ( (data >> 6) & B00000011); //D7, D6
+  PORTD = PORTD | ( (data << 2) & B10111000); //D5-D1
+  PORTD = PORTD | ( (data << 1) & B01000010); //D0 
 }
 
 //shift out the given address to the 74HC595 registers
@@ -229,13 +244,15 @@ void TIready (byte state)
 //short function to disable TI I/O
 void TIstop()
 {
-  TIready(LOW);
-  TIbuf(HIGH);
+   TIready(LOW);
+   TIbuf(HIGH);
+   ena_cbus();
 }
 
 //short function to enable TI I/O
 void TIgo()
 {
+  dis_cbus();
   TIbuf(LOW);
   TIready(HIGH);
 }
@@ -264,12 +281,13 @@ void Wbyte(unsigned int address, byte data)
   set_abus(address);
   //set databus for writing
   dbus_out();
-  //enable RAM chip select
-  set_CE(LOW);
   //set data bus value
   dbus_write(data);
   //enable write
   set_WE(LOW);
+  //delayMicroseconds(3);
+  //enable RAM chip select
+  set_CE(LOW);
   //disable chip select
   set_CE(HIGH);
   //disable write
@@ -331,14 +349,10 @@ void setup() {
 
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
-  //enable Arduino control bus
-  ena_cbus();
   
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
-  Wbyte(0x0000,0xFF);
-  //delay(500);
-  //DSRAM = Rbyte(0x0000);
-  /*
+  //Wbyte(0x0000,0xFF);
+  DSRAM = Rbyte(0x0000);
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
@@ -385,7 +399,6 @@ void setup() {
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
-
   byte ccmd =  0; //current command
   byte lcmd =  0; //former command
   byte lcruw = 0; //former CRUWRI value
@@ -393,7 +406,7 @@ void setup() {
   int secval = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
   
   boolean curdir = LOW; //current step direction, step in by default
-  */
+
 }
 
 void loop() {
