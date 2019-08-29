@@ -80,8 +80,6 @@
 //define IO lines for RAM control
 #define CE		      14	//LED flashes for both Arduino CE* and TI MBE*
 #define WE		      16
-#define PORTC_CE   	0
-#define PORTC_WE   	2
 
 //define IO lines for TI99/4a control
 #define TI_BUFFERS 	  15	//74LS541 buffers enable/disable
@@ -263,30 +261,6 @@ void fastShiftOut(byte data) {
   digitalLow(CLOCK);
 }
 
-//short function to set RAM CE* (OE* and CS) are permanenty enabled)
-void set_CE (byte state)
-{
-  digitalWrite(CE, state);
-}
-
-//short function to set RAM WE* (Write Enable)
-void set_WE (byte state)
-{
-  digitalWrite(WE, state);
-}
-
-//short function to enable/disable TI interface 74LS541 buffers
-void TIbuf (byte state)
-{
-  digitalWrite(TI_BUFFERS, state);
-}
-
-//short function to set TI READY line (pause/resume TI); 74HC595 buffers are !set at the same time
-void TIready (byte state)
-{
-  digitalWrite(TI_READY, state);
-}
-
 //short function to disable TI I/O
 void TIstop()
 {
@@ -350,7 +324,7 @@ void eflash(byte error)
   digitalHigh(TI_READY);
     
   //make sure we can toggle Arduino CE* to flash the error code
-   pinAsOutput(CE);
+  pinAsOutput(CE);
 
   //stuck in error flashing loop until reset
   while (1) {
@@ -377,15 +351,15 @@ void eflash(byte error)
 void setup() {
 
   //74HC595 shift register control
-  pinMode(DS, OUTPUT);
-  pinMode(LATCH, OUTPUT);
-  pinMode(CLOCK, OUTPUT);
+  pinAsOutput(DS);
+  pinAsOutput(LATCH);
+  pinAsOutput(CLOCK);
 
   //TI99/4a I/O control
-  pinMode(TI_READY, OUTPUT);
-  pinMode(TI_BUFFERS, OUTPUT);
+  pinAsOutput(TI_READY);
+  pinAsOutput(TI_BUFFERS);
   //74LS138 interrupt: write to DSR space (aka CRU or FD1771 registers)
-  pinMode(TI_INT, INPUT);
+  pinAsInput(TI_INT);
 
   //see if the SD card is present and can be initialized
   if (!SD.begin(SPI_CS)) {
