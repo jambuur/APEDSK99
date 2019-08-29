@@ -58,7 +58,7 @@
 #define SPI_CS 10
 
 //74HC595 shift-out definitions
-#define DS	17
+#define DS	  17
 #define LATCH	18
 #define CLOCK	19
 
@@ -78,8 +78,8 @@
 #define D7 9
 
 //define IO lines for RAM control
-#define CE		      14	//LED flashes for both Arduino CE* and TI MBE*
-#define WE		      16
+#define CE  3 //14	//LED flashes for both Arduino CE* and TI MBE*
+#define WE  4 //16
 
 //define IO lines for TI99/4a control
 #define TI_BUFFERS 	  15	//74LS541 buffers enable/disable
@@ -105,7 +105,7 @@ byte DSRAM = 0;
 #define WDATA   0x1FFE     //write FD1771 Data register
 
 //error blinking parameters: on, off, delay between sequence
-#define LED_on      32767
+#define LED_on      524288
 #define LED_off     250
 #define LED_repeat  1500
 
@@ -135,8 +135,8 @@ void dbus_in() {
   pinAsInput(D6);
   pinAsInput(D7);
 
-  DDRD = DDRD | B11111010;
-  DDRB = DDRB | B00000011;
+  /*DDRD = DDRD | B11111010;
+  DDRB = DDRB | B00000011;*/
 }
 
 //switch databus to OUTPUT state
@@ -150,30 +150,34 @@ void dbus_out() {
   pinAsOutput(D6);
   pinAsOutput(D7);
 
-  DDRD = DDRD & B00000101;
-  DDRB = DDRB & B11111100;
+  /*DDRD = DDRD & B00000101;
+  DDRB = DDRB & B11111100;*/
 }
 
 //disable Arduino control bus
 void dis_cbus() {
   //pinMode(CE, INPUT);
   //pinMode(WE, INPUT);
-  pinAsInpit(CE);
+  pinAsInput(CE);
   pinAsInput(WE);
 }
  
 //enable Arduino control bus
 void ena_cbus() {
-  pinAsOutput(WE);
+  /*pinAsOutput(WE);
   digitalHigh(WE);
   //delayMicroseconds(10); //CHECK: may cause data corruption
   pinAsOutput(CE);
-  digitalHigh(CE);
+  digitalHigh(CE);*/
+  //pinMode(WE,OUTPUT);
+  //digitalWrite(WE,HIGH);
+  pinMode(CE, OUTPUT);
+  digitalWrite(CE, HIGH);
 }
 
 //read a complete byte from the databus
 //be sure to set databus to input first!
-byte dbus_read()
+byte dbus_read() 
 {
   /*return ((digitalRead(D7) << 7) +
           (digitalRead(D6) << 6) +
@@ -182,7 +186,7 @@ byte dbus_read()
           (digitalRead(D3) << 3) +
           (digitalRead(D2) << 2) +
           (digitalRead(D1) << 1) +
-           digitalRead(D0)); 
+           digitalRead(D0)); */
              
    return ( (digitalState(D0)       +
             (digitalState(D1) << 1) + 
@@ -191,29 +195,29 @@ byte dbus_read()
             (digitalState(D4) << 4) + 
             (digitalState(D5) << 5) +
             (digitalState(D6) << 6) + 
-             digitalState(D7) << 7) );
+             digitalState(D7) << 7) ); 
 	     
-  return    ( (PINB & B00000011) << 6) + //D7, D6
-	      (PIND & B11111000) >> 2) + //D5-D1
-	      (PIND & B00000010) >> 1);  //D0
+  /*return(   ((PINB & B00000011) << 6) +  //D7, D6
+	          ((PIND & B11111000) >> 2) +  //D5-D1
+	          ((PIND & B00000010) >> 1) ); //D0 */
 } 
 
 //write a byte to the databus
 //be sure to set databus to output first!
 void dbus_write(byte data)
 {
-  /*digitalWrite(D7, (data >> 7) & 0x01);
+  digitalWrite(D7, (data >> 7) & 0x01);
   digitalWrite(D6, (data >> 6) & 0x01);
   digitalWrite(D5, (data >> 5) & 0x01);
   digitalWrite(D4, (data >> 4) & 0x01);
   digitalWrite(D3, (data >> 3) & 0x01);
   digitalWrite(D2, (data >> 2) & 0x01);
   digitalWrite(D1, (data >> 1) & 0x01);
-  digitalWrite(D0, data & 0x01);  */
+  digitalWrite(D0, data & 0x01);  
 
-  PORTB = PORTB | ( (data >> 6) & B00000011); //D7, D6
+  /*PORTB = PORTB | ( (data >> 6) & B00000011); //D7, D6
   PORTD = PORTD | ( (data << 2) & B11111000); //D5-D1
-  PORTD = PORTD | ( (data << 1) & B00000010); //D0 
+  PORTD = PORTD | ( (data << 1) & B00000010); //D0 */
 }
 
 //shift out the given address to the 74HC595 registers
@@ -223,7 +227,6 @@ void set_abus(unsigned int address)
   byte MSB = address >> 8;
   //get LSB of 16 bit address
   byte LSB = address & 0xFF;
-
   //disable latch line
   //bitClear(PORTC,PORTC_LATCH);
   digitalLow(LATCH);
@@ -231,7 +234,6 @@ void set_abus(unsigned int address)
   fastShiftOut(MSB);
   //shift out LSB byte
   fastShiftOut(LSB);
-
   //enable latch and set address
   digitalHigh(LATCH);
 }
@@ -266,7 +268,7 @@ void TIstop()
 {
    digitalLow(TI_READY);
    digitalHigh(TI_BUFFERS);
-   ena_cbus();
+   //ena_cbus();
 }
 
 //short function to enable TI I/O
@@ -332,7 +334,7 @@ void eflash(byte error)
     for (byte flash = 0; flash < error; flash++)
     {
       //poor man's PWM, reduce mA's through LED to prolong its life
-      for (int ppwm =0; ppwm < LED_on; ppwm++) {
+      for (unsigned long int ppwm =0; ppwm < LED_on; ppwm++) {
         digitalLow(CE);  //turn on RAM CE* and thus LED
         digitalHigh(CE); //turn it off
       }
@@ -368,11 +370,13 @@ void setup() {
   }
 
   //put TI on hold and enable 74HC595 shift registers
+  ena_cbus();
   TIstop();
   
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
   //Wbyte(0x0000,0xFF);
-  DSRAM = Rbyte(0x0000);
+  
+  //DSRAM = Rbyte(0x0000); 
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
