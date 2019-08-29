@@ -135,8 +135,8 @@ void dbus_in() {
   pinAsInput(D6);
   pinAsInput(D7);
 
-  /*DDRD = DDRD | B11111010;
-  DDRB = DDRB | B00000011;*/
+  /*DDRB = DDRB & B11111100;
+  DDRD = DDRD & B00000101;*/
 }
 
 //switch databus to OUTPUT state
@@ -150,8 +150,8 @@ void dbus_out() {
   pinAsOutput(D6);
   pinAsOutput(D7);
 
-  /*DDRD = DDRD & B00000101;
-  DDRB = DDRB & B11111100;*/
+ /*DDRB = DDRB | B00000011;
+ DDRD = DDRD | B11111010;*/
 }
 
 //disable Arduino control bus
