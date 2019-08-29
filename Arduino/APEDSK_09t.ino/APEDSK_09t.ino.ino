@@ -128,41 +128,49 @@ boolean DSK3 = LOW;
 
 //switch databus to INPUT state
 void dbus_in() {
-  pinMode(D0, INPUT);
-  pinMode(D1, INPUT);
-  pinMode(D2, INPUT);
-  pinMode(D3, INPUT);
-  pinMode(D4, INPUT);
-  pinMode(D5, INPUT);
-  pinMode(D6, INPUT);
-  pinMode(D7, INPUT);
+  pinAsInput(D0);
+  pinAsInput(D1);
+  pinAsInput(D2);
+  pinAsInput(D3);
+  pinAsInput(D4);
+  pinAsInput(D5);
+  pinAsInput(D6);
+  pinAsInput(D7);
+
+  DDRD = DDRD | B11111010;
+  DDRB = DDRB | B00000011;
 }
 
 //switch databus to OUTPUT state
 void dbus_out() {
-  pinMode(D0, OUTPUT);
-  pinMode(D1, OUTPUT);
-  pinMode(D2, OUTPUT);
-  pinMode(D3, OUTPUT);
-  pinMode(D4, OUTPUT);
-  pinMode(D5, OUTPUT);
-  pinMode(D6, OUTPUT);
-  pinMode(D7, OUTPUT);
+  pinAsOutput(D0);
+  pinAsOutput(D1);
+  pinAsOutput(D2);
+  pinAsOutput(D3);
+  pinAsOutput(D4);
+  pinAsOutput(D5);
+  pinAsOutput(D6);
+  pinAsOutput(D7);
+
+  DDRD = DDRD & B00000101;
+  DDRB = DDRB & B11111100;
 }
 
 //disable Arduino control bus
 void dis_cbus() {
-  pinMode(CE, INPUT);
-  pinMode(WE, INPUT);
+  //pinMode(CE, INPUT);
+  //pinMode(WE, INPUT);
+  pinAsInpit(CE);
+  pinAsInput(WE);
 }
  
 //enable Arduino control bus
 void ena_cbus() {
-  pinMode(CE, OUTPUT);
-  set_CE(HIGH);
-  delayMicroseconds(10);
-  pinMode(WE, OUTPUT);
-  set_WE(HIGH);
+  pinAsOutput(WE);
+  digitalHigh(WE);
+  //delayMicroseconds(10); //CHECK: may cause data corruption
+  pinAsOutput(CE);
+  digitalHigh(CE);
 }
 
 //read a complete byte from the databus
@@ -177,15 +185,7 @@ byte dbus_read()
           (digitalRead(D2) << 2) +
           (digitalRead(D1) << 1) +
            digitalRead(D0)); 
-  return (  (bitRead(PORTB,1) << 7) + //D7
-            (bitRead(PORTB,0) << 6) + //D6
-            (bitRead(PORTD,7) << 5) + //D5
-            (bitRead(PORTD,6) << 4) + //D4
-            (bitRead(PORTD,5) << 3) + //D3
-            (bitRead(PORTD,4) << 2) + //D2
-            (bitRead(PORTD,3) << 1) + //D1
-             bitRead(PORTD,1) );      //D0 */
-            
+             
    return ( (bitRead(PORTD,1)       +
             (bitRead(PORTD,3) << 1) + //D1
             (bitRead(PORTD,4) << 2) + //D2
