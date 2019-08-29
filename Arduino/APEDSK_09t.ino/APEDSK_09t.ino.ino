@@ -78,8 +78,8 @@
 #define D7 9
 
 //define IO lines for RAM control
-#define CE  3 //14	//LED flashes for both Arduino CE* and TI MBE*
-#define WE  4 //16
+#define CE  14	//LED flashes for both Arduino CE* and TI MBE*
+#define WE  16
 
 //define IO lines for TI99/4a control
 #define TI_BUFFERS 	  15	//74LS541 buffers enable/disable
@@ -164,15 +164,11 @@ void dis_cbus() {
  
 //enable Arduino control bus
 void ena_cbus() {
-  /*pinAsOutput(WE);
+  pinAsOutput(WE);
   digitalHigh(WE);
   //delayMicroseconds(10); //CHECK: may cause data corruption
   pinAsOutput(CE);
-  digitalHigh(CE);*/
-  //pinMode(WE,OUTPUT);
-  //digitalWrite(WE,HIGH);
-  pinMode(CE, OUTPUT);
-  digitalWrite(CE, HIGH);
+  digitalLow(CE);
 }
 
 //read a complete byte from the databus
@@ -268,7 +264,7 @@ void TIstop()
 {
    digitalLow(TI_READY);
    digitalHigh(TI_BUFFERS);
-   //ena_cbus();
+   ena_cbus();
 }
 
 //short function to enable TI I/O
@@ -376,7 +372,7 @@ void setup() {
   //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
   //Wbyte(0x0000,0xFF);
   
-  //DSRAM = Rbyte(0x0000); 
+  DSRAM = Rbyte(0x0000); 
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
