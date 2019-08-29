@@ -58,9 +58,9 @@
 #define SPI_CS 10
 
 //74HC595 shift-out definitions
-#define DS	  A3
-#define LATCH	A4
-#define CLOCK	A5
+#define DS	17
+#define LATCH	18
+#define CLOCK	19
 
 #define PORTC_DS	  3
 #define PORTC_LATCH	4
@@ -78,13 +78,13 @@
 #define D7 9
 
 //define IO lines for RAM control
-#define CE		      A0	//LED flashes for both Arduino CE* and TI MBE*
-#define WE		      A2
+#define CE		      14	//LED flashes for both Arduino CE* and TI MBE*
+#define WE		      16
 #define PORTC_CE   	0
 #define PORTC_WE   	2
 
 //define IO lines for TI99/4a control
-#define TI_BUFFERS 	  A1	//74LS541 buffers enable/disable
+#define TI_BUFFERS 	  15	//74LS541 buffers enable/disable
 #define TI_READY      0	  //TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //74LS138 interrupt (MBE*, WE* and A15) 
 
@@ -186,14 +186,18 @@ byte dbus_read()
           (digitalRead(D1) << 1) +
            digitalRead(D0)); 
              
-   return ( (bitRead(PORTD,1)       +
-            (bitRead(PORTD,3) << 1) + //D1
-            (bitRead(PORTD,4) << 2) + //D2
-            (bitRead(PORTD,5) << 3) + //D3
-            (bitRead(PORTD,6) << 4) + //D4
-            (bitRead(PORTD,7) << 5) + //D5
-            (bitRead(PORTB,0) << 6) + //D6
-            bitRead(PORTB,1) << 7) );
+   return ( (digitalState(D0)       +
+            (digitalState(D1) << 1) + 
+            (digitalState(D2) << 2) + 
+            (digitalState(D3) << 3) + 
+            (digitalState(D4) << 4) + 
+            (digitalState(D5) << 5) +
+            (digitalState(D6) << 6) + 
+             digitalState(D7) << 7) );
+	     
+  return    ( (PINB & B00000011) << 6) + //D7, D6
+	      (PIND & B11111000) >> 2) + //D5-D1
+	      (PIND & B00000010) >> 1);  //D0
 } 
 
 //write a byte to the databus
@@ -223,38 +227,40 @@ void set_abus(unsigned int address)
   byte LSB = address & 0xFF;
 
   //disable latch line
-  bitClear(PORTC,PORTC_LATCH);
-
+  //bitClear(PORTC,PORTC_LATCH);
+  digitalLow(LATCH);
   //shift out MSB byte
   fastShiftOut(MSB);
   //shift out LSB byte
   fastShiftOut(LSB);
 
   //enable latch and set address
-  bitSet(PORTC,PORTC_LATCH);
+  digitalHigh(LATCH);
 }
 
 //faster shiftOut function then normal IDE function (about 4 times)
 void fastShiftOut(byte data) {
   //clear data pin
-  bitClear(PORTC,PORTC_DS);
+  //bitClear(PORTC,PORTC_DS);
+  digitalLow(DS);
   //send each bit of the data byte; MSB first
   for (int i=7; i>=0; i--)  {
-    bitClear(PORTC,PORTC_CLOCK);
+    //bitClear(PORTC,PORTC_CLOCK);
+    digitalLow(CLOCK);
     //Turn data on or off based on value of bit
     if ( bitRead(data,i) == 1 ) {
-      bitSet(PORTC,PORTC_DS);
+      digitalHigh(DS);
     }
     else {      
-      bitClear(PORTC,PORTC_DS);
+      digitalLow(DS);
     }
     //register shifts bits on upstroke of clock pin  
-    bitSet(PORTC,PORTC_CLOCK);
+    digitalHigh(CLOCK);
     //zero the data pin after shift to prevent bleed through
-    bitClear(PORTC,PORTC_DS);
+    digitalLow(DS);
   }
   //stop shifting
-  bitClear(PORTC,PORTC_CLOCK);
+  digitalLow(CLOCK);
 }
 
 //short function to set RAM CE* (OE* and CS) are permanenty enabled)
@@ -284,8 +290,8 @@ void TIready (byte state)
 //short function to disable TI I/O
 void TIstop()
 {
-   TIready(LOW);
-   TIbuf(HIGH);
+   digitalLow(TI_READY);
+   digitalHigh(TI_BUFFERS);
    ena_cbus();
 }
 
@@ -293,8 +299,8 @@ void TIstop()
 void TIgo()
 {
   dis_cbus();
-  TIbuf(LOW);
-  TIready(HIGH);
+  digitalLow(TI_BUFFERS);
+  digitalHigh(TI_READY);
 }
 
 //highlevel function to read a byte from a given address
@@ -306,11 +312,11 @@ byte Rbyte(unsigned int address)
   //set databus for reading
   dbus_in();
   //enable RAM chip select
-  set_CE(LOW);
+ digitalLow(CE);
   //get databus value
   data = dbus_read();
   //disable RAM chip select
-  set_CE(HIGH);
+  digitalHigh(CE);
   return data;
 }
 
@@ -324,14 +330,14 @@ void Wbyte(unsigned int address, byte data)
   //set data bus value
   dbus_write(data);
   //enable write
-  set_WE(LOW);
+  digitalLow(WE);
   //delayMicroseconds(3);
   //enable RAM chip select
-  set_CE(LOW);
+  digitalLow(CE);
   //disable chip select
-  set_CE(HIGH);
+  digitalHigh(CE);
   //disable write
-  set_WE(HIGH);
+  digitalHigh(WE);
   //set databus to input
   dbus_in();
 }
@@ -340,11 +346,11 @@ void Wbyte(unsigned int address, byte data)
 void eflash(byte error)
 {
   //TI still usable but no APEDSK for you
-  TIbuf(HIGH);
-  TIready(HIGH);
+  digitalHigh(TI_BUFFERS);
+  digitalHigh(TI_READY);
     
   //make sure we can toggle Arduino CE* to flash the error code
-  pinMode(CE, OUTPUT);
+   pinAsOutput(CE);
 
   //stuck in error flashing loop until reset
   while (1) {
@@ -353,11 +359,11 @@ void eflash(byte error)
     {
       //poor man's PWM, reduce mA's through LED to prolong its life
       for (int ppwm =0; ppwm < LED_on; ppwm++) {
-        set_CE(LOW);  //turn on RAM CE* and thus LED
-        set_CE(HIGH); //turn it off
+        digitalLow(CE);  //turn on RAM CE* and thus LED
+        digitalHigh(CE); //turn it off
       }
       //disable RAM CE*, turning off LED
-      set_CE(HIGH);
+      digitalHigh(CE);
       //LED is off for a bit
       delay(LED_off);
     } 
