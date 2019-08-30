@@ -182,7 +182,7 @@ byte dbus_read()
           (digitalRead(D3) << 3) +
           (digitalRead(D2) << 2) +
           (digitalRead(D1) << 1) +
-           digitalRead(D0)); */
+           digitalRead(D0)); 
              
    return ( (digitalState(D0)       +
             (digitalState(D1) << 1) + 
@@ -191,42 +191,68 @@ byte dbus_read()
             (digitalState(D4) << 4) + 
             (digitalState(D5) << 5) +
             (digitalState(D6) << 6) + 
-             digitalState(D7) << 7) ); 
+             digitalState(D7) << 7) ); */
 	     
-  /*return(   ((PINB & B00000011) << 6) +  //D7, D6
+  return(   ((PINB & B00000011) << 6) +  //D7, D6
 	          ((PIND & B11111000) >> 2) +  //D5-D1
-	          ((PIND & B00000010) >> 1) ); //D0 */
+	          ((PIND & B00000010) >> 1) ); //D0 
 } 
 
 //write a byte to the databus
 //be sure to set databus to output first!
 void dbus_write(byte data)
 {
-  digitalWrite(D7, (data >> 7) & 0x01);
+  /*digitalWrite(D7, (data >> 7) & 0x01);
   digitalWrite(D6, (data >> 6) & 0x01);
   digitalWrite(D5, (data >> 5) & 0x01);
   digitalWrite(D4, (data >> 4) & 0x01);
   digitalWrite(D3, (data >> 3) & 0x01);
   digitalWrite(D2, (data >> 2) & 0x01);
   digitalWrite(D1, (data >> 1) & 0x01);
-  digitalWrite(D0, data & 0x01);  
+  digitalWrite(D0, data & 0x01); */
 
-  /*PORTB = PORTB | ( (data >> 6) & B00000011); //D7, D6
+  PORTB = PORTB | ( (data >> 6) & B00000011); //D7, D6
   PORTD = PORTD | ( (data << 2) & B11111000); //D5-D1
-  PORTD = PORTD | ( (data << 1) & B00000010); //D0 */
+  PORTD = PORTD | ( (data << 1) & B00000010); //D0 
 }
 
 //shift out the given address to the 74HC595 registers
 void set_abus(unsigned int address)
 {
-  //get MSB of 16 bit address
+  /*//get MSB of 16 bit address
   byte MSB = address >> 8;
   //get LSB of 16 bit address
-  byte LSB = address & 0xFF;
+  byte LSB = address & 0xFF;*/
   //disable latch line
   //bitClear(PORTC,PORTC_LATCH);
   digitalLow(LATCH);
-  //shift out MSB byte
+  //clear data pin
+  //bitClear(PORTC,PORTC_DS);
+  digitalLow(DS);
+
+  //send each bit of the 16bit address word; MSb first
+  for (int i=15; i>=0; i--)  {
+    //bitClear(PORTC,PORTC_CLOCK);
+    digitalLow(CLOCK);
+    //Turn data on or off based on value of bit
+    //if ( bitRead(data,i) == 1 ) {
+    if ( bitRead(address,i) == 1 ) {
+      digitalHigh(DS);
+    }
+    else {      
+      digitalLow(DS);
+    }
+    //register shifts bits on upstroke of clock pin  
+    digitalHigh(CLOCK);
+    //zero the data pin after shift to prevent bleed through
+    digitalLow(DS);
+  }
+  //stop shifting
+  digitalLow(CLOCK);
+  //enable latch and set address
+  digitalHigh(LATCH);
+}  
+/*  //shift out MSB byte
   fastShiftOut(MSB);
   //shift out LSB byte
   fastShiftOut(LSB);
@@ -257,7 +283,7 @@ void fastShiftOut(byte data) {
   }
   //stop shifting
   digitalLow(CLOCK);
-}
+} */
 
 //short function to disable TI I/O
 void TIstop()
@@ -302,14 +328,14 @@ void Wbyte(unsigned int address, byte data)
   //set data bus value
   dbus_write(data);
   //enable write
-  digitalLow(WE);
+  digitalLow(CE);
   //delayMicroseconds(3);
   //enable RAM chip select
-  digitalLow(CE);
+  digitalLow(WE);
   //disable chip select
-  digitalHigh(CE);
-  //disable write
   digitalHigh(WE);
+  //disable write
+  digitalHigh(CE);
   //set databus to input
   dbus_in();
 }
@@ -369,7 +395,7 @@ void setup() {
   ena_cbus();
   TIstop();
   
-  //check for existing DSR: read first DSR RAM byte (>4000 in TI address space) ...
+  //check for existing DSR: read first DSR RAM byte ...
   //Wbyte(0x0000,0xFF);
   
   DSRAM = Rbyte(0x0000); 
