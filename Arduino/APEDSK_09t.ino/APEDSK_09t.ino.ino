@@ -126,32 +126,32 @@ boolean DSK3 = LOW;
 
 //switch databus to INPUT state
 void dbus_in() {
-  pinAsInput(D0);
+ /* pinAsInput(D0);
   pinAsInput(D1);
   pinAsInput(D2);
   pinAsInput(D3);
   pinAsInput(D4);
   pinAsInput(D5);
   pinAsInput(D6);
-  pinAsInput(D7);
+  pinAsInput(D7);*/
 
-  /*DDRB = DDRB & B11111100;
-  DDRD = DDRD & B00000101;*/
+  DDRB = DDRB & B11111100;
+  DDRD = DDRD & B00000101;
 }
 
 //switch databus to OUTPUT state
 void dbus_out() {
-  pinAsOutput(D0);
+  /*pinAsOutput(D0);
   pinAsOutput(D1);
   pinAsOutput(D2);
   pinAsOutput(D3);
   pinAsOutput(D4);
   pinAsOutput(D5);
   pinAsOutput(D6);
-  pinAsOutput(D7);
+  pinAsOutput(D7);*/
 
- /*DDRB = DDRB | B00000011;
- DDRD = DDRD | B11111010;*/
+ DDRB = DDRB | B00000011;
+ DDRD = DDRD | B11111010;
 }
 
 //disable Arduino control bus
