@@ -442,7 +442,7 @@ void setup() {
   TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
   byte ccmd =  0; //current command
   byte lcmd =  0; //former command
@@ -456,9 +456,26 @@ void setup() {
 
 void loop() {
 
-  if (FD1771 == 0xBB) {
+  InDSR = SD.open("/APEDSK.DSR", FILE_READ);
+    if (InDSR) {
+      for (unsigned int CByte =0; CByte < 0x2000; CByte++) {
+        byte SDbyte = InDSR.read();
+        byte RAMbyte = Rbyte(CByte);
+        if (SDbyte != RAMbyte) {
+            eflash(5);
+        }
+      }
+    InDSR.close();
+    }
+    else {
+      //couldn't open SD DSR file -> flash LED error 2
+      eflash(4);
+    }
 
-/*    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
+
+  /*if (FD1771 == 0xBB) {
+
+    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
     
     switch (ccmd) {
 	
@@ -552,9 +569,9 @@ void loop() {
 	      break;
   
     }*/
-  FD1771 = 0;  
+  //FD1771 = 0;  
   //interrupts(); 
-  } 
+  
 }
 void listen1771() {
   noInterrupts();
