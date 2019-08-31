@@ -233,22 +233,77 @@ void set_abus(unsigned int address)
   digitalLow(DS);
 
   //send each bit of the 16bit address word; MSb first
-  for (int i=15; i>=0; i--)  {
+  //for (int i=15; i>=0; i--)  {
     //bitClear(PORTC,PORTC_CLOCK);
+      digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >> 12) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+      digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >> 11) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+      digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >> 10) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+      digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >>  9) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
     digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >>  8) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+    digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >>  7) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+    digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >>  6) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+    digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >>  5) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+    digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address >>  4) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+    digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address      ) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+    digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address <<  1) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+    digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address <<  2) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+    digitalLow(CLOCK);
+        PORTC = PORTC &  ( (address <<  3) & B00001000);
+        digitalHigh(CLOCK);
+        digitalLow(DS);
+      
     //Turn data on or off based on value of bit
     //if ( bitRead(data,i) == 1 ) {
-    if ( bitRead(address,i) == 1 ) {
+   
+   /* if ( bitRead(address,i) == 1 ) {
       digitalHigh(DS);
     }
     else {      
       digitalLow(DS);
-    }
+    }*/
+    
     //register shifts bits on upstroke of clock pin  
-    digitalHigh(CLOCK);
+   
     //zero the data pin after shift to prevent bleed through
-    digitalLow(DS);
-  }
+    
+  //} 
+  
   //stop shifting
   digitalLow(CLOCK);
   //enable latch and set address
@@ -259,9 +314,9 @@ void set_abus(unsigned int address)
   //shift out LSB byte
   fastShiftOut(LSB);
   //enable latch and set address
-  digitalHigh(LATCH);
-}
-
+  digitalHigh(LATCH);*/
+//}
+/*
 //faster shiftOut function then normal IDE function (about 4 times)
 void fastShiftOut(byte data) {
   //clear data pin
@@ -455,23 +510,6 @@ void setup() {
 }
 
 void loop() {
-
-  InDSR = SD.open("/APEDSK.DSR", FILE_READ);
-    if (InDSR) {
-      for (unsigned int CByte =0; CByte < 0x2000; CByte++) {
-        byte SDbyte = InDSR.read();
-        byte RAMbyte = Rbyte(CByte);
-        if (SDbyte != RAMbyte) {
-            eflash(5);
-        }
-      }
-    InDSR.close();
-    }
-    else {
-      //couldn't open SD DSR file -> flash LED error 2
-      eflash(4);
-    }
-
 
   /*if (FD1771 == 0xBB) {
 
