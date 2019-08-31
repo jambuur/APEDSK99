@@ -62,9 +62,11 @@
 #define LATCH	18
 #define CLOCK	19
 
+/*
 #define PORTC_DS	  3
 #define PORTC_LATCH	4
 #define PORTC_CLOCK	5
+*/
 
 //define IO lines for RAM databus
 //skip 2 as we need it for interrupts
@@ -329,7 +331,6 @@ void Wbyte(unsigned int address, byte data)
   dbus_write(data);
   //enable write
   digitalLow(CE);
-  //delayMicroseconds(3);
   //enable RAM chip select
   digitalLow(WE);
   //disable chip select
@@ -396,8 +397,6 @@ void setup() {
   TIstop();
   
   //check for existing DSR: read first DSR RAM byte ...
-  //Wbyte(0x0000,0xFF);
-  
   DSRAM = Rbyte(0x0000); 
   // ... and check for valid DSR header (>AA)
   if ( DSRAM != 0xAA ) {
@@ -434,7 +433,7 @@ void setup() {
 
   //initialise FD1771 (clear CRU and FD1771 registers)
   for (unsigned int CByte = CRURD; CByte < (WDATA+1) ; CByte++) {
-    Wbyte(CByte,0);
+    Wbyte(CByte,0x00);
   } 
   
   //disable Arduino control bus 
