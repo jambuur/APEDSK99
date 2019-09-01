@@ -1,23 +1,23 @@
 /* APEDISK99
 * 
-* This sketch emulates 3 TI99/4a disk drives. It will need:
+* This sketch emulates 3 TI99/4a disk drives. Shopping list:
 *
-* 	- Arduino Uno
+* - Arduino Uno
 *	- SD shield (RTC optional but potentially super handy)
 *	- APEDSK99 shield
 *
 * The Arduino RAM interface is based on Mario's EEPROM programmer:
 * https://github.com/mkeller0815/MEEPROMMER
 *
-* faster digitalRead/Write by:
+* (much) faster digitalRead / Write by:
 * http://masteringarduino.blogspot.com/2013/10/fastest-and-smallest-digitalread-and.html
 * usage:
-*   pinMode( pin, INPUT ); with pinAsInput( pin );
-*   pinMode( pin, OUTPUT ); with pinAsOutput( pin );
-*   pinMode( pin, INPUT_PULLUP); with pinAsInputPullUp( pin );
-*   digitalWrite( pin, LOW ); with digitalLow( pin );
-*   digitalWrite( pin, HIGH ); with digitalHigh( pin );
-*   digitalRead( pin ) with digitalState( pin )
+*   pinMode( pin, INPUT );        with pinAsInput( pin );
+*   pinMode( pin, OUTPUT );       with pinAsOutput( pin );
+*   pinMode( pin, INPUT_PULLUP);  with pinAsInputPullUp( pin );
+*   digitalWrite( pin, LOW );     with digitalLow( pin );
+*   digitalWrite( pin, HIGH );    with digitalHigh( pin );
+*   digitalRead( pin )            with digitalState( pin )
 *   if( digitalState( pin ) == HIGH )  can be if( isHigh( pin ) ) 
 *   digitalState( pin ) == LOW         can be isLow( pin )
 *
@@ -62,13 +62,7 @@
 #define LATCH	18
 #define CLOCK	19
 
-/*
-#define PORTC_DS	  3
-#define PORTC_LATCH	4
-#define PORTC_CLOCK	5
-*/
-
-//define IO lines for RAM databus
+//IO lines for RAM databus
 //skip 2 as we need it for interrupts
 #define D0 1
 #define D1 3
@@ -79,19 +73,19 @@
 #define D6 8
 #define D7 9
 
-//define IO lines for RAM control
-#define CE  14	//LED flashes for both Arduino CE* and TI MBE*
+//IO lines for RAM control
+#define CE  14  //LED flashes for both Arduino CE* and TI MBE*
 #define WE  16
 
 //define IO lines for TI99/4a control
-#define TI_BUFFERS 	  15	//74LS541 buffers enable/disable
+#define TI_BUFFERS 	  15  //74LS541 buffers enable/disable
 #define TI_READY      0	  //TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //74LS138 interrupt (MBE*, WE* and A15) 
 
-//flag from interrupt routine to signal possible new FD1771 command
+//interrupt routine flag for possible new FD1771 command
 volatile byte FD1771 = 0;
 
-//generic variable for r/w DSRAM
+//generic variable for r/w RAM
 byte DSRAM = 0;
 
 //CRU emulation bytes + FD1771 registers
@@ -128,38 +122,19 @@ boolean DSK3 = LOW;
 
 //switch databus to INPUT state
 void dbus_in() {
- /* pinAsInput(D0);
-  pinAsInput(D1);
-  pinAsInput(D2);
-  pinAsInput(D3);
-  pinAsInput(D4);
-  pinAsInput(D5);
-  pinAsInput(D6);
-  pinAsInput(D7);*/
-
-  DDRB = DDRB & B11111100;
-  DDRD = DDRD & B00000101;
+  DDRB = DDRB & B11111100;  //set PB1, PB0 to input
+  DDRD = DDRD & B00000101;  //set PD7-PD3 and PD1 to input  
 }
 
 //switch databus to OUTPUT state
 void dbus_out() {
-  /*pinAsOutput(D0);
-  pinAsOutput(D1);
-  pinAsOutput(D2);
-  pinAsOutput(D3);
-  pinAsOutput(D4);
-  pinAsOutput(D5);
-  pinAsOutput(D6);
-  pinAsOutput(D7);*/
-
- DDRB = DDRB | B00000011;
- DDRD = DDRD | B11111010;
+  //set PB1, PB0, PD7-PD3 and PD1 to output
+  DDRB = DDRB | B00000011;  //set PB1, PB0 to output
+  DDRD = DDRD | B11111010;  //set PD7-PD3 and PD1 to output
 }
 
 //disable Arduino control bus
 void dis_cbus() {
-  //pinMode(CE, INPUT);
-  //pinMode(WE, INPUT);
   pinAsInput(CE);
   pinAsInput(WE);
 }
@@ -167,195 +142,126 @@ void dis_cbus() {
 //enable Arduino control bus
 void ena_cbus() {
   pinAsOutput(WE);
-  digitalHigh(WE);
+  digitalHigh(WE);  //default output state is LOW, could cause data corruption
   //delayMicroseconds(10); //CHECK: may cause data corruption
   pinAsOutput(CE);
-  digitalLow(CE);
+  digitalLow(CE);   //default output state is LOW, could cause data corruption
 }
 
 //read a complete byte from the databus
 //be sure to set databus to input first!
 byte dbus_read() 
-{
-  /*return ((digitalRead(D7) << 7) +
-          (digitalRead(D6) << 6) +
-          (digitalRead(D5) << 5) +
-          (digitalRead(D4) << 4) +
-          (digitalRead(D3) << 3) +
-          (digitalRead(D2) << 2) +
-          (digitalRead(D1) << 1) +
-           digitalRead(D0)); 
-             
-   return ( (digitalState(D0)       +
-            (digitalState(D1) << 1) + 
-            (digitalState(D2) << 2) + 
-            (digitalState(D3) << 3) + 
-            (digitalState(D4) << 4) + 
-            (digitalState(D5) << 5) +
-            (digitalState(D6) << 6) + 
-             digitalState(D7) << 7) ); */
-	     
-  return(   ((PINB & B00000011) << 6) +  //D7, D6
-	          ((PIND & B11111000) >> 2) +  //D5-D1
-	          ((PIND & B00000010) >> 1) ); //D0 
+{   
+  return( ((PINB & B00000011) << 6) +   //read PB1, PBO (D7, D6)
+	        ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
+	        ((PIND & B00000010) >> 1));   //read PD1 (D0)
 } 
 
 //write a byte to the databus
 //be sure to set databus to output first!
 void dbus_write(byte data)
 {
-  /*digitalWrite(D7, (data >> 7) & 0x01);
-  digitalWrite(D6, (data >> 6) & 0x01);
-  digitalWrite(D5, (data >> 5) & 0x01);
-  digitalWrite(D4, (data >> 4) & 0x01);
-  digitalWrite(D3, (data >> 3) & 0x01);
-  digitalWrite(D2, (data >> 2) & 0x01);
-  digitalWrite(D1, (data >> 1) & 0x01);
-  digitalWrite(D0, data & 0x01); */
-
-  PORTB = PORTB | ( (data >> 6) & B00000011); //D7, D6
-  PORTD = PORTD | ( (data << 2) & B11111000); //D5-D1
-  PORTD = PORTD | ( (data << 1) & B00000010); //D0 
+  PORTB = PORTB | ( (data >> 6) & B00000011); //write PB1, PBO (D7, D6)
+  PORTD = PORTD | ( (data << 2) & B11111000); //write PD7-PD3 (D5-D1)
+  PORTD = PORTD | ( (data << 1) & B00000010); //write PD1 (D0)
 }
 
 //shift out the given address to the 74HC595 registers
 void set_abus(unsigned int address)
 {
-  /*//get MSB of 16 bit address
-  byte MSB = address >> 8;
-  //get LSB of 16 bit address
-  byte LSB = address & 0xFF;*/
   //disable latch line
-  //bitClear(PORTC,PORTC_LATCH);
   digitalLow(LATCH);
   //clear data pin
-  //bitClear(PORTC,PORTC_DS);
   digitalLow(DS);
 
-  //send each bit of the 16bit address word; MSb first
-  //for (int i=15; i>=0; i--)  {
-    //bitClear(PORTC,PORTC_CLOCK);
-      digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >> 12) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-      digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >> 11) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-      digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >> 10) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-      digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >>  9) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >>  8) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >>  7) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >>  6) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >>  5) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address >>  4) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address      ) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address <<  1) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address <<  2) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-    digitalLow(CLOCK);
-        PORTC = PORTC &  ( (address <<  3) & B00001000);
-        digitalHigh(CLOCK);
-        digitalLow(DS);
-      
-    //Turn data on or off based on value of bit
-    //if ( bitRead(data,i) == 1 ) {
+  //OK, repetitive, slightly ugly code but ... almost 2x as fast as a for() - if() - else()
+  //for every address bit (16): 
+  //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >> 12) & B00001000);  //D15
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >> 11) & B00001000);  //D14
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >> 10) & B00001000);  //D13
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  9) & B00001000);  //D12
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  8) & B00001000);  //D11
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  7) & B00001000);  //D10
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  6) & B00001000);  //D9
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  5) & B00001000);  //D8
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  4) & B00001000);  //D7
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  3) & B00001000);  //D6
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  2) & B00001000);  //D5
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address >>  1) & B00001000);  //D4
+    digitalHigh(CLOCK);
+    digitalLow(DS);
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address      ) & B00001000);  //D3
+    digitalHigh(CLOCK);
+    digitalLow(DS); 
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address <<  1) & B00001000);  //D2
+    digitalHigh(CLOCK);
+    digitalLow(DS); 
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address <<  2) & B00001000);  //D1
+    digitalHigh(CLOCK);
+    digitalLow(DS); 
+  digitalLow(CLOCK);
+    PORTC = PORTC |  ( (address <<  3) & B00001000);  //D0
+    digitalHigh(CLOCK);
+    digitalLow(DS); 
    
-   /* if ( bitRead(address,i) == 1 ) {
-      digitalHigh(DS);
-    }
-    else {      
-      digitalLow(DS);
-    }*/
-    
-    //register shifts bits on upstroke of clock pin  
-   
-    //zero the data pin after shift to prevent bleed through
-    
-  //} 
-  
   //stop shifting
   digitalLow(CLOCK);
   //enable latch and set address
   digitalHigh(LATCH);
 }  
-/*  //shift out MSB byte
-  fastShiftOut(MSB);
-  //shift out LSB byte
-  fastShiftOut(LSB);
-  //enable latch and set address
-  digitalHigh(LATCH);*/
-//}
-/*
-//faster shiftOut function then normal IDE function (about 4 times)
-void fastShiftOut(byte data) {
-  //clear data pin
-  //bitClear(PORTC,PORTC_DS);
-  digitalLow(DS);
-  //send each bit of the data byte; MSB first
-  for (int i=7; i>=0; i--)  {
-    //bitClear(PORTC,PORTC_CLOCK);
-    digitalLow(CLOCK);
-    //Turn data on or off based on value of bit
-    if ( bitRead(data,i) == 1 ) {
-      digitalHigh(DS);
-    }
-    else {      
-      digitalLow(DS);
-    }
-    //register shifts bits on upstroke of clock pin  
-    digitalHigh(CLOCK);
-    //zero the data pin after shift to prevent bleed through
-    digitalLow(DS);
-  }
-  //stop shifting
-  digitalLow(CLOCK);
-} */
 
 //short function to disable TI I/O
 void TIstop()
 {
-   digitalLow(TI_READY);
-   digitalHigh(TI_BUFFERS);
-   ena_cbus();
+   digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
+   digitalHigh(TI_BUFFERS); //disables 74LS541's
+   ena_cbus();              //Arduino in control of RAM
 }
 
 //short function to enable TI I/O
 void TIgo()
 {
-  dis_cbus();
-  digitalLow(TI_BUFFERS);
-  digitalHigh(TI_READY);
+  dis_cbus();               //take RAM control from Arduino
+  digitalLow(TI_BUFFERS);   //enable 74LS541's
+  digitalHigh(TI_READY);    //wake up TI
 }
 
 //highlevel function to read a byte from a given address
@@ -497,7 +403,7 @@ void setup() {
   TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
   byte ccmd =  0; //current command
   byte lcmd =  0; //former command
@@ -511,9 +417,9 @@ void setup() {
 
 void loop() {
 
-  /*if (FD1771 == 0xBB) {
+  if (FD1771 == 0xBB) {
 
-    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
+    /*ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
     
     switch (ccmd) {
 	
@@ -604,12 +510,11 @@ void loop() {
 	      break;
 	    case 240: //write track
         while sector <  sectors p/t
-	      break;
+	      break; */
   
-    }*/
-  //FD1771 = 0;  
-  //interrupts(); 
-  
+  }
+  FD1771 = 0;  
+  interrupts(); 
 }
 void listen1771() {
   noInterrupts();
