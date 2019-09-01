@@ -403,7 +403,7 @@ void setup() {
   TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
   byte ccmd =  0; //current command
   byte lcmd =  0; //former command
@@ -417,7 +417,7 @@ void setup() {
 
 void loop() {
 
-  if (FD1771 == 0xBB) {
+  //if (FD1771 == 0xBB) {
 
     /*ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
     
@@ -512,9 +512,9 @@ void loop() {
         while sector <  sectors p/t
 	      break; */
   
-  }
-  FD1771 = 0;  
-  interrupts(); 
+  //}
+  //FD1771 = 0;  
+  //interrupts(); 
 }
 void listen1771() {
   noInterrupts();
