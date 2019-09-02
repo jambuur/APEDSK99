@@ -419,10 +419,11 @@ void loop() {
   if (FD1771 == 0xBB) {
 
     noInterrupts(); //we don't want our interrupt be interrupted
-
-    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep FD1771 command only
     
-    switch (ccmd) {
+    ccmd = Rbyte(WCOMND)
+    if ( ccmd != 0xFF || lcmd ) {
+
+    switch (ccmd & 0xF0) {  //strip floppy-specific bits we don't need, keep FD1771 command only
 	
     	case 0: //restore
         Wbyte(RTRACK,0);  //clear read track register
@@ -432,15 +433,12 @@ void loop() {
 	
     	case 16: //seek
     		//2 comparisons as if RTRACK == WDATA curdir doesn't change
-    		curdir = LOW   && ( Rbyte(RTRACK) > Rbyte(WDATA) );
-        curdir = HIGH  && ( Rbyte(RTRACK) < Rbyte(WDATA) );
-    		
-    		/* if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
+        if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
     		  curdir == LOW;  //step-in towards track 40
     		}	
-    		if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
+    		else if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
     		  curdir == HIGH; //step-out towards track 0
-    		} */
+    		} 
     	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
       break;
  
@@ -452,14 +450,14 @@ void loop() {
     		DSRAM = Rbyte(RTRACK);	//read current track #
     		//is current direction inwards and track # still within limits?
     		if ( curdir == LOW && DSRAM < 39 ) {
-    		  Wbyte(RTRACK,DSRAM++);  //increase track #
+    		  Wbyte(RTRACK,++DSRAM);  //increase track #
     		}
     		//is current direction outwards and track # still within limits?
-    		if ( curdir == HIGH && DSRAM >  0) {
-    		  Wbyte(RTRACK,DSRAM--); }	//decrease track #		
+    		else if ( curdir == HIGH && DSRAM >  0) {
+    		  Wbyte(RTRACK,--DSRAM); //decrease track #
+    		}			
       break;
-      
-    } /*
+     
   	  case 64: //step-in
   		  curdir == LOW; //set current direction		
       break;
@@ -467,7 +465,8 @@ void loop() {
     	case 80: //step-in+T
     		DSRAM = Rbyte(RTRACK);  //read current track #
     		//if track # still within limits update track register
-    		if ( DSRAM < 39) { Wbyte(RTRACK,DSRAM++); }
+    		if ( DSRAM < 39) { 
+    		  Wbyte(RTRACK,++DSRAM); }
     		curdir == LOW; //set current direction		
       break;
 
@@ -478,12 +477,17 @@ void loop() {
       case 112: //step-out+T
         DSRAM = Rbyte(RTRACK);  //read current track #
         //if track # still within limits update track register
-    		if ( DSRAM > 0) { Wbyte(RTRACK,DSRAM--); }
-    		curdir == LOW; //set current direction		
+        if ( DSRAM > 0) { 
+          Wbyte(RTRACK,--DSRAM); }
+        curdir == HIGH; //set current direction    
       break;
-/*
+    
 	    case 128: //read sector
-       		if ( ccmd != lcmd ) { //new sector read
+        if ( ccmd != lcmd ) { //new sector read
+          //determine absolute sector #
+          secval = ( (Rbyte(CRURD
+          
+        }
 			secval = (side * 359) + (track * 9) + WSECTR
 			
  while m is set AND WSECTR < max
@@ -525,8 +529,12 @@ void loop() {
 	      break; */
   
   }
-  lcmd = ccmd;  //save current command for next interrupt
-  ccmd = 0;     //ready to store next command (which could be more of the same)
+
+  if ( Rbyte(CRUWRI)
+  
+  lcmd = ccmd;            //save current command for compare in next interrupt
+  ccmd = 0;               //ready to store next command (which could be more of the same)
+  lcruw = Rbyte(CRUWI);   //save current CRU write register for compare in next interrupt
   
   FD1771 = 0;   //clear interrupt flag
   interrupts(); //enable interrupts again
