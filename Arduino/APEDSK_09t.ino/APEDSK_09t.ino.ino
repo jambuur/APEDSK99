@@ -417,7 +417,7 @@ void loop() {
 
   //check if flag has set by interrupt routine (TI WE*, MBE* and A15 -> 74LS138 O0)
   if (FD1771 == 0xBB) {
-
+/*
     noInterrupts(); //we don't want our interrupt be interrupted
     
     ccmd = Rbyte(WCOMND)
@@ -530,11 +530,11 @@ void loop() {
   
   }
 
-  if ( Rbyte(CRUWRI)
+  //if ( Rbyte(CRUWRI)
   
   lcmd = ccmd;            //save current command for compare in next interrupt
   ccmd = 0;               //ready to store next command (which could be more of the same)
-  lcruw = Rbyte(CRUWI);   //save current CRU write register for compare in next interrupt
+  lcruw = Rbyte(CRUWRI);   //save current CRU write register for compare in next interrupt
   
   FD1771 = 0;   //clear interrupt flag
   interrupts(); //enable interrupts again
