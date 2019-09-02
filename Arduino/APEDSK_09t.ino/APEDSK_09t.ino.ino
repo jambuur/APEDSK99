@@ -58,29 +58,29 @@
 #define SPI_CS 10
 
 //74HC595 shift-out definitions
-#define DS	  17
-#define LATCH	18
-#define CLOCK	19
+#define DS	  17	//PC3
+#define LATCH	18	//PC4
+#define CLOCK	19	//PC5
 
 //IO lines for RAM databus
 //skip 2 as we need it for interrupts
-#define D0 1
-#define D1 3
-#define D2 4
-#define D3 5
-#define D4 6
-#define D5 7
-#define D6 8
-#define D7 9
+#define D0 1	//PD1
+#define D1 3	//PD3
+#define D2 4	//PD4
+#define D3 5	//PD5
+#define D4 6	//PD6
+#define D5 7	//PD7
+#define D6 8	//PD8
+#define D7 9	//PD9
 
 //IO lines for RAM control
-#define CE  14  //LED flashes for both Arduino CE* and TI MBE*
-#define WE  16
+#define CE  14  //PC0; LED flashes for both Arduino CE* and TI MBE*
+#define WE  16	//PC2
 
 //define IO lines for TI99/4a control
-#define TI_BUFFERS 	  15  //74LS541 buffers enable/disable
-#define TI_READY      0	  //TI READY line + enable/disable 74HC595 shift registers
-#define TI_INT      	2	  //74LS138 interrupt (MBE*, WE* and A15) 
+#define TI_BUFFERS 	  15  //PC1; 74LS541 buffers enable/disable
+#define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
+#define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
 //interrupt routine flag for possible new FD1771 command
 volatile byte FD1771 = 0;
@@ -89,16 +89,16 @@ volatile byte FD1771 = 0;
 byte DSRAM = 0;
 
 //CRU emulation bytes + FD1771 registers
-#define CRURD   0x1FEC     //emulated 8 CRU input bits
-#define CRUWRI  0x1FEE     //emulated 8 CRU output bits
-#define RSTAT   0x1FF0     //read FD1771 Status register
-#define RTRACK  0x1FF2     //read FD1771 Track register
-#define RSECTR  0x1FF4     //read FD1771 Sector register
-#define RDATA   0x1FF6     //read FD1771 Data register
-#define WCOMND  0x1FF8     //write FD1771 Command register
-#define WTRACK  0x1FFA     //write FD1771 Track register
-#define WSECTR  0x1FFC     //write FD1771 Sector register
-#define WDATA   0x1FFE     //write FD1771 Data register
+#define CRURD   0x1FEC     //emulated 8 CRU input bits (>5FEC in TI99/4a DSR memory block)
+#define CRUWRI  0x1FEE     //emulated 8 CRU output bits (>5FEE in TI99/4a DSR memory block)
+#define RSTAT   0x1FF0     //read FD1771 Status register (>5FF0 in TI99/4a DSR memory block)
+#define RTRACK  0x1FF2     //read FD1771 Track register (>5FF2 in TI99/4a DSR memory block)
+#define RSECTR  0x1FF4     //read FD1771 Sector register (>55FF4 in TI99/4a DSR memory block)
+#define RDATA   0x1FF6     //read FD1771 Data register (>5FF6 in TI99/4a DSR memory block)
+#define WCOMND  0x1FF8     //write FD1771 Command register (>5FF8 in TI99/4a DSR memory block)
+#define WTRACK  0x1FFA     //write FD1771 Track register (>5FFA in TI99/4a DSR memory block)
+#define WSECTR  0x1FFC     //write FD1771 Sector register (>5FFC in TI99/4a DSR memory block)
+#define WDATA   0x1FFE     //write FD1771 Data register (>5FFE in TI99/4a DSR memory block)
 
 //error blinking parameters: on, off, delay between sequence
 #define LED_on      524288
@@ -120,13 +120,13 @@ boolean DSK3 = LOW;
 
 //----- RAM, I/O data and control functions
 
-//switch databus to INPUT state
+//switch databus to INPUT state for TI RAM access 
 void dbus_in() {
   DDRB = DDRB & B11111100;  //set PB1, PB0 to input
   DDRD = DDRD & B00000101;  //set PD7-PD3 and PD1 to input  
 }
 
-//switch databus to OUTPUT state
+//switch databus to OUTPUT state so Arduino can play bus master
 void dbus_out() {
   //set PB1, PB0, PD7-PD3 and PD1 to output
   DDRB = DDRB | B00000011;  //set PB1, PB0 to output
