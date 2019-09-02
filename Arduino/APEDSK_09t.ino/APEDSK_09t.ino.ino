@@ -85,8 +85,17 @@
 //interrupt routine flag for possible new FD1771 command
 volatile byte FD1771 = 0;
 
-//generic variable for r/w RAM
+//generic variable for R/W RAM
 byte DSRAM = 0;
+
+byte ccmd   = 0; //current command
+byte lcmd   = 0; //last command
+byte ccruw  = 0; //current CRUWRI value
+byte lcruw  = 0; //last CRUWRI value
+int lr6val  = 0; //byte counter for sector/track R/W
+int secval  = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
+  
+boolean curdir = LOW; //current step direction, step in(wards) by default
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC     //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
@@ -402,37 +411,39 @@ void setup() {
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
-  byte ccmd =  0; //current command
-  byte lcmd =  0; //former command
-  byte lcruw = 0; //former CRUWRI value
-  int lr6val = 0; //byte counter for sector/track R/W
-  int secval = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
-  
-  boolean curdir = LOW; //current step direction, step in by default
-
-}
+} //end of setup()
 
 void loop() {
 
-  //if (FD1771 == 0xBB) {
+  //check if flag has set by interrupt routine (TI WE*, MBE* and A15 -> 74LS138 O0)
+  if (FD1771 == 0xBB) {
 
-    /*ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep command only
+    noInterrupts(); //we don't want our interrupt be interrupted
+
+    ccmd = Rbyte(WCOMND) & 0xF; //strip floppy-specific bits we don't need, keep FD1771 command only
     
     switch (ccmd) {
 	
     	case 0: //restore
+        Wbyte(RTRACK,0);  //clear read track register
     		Wbyte(WTRACK,0);	//clear write track register        
     		Wbyte(WDATA,0); 	//clear write data register
-    		Wbyte(RTRACK,0);	//clear read track register
     	break;
 	
     	case 16: //seek
-    		//2 comparisons because if RTRACK == WDATA curdir doesn't change
-    		if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { curdir == LOW;  }	//step-in towards track 40
-    		if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { curdir == HIGH; }	//step-out towards track 0
+    		//2 comparisons as if RTRACK == WDATA curdir doesn't change
+    		curdir = LOW   && ( Rbyte(RTRACK) > Rbyte(WDATA) );
+        curdir = HIGH  && ( Rbyte(RTRACK) < Rbyte(WDATA) );
+    		
+    		/* if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
+    		  curdir == LOW;  //step-in towards track 40
+    		}	
+    		if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
+    		  curdir == HIGH; //step-out towards track 0
+    		} */
     	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
       break;
-	
+ 
 	    case 32: //step
 	      //don't have to do anything for just step
 		  break;	    
@@ -440,11 +451,15 @@ void loop() {
     	case 48: //step+T
     		DSRAM = Rbyte(RTRACK);	//read current track #
     		//is current direction inwards and track # still within limits?
-    		if ( DSRAM < 39 && curdir == LOW ) { Wbyte(RTRACK,DSRAM++); }	//yes, increase track #
+    		if ( curdir == LOW && DSRAM < 39 ) {
+    		  Wbyte(RTRACK,DSRAM++);  //increase track #
+    		}
     		//is current direction outwards and track # still within limits?
-    		if ( DSRAM >  0 && curdir == HIGH) { Wbyte(RTRACK,DSRAM--); }	//yes, decrease track #		
+    		if ( curdir == HIGH && DSRAM >  0) {
+    		  Wbyte(RTRACK,DSRAM--); }	//decrease track #		
       break;
-	
+      
+    } /*
   	  case 64: //step-in
   		  curdir == LOW; //set current direction		
       break;
@@ -509,10 +524,15 @@ void loop() {
         while sector <  sectors p/t
 	      break; */
   
-  //}
-  //FD1771 = 0;  
-  //interrupts(); 
-}
+  }
+  lcmd = ccmd;  //save current command for next interrupt
+  ccmd = 0;     //ready to store next command (which could be more of the same)
+  
+  FD1771 = 0;   //clear interrupt flag
+  interrupts(); //enable interrupts again
+
+} //end of loop()
+
 void listen1771() {
   noInterrupts();
   FD1771=0xBB;
