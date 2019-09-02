@@ -89,32 +89,32 @@ volatile byte FD1771 = 0;
 byte DSRAM = 0;
 
 //CRU emulation bytes + FD1771 registers
-#define CRURD   0x1FEC     //emulated 8 CRU input bits (>5FEC in TI99/4a DSR memory block)
-#define CRUWRI  0x1FEE     //emulated 8 CRU output bits (>5FEE in TI99/4a DSR memory block)
-#define RSTAT   0x1FF0     //read FD1771 Status register (>5FF0 in TI99/4a DSR memory block)
-#define RTRACK  0x1FF2     //read FD1771 Track register (>5FF2 in TI99/4a DSR memory block)
-#define RSECTR  0x1FF4     //read FD1771 Sector register (>55FF4 in TI99/4a DSR memory block)
-#define RDATA   0x1FF6     //read FD1771 Data register (>5FF6 in TI99/4a DSR memory block)
-#define WCOMND  0x1FF8     //write FD1771 Command register (>5FF8 in TI99/4a DSR memory block)
-#define WTRACK  0x1FFA     //write FD1771 Track register (>5FFA in TI99/4a DSR memory block)
-#define WSECTR  0x1FFC     //write FD1771 Sector register (>5FFC in TI99/4a DSR memory block)
-#define WDATA   0x1FFE     //write FD1771 Data register (>5FFE in TI99/4a DSR memory block)
+#define CRURD   0x1FEC     //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
+#define CRUWRI  0x1FEE     //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
+#define RSTAT   0x1FF0     //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
+#define RTRACK  0x1FF2     //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
+#define RSECTR  0x1FF4     //read FD1771 Sector register    (>55F4 in TI99/4a DSR memory block)
+#define RDATA   0x1FF6     //read FD1771 Data register      (>5FF6 in TI99/4a DSR memory block)
+#define WCOMND  0x1FF8     //write FD1771 Command register  (>5FF8 in TI99/4a DSR memory block)
+#define WTRACK  0x1FFA     //write FD1771 Track register    (>5FFA in TI99/4a DSR memory block)
+#define WSECTR  0x1FFC     //write FD1771 Sector register   (>5FFC in TI99/4a DSR memory block)
+#define WDATA   0x1FFE     //write FD1771 Data register     (>5FFE in TI99/4a DSR memory block)
 
-//error blinking parameters: on, off, delay between sequence
+//error blinking parameters: on (pwm), off, delay between sequence
 #define LED_on      524288
 #define LED_off     250
 #define LED_repeat  1500
 
 //input and output file pointers
-File InDSR;
-File InDSK1;
-File OutDSK1;
-File InDSK2;
-File OutDSK2;
-File InDSK3;
-File OutDSK3;
+File InDSR;   //DSR binary
+File InDSK1;  //DSK1 read
+File OutDSK1; //DSK1 write
+File InDSK2;  //DSK2 read
+File OutDSK2; //DSK2 write
+File InDSK3;  //DSK3 read
+File OutDSK3; //DSK3 write
 
-//flags for additional "drives" available
+//flags for additional "drives" (aka DOAD files) available
 boolean DSK2 = LOW;
 boolean DSK3 = LOW;
 
@@ -122,24 +122,24 @@ boolean DSK3 = LOW;
 
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
-  DDRB = DDRB & B11111100;  //set PB1, PB0 to input
-  DDRD = DDRD & B00000101;  //set PD7-PD3 and PD1 to input  
+  DDRB = DDRB & B11111100;  //set PB1, PB0 to input (D7, D6)
+  DDRD = DDRD & B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
 }
 
 //switch databus to OUTPUT state so Arduino can play bus master
 void dbus_out() {
   //set PB1, PB0, PD7-PD3 and PD1 to output
-  DDRB = DDRB | B00000011;  //set PB1, PB0 to output
-  DDRD = DDRD | B11111010;  //set PD7-PD3 and PD1 to output
+  DDRB = DDRB | B00000011;  //set PB1, PB0 to output (D7, D6)
+  DDRD = DDRD | B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
 }
 
-//disable Arduino control bus
+//disable Arduino control bus; CE* and WE* both HighZ
 void dis_cbus() {
   pinAsInput(CE);
   pinAsInput(WE);
 }
  
-//enable Arduino control bus
+//enable Arduino control bus; CE* and WE* both HIGH
 void ena_cbus() {
   pinAsOutput(WE);
   digitalHigh(WE);  //default output state is LOW, could cause data corruption
@@ -174,8 +174,8 @@ void set_abus(unsigned int address)
   //clear data pin
   digitalLow(DS);
 
-  //OK, repetitive, slightly ugly code but ... almost 2x as fast as a for() - if() - else()
-  //for every address bit (16): 
+  //OK, repetitive, slightly ugly code but ... 1.53x as fast as the elegant for() - if() - else()
+  //for every address bit (16) set: 
   //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
   digitalLow(CLOCK);
     PORTC = PORTC |  ( (address >> 12) & B00001000);  //D15
@@ -259,7 +259,7 @@ void TIstop()
 //short function to enable TI I/O
 void TIgo()
 {
-  dis_cbus();               //take RAM control from Arduino
+  dis_cbus();               //cease Arduino RAM control
   digitalLow(TI_BUFFERS);   //enable 74LS541's
   digitalHigh(TI_READY);    //wake up TI
 }
@@ -294,9 +294,9 @@ void Wbyte(unsigned int address, byte data)
   digitalLow(CE);
   //enable RAM chip select
   digitalLow(WE);
-  //disable chip select
-  digitalHigh(WE);
   //disable write
+  digitalHigh(WE);
+  //disable chip select
   digitalHigh(CE);
   //set databus to input
   dbus_in();
@@ -305,7 +305,7 @@ void Wbyte(unsigned int address, byte data)
 //flash error code
 void eflash(byte error)
 {
-  //TI still usable but no APEDSK for you
+  //no APEDSK for you but TI still usable 
   digitalHigh(TI_BUFFERS);
   digitalHigh(TI_READY);
     
@@ -323,7 +323,7 @@ void eflash(byte error)
         digitalHigh(CE); //turn it off
       }
       //disable RAM CE*, turning off LED
-      digitalHigh(CE);
+      //digitalHigh(CE);
       //LED is off for a bit
       delay(LED_off);
     } 
@@ -341,10 +341,10 @@ void setup() {
   pinAsOutput(LATCH);
   pinAsOutput(CLOCK);
 
-  //TI99/4a I/O control
+  //TI99-4a I/O control
   pinAsOutput(TI_READY);
   pinAsOutput(TI_BUFFERS);
-  //74LS138 interrupt: write to DSR space (aka CRU or FD1771 registers)
+  //74LS138 interrupt: a write to DSR space (aka CRU, FD1771 registers, sector R/W (R6 counter in RAM) or track R/F (ditto))
   pinAsInput(TI_INT);
 
   //see if the SD card is present and can be initialized
@@ -354,19 +354,18 @@ void setup() {
   }
 
   //put TI on hold and enable 74HC595 shift registers
-  ena_cbus();
   TIstop();
   
   //check for existing DSR: read first DSR RAM byte ...
   DSRAM = Rbyte(0x0000); 
-  // ... and check for valid DSR header (>AA)
+  // ... and check for valid DSR header mark (>AA)
   if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
     InDSR = SD.open("/APEDSK.DSR", FILE_READ);
     if (InDSR) {
-      for (unsigned int CByte =0; CByte < 0x2000; CByte++) {
+      for (unsigned int ii = 0; ii < 0x2000; ii++) {
         DSRAM = InDSR.read();
-        Wbyte(CByte,DSRAM);
+        Wbyte(ii,DSRAM);
       }
     InDSR.close();
     }
@@ -393,17 +392,15 @@ void setup() {
     }
 
   //initialise FD1771 (clear CRU and FD1771 registers)
-  for (unsigned int CByte = CRURD; CByte < (WDATA+1) ; CByte++) {
-    Wbyte(CByte,0x00);
+  for (unsigned int ii = CRURD; ii < (WDATA+1) ; ii++) {
+    Wbyte(ii,0x00);
   } 
   
-  //disable Arduino control bus 
-  dis_cbus();
-  //enable TI buffers, disable 74HC595 shift registers
+  //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
   TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
   byte ccmd =  0; //current command
   byte lcmd =  0; //former command
