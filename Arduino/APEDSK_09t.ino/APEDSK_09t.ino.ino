@@ -86,7 +86,7 @@
 volatile byte FD1771 = 0;
 
 //generic variable for R/W RAM
-byte DSRAM = 0;
+byte DSRAM  = 0;
 
 byte ccmd   = 0; //current command
 byte lcmd   = 0; //last command
@@ -97,17 +97,19 @@ int secval  = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
   
 boolean curdir = LOW; //current step direction, step in(wards) by default
 
+#define APEERR  0x1FE8  //APEDSK debugging
+#define RDINT   0x1FEA  //R6 counter value to detect read access in sector R/W, ReadID and track R/F
 //CRU emulation bytes + FD1771 registers
-#define CRURD   0x1FEC     //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
-#define CRUWRI  0x1FEE     //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
-#define RSTAT   0x1FF0     //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
-#define RTRACK  0x1FF2     //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
-#define RSECTR  0x1FF4     //read FD1771 Sector register    (>55F4 in TI99/4a DSR memory block)
-#define RDATA   0x1FF6     //read FD1771 Data register      (>5FF6 in TI99/4a DSR memory block)
-#define WCOMND  0x1FF8     //write FD1771 Command register  (>5FF8 in TI99/4a DSR memory block)
-#define WTRACK  0x1FFA     //write FD1771 Track register    (>5FFA in TI99/4a DSR memory block)
-#define WSECTR  0x1FFC     //write FD1771 Sector register   (>5FFC in TI99/4a DSR memory block)
-#define WDATA   0x1FFE     //write FD1771 Data register     (>5FFE in TI99/4a DSR memory block)
+#define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
+#define CRUWRI  0x1FEE  //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
+#define RSTAT   0x1FF0  //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
+#define RTRACK  0x1FF2  //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
+#define RSECTR  0x1FF4  //read FD1771 Sector register    (>55F4 in TI99/4a DSR memory block)
+#define RDATA   0x1FF6  //read FD1771 Data register      (>5FF6 in TI99/4a DSR memory block)
+#define WCOMND  0x1FF8  //write FD1771 Command register  (>5FF8 in TI99/4a DSR memory block)
+#define WTRACK  0x1FFA  //write FD1771 Track register    (>5FFA in TI99/4a DSR memory block)
+#define WSECTR  0x1FFC  //write FD1771 Sector register   (>5FFC in TI99/4a DSR memory block)
+#define WDATA   0x1FFE  //write FD1771 Data register     (>5FFE in TI99/4a DSR memory block)
 
 //error blinking parameters: on (pwm), off, delay between sequence
 #define LED_on      524288
@@ -131,15 +133,15 @@ boolean DSK3 = LOW;
 
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
-  DDRB = DDRB & B11111100;  //set PB1, PB0 to input (D7, D6)
-  DDRD = DDRD & B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
+  DDRB &= B11111100;  //set PB1, PB0 to input (D7, D6)
+  DDRD &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
 }
 
 //switch databus to OUTPUT state so Arduino can play bus master
 void dbus_out() {
   //set PB1, PB0, PD7-PD3 and PD1 to output
-  DDRB = DDRB | B00000011;  //set PB1, PB0 to output (D7, D6)
-  DDRD = DDRD | B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
+  DDRB |= B00000011;  //set PB1, PB0 to output (D7, D6)
+  DDRD |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
 }
 
 //disable Arduino control bus; CE* and WE* both HighZ
@@ -170,9 +172,9 @@ byte dbus_read()
 //be sure to set databus to output first!
 void dbus_write(byte data)
 {
-  PORTB = PORTB | ( (data >> 6) & B00000011); //write PB1, PBO (D7, D6)
-  PORTD = PORTD | ( (data << 2) & B11111000); //write PD7-PD3 (D5-D1)
-  PORTD = PORTD | ( (data << 1) & B00000010); //write PD1 (D0)
+  PORTB |= ( (data >> 6) & B00000011); //write PB1, PBO (D7, D6)
+  PORTD |= ( (data << 2) & B11111000); //write PD7-PD3 (D5-D1)
+  PORTD |= ( (data << 1) & B00000010); //write PD1 (D0)
 }
 
 //shift out the given address to the 74HC595 registers
@@ -187,67 +189,67 @@ void set_abus(unsigned int address)
   //for every address bit (16) set: 
   //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >> 12) & B00001000);  //D15
+    PORTC |= ( (address >> 12) & B00001000);  //D15
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >> 11) & B00001000);  //D14
+    PORTC |= ( (address >> 11) & B00001000);  //D14
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >> 10) & B00001000);  //D13
+    PORTC |= ( (address >> 10) & B00001000);  //D13
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  9) & B00001000);  //D12
+    PORTC |= ( (address >>  9) & B00001000);  //D12
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  8) & B00001000);  //D11
+    PORTC |= ( (address >>  8) & B00001000);  //D11
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  7) & B00001000);  //D10
+    PORTC |= ( (address >>  7) & B00001000);  //D10
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  6) & B00001000);  //D9
+    PORTC |= ( (address >>  6) & B00001000);  //D9
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  5) & B00001000);  //D8
+    PORTC |= ( (address >>  5) & B00001000);  //D8
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  4) & B00001000);  //D7
+    PORTC |= ( (address >>  4) & B00001000);  //D7
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  3) & B00001000);  //D6
+    PORTC |= ( (address >>  3) & B00001000);  //D6
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  2) & B00001000);  //D5
+    PORTC |= ( (address >>  2) & B00001000);  //D5
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address >>  1) & B00001000);  //D4
+    PORTC |= ( (address >>  1) & B00001000);  //D4
     digitalHigh(CLOCK);
     digitalLow(DS);
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address      ) & B00001000);  //D3
+    PORTC |= ( (address      ) & B00001000);  //D3
     digitalHigh(CLOCK);
     digitalLow(DS); 
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address <<  1) & B00001000);  //D2
+    PORTC |= ( (address <<  1) & B00001000);  //D2
     digitalHigh(CLOCK);
     digitalLow(DS); 
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address <<  2) & B00001000);  //D1
+    PORTC |= ( (address <<  2) & B00001000);  //D1
     digitalHigh(CLOCK);
     digitalLow(DS); 
   digitalLow(CLOCK);
-    PORTC = PORTC |  ( (address <<  3) & B00001000);  //D0
+    PORTC |= ( (address <<  3) & B00001000);  //D0
     digitalHigh(CLOCK);
     digitalLow(DS); 
    
@@ -414,14 +416,27 @@ void setup() {
 } //end of setup()
 
 void loop() {
-
+  
   //check if flag has set by interrupt routine (TI WE*, MBE* and A15 -> 74LS138 O0)
   if (FD1771 == 0xBB) {
-/*
+
     noInterrupts(); //we don't want our interrupt be interrupted
-    
-    ccmd = Rbyte(WCOMND)
-    if ( ccmd != 0xFF || lcmd ) {
+
+    //first test if write was updating the CRU Write Register as we can go straight back to the TI
+    if ( Rbyte(CRUWRI) != lcruw)
+
+      //nope, now check for a fresh or repeated commannd
+      ccmd = Rbyte(WCOMND);
+      
+      ccmd == 0xFF ? ccmd = lcmd : ccmd &= 0xF0 hasn't changed so it must have been RDINT (R6 counter sector R/W, ReadID and track R/F)
+      
+        if (
+        
+      }
+
+        
+
+
 
     switch (ccmd & 0xF0) {  //strip floppy-specific bits we don't need, keep FD1771 command only
 	
@@ -530,11 +545,14 @@ void loop() {
   
   }
 
-  //if ( Rbyte(CRUWRI)
+  //reflect disk select + side select bits in CRU Read register. 
+  DSRAM = Rbyte(CRUWRI);
+  Wbyte(CRURD,( (DSRAM >> 4) & 0xE)) + (DSRAM & 0x80) );
   
-  lcmd = ccmd;            //save current command for compare in next interrupt
-  ccmd = 0;               //ready to store next command (which could be more of the same)
-  lcruw = Rbyte(CRUWRI);   //save current CRU write register for compare in next interrupt
+  lcmd    = ccmd;           //save current command for compare in next interrupt
+  ccmd    = 0;              //ready to store next command (which could be more of the same)
+  lcruw   = Rbyte(CRUWRI);  //save current CRU write register for compare in next interrupt
+  lr6val  = Rbyte(RDINT);   //save current R6 counter value; next byte in sector R/W, ReadID and track R/F 
   
   FD1771 = 0;   //clear interrupt flag
   interrupts(); //enable interrupts again
