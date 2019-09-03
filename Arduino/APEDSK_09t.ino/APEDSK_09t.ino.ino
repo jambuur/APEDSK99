@@ -92,12 +92,11 @@ byte ccmd   = 0; //current command
 byte lcmd   = 0; //last command
 byte ccruw  = 0; //current CRUWRI value
 byte lcruw  = 0; //last CRUWRI value
-int lr6val  = 0; //byte counter for sector/track R/W
+int lrdi    = 0; //byte counter for sector/track R/W
 int secval  = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
   
 boolean curdir = LOW; //current step direction, step in(wards) by default
 
-#define APEERR  0x1FE8  //APEDSK debugging
 #define RDINT   0x1FEA  //R6 counter value to detect read access in sector R/W, ReadID and track R/F
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
@@ -416,94 +415,98 @@ void setup() {
 } //end of setup()
 
 void loop() {
-  
+
   //check if flag has set by interrupt routine (TI WE*, MBE* and A15 -> 74LS138 O0)
   if (FD1771 == 0xBB) {
 
     noInterrupts(); //we don't want our interrupt be interrupted
 
     //first test if write was updating the CRU Write Register as we can go straight back to the TI
-    if ( Rbyte(CRUWRI) != lcruw)
+    if ( (Rbyte(CRUWRI) == lcruw) {
 
-      //nope, now check for a fresh or repeated commannd
-      ccmd = Rbyte(WCOMND);
-      
-      ccmd == 0xFF ? ccmd = lcmd : ccmd &= 0xF0 hasn't changed so it must have been RDINT (R6 counter sector R/W, ReadID and track R/F)
-      
-        if (
+      //nope so prep with reading Command Register and strip off unneeded floppy bits
+      DSRAM = Rbyte(WCOMND);
         
+      if ( DSRAM != lcmd ) {    
+          ccmd = DSRAM; //new command
       }
-
-        
-
-
-
-    switch (ccmd & 0xF0) {  //strip floppy-specific bits we don't need, keep FD1771 command only
+      else if ( Rbyte(RDINT+1) != lrdi ) {
+        ccmd = lcmd;  //updated read counter
+      }
+      else {
+        ccmd = 32;  //update to Data, Sector or Track Register; no further action this time (same as Step)
+      }
+            
+      switch (ccmd) {  //strip unneeded floppy bits
 	
-    	case 0: //restore
-        Wbyte(RTRACK,0);  //clear read track register
-    		Wbyte(WTRACK,0);	//clear write track register        
-    		Wbyte(WDATA,0); 	//clear write data register
-    	break;
-	
-    	case 16: //seek
-    		//2 comparisons as if RTRACK == WDATA curdir doesn't change
-        if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
-    		  curdir == LOW;  //step-in towards track 40
-    		}	
-    		else if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
-    		  curdir == HIGH; //step-out towards track 0
-    		} 
-    	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
-      break;
- 
-	    case 32: //step
-	      //don't have to do anything for just step
-		  break;	    
-	
-    	case 48: //step+T
-    		DSRAM = Rbyte(RTRACK);	//read current track #
-    		//is current direction inwards and track # still within limits?
-    		if ( curdir == LOW && DSRAM < 39 ) {
-    		  Wbyte(RTRACK,++DSRAM);  //increase track #
-    		}
-    		//is current direction outwards and track # still within limits?
-    		else if ( curdir == HIGH && DSRAM >  0) {
-    		  Wbyte(RTRACK,--DSRAM); //decrease track #
-    		}			
-      break;
-     
-  	  case 64: //step-in
-  		  curdir == LOW; //set current direction		
-      break;
-	
-    	case 80: //step-in+T
-    		DSRAM = Rbyte(RTRACK);  //read current track #
-    		//if track # still within limits update track register
-    		if ( DSRAM < 39) { 
-    		  Wbyte(RTRACK,++DSRAM); }
-    		curdir == LOW; //set current direction		
-      break;
-
-      case 96: //step-out
-  		  curdir == HIGH; //set current direction		
-      break;
+       	case 0: //restore
+          Wbyte(RTRACK,0);  //clear read track register
+      		Wbyte(WTRACK,0);	//clear write track register        
+      		Wbyte(WDATA,0); 	//clear write data register
+      	break;
+  	
+      	case 16: //seek
+      		//2 comparisons as if RTRACK == WDATA curdir doesn't change
+          if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
+      		  curdir == LOW;  //step-in towards track 40
+      		}	
+      		else if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
+      		  curdir == HIGH; //step-out towards track 0
+      		} 
+      	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
+        break;
+   
+  	    case 32: //step
+  	      //don't have to do anything for just step
+  		  break;	    
+  	
+      	case 48: //step+T
+      		DSRAM = Rbyte(RTRACK);	//read current track #
+      		//is current direction inwards and track # still within limits?
+      		if ( curdir == LOW && DSRAM < 39 ) {
+      		  Wbyte(RTRACK,++DSRAM);  //increase track #
+      		}
+      		//is current direction outwards and track # still within limits?
+      		else if ( curdir == HIGH && DSRAM >  0) {
+      		  Wbyte(RTRACK,--DSRAM); //decrease track #
+      		}			
+        break;
+       
+    	  case 64: //step-in
+    		  curdir == LOW; //set current direction		
+        break;
+  	
+      	case 80: //step-in+T
+      		DSRAM = Rbyte(RTRACK);  //read current track #
+      		//if track # still within limits update track register
+      		if ( DSRAM < 39) { 
+      		  Wbyte(RTRACK,++DSRAM); 
+      		}
+      		curdir == LOW; //set current direction		
+        break;
   
-      case 112: //step-out+T
-        DSRAM = Rbyte(RTRACK);  //read current track #
-        //if track # still within limits update track register
-        if ( DSRAM > 0) { 
-          Wbyte(RTRACK,--DSRAM); }
-        curdir == HIGH; //set current direction    
-      break;
+        case 96: //step-out
+    		  curdir == HIGH; //set current direction		
+        break;
     
-	    case 128: //read sector
-        if ( ccmd != lcmd ) { //new sector read
-          //determine absolute sector #
-          secval = ( (Rbyte(CRURD
-          
-        }
-			secval = (side * 359) + (track * 9) + WSECTR
+        case 112: //step-out+T
+          DSRAM = Rbyte(RTRACK);  //read current track #
+          //if track # still within limits update track register
+          if ( DSRAM > 0) { 
+            Wbyte(RTRACK,--DSRAM); 
+          }
+          curdir == HIGH; //set current direction    
+        break;
+/*      
+  	    case 128: //read sector
+           if ( ccmd != lcmd ) { //new sector read
+            //determine absolute sector #
+            
+            
+            secval = ( (Rbyte(CRURD
+            
+          }
+  			secval = (side * 359) + (track * 9) + WSECTR
 			
  while m is set AND WSECTR < max
           while RDINT >= 0
@@ -542,17 +545,17 @@ void loop() {
 	    case 240: //write track
         while sector <  sectors p/t
 	      break; */
-  
+      }
+    }
   }
-
-  //reflect disk select + side select bits in CRU Read register. 
-  DSRAM = Rbyte(CRUWRI);
-  Wbyte(CRURD,( (DSRAM >> 4) & 0xE)) + (DSRAM & 0x80) );
+  //reflect disk select + side select bits in CRU Read register. DISABLED for now
+  //DSRAM = Rbyte(CRUWRI);
+  //Wbyte(CRURD,( (DSRAM >> 4) & 0xE)) + (DSRAM & 0x80) );
   
-  lcmd    = ccmd;           //save current command for compare in next interrupt
-  ccmd    = 0;              //ready to store next command (which could be more of the same)
-  lcruw   = Rbyte(CRUWRI);  //save current CRU write register for compare in next interrupt
-  lr6val  = Rbyte(RDINT);   //save current R6 counter value; next byte in sector R/W, ReadID and track R/F 
+  lcmd    = ccmd;               //save current command for compare in next interrupt
+  ccmd    = 0;                  //ready to store next command (which could be more of the same)
+  lcruw   = Rbyte(CRUWRI);      //save current CRU write register for compare in next interrupt
+  lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F 
   
   FD1771 = 0;   //clear interrupt flag
   interrupts(); //enable interrupts again
