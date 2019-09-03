@@ -88,13 +88,14 @@ volatile byte FD1771 = 0;
 //generic variable for R/W RAM
 byte DSRAM  = 0;
 
-byte ccmd         = 0; //current command
-byte lcmd         = 0; //last command
-byte ccruw        = 0; //current CRUWRI value
-byte lcruw        = 0; //last CRUWRI value
-int lrdi          = 0; //byte counter for sector/track R/W
-int secval        = 0; //absolute sector number: (side * 359) + (track * 9) + WSECTR
-long int btidx    = 0; //absolute byte index: (secval * 256) + repeat R/W
+byte ccmd         = 0;    //current command
+byte lcmd         = 0;    //last command
+boolean ncmd      = LOW;  //flag new command
+byte ccruw        = 0;    //current CRUWRI value
+byte lcruw        = 0;    //last CRUWRI value
+int lrdi          = 0;    //byte counter for sector/track R/W
+int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
+long int btidx    = 0;    //absolute byte index: (secval * 256) + repeat R/W
   
 boolean curdir = LOW; //current step direction, step in(wards) by default
 
@@ -125,6 +126,7 @@ File DSK[7];
 //flags for additional "drives" (aka DOAD files) available
 boolean DSK2 = LOW;
 boolean DSK3 = LOW;
+byte    ADSK = 0;
 
 //----- RAM, I/O data and control functions
 
@@ -427,22 +429,20 @@ void loop() {
     noInterrupts(); //we don't want our interrupt be interrupted
 
     //first test if write was updating the CRU Write Register as we can go straight back to the TI
-    if ( (Rbyte(CRUWRI) == lcruw) {
+    if ( Rbyte(CRUWRI) == lcruw) {
 
       //nope so prep with reading Command Register
-      DSRAM = Rbyte(WCOMND);
+      DSRAM = Rbyte(WCOMND & 0xF0); //keep command only, strip unneeded floppy bits
         
-      if ( DSRAM != lcmd ) {    //same as last command?
-          ccmd = DSRAM;         //nope, new command
-      }
-      else if ( Rbyte(RDINT+1) != lrdi ) {  //updated read counter?
-        ccmd = lcmd;                        //yes, continue with same command
+      if ( DSRAM != lcmd ) {    //different to last command?
+          ccmd = DSRAM;         //yes, set new command
+          ncmd = HIGH;          //and flag it
       }
       else {
-        ccmd = 32;  //was update to Data, Sector or Track Register; no further action this time (same as Step)
+        ccmd = lcmd;            //no, continue with same command
       }
-            
-      switch (ccmd & 0xF0) {  //keep command only, strip unneeded floppy bits
+     
+      switch (ccmd) {
 	
        	case 0: //restore
           Wbyte(RTRACK,0);  //clear read track register
@@ -504,14 +504,17 @@ void loop() {
         break;
      
   	    case 128: //read sector
-          if ( ccmd != lcmd ) { //new sector read     
+          if ( ncmd ) { //new sector read     
             //absolute sector calc: (side * 39) + (track * 9) + sector #
-            secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR);
-            
-            
+            secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector # in DOAD (0-359)
+            btidx = secval * 256;                                                       //calc absolute byte index (0-92160)
+            ADSK = Rbyte(CRURD) >> 7;                                                   //determine selected disk
+            DSK[ADSK].seek(btidx);                                                      //set to first absolute byte
           }
-  			
-			
+            DSRAM = DSK[ADSK].read();
+			      Wbyte(RDATA,DSRAM);
+         break;
+ /*      
  while m is set AND WSECTR < max
           while RDINT >= 0
           sector byte -> RDATA
@@ -548,10 +551,11 @@ void loop() {
 	      break;
 	    case 240: //write track
         while sector <  sectors p/t
-	      break; 
+	      break; */
       }
     }
   }
+  
   //reflect disk select + side select bits in CRU Read register. DISABLED for now
   //DSRAM = Rbyte(CRUWRI);
   //Wbyte(CRURD,( (DSRAM >> 4) & 0xE)) + (DSRAM & 0x80) );
@@ -563,7 +567,7 @@ void loop() {
   
   FD1771 = 0;   //clear interrupt flag
   interrupts(); //enable interrupts again
-*/
+
 } //end of loop()
 
 void listen1771() {
