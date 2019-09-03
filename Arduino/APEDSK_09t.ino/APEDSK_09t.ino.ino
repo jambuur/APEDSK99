@@ -442,78 +442,86 @@ void loop() {
         ccmd = lcmd;            //no, continue with same command
       }
      
-      switch (ccmd) {
-	
-       	case 0: //restore
-          Wbyte(RTRACK,0);  //clear read track register
-      		Wbyte(WTRACK,0);	//clear write track register        
-      		Wbyte(WDATA,0); 	//clear write data register
-      	break;
+      if ( ccmd < 128 ) { //step/seek commands; no additional prep needed
+      
+        switch (ccmd) {
   	
-      	case 16: //seek
-      		//2 comparisons as if RTRACK == WDATA curdir doesn't change
-          if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
-      		  curdir == LOW;  //step-in towards track 40
-      		}	
-      		else if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
-      		  curdir == HIGH; //step-out towards track 0
-      		} 
-      	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
-        break;
-   
-  	    case 32: //step
-  	      //don't have to do anything for just step
-  		  break;	    
-  	
-      	case 48: //step+T (update Track register)
-      		DSRAM = Rbyte(RTRACK);	//read current track #
-      		//is current direction inwards and track # still within limits?
-      		if ( curdir == LOW && DSRAM < 39 ) {
-      		  Wbyte(RTRACK,++DSRAM);  //increase track #
-      		}
-      		//is current direction outwards and track # still within limits?
-      		else if ( curdir == HIGH && DSRAM >  0) {
-      		  Wbyte(RTRACK,--DSRAM); //decrease track #
-      		}			
-        break;
-       
-    	  case 64: //step-in (towards track 39)
-    		  curdir == LOW; //set current direction		
-        break;
-  	
-      	case 80: //step-in+T (towards track 39, update Track Register)
-      		DSRAM = Rbyte(RTRACK);  //read current track #
-      		//if track # still within limits update track register
-      		if ( DSRAM < 39) { 
-      		  Wbyte(RTRACK,++DSRAM); 
-      		}
-      		curdir == LOW; //set current direction		
-        break;
-  
-        case 96: //step-out (towards track 0)
-    		  curdir == HIGH; //set current direction		
-        break;
-    
-        case 112: //step-out+T
-          DSRAM = Rbyte(RTRACK);  //read current track #
-          //if track # still within limits update track register
-          if ( DSRAM > 0) { 
-            Wbyte(RTRACK,--DSRAM); 
-          }
-          curdir == HIGH; //set current direction    
-        break;
+         	case 0: //restore
+            Wbyte(RTRACK,0);  //clear read track register
+        		Wbyte(WTRACK,0);	//clear write track register        
+        		Wbyte(WDATA,0); 	//clear write data register
+        	break;
+    	
+        	case 16: //seek
+        		//2 comparisons as if RTRACK == WDATA curdir doesn't change
+            if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
+        		  curdir == LOW;  //step-in towards track 40
+        		}	
+        		else if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
+        		  curdir == HIGH; //step-out towards track 0
+        		} 
+        	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
+          break;
      
-  	    case 128: //read sector
-          if ( ncmd ) { //new sector read     
-            //absolute sector calc: (side * 39) + (track * 9) + sector #
-            secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector # in DOAD (0-359)
-            btidx = secval * 256;                                                       //calc absolute byte index (0-92160)
-            ADSK = Rbyte(CRURD) >> 7;                                                   //determine selected disk
-            DSK[ADSK].seek(btidx);                                                      //set to first absolute byte
-          }
+    	    case 32: //step
+    	      //don't have to do anything for just step
+    		  break;	    
+    	
+        	case 48: //step+T (update Track register)
+        		DSRAM = Rbyte(RTRACK);	//read current track #
+        		//is current direction inwards and track # still within limits?
+        		if ( curdir == LOW && DSRAM < 39 ) {
+        		  Wbyte(RTRACK,++DSRAM);  //increase track #
+        		}
+        		//is current direction outwards and track # still within limits?
+        		else if ( curdir == HIGH && DSRAM >  0) {
+        		  Wbyte(RTRACK,--DSRAM); //decrease track #
+        		}			
+          break;
+         
+      	  case 64: //step-in (towards track 39)
+      		  curdir == LOW; //set current direction		
+          break;
+    	
+        	case 80: //step-in+T (towards track 39, update Track Register)
+        		DSRAM = Rbyte(RTRACK);  //read current track #
+        		//if track # still within limits update track register
+        		if ( DSRAM < 39) { 
+        		  Wbyte(RTRACK,++DSRAM); 
+        		}
+        		curdir == LOW; //set current direction		
+          break;
+    
+          case 96: //step-out (towards track 0)
+      		  curdir == HIGH; //set current direction		
+          break;
+      
+          case 112: //step-out+T
+            DSRAM = Rbyte(RTRACK);  //read current track #
+            //if track # still within limits update track register
+            if ( DSRAM > 0) { 
+              Wbyte(RTRACK,--DSRAM); 
+            }
+            curdir == HIGH; //set current direction    
+          break;
+      } //end switch seek/step commands
+
+      else { //rest of commands; more prep needed
+
+        if ( ncmd ) { //new sector read     
+          //absolute sector calc: (side * 39) + (track * 9) + sector #
+          secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector # in DOAD (0-359)
+          btidx = secval * 256;                                                       //calc absolute byte index (0-92160)
+          ADSK = Rbyte(CRURD) >> 7;                                                   //determine selected disk
+          DSK[ADSK].seek(btidx);                                                      //set to first absolute byte
+        }
+
+        switch (ccmd) {
+           
+          case 128: //read sector
             DSRAM = DSK[ADSK].read();
-			      Wbyte(RDATA,DSRAM);
-         break;
+            Wbyte(RDATA,DSRAM);
+          break;
  /*      
  while m is set AND WSECTR < max
           while RDINT >= 0
@@ -555,6 +563,7 @@ void loop() {
       }
     }
   }
+ }
   
   //reflect disk select + side select bits in CRU Read register. DISABLED for now
   //DSRAM = Rbyte(CRUWRI);
