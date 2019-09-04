@@ -508,7 +508,7 @@ void loop() {
 
       else { //rest of commands; more prep needed
 
-        if ( ncmd ) { //new sector read     
+        if ( ncmd ) { //new sector R/W, Track R/F     
           //absolute sector calc: (side * 39) + (track * 9) + sector #
           secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector # in DOAD (0-359)
           btidx = secval * 256;                                                       //calc absolute byte index (0-92160)
@@ -519,18 +519,25 @@ void loop() {
         switch (ccmd) {
            
           case 128: //read sector
-            DSRAM = DSK[ADSK].read();
+          if ( ( btidx - DSK[ADSK].position() ) <= 256 { //have we supplied all 256 bytes yet?
+		DSRAM = DSK[ADSK].read(); //nope, supply next byte
             Wbyte(RDATA,DSRAM);
+	  }
+	  else {
+		 Wbyte( RSECTR,++(Rbyte(RSECTR) ); //update Read Sector Register
+		 //update Mark Type
           break;
  /*      
- while m is set AND WSECTR < max
-          while RDINT >= 0
-          sector byte -> RDATA
-        update mark type
-        update RSECTR
-	      break;
-	    case 144: //read multiple sectors
-	      break;
+          case 144: //read multiple sectors
+	      if ( DSK[ADSK].position() <= (360 * 256) {
+	      	DSRAM = DSK[ADSK].read(); //nope, supply next byte
+            	Wbyte(RDATA,DSRAM);
+	      }
+	      else {
+	         Wbyte( RSECTR,++(Rbyte(RSECTR) ); //update Read Sector Register
+		 //update Mark Type
+	      }	      
+	   break;
 	    case 160: //write sector
         if P then
          set p bit, abort
@@ -563,8 +570,6 @@ void loop() {
       }
     }
   }
- }
-  
   //reflect disk select + side select bits in CRU Read register. DISABLED for now
   //DSRAM = Rbyte(CRUWRI);
   //Wbyte(CRURD,( (DSRAM >> 4) & 0xE)) + (DSRAM & 0x80) );
@@ -576,7 +581,9 @@ void loop() {
   
   FD1771 = 0;   //clear interrupt flag
   interrupts(); //enable interrupts again
-
+ }
+  
+  
 } //end of loop()
 
 void listen1771() {
