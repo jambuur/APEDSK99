@@ -121,12 +121,13 @@ boolean curdir = LOW; //current step direction, step in(wards) by default
 File InDSR;   //DSR binary
 
 //DSKx file pointers; x=1,2,3 for read, (x+3) for write
-File DSK[7]; 
+#define woff 3	//write file pointer offset
+File DSK[7]; 	//read and write file pointers to DOAD's
 
 //flags for additional "drives" (aka DOAD files) available
 boolean DSK2 = LOW;
 boolean DSK3 = LOW;
-byte    ADSK = 0;
+byte    CDSK = 0;
 
 //----- RAM, I/O data and control functions
 
@@ -391,20 +392,20 @@ void setup() {
     eflash(3);
   }
   else {
-    DSK[1+3] = SD.open("/DISKS/001.DSK", FILE_WRITE);
+    DSK[1+woff] = SD.open("/DISKS/001.DSK", FILE_WRITE);
   }
   
   //try to open DSK2 and flag if exists
   DSK[2] = SD.open("/DISKS/002.DSK", FILE_READ);
   if (DSK[2]) {
-    DSK[2+3] = SD.open("/DISKS/002.DSK", FILE_WRITE);
+    DSK[2+woff] = SD.open("/DISKS/002.DSK", FILE_WRITE);
     DSK2 = HIGH;
   }
    
   //try to open DSK3 and flag if exists
   DSK[3] = SD.open("/DISKS/003.DSK", FILE_READ);
   if (DSK[3]) {
-    DSK[3+3] = SD.open("/DISKS/003.DSK", FILE_WRITE);
+    DSK[3+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
     DSK3 = HIGH;
   }
   
@@ -512,34 +513,34 @@ void loop() {
           //absolute sector calc: (side * 39) + (track * 9) + sector #
           secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector # in DOAD (0-359)
           btidx = secval * 256;                                                       //calc absolute byte index (0-92160)
-          ADSK = Rbyte(CRURD) >> 7;                                                   //determine selected disk
-          DSK[ADSK].seek(btidx);                                                      //set to first absolute byte
+          CDSK = Rbyte(CRURD) >> 7;                                                   //determine selected disk
+          DSK[CDSK].seek(btidx);                                                      //set to first absolute byte
         }
 
         switch (ccmd) {
            
           case 128: //read sector
-          if ( ( btidx - DSK[ADSK].position() ) <= 256 { //have we supplied all 256 bytes yet?
-		DSRAM = DSK[ADSK].read(); //nope, supply next byte
+          if ( ( btidx - DSK[CDSK].position() ) < 257 { //have we supplied all 256 bytes yet?
+		DSRAM = DSK[CDSK].read(); //nope, supply next byte
             Wbyte(RDATA,DSRAM);
 	  }
-	  else {
-		 Wbyte( RSECTR,++(Rbyte(RSECTR) ); //update Read Sector Register
-		 //update Mark Type
           break;
- /*      
+		       
           case 144: //read multiple sectors
-	      if ( DSK[ADSK].position() <= (360 * 256) {
-	      	DSRAM = DSK[ADSK].read(); //nope, supply next byte
+	      if ( Rbyte(RSECTR) < 9 { //are we still below the max # of sectors/track? CHECK sector # scheme in source
+	      	DSRAM = DSK[CDSK].read(); //nope, supply next byte
             	Wbyte(RDATA,DSRAM);
 	      }
-	      else {
-	         Wbyte( RSECTR,++(Rbyte(RSECTR) ); //update Read Sector Register
-		 //update Mark Type
-	      }	      
-	   break;
-	    case 160: //write sector
-        if P then
+	         Wbyte(RSECTR, Rbyte(RSECTR) +  ((DSK[CDSK].position() - btidx) / 256)) ); //update Read Sector Register    
+	   break;   
+	      
+	   case 160: //write sector
+        
+	      
+	      
+	      
+	      
+	      if P then
          set p bit, abort
        else
         while m is set AND WSECTR < max
