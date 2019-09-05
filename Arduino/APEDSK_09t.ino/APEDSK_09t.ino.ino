@@ -96,8 +96,7 @@ byte lcruw        = 0;    //last CRUWRI value
 int lrdi          = 0;    //byte counter for sector/track R/W
 int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
 long int btidx    = 0;    //absolute byte index: (secval * 256) + repeat R/W
-  
-boolean curdir = LOW; //current step direction, step in(wards) by default
+boolean curdir    = LOW;  //current step direction, step in(wards) by default
 
 #define RDINT   0x1FEA  //R6 counter value to detect read access in sector R/W, ReadID and track R/F
 //CRU emulation bytes + FD1771 registers
@@ -124,10 +123,18 @@ File InDSR;   //DSR binary
 #define woff 3	//write file pointer offset
 File DSK[7]; 	//read and write file pointers to DOAD's
 
-//flags for additional "drives" (aka DOAD files) available
-boolean DSK2 = LOW;
-boolean DSK3 = LOW;
-byte    CDSK = 0;
+//flags for "drives" (aka DOAD files) available (DSK1 is always available, if not Flash Error 3
+boolean aDSK[4] = LOW,HIGH,LOW,LOW;
+//current selected DSK
+byte cDSK = 0;
+//protected DSK flag
+boolean pDSK = LOW;
+
+void sTrack0(byte track) {
+  if ( track == 0 ) {
+    Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //set Track 0 bit in Status Register;
+  }
+}
 
 //----- RAM, I/O data and control functions
 
@@ -399,14 +406,14 @@ void setup() {
   DSK[2] = SD.open("/DISKS/002.DSK", FILE_READ);
   if (DSK[2]) {
     DSK[2+woff] = SD.open("/DISKS/002.DSK", FILE_WRITE);
-    DSK2 = HIGH;
+    aDSK[2] = HIGH;
   }
    
   //try to open DSK3 and flag if exists
   DSK[3] = SD.open("/DISKS/003.DSK", FILE_READ);
   if (DSK[3]) {
     DSK[3+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
-    DSK3 = HIGH;
+    aDSK[3] = HIGH;
   }
   
   //initialise FD1771 (clear CRU and FD1771 registers)
@@ -429,7 +436,7 @@ void loop() {
 
     noInterrupts(); //we don't want our interrupt be interrupted
 
-    //first test if write was updating the CRU Write Register as we can go straight back to the TI
+    //if write to CRU Write Register we can go straight back to the TI
     if ( Rbyte(CRUWRI) == lcruw) {
 
       //nope so prep with reading Command Register
@@ -437,10 +444,18 @@ void loop() {
         
       if ( DSRAM != lcmd ) {    //different to last command?
           ccmd = DSRAM;         //yes, set new command
-          ncmd = HIGH;          //and flag it
+          ncmd = HIGH;          //and set flag
       }
       else {
         ccmd = lcmd;            //no, continue with same command
+      }
+
+      //is the selected DSK available?
+      cDSK = (Rbyte(CRURD) >> 1) & 0x07;    //determine selected disk
+      if ( !aDSK[cDSK] ) {                 //check if DSK is available
+        Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set Not Ready bit in Status Register
+        ncmd = LOW;                         //skip new command prep
+        ccmd = 208;                         //exit via Force Interrupt command
       }
      
       if ( ccmd < 128 ) { //step/seek commands; no additional prep needed
@@ -449,34 +464,39 @@ void loop() {
   	
          	case 0: //restore
             Wbyte(RTRACK,0);  //clear read track register
-        		Wbyte(WTRACK,0);	//clear write track register        
-        		Wbyte(WDATA,0); 	//clear write data register
+        		Wbyte(WTRACK,0);  //clear write track register        
+        		Wbyte(WDATA,0);   //clear write data register
+            sTrack0(0);       //set Track 0 bit in Status Register      
         	break;
     	
-        	case 16: //seek
-        		//2 comparisons as if RTRACK == WDATA curdir doesn't change
+        	case 16: //seek; if RTRACK == WDATA direction doesn't change
             if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
-        		  curdir == LOW;  //step-in towards track 40
+        		  curdir == LOW;                            //step-in towards track 39
         		}	
         		else if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
-        		  curdir == HIGH; //step-out towards track 0
+        		  curdir == HIGH;                           //step-out towards track 0
         		} 
-        	  Wbyte(RTRACK,Rbyte(WDATA)); //update track register			
+        	  DSRAM = Rbyte(WDATA);                       //read track seek #
+        	  Wbyte(RTRACK, DSRAM);                       //update track register
+            sTrack0(DSRAM);                             //check, possibly set Track 0 bit in Status Register
           break;
      
     	    case 32: //step
-    	      //don't have to do anything for just step
+    	      if ( curdir == HIGH ) {         //we could be stepping out towards Track 0 ...
+              sTrack0(Rbyte(RTRACK) - 1);   //... so check if we are on Track 1 and if yes set Track 0 bit
+    	      }
     		  break;	    
     	
         	case 48: //step+T (update Track register)
         		DSRAM = Rbyte(RTRACK);	//read current track #
         		//is current direction inwards and track # still within limits?
         		if ( curdir == LOW && DSRAM < 39 ) {
-        		  Wbyte(RTRACK,++DSRAM);  //increase track #
+        		  Wbyte(RTRACK,++DSRAM);                  //increase track #
         		}
         		//is current direction outwards and track # still within limits?
         		else if ( curdir == HIGH && DSRAM >  0) {
-        		  Wbyte(RTRACK,--DSRAM); //decrease track #
+        		  Wbyte(RTRACK,--DSRAM);                  //decrease track #
+              sTrack0(DSRAM);                         //check/set Track 0
         		}			
           break;
          
@@ -494,7 +514,8 @@ void loop() {
           break;
     
           case 96: //step-out (towards track 0)
-      		  curdir == HIGH; //set current direction		
+      		  curdir == HIGH;               //set current direction		
+            sTrack0(Rbyte(RTRACK) - 1);   //check if we are on Track 1 and if yes set Track 0 bit
           break;
       
           case 112: //step-out+T
@@ -503,88 +524,79 @@ void loop() {
             if ( DSRAM > 0) { 
               Wbyte(RTRACK,--DSRAM); 
             }
-            curdir == HIGH; //set current direction    
+            curdir == HIGH; //set current direction  
+            sTrack0(DSRAM); //check if we are on Track 1 and if yes set Track 0 bit  
           break;
-      } //end switch seek/step commands
-
+      
+        } //end switch seek/step commands
+      }
       else { //rest of commands; more prep needed
-
+          
         if ( ncmd ) { //new sector R/W, Track R/F     
-          //absolute sector calc: (side * 39) + (track * 9) + sector #
-          secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector # in DOAD (0-359)
-          btidx = secval * 256;                                                       //calc absolute byte index (0-92160)
-          CDSK = Rbyte(CRURD) >> 7;                                                   //determine selected disk
-          DSK[CDSK].seek(btidx);                                                      //set to first absolute byte
+
+          DSK[cDSK].seek(0x10);     //select byte 0x10 in Volume Information Block
+          DSRAM = DSK[cDSK].read(); //read that byte
+          if ( DSRAM != 32 ) {
+            pDSK = HIGH;
+          }
+          else {
+            pDSK = LOW;        
+          }
+
+          secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); ///calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
+          btidx = secval * 256;                                                       //calc absolute DOAD byte index (0-92160)
+          DSK[cDSK].seek(btidx);                                                      //set to first absolute byte for R/W
         }
 
         switch (ccmd) {
            
           case 128: //read sector
-          if ( ( btidx - DSK[CDSK].position() ) < 257 { //have we supplied all 256 bytes yet?
-		DSRAM = DSK[CDSK].read(); //nope, supply next byte
-            Wbyte(RDATA,DSRAM);
-	  }
+            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?
+  		        DSRAM = DSK[cDSK].read();                 //nope, supply next byte
+              Wbyte(RDATA,DSRAM);
+  	        }
           break;
 		       
           case 144: //read multiple sectors
-	      if ( Rbyte(RSECTR) < 9 { //are we still below the max # of sectors/track? CHECK sector # scheme in source
-	      	DSRAM = DSK[CDSK].read(); //nope, supply next byte
-            	Wbyte(RDATA,DSRAM);
-	      }
-	         Wbyte(RSECTR, Rbyte(RSECTR) +  ((DSK[CDSK].position() - btidx) / 256)) ); //update Read Sector Register    
-	   break;   
+  	        if ( Rbyte(RSECTR) < 9 ) {      //are we still below the max # of sectors/track? CHECK sector # scheme in source
+  	      	  DSRAM = DSK[cDSK].read();   //yes, supply next byte
+             	Wbyte(RDATA,DSRAM);
+  	        }
+  	        Wbyte(RSECTR, Rbyte(RSECTR) + ((DSK[cDSK].position() - btidx) / 256) ); //update Read Sector Register    
+	        break;   
 	      
-	   case 160: //write sector
-        
-	      
-	      
-	      
-	      
-	      if P then
-         set p bit, abort
-       else
-        while m is set AND WSECTR < max
-          while RDINT >= 0
-          RDATA -> sector byte
-        update RSECTR
-	      break;
-	    case 176: //write multiple sectors
-	      break;
-	    case 192: //read ID
-        RTRACK -> WDATA
-        SIDE -> WDATA
-        RSECTR -> WDATA
-        sector length -> WDATA
-        CRC x2 -> WDATA
-	      break;
-	    case 208: //force interrupt
-	      break;
-	    case 224: //read track
-        while sector <  sectors p/t
-          while bytes < 256
-          sector byte -> RDATA
-        next sector
-	      break;
-	    case 240: //write track
-        while sector <  sectors p/t
-	      break; */
+          /*case 160: //write sector (P bit!)
+	        case 176: //write multiple sectors
+	        break;
+	        case 192: //read ID
+            RTRACK -> WDATA
+            SIDE -> WDATA
+            RSECTR -> WDATA
+            sector length -> WDATA
+            CRC x2 -> WDATA
+	        break;
+	        case 208: //force interrupt
+	        break;
+	        case 224: //read track
+          while sector <  sectors p/t
+	        break;
+	        case 240: //write track
+	        break; */
+        }
       }
     }
+    //reflect disk select + side select bits in CRU Read register. 
+    DSRAM = Rbyte(CRUWRI);
+    Wbyte(CRURD,( (DSRAM >> 4) & 0x07) + (DSRAM & 0x80) );
+    
+    lcmd    = ccmd;               //save current command for compare in next interrupt
+    ccmd    = 0;                  //ready to store next command (which could be more of the same)
+    lcruw   = Rbyte(CRUWRI);      //save current CRU write register for compare in next interrupt
+    lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F 
+    
+    FD1771 = 0;   //clear interrupt flag
+    interrupts(); //enable interrupts again
   }
-  //reflect disk select + side select bits in CRU Read register. DISABLED for now
-  //DSRAM = Rbyte(CRUWRI);
-  //Wbyte(CRURD,( (DSRAM >> 4) & 0xE)) + (DSRAM & 0x80) );
-  
-  lcmd    = ccmd;               //save current command for compare in next interrupt
-  ccmd    = 0;                  //ready to store next command (which could be more of the same)
-  lcruw   = Rbyte(CRUWRI);      //save current CRU write register for compare in next interrupt
-  lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F 
-  
-  FD1771 = 0;   //clear interrupt flag
-  interrupts(); //enable interrupts again
- }
-  
-  
 } //end of loop()
 
 void listen1771() {
