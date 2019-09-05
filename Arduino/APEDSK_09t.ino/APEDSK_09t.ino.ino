@@ -124,7 +124,7 @@ File InDSR;   //DSR binary
 File DSK[7]; 	//read and write file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 is always available, if not Flash Error 3
-boolean aDSK[4] = LOW,HIGH,LOW,LOW;
+boolean aDSK[4] = {LOW,HIGH,LOW,LOW};
 //current selected DSK
 byte cDSK = 0;
 //protected DSK flag
