@@ -420,6 +420,8 @@ void setup() {
   for (unsigned int ii = CRURD; ii < (WDATA+1) ; ii++) {
     Wbyte(ii,0x00);
   } 
+
+//TODO: initialise Status Register
   
   //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
   TIgo(); 
