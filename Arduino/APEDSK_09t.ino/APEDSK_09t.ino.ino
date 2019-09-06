@@ -420,6 +420,8 @@ void setup() {
   for (unsigned int ii = CRURD; ii < (WDATA+1) ; ii++) {
     Wbyte(ii,0x00);
   } 
+
+//TODO: initialise Status Register
   
   //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
   TIgo(); 
@@ -580,14 +582,24 @@ void loop() {
 		       
           case 144: //read multiple sectors
   	        if ( Rbyte(RSECTR) < 9 ) {      //are we still below the max # of sectors/track? CHECK sector # scheme in source
-  	      	  DSRAM = DSK[cDSK].read();   //yes, supply next byte
-             	Wbyte(RDATA,DSRAM);
+  	      	  //DSRAM = DSK[cDSK].read();   //yes, supply next byte
+             	Wbyte(RDATA, DSK[cDSK].read());
   	        }
   	        Wbyte(RSECTR, Rbyte(RSECTR) + ((DSK[cDSK].position() - btidx) / 256) ); //update Read Sector Register    
 	        break;   
 	      
-          /*case 160: //write sector (P bit!)
-	        case 176: //write multiple sectors
+          case 160: //write sector
+	  	if (!pDSK) {	//only write if DOAD is not protected
+		if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we written all 256 bytes yet?
+  		        //DSRAM =  DSK[cDSK].read();                 //nope, write next byte
+              		DSK[cDSK].write(Rbyte(WDATA) );
+  	        }	
+		else {
+			Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set Not Ready bit in Status Register
+		}
+		
+		
+		case 176: //write multiple sectors
 	        break;
 	        case 192: //read ID
             RTRACK -> WDATA
