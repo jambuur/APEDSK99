@@ -425,12 +425,33 @@ void setup() {
   TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
 } //end of setup()
 
 void loop() {
 
+  unsigned int  ii;
+  byte          jj=0xAA;
+  byte          kk;
+
+  TIstop();
+
+  while(1) {
+  
+    for (ii = 170; ii < 0x2000; ii++); {
+      
+        Wbyte(ii,jj);
+        kk = Rbyte(ii);
+      
+        if (kk == jj) {
+          eflash(5);
+        }
+
+    }
+  }
+
+/*
   //check if flag has set by interrupt routine (TI WE*, MBE* and A15 -> 74LS138 O0)
   if (FD1771 == 0xBB) {
 
@@ -530,20 +551,20 @@ void loop() {
       
         } //end switch seek/step commands
       }
-      else { //rest of commands; more prep needed
+      else { //rest of commands, needing more prep
           
         if ( ncmd ) { //new sector R/W, Track R/F     
 
           DSK[cDSK].seek(0x10);     //select byte 0x10 in Volume Information Block
           DSRAM = DSK[cDSK].read(); //read that byte
-          if ( DSRAM != 32 ) {
-            pDSK = HIGH;
+          if ( DSRAM != 32 ) {      //space?
+            pDSK = HIGH;            //yes; disk unprotected
           }
           else {
-            pDSK = LOW;        
+            pDSK = LOW;             //nope, disk is protected
           }
 
-          secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); ///calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
+          secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
           btidx = secval * 256;                                                       //calc absolute DOAD byte index (0-92160)
           DSK[cDSK].seek(btidx);                                                      //set to first absolute byte for R/W
         }
@@ -581,7 +602,7 @@ void loop() {
           while sector <  sectors p/t
 	        break;
 	        case 240: //write track
-	        break; */
+	        break; 
         }
       }
     }
@@ -597,6 +618,7 @@ void loop() {
     FD1771 = 0;   //clear interrupt flag
     interrupts(); //enable interrupts again
   }
+*/
 } //end of loop()
 
 void listen1771() {
