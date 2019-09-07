@@ -161,7 +161,7 @@ void dis_cbus() {
 void ena_cbus() {
   pinAsOutput(WE);
   digitalHigh(WE);  //default output state is LOW, could cause data corruption
-  //delayMicroseconds(10); //CHECK: may cause data corruption
+  delayMicroseconds(3); //CHECK: may cause data corruption
   pinAsOutput(CE);
   digitalLow(CE);   //default output state is LOW, could cause data corruption
 }
@@ -375,9 +375,9 @@ void setup() {
   TIstop();
   
   //check for existing DSR: read first DSR RAM byte ...
-  DSRAM = Rbyte(0x0000); 
+  DSRAM = Rbyte(0x0de4); 
   // ... and check for valid DSR header mark (>AA)
-  if ( DSRAM != 0xAA ) {
+  if ( DSRAM != 0xff ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
     InDSR = SD.open("/APEDSK.DSR", FILE_READ);
     if (InDSR) {
@@ -416,10 +416,10 @@ void setup() {
     aDSK[3] = HIGH;
   }
   
-  //initialise FD1771 (clear CRU and FD1771 registers)
+  /*initialise FD1771 (clear CRU and FD1771 registers)
   for (unsigned int ii = CRURD; ii < (WDATA+1) ; ii++) {
-    Wbyte(ii,0x00);
-  } 
+    Wbyte(ii,0x00); 
+  } */
 
 //TODO: initialise Status Register
   
@@ -433,27 +433,7 @@ void setup() {
 
 void loop() {
 
-  unsigned int  ii;
-  byte          jj=0xAA;
-  byte          kk;
-
-  TIstop();
-
-  while(1) {
-  
-    for (ii = 170; ii < 0x2000; ii++); {
-      
-        Wbyte(ii,jj);
-        kk = Rbyte(ii);
-      
-        if (kk == jj) {
-          eflash(5);
-        }
-
-    }
-  }
-
-/*
+ /*
   //check if flag has set by interrupt routine (TI WE*, MBE* and A15 -> 74LS138 O0)
   if (FD1771 == 0xBB) {
 
