@@ -193,20 +193,8 @@ void set_abus(unsigned int address)
   digitalLow(DS);
 
   //OK, repetitive, slightly ugly code but ... 1.53x as fast as the elegant for() - if() - else()
-  //for every address bit (16) set: 
+  //for every address bit (13 bits to address 8K) set: 
   //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
-  digitalLow(CLOCK);
-    PORTC |= ( (address >> 12) & B00001000);  //D15
-    digitalHigh(CLOCK);
-    digitalLow(DS);
-  digitalLow(CLOCK);
-    PORTC |= ( (address >> 11) & B00001000);  //D14
-    digitalHigh(CLOCK);
-    digitalLow(DS);
-  digitalLow(CLOCK);
-    PORTC |= ( (address >> 10) & B00001000);  //D13
-    digitalHigh(CLOCK);
-    digitalLow(DS);
   digitalLow(CLOCK);
     PORTC |= ( (address >>  9) & B00001000);  //D12
     digitalHigh(CLOCK);
@@ -375,9 +363,9 @@ void setup() {
   TIstop();
   
   //check for existing DSR: read first DSR RAM byte ...
-  DSRAM = Rbyte(0x0de4); 
+  DSRAM = Rbyte(0x140B); 
   // ... and check for valid DSR header mark (>AA)
-  if ( DSRAM != 0xff ) {
+  if ( DSRAM != 0xFE ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
     InDSR = SD.open("/APEDSK.DSR", FILE_READ);
     if (InDSR) {
