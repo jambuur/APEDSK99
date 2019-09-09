@@ -73,7 +73,7 @@
 #define D6 8	//PD8
 #define D7 9	//PD9
 
-//IO lines for RAM control
+//IO lines for Arduino RAM control
 #define CE  14  //PC0; LED flashes for both Arduino CE* and TI MBE*
 #define WE  16	//PC2
 
@@ -120,20 +120,23 @@ boolean curdir    = LOW;  //current step direction, step in(wards) by default
 File InDSR;   //DSR binary
 
 //DSKx file pointers; x=1,2,3 for read, (x+3) for write
-#define woff 3	//write file pointer offset
 File DSK[7]; 	//read and write file pointers to DOAD's
+#define woff 3	//write file pointer array index offset
 
-//flags for "drives" (aka DOAD files) available (DSK1 is always available, if not Flash Error 3
+//flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
 boolean aDSK[4] = {LOW,HIGH,LOW,LOW};
 //current selected DSK
 byte cDSK = 0;
 //protected DSK flag
 boolean pDSK = LOW;
 
+//short function to set Track 0 bit in Status Register
 void sTrack0(byte track) {
   if ( track == 0 ) {
-    Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //set Track 0 bit in Status Register;
+    Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register;
   }
+  else {
+	Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register;  
 }
 
 //----- RAM, I/O data and control functions
@@ -161,7 +164,7 @@ void dis_cbus() {
 void ena_cbus() {
   pinAsOutput(WE);
   digitalHigh(WE);  //default output state is LOW, could cause data corruption
-  delayMicroseconds(3); //CHECK: may cause data corruption
+  //delayMicroseconds(3); //CHECK: may cause data corruption
   pinAsOutput(CE);
   digitalLow(CE);   //default output state is LOW, could cause data corruption
 }
@@ -324,12 +327,10 @@ void eflash(byte error)
     for (byte flash = 0; flash < error; flash++)
     {
       //poor man's PWM, reduce mA's through LED to prolong its life
-      for (unsigned long int ppwm =0; ppwm < LED_on; ppwm++) {
-        digitalLow(CE);  //turn on RAM CE* and thus LED
+      for (unsigned long int ppwm = 0; ppwm < LED_on; ppwm++) {
+        digitalLow(CE);  //set RAM CE* LOW, turns on LED
         digitalHigh(CE); //turn it off
       }
-      //disable RAM CE*, turning off LED
-      //digitalHigh(CE);
       //LED is off for a bit
       delay(LED_off);
     } 
@@ -363,9 +364,9 @@ void setup() {
   TIstop();
   
   //check for existing DSR: read first DSR RAM byte ...
-  DSRAM = Rbyte(0x140B); 
+  DSRAM = Rbyte(0x0000); 
   // ... and check for valid DSR header mark (>AA)
-  if ( DSRAM != 0xFE ) {
+  if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
     InDSR = SD.open("/APEDSK.DSR", FILE_READ);
     if (InDSR) {
@@ -381,41 +382,47 @@ void setup() {
     }
   }
 
-  //open DSK1 (error if doesn't exist)
+  //try to open DSK1 for reads
   DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
   if (!DSK[1]) {
-    eflash(3);
+    eflash(3);	//could not open DSK1 -> flash error 3
   }
   else {
+    //DSK1 is available, assign file pointer for writes	  
     DSK[1+woff] = SD.open("/DISKS/001.DSK", FILE_WRITE);
   }
   
-  //try to open DSK2 and flag if exists
+  //try to open DSK2 for reads
   DSK[2] = SD.open("/DISKS/002.DSK", FILE_READ);
   if (DSK[2]) {
+    //DSK2 is available, assign file pointer for writes ...
     DSK[2+woff] = SD.open("/DISKS/002.DSK", FILE_WRITE);
+    //... and set flag
     aDSK[2] = HIGH;
   }
    
-  //try to open DSK3 and flag if exists
+  //try to open DSK3 for reads
   DSK[3] = SD.open("/DISKS/003.DSK", FILE_READ);
   if (DSK[3]) {
+    //DSK3 is available, assign file pointer for writes ...
     DSK[3+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
+    //... and set flag
     aDSK[3] = HIGH;
   }
   
-  /*initialise FD1771 (clear CRU and FD1771 registers)
+  initialise FD1771 (clear "CRU" and "FD1771 registers")
   for (unsigned int ii = CRURD; ii < (WDATA+1) ; ii++) {
     Wbyte(ii,0x00); 
-  } */
+  } 
 
-//TODO: initialise Status Register
+  //initialise Status Register: Head Loaded, Track 0 bits set
+  Wbyte(RSTAT,B00100100)
   
   //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
   TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
 } //end of setup()
 
@@ -443,7 +450,7 @@ void loop() {
 
       //is the selected DSK available?
       cDSK = (Rbyte(CRURD) >> 1) & 0x07;    //determine selected disk
-      if ( !aDSK[cDSK] ) {                 //check if DSK is available
+      if ( !aDSK[cDSK] ) {                 //check availability
         Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set Not Ready bit in Status Register
         ncmd = LOW;                         //skip new command prep
         ccmd = 208;                         //exit via Force Interrupt command
@@ -451,6 +458,7 @@ void loop() {
      
       if ( ccmd < 128 ) { //step/seek commands; no additional prep needed
       
+        Wbyte(
         switch (ccmd) {
   	
          	case 0: //restore
