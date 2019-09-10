@@ -31,6 +31,8 @@
 * I'm not responsible for any bad effect or damages caused by this software
 */
 
+//----- definitions and initialisations
+
 //faster digitalRead / digitalWrite definitions
 #define portOfPin(P)\
   (((P)>=0&&(P)<8)?&PORTD:(((P)>7&&(P)<14)?&PORTB:&PORTC))
@@ -77,17 +79,18 @@
 #define CE  14  //PC0; LED flashes for both Arduino CE* and TI MBE*
 #define WE  16	//PC2
 
-//define IO lines for TI99/4a control
+//IO lines for TI99/4a control
 #define TI_BUFFERS 	  15  //PC1; 74LS541 buffers enable/disable
 #define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
-//interrupt routine flag for possible new FD1771 command
+//interrupt routine flag for possible new / continued FD1771 command
 volatile byte FD1771 = 0;
 
-//generic variable for R/W RAM
+//generic variable for RAM R/W
 byte DSRAM  = 0;
 
+//various storage and flags for command interpretation and handling
 byte ccmd         = 0;    //current command
 byte lcmd         = 0;    //last command
 boolean ncmd      = LOW;  //flag new command
@@ -95,10 +98,12 @@ byte ccruw        = 0;    //current CRUWRI value
 byte lcruw        = 0;    //last CRUWRI value
 int lrdi          = 0;    //byte counter for sector/track R/W
 int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
-long int btidx    = 0;    //absolute byte index: (secval * 256) + repeat R/W
-boolean curdir    = LOW;  //current step direction, step in(wards) by default
+long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
+boolean curdir    = LOW;  //current step direction, step in(wards) towards track 39 by default
 
-#define RDINT   0x1FEA  //R6 counter value to detect read access in sector R/W, ReadID and track R/F
+//R6 counter value to detect read access in sector, ReadID and track commands
+#define RDINT   0x1FEA  
+
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
 #define CRUWRI  0x1FEE  //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
@@ -121,7 +126,7 @@ File InDSR;   //DSR binary
 
 //DSKx file pointers; x=1,2,3 for read, (x+3) for write
 File DSK[7]; 	//read and write file pointers to DOAD's
-#define woff 3	//write file pointer array index offset
+#define woff 3	//write file pointer (array index offset from read file pointer)
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
 boolean aDSK[4] = {LOW,HIGH,LOW,LOW};
@@ -130,16 +135,7 @@ byte cDSK = 0;
 //protected DSK flag
 boolean pDSK = LOW;
 
-//short function to set Track 0 bit in Status Register
-void sTrack0(byte track) {
-  if ( track == 0 ) {
-    Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register;
-  }
-  else {
-	Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register;  
-}
-
-//----- RAM, I/O data and control functions
+//----- RAM, I/O data/control and status functions
 
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
@@ -169,8 +165,7 @@ void ena_cbus() {
   digitalLow(CE);   //default output state is LOW, could cause data corruption
 }
 
-//read a complete byte from the databus
-//be sure to set databus to input first!
+//read a byte from the databus
 byte dbus_read() 
 {   
   return( ((PINB & B00000011) << 6) +   //read PB1, PBO (D7, D6)
@@ -178,8 +173,7 @@ byte dbus_read()
 	        ((PIND & B00000010) >> 1));   //read PD1 (D0)
 } 
 
-//write a byte to the databus
-//be sure to set databus to output first!
+//place a byte on the databus
 void dbus_write(byte data)
 {
   PORTB |= ( (data >> 6) & B00000011); //write PB1, PBO (D7, D6)
@@ -195,8 +189,8 @@ void set_abus(unsigned int address)
   //clear data pin
   digitalLow(DS);
 
-  //OK, repetitive, slightly ugly code but ... 1.53x as fast as the elegant for() - if() - else()
-  //for every address bit (13 bits to address 8K) set: 
+  //OK, repetitive, slightly ugly code but ... 1.53x as fast as the more elegant for() - if() - else()
+  //for every address bit (13 bits to address 8Kbytes) set: 
   //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
   digitalLow(CLOCK);
     PORTC |= ( (address >>  9) & B00001000);  //D12
@@ -257,7 +251,7 @@ void set_abus(unsigned int address)
   digitalHigh(LATCH);
 }  
 
-//short function to disable TI I/O
+//disable TI I/O, enable Arduino shift registers and control bus
 void TIstop()
 {
    digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
@@ -265,7 +259,7 @@ void TIstop()
    ena_cbus();              //Arduino in control of RAM
 }
 
-//short function to enable TI I/O
+//enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
@@ -273,7 +267,7 @@ void TIgo()
   digitalHigh(TI_READY);    //wake up TI
 }
 
-//highlevel function to read a byte from a given address
+//read a byte from RAM address
 byte Rbyte(unsigned int address)
 {
   byte data = 0;
@@ -290,7 +284,7 @@ byte Rbyte(unsigned int address)
   return data;
 }
 
-//highlevel function to write a byte to a given address
+//write a byte to RAM address
 void Wbyte(unsigned int address, byte data)
 {
   //set address bus
@@ -314,7 +308,7 @@ void Wbyte(unsigned int address, byte data)
 //flash error code
 void eflash(byte error)
 {
-  //no APEDSK for you but TI still usable 
+  //no APEDSK99 for you but TI console still usable
   digitalHigh(TI_BUFFERS);
   digitalHigh(TI_READY);
     
@@ -339,30 +333,31 @@ void eflash(byte error)
   }
 }
 
-//----- Main
-  
+//------------  
 void setup() {
-
-  //74HC595 shift register control
-  pinAsOutput(DS);
-  pinAsOutput(LATCH);
-  pinAsOutput(CLOCK);
-
-  //TI99-4a I/O control
-  pinAsOutput(TI_READY);
-  pinAsOutput(TI_BUFFERS);
-  //74LS138 interrupt: a write to DSR space (aka CRU, FD1771 registers, sector R/W (R6 counter in RAM) or track R/F (ditto))
-  pinAsInput(TI_INT);
 
   //see if the SD card is present and can be initialized
   if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
     eflash(1);
   }
+	
+  //74HC595 shift register control
+  pinAsOutput(DS);
+  pinAsOutput(LATCH);
+  pinAsOutput(CLOCK);
 
+  //74LS138 interrupt: TI WE*, MBE* and A15 -> O0 output
+  //a write to DSR space (aka CRU, FD1771 registers; or sector/track Read through R6 counter in RAM, see DSR source)
+  pinAsInput(TI_INT);
+	
+  //TI99-4a I/O control
+  pinAsOutput(TI_READY);
+  pinAsOutput(TI_BUFFERS);
+  
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
-  
+ 
   //check for existing DSR: read first DSR RAM byte ...
   DSRAM = Rbyte(0x0000); 
   // ... and check for valid DSR header mark (>AA)
@@ -384,7 +379,7 @@ void setup() {
 
   //try to open DSK1 for reads
   DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
-  if (!DSK[1]) {
+  if ( !DSK[1] ) {
     eflash(3);	//could not open DSK1 -> flash error 3
   }
   else {
@@ -394,7 +389,7 @@ void setup() {
   
   //try to open DSK2 for reads
   DSK[2] = SD.open("/DISKS/002.DSK", FILE_READ);
-  if (DSK[2]) {
+  if ( DSK[2] ) {
     //DSK2 is available, assign file pointer for writes ...
     DSK[2+woff] = SD.open("/DISKS/002.DSK", FILE_WRITE);
     //... and set flag
@@ -403,7 +398,7 @@ void setup() {
    
   //try to open DSK3 for reads
   DSK[3] = SD.open("/DISKS/003.DSK", FILE_READ);
-  if (DSK[3]) {
+  if ( DSK[3] ) {
     //DSK3 is available, assign file pointer for writes ...
     DSK[3+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
     //... and set flag
@@ -415,7 +410,7 @@ void setup() {
     Wbyte(ii,0x00); 
   } 
 
-  //initialise Status Register: Head Loaded, Track 0 bits set
+  //initialise Status Register: set Head Loaded and Track 0 bits
   Wbyte(RSTAT,B00100100)
   
   //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
@@ -428,8 +423,17 @@ void setup() {
 
 void loop() {
 
+ //set Track 0 bit in Status Register
+void sTrack0(byte track) {
+  if ( track == 0 ) {
+    Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register;
+  }
+  else {
+    Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register;  
+ }
+	
  /*
-  //check if flag has set by interrupt routine (TI WE*, MBE* and A15 -> 74LS138 O0)
+  //check if flag has set by interrupt routine 
   if (FD1771 == 0xBB) {
 
     noInterrupts(); //we don't want our interrupt be interrupted
