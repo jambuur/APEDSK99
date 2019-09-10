@@ -160,57 +160,31 @@ void set_abus(unsigned int address)
   //for every address bit (13 bits to address 8Kbytes) set: 
   //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  9) & B00001000);  //D12
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  9) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D12   
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  8) & B00001000);  //D11
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  8) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D11 
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  7) & B00001000);  //D10
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  7) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D10
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  6) & B00001000);  //D9
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  6) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D9
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  5) & B00001000);  //D8
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  5) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D8
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  4) & B00001000);  //D7
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  4) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D7
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  3) & B00001000);  //D6
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D6
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  2) & B00001000);  //D5
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D5
   digitalLow(CLOCK);
-    PORTC |= ( (address >>  1) & B00001000);  //D4
-    digitalHigh(CLOCK);
-    digitalLow(DS);
+    PORTC |= ( (address >>  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D4
   digitalLow(CLOCK);
-    PORTC |= ( (address      ) & B00001000);  //D3
-    digitalHigh(CLOCK);
-    digitalLow(DS); 
+    PORTC |= ( (address      ) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D3
   digitalLow(CLOCK);
-    PORTC |= ( (address <<  1) & B00001000);  //D2
-    digitalHigh(CLOCK);
-    digitalLow(DS); 
+    PORTC |= ( (address <<  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D2
   digitalLow(CLOCK);
-    PORTC |= ( (address <<  2) & B00001000);  //D1
-    digitalHigh(CLOCK);
-    digitalLow(DS); 
+    PORTC |= ( (address <<  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D1
   digitalLow(CLOCK);
-    PORTC |= ( (address <<  3) & B00001000);  //D0
-    digitalHigh(CLOCK);
-    digitalLow(DS); 
+    PORTC |= ( (address <<  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D0
    
   //stop shifting
   digitalLow(CLOCK);
