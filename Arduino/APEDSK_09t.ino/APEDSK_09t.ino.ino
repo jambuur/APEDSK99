@@ -31,7 +31,7 @@
 * I'm not responsible for any bad effect or damages caused by this software
 */
 
-//----- definitions and initialisations
+//----- definitions, functions and initialisations
 
 //faster digitalRead / digitalWrite definitions
 #define portOfPin(P)\
@@ -84,23 +84,6 @@
 #define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
-//interrupt routine flag for possible new / continued FD1771 command
-volatile byte FD1771 = 0;
-
-//generic variable for RAM R/W
-byte DSRAM  = 0;
-
-//various storage and flags for command interpretation and handling
-byte ccmd         = 0;    //current command
-byte lcmd         = 0;    //last command
-boolean ncmd      = LOW;  //flag new command
-byte ccruw        = 0;    //current CRUWRI value
-byte lcruw        = 0;    //last CRUWRI value
-int lrdi          = 0;    //byte counter for sector/track R/W
-int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
-long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
-boolean curdir    = LOW;  //current step direction, step in(wards) towards track 39 by default
-
 //R6 counter value to detect read access in sector, ReadID and track commands
 #define RDINT   0x1FEA  
 
@@ -120,22 +103,6 @@ boolean curdir    = LOW;  //current step direction, step in(wards) towards track
 #define LED_on      524288
 #define LED_off     250
 #define LED_repeat  1500
-
-//input and output file pointers
-File InDSR;   //DSR binary
-
-//DSKx file pointers; x=1,2,3 for read, (x+3) for write
-File DSK[7]; 	//read and write file pointers to DOAD's
-#define woff 3	//write file pointer (array index offset from read file pointer)
-
-//flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
-boolean aDSK[4] = {LOW,HIGH,LOW,LOW};
-//current selected DSK
-byte cDSK = 0;
-//protected DSK flag
-boolean pDSK = LOW;
-
-//----- RAM, I/O data/control and status functions
 
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
@@ -315,7 +282,7 @@ void eflash(byte error)
   //make sure we can toggle Arduino CE* to flash the error code
   pinAsOutput(CE);
 
-  //stuck in error flashing loop until reset
+  //error routine: stuck in code flashing loop until reset
   while (1) {
 
     for (byte flash = 0; flash < error; flash++)
@@ -332,6 +299,37 @@ void eflash(byte error)
       delay(LED_repeat);
   }
 }
+
+//interrupt routine flag: possible new / continued FD1771 command
+volatile byte FD1771 = 0;
+
+//generic variable for RAM R/W
+byte DSRAM  = 0;
+
+//input and output file pointers
+File InDSR;   //DSR binary
+
+//DSKx file pointers; x=1,2,3 for read, (x+3) for write
+File DSK[7]; 	//read and write file pointers to DOAD's
+#define woff 3	//write file pointer (array index offset from read file pointer)
+
+//flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
+boolean aDSK[4] = {LOW,HIGH,LOW,LOW};
+//current selected DSK
+byte cDSK = 0;
+//protected DSK flag
+boolean pDSK = LOW;
+
+//various storage and flags for command interpretation and handling
+byte ccmd         = 0;    //current command
+byte lcmd         = 0;    //last command
+boolean ncmd      = LOW;  //flag new command
+byte ccruw        = 0;    //current CRUWRI value
+byte lcruw        = 0;    //last CRUWRI value
+int lrdi          = 0;    //byte counter for sector/track R/W
+int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
+long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
+boolean curdir    = LOW;  //current step direction, step in(wards) towards track 39 by default
 
 //------------  
 void setup() {
