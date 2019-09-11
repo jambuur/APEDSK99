@@ -76,7 +76,7 @@
 #define D7 9	//PD9
 
 //IO lines for Arduino RAM control
-#define CE  14  //PC0; LED flashes for both Arduino CE* and TI MBE*
+#define CE  14  //PC0  LED flashes for both Arduino CE* and TI MBE*
 #define WE  16	//PC2
 
 //IO lines for TI99/4a control
@@ -112,7 +112,6 @@ void dbus_in() {
 
 //switch databus to OUTPUT state so Arduino can play bus master
 void dbus_out() {
-  //set PB1, PB0, PD7-PD3 and PD1 to output
   DDRB |= B00000011;  //set PB1, PB0 to output (D7, D6)
   DDRD |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
 }
@@ -280,8 +279,8 @@ volatile byte FD1771 = 0;
 //generic variable for RAM R/W
 byte DSRAM  = 0;
 
-//input and output file pointers
-File InDSR;   //DSR binary
+//DSR binary input file pointer
+File InDSR;  
 
 //DSKx file pointers; x=1,2,3 for read, (x+3) for write
 File DSK[7]; 	//read and write file pointers to DOAD's
@@ -309,10 +308,10 @@ boolean curdir    = LOW;  //current step direction, step in(wards) towards track
 void setup() {
 
   //see if the SD card is present and can be initialized
-  if (!SD.begin(SPI_CS)) {
+  /*if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
-    eflash(1);
-  }
+    eflash(1); 
+  } */
 	
   //74HC595 shift register control
   pinAsOutput(DS);
