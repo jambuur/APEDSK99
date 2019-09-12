@@ -308,10 +308,10 @@ boolean curdir    = LOW;  //current step direction, step in(wards) towards track
 void setup() {
 
   //see if the SD card is present and can be initialized
-  /*if (!SD.begin(SPI_CS)) {
+  if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
     eflash(1); 
-  } */
+  } 
 	
   //74HC595 shift register control
   pinAsOutput(DS);
@@ -330,9 +330,9 @@ void setup() {
   TIstop();
  
   //check for existing DSR: read first DSR RAM byte ...
-  DSRAM = Rbyte(0x0001); 
+  DSRAM = Rbyte(0x00A6); 
   // ... and check for valid DSR header mark (>AA)
-  if ( DSRAM != 0x02 ) {
+  if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
     InDSR = SD.open("/APEDSK.DSR", FILE_READ);
     if (InDSR) {
