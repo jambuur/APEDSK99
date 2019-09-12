@@ -231,11 +231,11 @@ void Wbyte(unsigned int address, byte data)
   set_abus(address);
   //set databus for writing
   dbus_out();
+  //enable RAM chip select
+  digitalLow(CE);
   //set data bus value
   dbus_write(data);
   //enable write
-  digitalLow(CE);
-  //enable RAM chip select
   digitalLow(WE);
   //disable write
   digitalHigh(WE);
