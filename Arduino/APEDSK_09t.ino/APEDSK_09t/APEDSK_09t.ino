@@ -128,23 +128,23 @@ void ena_cbus() {
   digitalHigh(WE);  //default output state is LOW, could cause data corruption
   //delayMicroseconds(3); //CHECK: may cause data corruption
   pinAsOutput(CE);
-  digitalLow(CE);   //default output state is LOW, could cause data corruption
+  digitalHigh(CE);   //default output state is LOW, could cause data corruption
 }
 
 //read a byte from the databus
 byte dbus_read() 
 {   
-  return( ((PINB & B00000011) << 6) +   //read PB1, PBO (D7, D6)
-	        ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
-	        ((PIND & B00000010) >> 1));   //read PD1 (D0)
+  return( (PINB & B00000011) << 6 +   //read PB1, PBO (D7, D6)
+	        (PIND & B11111000) >> 2 +   //read PD7-PD3 (D5-D1)
+	        (PIND & B00000010) >> 1);   //read PD1 (D0)
 } 
 
 //place a byte on the databus
 void dbus_write(byte data)
 {
-  PORTB |= ( (data >> 6) & B00000011); //write PB1, PBO (D7, D6)
-  PORTD |= ( (data << 2) & B11111000); //write PD7-PD3 (D5-D1)
-  PORTD |= ( (data << 1) & B00000010); //write PD1 (D0)
+  PORTB |= (data >> 6) & B00000011; //write PB1, PBO (D7, D6)
+  PORTD |= (data << 2) & B11111000; //write PD7-PD3 (D5-D1)
+  PORTD |= (data << 1) & B00000010; //write PD1 (D0)
 }
 
 //shift out the given address to the 74HC595 registers
