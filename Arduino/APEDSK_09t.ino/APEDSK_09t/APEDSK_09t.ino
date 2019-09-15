@@ -107,7 +107,7 @@
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
   DDRB &= B11111100;  //set PB1, PB0 to input (D7, D6)
-  DDRD &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
+  DDRD &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) 
 }
 
 //switch databus to OUTPUT state so Arduino can play bus master
@@ -126,7 +126,7 @@ void dis_cbus() {
 void ena_cbus() {
   pinAsOutput(WE);
   digitalHigh(WE);  //default output state is LOW, could cause data corruption
-  //delayMicroseconds(3); //CHECK: may cause data corruption
+  delayMicroseconds(3); //CHECK: may cause data corruption
   pinAsOutput(CE);
   digitalHigh(CE);   //default output state is LOW, could cause data corruption
 }
@@ -137,7 +137,7 @@ byte dbus_read()
   return( (PINB & B00000011) << 6 +   //read PB1, PBO (D7, D6)
 	        (PIND & B11111000) >> 2 +   //read PD7-PD3 (D5-D1)
 	        (PIND & B00000010) >> 1);   //read PD1 (D0)
-} 
+ } 
 
 //place a byte on the databus
 void dbus_write(byte data)
@@ -145,6 +145,7 @@ void dbus_write(byte data)
   PORTB |= (data >> 6) & B00000011; //write PB1, PBO (D7, D6)
   PORTD |= (data << 2) & B11111000; //write PD7-PD3 (D5-D1)
   PORTD |= (data << 1) & B00000010; //write PD1 (D0)
+  
 }
 
 //shift out the given address to the 74HC595 registers
@@ -216,7 +217,7 @@ byte Rbyte(unsigned int address)
   //set databus for reading
   dbus_in();
   //enable RAM chip select
- digitalLow(CE);
+  digitalLow(CE);
   //get databus value
   data = dbus_read();
   //disable RAM chip select
@@ -241,8 +242,6 @@ void Wbyte(unsigned int address, byte data)
   digitalHigh(WE);
   //disable chip select
   digitalHigh(CE);
-  //set databus to input
-  dbus_in();
 }
 
 //flash error code
@@ -307,11 +306,11 @@ boolean curdir    = LOW;  //current step direction, step in(wards) towards track
 //------------  
 void setup() {
 
-  //see if the SD card is present and can be initialized
+/* //see if the SD card is present and can be initialized
   if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
     eflash(1); 
-  } 
+  } */
 	
   //74HC595 shift register control
   pinAsOutput(DS);
@@ -328,9 +327,9 @@ void setup() {
   
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
- 
-  //check for existing DSR: read first DSR RAM byte ...
-  DSRAM = Rbyte(0x00A6); 
+  
+ /* //check for existing DSR: read first DSR RAM byte ...
+  DSRAM = Rbyte(0x0000); 
   // ... and check for valid DSR header mark (>AA)
   if ( DSRAM != 0xAA ) {
     //didn't find header so read DSR binary from SD and write into DSR RAM
@@ -346,7 +345,7 @@ void setup() {
       //couldn't open SD DSR file -> flash LED error 2
       eflash(2);
     }
-  }
+  } 
 
   //try to open DSK1 for reads
   DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
@@ -388,7 +387,7 @@ void setup() {
   TIgo(); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
 } //end of setup()
 
