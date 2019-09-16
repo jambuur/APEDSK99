@@ -17,7 +17,7 @@
   (layers
     (0 Top-Data signal hide)
     (1 Layer2-Power mixed hide)
-    (2 Layer3-Address signal)
+    (2 Layer3-Address signal hide)
     (31 Bottom-GND power hide)
     (36 B.SilkS user hide)
     (37 F.SilkS user)
