@@ -195,17 +195,18 @@ void set_abus(unsigned int address)
 //disable TI I/O, enable Arduino shift registers and control bus
 void TIstop()
 {
-   digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
    digitalHigh(TI_BUFFERS); //disables 74LS541's
+   pinAsOutput(TI_READY);   //switch from HighZ to output
+   digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
    ena_cbus();              //Arduino in control of RAM
 }
 
 //enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
-  dis_cbus();               //cease Arduino RAM control
-  digitalLow(TI_BUFFERS);   //enable 74LS541's
-  digitalHigh(TI_READY);    //wake up TI
+  dis_cbus();                 //cease Arduino RAM control
+  pinAsInputPullUp(TI_READY); //switch from output to HighZ: disables 74HC595's and wakes up TI
+  digitalLow(TI_BUFFERS);     //enable 74LS541's 
 }
 
 //read a byte from RAM address
@@ -384,7 +385,7 @@ void setup() {
   Wbyte(RSTAT,B00100100) */
   
   //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
-  TIgo(); 
+  TIgo();  
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
