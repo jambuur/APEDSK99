@@ -273,6 +273,16 @@ void eflash(byte error)
   }
 }
 
+//set Track 0 bit in Status Register
+void sTrack0(byte track) {
+  if ( track == 0 ) {
+    Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register;
+  }
+  else {
+    Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register;  
+ }
+}
+
 //interrupt routine flag: possible new / continued FD1771 command
 volatile byte FD1771 = 0;
 
@@ -349,7 +359,7 @@ void setup() {
   } 
 
   //try to open DSK1 for reads
-  DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
+ DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
   if ( !DSK[1] ) {
     eflash(3);	//could not open DSK1 -> flash error 3
   }
@@ -394,14 +404,7 @@ void setup() {
 
 void loop() {
 /*
- //set Track 0 bit in Status Register
-void sTrack0(byte track) {
-  if ( track == 0 ) {
-    Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register;
-  }
-  else {
-    Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register;  
- }
+ 
 	
  
   //check if flag has set by interrupt routine 
