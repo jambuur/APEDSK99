@@ -205,7 +205,7 @@ void TIstop()
 void TIgo()
 {
   dis_cbus();                 //cease Arduino RAM control
-  pinAsInputPullUp(TI_READY); //switch from output to HighZ: disables 74HC595's and wakes up TI
+  pinAsInput(TI_READY); //switch from output to HighZ: disables 74HC595's and wakes up TI
   digitalLow(TI_BUFFERS);     //enable 74LS541's 
 }
 
@@ -233,16 +233,18 @@ void Wbyte(unsigned int address, byte data)
   set_abus(address);
   //set databus for writing
   dbus_out();
+  //enable write
+  digitalLow(WE);
   //enable RAM chip select
   digitalLow(CE);
   //set data bus value
   dbus_write(data);
-  //enable write
-  digitalLow(WE);
-  //disable write
-  digitalHigh(WE);
   //disable chip select
   digitalHigh(CE);
+  //disable write
+  digitalHigh(WE);
+  //set databus for reading
+  dbus_in();
 }
 
 //flash error code
@@ -281,7 +283,7 @@ void sTrack0(byte track) {
   else {
     Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register;  
  }
-}
+} 
 
 //interrupt routine flag: possible new / continued FD1771 command
 volatile byte FD1771 = 0;
@@ -317,11 +319,11 @@ boolean curdir    = LOW;  //current step direction, step in(wards) towards track
 //------------  
 void setup() {
 
-/* //see if the SD card is present and can be initialized
+ //see if the SD card is present and can be initialized
   if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
     eflash(1); 
-  } */
+  } 
 	
   //74HC595 shift register control
   pinAsOutput(DS);
@@ -339,7 +341,7 @@ void setup() {
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
   
- /* //check for existing DSR: read first DSR RAM byte ...
+  //check for existing DSR: read first DSR RAM byte ...
   DSRAM = Rbyte(0x0000); 
   // ... and check for valid DSR header mark (>AA)
   if ( DSRAM != 0xAA ) {
