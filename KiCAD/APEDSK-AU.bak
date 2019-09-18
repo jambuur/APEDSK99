@@ -1,4 +1,5 @@
 EESchema Schematic File Version 4
+LIBS:APEDSK-AU-cache
 EELAYER 29 0
 EELAYER END
 $Descr A4 11693 8268
@@ -332,7 +333,7 @@ Text Label 3000 6400 0    50   ~ 0
 AD_A12
 Text Label 3000 6200 0    50   ~ 0
 AD_A10
-Text Label 2000 6600 2    50   ~ 0
+Text Label 1800 6500 2    50   ~ 0
 ~MBE
 Text Label 2000 6700 2    50   ~ 0
 ~WE
@@ -598,20 +599,9 @@ Text Label 7350 3150 2    50   ~ 0
 ~AR_BUF
 $Comp
 L Device:R_Small_US R2
-U 1 1 5D2D397E
-P 6750 3050
-F 0 "R2" H 6818 3096 50  0000 L CNN
-F 1 "5.1K" H 6818 3005 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 6750 3050 50  0001 C CNN
-F 3 "~" H 6750 3050 50  0001 C CNN
-	1    6750 3050
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R_Small_US R3
 U 1 1 5D2D3984
 P 8700 3350
-F 0 "R3" H 8768 3396 50  0000 L CNN
+F 0 "R2" H 8768 3396 50  0000 L CNN
 F 1 "5.1K" H 8768 3305 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 8700 3350 50  0001 C CNN
 F 3 "~" H 8700 3350 50  0001 C CNN
@@ -619,10 +609,10 @@ F 3 "~" H 8700 3350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:R_Small_US R4
+L Device:R_Small_US R3
 U 1 1 5D2D398A
 P 9000 3450
-F 0 "R4" H 9068 3496 50  0000 L CNN
+F 0 "R3" H 9068 3496 50  0000 L CNN
 F 1 "5.1K" H 9068 3405 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9000 3450 50  0001 C CNN
 F 3 "~" H 9000 3450 50  0001 C CNN
@@ -630,10 +620,10 @@ F 3 "~" H 9000 3450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:R_Small_US R5
+L Device:R_Small_US R4
 U 1 1 5D2D3990
 P 9300 3450
-F 0 "R5" H 9368 3496 50  0000 L CNN
+F 0 "R4" H 9368 3496 50  0000 L CNN
 F 1 "5.1K" H 9368 3405 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9300 3450 50  0001 C CNN
 F 3 "~" H 9300 3450 50  0001 C CNN
@@ -654,10 +644,10 @@ F 3 "~" V 9650 3550 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L Device:R_Small_US R6
+L Device:R_Small_US R5
 U 1 1 5D2D399D
 P 9650 3350
-F 0 "R6" H 9718 3396 50  0000 L CNN
+F 0 "R5" H 9718 3396 50  0000 L CNN
 F 1 "68R" H 9718 3305 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9650 3350 50  0001 C CNN
 F 3 "~" H 9650 3350 50  0001 C CNN
@@ -696,33 +686,17 @@ F 3 "" H 9150 3250 50  0001 C CNN
 	1    9150 3250
 	-1   0    0    -1  
 $EndComp
-Wire Wire Line
-	7350 3150 6750 3150
-$Comp
-L power:+5V #PWR0115
-U 1 1 5D2D39B9
-P 6750 2950
-F 0 "#PWR0115" H 6750 2800 50  0001 C CNN
-F 1 "+5V" H 6765 3123 50  0000 C CNN
-F 2 "" H 6750 2950 50  0001 C CNN
-F 3 "" H 6750 2950 50  0001 C CNN
-	1    6750 2950
-	-1   0    0    -1  
-$EndComp
 $Comp
 L Device:R_Small_US R1
 U 1 1 5D2D39BF
 P 6550 3150
 F 0 "R1" V 6345 3150 50  0000 C CNN
-F 1 "68R" V 6436 3150 50  0000 C CNN
+F 1 "1K" V 6436 3150 50  0000 C CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 6550 3150 50  0001 C CNN
 F 3 "~" H 6550 3150 50  0001 C CNN
 	1    6550 3150
 	0    1    1    0   
 $EndComp
-Wire Wire Line
-	6650 3150 6750 3150
-Connection ~ 6750 3150
 Text Label 6450 3150 2    50   ~ 0
 READY
 NoConn ~ 4800 6950
@@ -1106,8 +1080,6 @@ A3
 NoConn ~ 850  3500
 NoConn ~ 1350 3600
 NoConn ~ 1350 4100
-NoConn ~ 3100 6450
-NoConn ~ 3000 6500
 Wire Wire Line
 	3000 6600 3450 6600
 Wire Wire Line
@@ -1131,23 +1103,19 @@ Wire Wire Line
 Text Label 5800 6750 2    50   ~ 0
 AD_A0
 Wire Wire Line
-	2000 6500 1700 6500
-$Comp
-L power:GND #PWR0132
-U 1 1 5D4DF201
-P 1700 6500
-F 0 "#PWR0132" H 1700 6250 50  0001 C CNN
-F 1 "GND" H 1705 6327 50  0000 C CNN
-F 2 "" H 1700 6500 50  0001 C CNN
-F 3 "" H 1700 6500 50  0001 C CNN
-	1    1700 6500
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
 	9000 3250 9150 3250
 Connection ~ 9150 3250
 Wire Wire Line
 	9150 3250 9300 3250
+Wire Wire Line
+	2000 6500 2000 6600
+Wire Wire Line
+	2000 6500 1800 6500
+Connection ~ 2000 6500
+Text Label 3000 6500 0    50   ~ 0
+CE_245
 Text Label 4600 2250 0    50   ~ 0
-~AD_WE
+CE_245
+Wire Wire Line
+	6650 3150 7350 3150
 $EndSCHEMATC
