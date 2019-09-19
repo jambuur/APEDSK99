@@ -106,8 +106,18 @@
 
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
-  /*DDRB &= B11111100;  //set PB1, PB0 to input (D7, D6)
-  DDRD &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) */
+  /*DDRD &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) 
+  DDRB &= B11111100;  //set PB1, PB0 to input (D7, D6)*/
+
+ /*pinAsInput(D0);
+  pinAsInput(D1);
+  pinAsInput(D2);
+  pinAsInput(D3);
+  pinAsInput(D4);
+  pinAsInput(D5);
+  pinAsInput(D6);
+  pinAsInput(D7); */
+  
   pinMode(D0, INPUT);
   pinMode(D1, INPUT);
   pinMode(D2, INPUT);
@@ -115,21 +125,22 @@ void dbus_in() {
   pinMode(D4, INPUT);
   pinMode(D5, INPUT);
   pinMode(D6, INPUT);
-  pinMode(D7, INPUT);
+  pinMode(D7, INPUT); 
 }
 
 //switch databus to OUTPUT state so Arduino can play bus master
 void dbus_out() {
-  /*DDRB |= B00000011;  //set PB1, PB0 to output (D7, D6)
-  DDRD |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)*/
-   pinMode(D0, OUTPUT);
+  DDRD |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
+  DDRB |= B00000011;  //set PB1, PB0 to output (D7, D6)
+
+  /*pinMode(D0, OUTPUT);
   pinMode(D1, OUTPUT);
   pinMode(D2, OUTPUT);
   pinMode(D3, OUTPUT);
   pinMode(D4, OUTPUT);
   pinMode(D5, OUTPUT);
   pinMode(D6, OUTPUT);
-  pinMode(D7, OUTPUT);
+  pinMode(D7, OUTPUT);*/
 }
 
 //disable Arduino control bus; CE* and WE* both HighZ
@@ -142,7 +153,6 @@ void dis_cbus() {
 void ena_cbus() {
   pinAsOutput(WE);
   digitalHigh(WE);  //default output state is LOW, could cause data corruption
-  delayMicroseconds(3); //CHECK: may cause data corruption
   pinAsOutput(CE);
   digitalHigh(CE);   //default output state is LOW, could cause data corruption
 }
@@ -150,19 +160,18 @@ void ena_cbus() {
 //read a byte from the databus
 byte dbus_read() 
 {   
-  return( (PIND & B00000010) >> 1 +   //read PD1 (D0)*/
-          (PIND & B11111000) >> 2 +   //read PD7-PD3 (D5-D1)
-          (PINB & B00000011) << 6);   //read PB1, PBO (D7, D6)
-          
-/* return ((digitalRead(D7) << 7) +
+  /*return( ((PIND & B00000010) >> 1) +   //read PD1 (D0)
+          ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
+          ((PINB & B00000011) << 6) );   //read PB1, PBO (D7, D6)  */
+ 
+ return ((digitalRead(D7) << 7) +
     (digitalRead(D6) << 6) +
     (digitalRead(D5) << 5) +
     (digitalRead(D4) << 4) +
     (digitalRead(D3) << 3) +
     (digitalRead(D2) << 2) +
     (digitalRead(D1) << 1) +
-    digitalRead(D0)); */
-         
+    digitalRead(D0));      
  } 
 
 //place a byte on the databus
@@ -171,14 +180,6 @@ void dbus_write(byte data)
   PORTD |= (data << 1) & B00000010; //write PD1 (D0)
   PORTD |= (data << 2) & B11111000; //write PD7-PD3 (D5-D1)
   PORTB |= (data >> 6) & B00000011; //write PB1, PBO (D7, D6)
-  
-  
-  
-  /*//2 bits belong to PORTB and have to be set separtely 
-  digitalWrite(D6, (data >> 6) & 0x01);
-  digitalWrite(D7, (data >> 7) & 0x01);
-  //bit 0 to 6 belong to bit 2 to 8 of PORTD
-  PORTD = PIND | ( data << 2 ); */
 }
 
 //shift out the given address to the 74HC595 registers
@@ -245,11 +246,11 @@ void TIgo()
 //read a byte from RAM address
 byte Rbyte(unsigned int address)
 {
-  byte data = 0;
-  //set address bus
-  set_abus(address);
+  byte data = 0x00;
   //set databus for reading
   dbus_in();
+  //set address bus
+  set_abus(address);
   //enable RAM chip select
   digitalLow(CE);
   //get databus value
@@ -262,10 +263,10 @@ byte Rbyte(unsigned int address)
 //write a byte to RAM address
 void Wbyte(unsigned int address, byte data)
 {
-  //set address bus
-  set_abus(address);
   //set databus for writing
   dbus_out();
+  //set address bus
+  set_abus(address);
   //set data bus value
   dbus_write(data);
   //enable write
@@ -393,7 +394,7 @@ void setup() {
     }
   } 
 
-  //try to open DSK1 for reads
+ //try to open DSK1 for reads
  DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
   if ( !DSK[1] ) {
     eflash(3);	//could not open DSK1 -> flash error 3
