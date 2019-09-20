@@ -106,8 +106,10 @@
 
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
-  /*DDRD &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) 
-  DDRB &= B11111100;  //set PB1, PB0 to input (D7, D6)*/
+  DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) 
+  PORTD &= B00000101;
+  DDRB  = B11111100;  //set PB1, PB0 to input (D7, D6)
+  PORTB &= B11111100;
 
  /*pinAsInput(D0);
   pinAsInput(D1);
@@ -116,7 +118,7 @@ void dbus_in() {
   pinAsInput(D4);
   pinAsInput(D5);
   pinAsInput(D6);
-  pinAsInput(D7); */
+  pinAsInput(D7); 
   
   pinMode(D0, INPUT);
   pinMode(D1, INPUT);
@@ -125,7 +127,7 @@ void dbus_in() {
   pinMode(D4, INPUT);
   pinMode(D5, INPUT);
   pinMode(D6, INPUT);
-  pinMode(D7, INPUT); 
+  pinMode(D7, INPUT); */
 }
 
 //switch databus to OUTPUT state so Arduino can play bus master
