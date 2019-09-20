@@ -133,9 +133,7 @@ void dbus_in() {
 //switch databus to OUTPUT state so Arduino can play bus master
 void dbus_out() {
   DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
-  PORTD &= B00000101;  //initialise output pins
   DDRB  |= B00000011;  //set PB1, PB0 to output (D7, D6)
-  PORTB &= B11111100;  //initialise output pins
 
   /*pinMode(D0, OUTPUT);
   pinMode(D1, OUTPUT);
@@ -169,13 +167,13 @@ byte dbus_read()
           ((PINB & B00000011) << 6) );   //read PB1, PBO (D7, D6)  */
  
  return ((digitalRead(D7) << 7) +
-    (digitalRead(D6) << 6) +
-    (digitalRead(D5) << 5) +
-    (digitalRead(D4) << 4) +
-    (digitalRead(D3) << 3) +
-    (digitalRead(D2) << 2) +
-    (digitalRead(D1) << 1) +
-    digitalRead(D0));      
+    (digitalState(D6) << 6) +
+    (digitalState(D5) << 5) +
+    (digitalState(D4) << 4) +
+    (digitalState(D3) << 3) +
+    (digitalState(D2) << 2) +
+    (digitalState(D1) << 1) +
+    digitalState(D0));      
  } 
 
 //place a byte on the databus
@@ -378,25 +376,23 @@ void setup() {
   
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
-  
-  //check for existing DSR: read first DSR RAM byte ...
-  DSRAM = Rbyte(0x0000); 
-  // ... and check for valid DSR header mark (>AA)
-  if ( DSRAM != 0xAA ) {
-    //didn't find header so read DSR binary from SD and write into DSR RAM
-    InDSR = SD.open("/APEDSK.DSR", FILE_READ);
-    if (InDSR) {
-      for (unsigned int ii = 0; ii < 0x2000; ii++) {
-        DSRAM = InDSR.read();
-        Wbyte(ii,DSRAM);
-      }
+ 
+  //read DSR binary from SD and write into DSR RAM
+  InDSR = SD.open("/APEDSK.DSR", FILE_READ);
+  if (InDSR) {
+    for (unsigned int ii = 0; ii < 0x2000; ii++) {
+      DSRAM = InDSR.read();
+      Wbyte(ii,DSRAM);
+    }
     InDSR.close();
-    }
-    else {
-      //couldn't open SD DSR file -> flash LED error 2
-      eflash(2);
-    }
-  } 
+  }
+  //check for DSR header at first DSR RAM byte ...
+  DSRAM = Rbyte(0x0000); 
+  // ... and check for valid mark (>AA)
+  if ( DSRAM != 0xAA ) {
+    //loading DSR unsuccessful -> flash LED error 2
+    eflash(2);
+  }
 
  //try to open DSK1 for reads
  DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
