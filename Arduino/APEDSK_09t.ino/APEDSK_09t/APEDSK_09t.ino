@@ -134,15 +134,6 @@ void dbus_in() {
 void dbus_out() {
   DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
   DDRB  |= B00000011;  //set PB1, PB0 to output (D7, D6)
-
-  /*pinMode(D0, OUTPUT);
-  pinMode(D1, OUTPUT);
-  pinMode(D2, OUTPUT);
-  pinMode(D3, OUTPUT);
-  pinMode(D4, OUTPUT);
-  pinMode(D5, OUTPUT);
-  pinMode(D6, OUTPUT);
-  pinMode(D7, OUTPUT);*/
 }
 
 //disable Arduino control bus; CE* and WE* both HighZ
@@ -162,26 +153,26 @@ void ena_cbus() {
 //read a byte from the databus
 byte dbus_read() 
 {   
-  /*return( ((PIND & B00000010) >> 1) +   //read PD1 (D0)
+  return( ((PIND & B00000010) >> 1) +   //read PD1 (D0)
           ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
-          ((PINB & B00000011) << 6) );   //read PB1, PBO (D7, D6)  */
+          ((PINB & B00000011) << 6) );  //read PB1, PBO (D7, D6) */
  
- return ((digitalRead(D7) << 7) +
+ /*return ((digitalState(D7) << 7) +
     (digitalState(D6) << 6) +
     (digitalState(D5) << 5) +
     (digitalState(D4) << 4) +
     (digitalState(D3) << 3) +
     (digitalState(D2) << 2) +
     (digitalState(D1) << 1) +
-    digitalState(D0));      
+    digitalState(D0));   */   
  } 
 
 //place a byte on the databus
 void dbus_write(byte data)
 {
-  PORTD |= (data << 1) & B00000010; //write PD1 (D0)
-  PORTD |= (data << 2) & B11111000; //write PD7-PD3 (D5-D1)
-  PORTB |= (data >> 6) & B00000011; //write PB1, PBO (D7, D6)
+  PORTD |= ((data << 1) & B00000010); //write PD1 (D0)
+  PORTD |= ((data << 2) & B11111000); //write PD7-PD3 (D5-D1)
+  PORTB |= ((data >> 6) & B00000011); //write PB1, PBO (D7, D6)
 }
 
 //shift out the given address to the 74HC595 registers
@@ -249,10 +240,10 @@ void TIgo()
 byte Rbyte(unsigned int address)
 {
   byte data = 0x00;
-  //set databus for reading
-  dbus_in();
   //set address bus
   set_abus(address);
+  //set databus for reading
+  dbus_in();
   //enable RAM chip select
   digitalLow(CE);
   //get databus value
@@ -265,10 +256,10 @@ byte Rbyte(unsigned int address)
 //write a byte to RAM address
 void Wbyte(unsigned int address, byte data)
 {
-  //set databus for writing
-  dbus_out();
   //set address bus
   set_abus(address);
+  //set databus for writing
+  dbus_out();
   //set data bus value
   dbus_write(data);
   //enable write
@@ -389,9 +380,11 @@ void setup() {
   //check for DSR header at first DSR RAM byte ...
   DSRAM = Rbyte(0x0000); 
   // ... and check for valid mark (>AA)
+  //Wbyte(0x1FE0,DSRAM);
+  
   if ( DSRAM != 0xAA ) {
     //loading DSR unsuccessful -> flash LED error 2
-    eflash(2);
+    //eflash(2);
   }
 
  //try to open DSK1 for reads
