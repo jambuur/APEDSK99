@@ -110,24 +110,6 @@ void dbus_in() {
   PORTD &= B00000101;  //initialise input pins
   DDRB  &= B11111100;  //set PB1, PB0 to input (D7, D6)
   PORTB &= B11111100;  //initialise input pins
-
- /*pinAsInput(D0);
-  pinAsInput(D1);
-  pinAsInput(D2);
-  pinAsInput(D3);
-  pinAsInput(D4);
-  pinAsInput(D5);
-  pinAsInput(D6);
-  pinAsInput(D7); 
-  
-  pinMode(D0, INPUT);
-  pinMode(D1, INPUT);
-  pinMode(D2, INPUT);
-  pinMode(D3, INPUT);
-  pinMode(D4, INPUT);
-  pinMode(D5, INPUT);
-  pinMode(D6, INPUT);
-  pinMode(D7, INPUT); */
 }
 
 //switch databus to OUTPUT state so Arduino can play bus master
@@ -153,18 +135,10 @@ void ena_cbus() {
 //read a byte from the databus
 byte dbus_read() 
 {   
+  delayMicroseconds(2);                 //long live the Logic Analyser
   return( ((PIND & B00000010) >> 1) +   //read PD1 (D0)
           ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
-          ((PINB & B00000011) << 6) );  //read PB1, PBO (D7, D6) */
- 
- /*return ((digitalState(D7) << 7) +
-    (digitalState(D6) << 6) +
-    (digitalState(D5) << 5) +
-    (digitalState(D4) << 4) +
-    (digitalState(D3) << 3) +
-    (digitalState(D2) << 2) +
-    (digitalState(D1) << 1) +
-    digitalState(D0));   */   
+          ((PINB & B00000011) << 6) );  //read PB1, PBO (D7, D6) 
  } 
 
 //place a byte on the databus
@@ -231,9 +205,9 @@ void TIstop()
 //enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
-  dis_cbus();                 //cease Arduino RAM control
-  pinAsInput(TI_READY); //switch from output to HighZ: disables 74HC595's and wakes up TI
-  digitalLow(TI_BUFFERS);     //enable 74LS541's 
+  dis_cbus();               //cease Arduino RAM control
+  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
+  digitalLow(TI_BUFFERS);   //enable 74LS541's 
 }
 
 //read a byte from RAM address
@@ -380,11 +354,9 @@ void setup() {
   //check for DSR header at first DSR RAM byte ...
   DSRAM = Rbyte(0x0000); 
   // ... and check for valid mark (>AA)
-  //Wbyte(0x1FE0,DSRAM);
-  
   if ( DSRAM != 0xAA ) {
     //loading DSR unsuccessful -> flash LED error 2
-    //eflash(2);
+    eflash(2);
   }
 
  //try to open DSK1 for reads
@@ -422,19 +394,94 @@ void setup() {
 
   //initialise Status Register: set Head Loaded and Track 0 bits
   Wbyte(RSTAT,B00100100); 
-  
+
+  FD1771 = 0;   //clear interrupt flag
+  //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
+  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+
   //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
   TIgo();  
-
-  //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
 
 } //end of setup()
 
 void loop() {
-/*
- 
-	
+
+  //check if flag has set by interrupt routine 
+  if (FD1771 == 0xBB) {
+
+    //wait until TI has finished write cycle
+    while ( isLow(WE) ) {
+    }
+
+    
+
+    TIstop();
+
+    DSRAM = Rbyte(WCOMND & 0xF0); //keep command only, strip unneeded floppy bits
+
+    Wbyte(0x1FDE,DSRAM);
+
+    switch (DSRAM) {
+
+      case 0:
+        Wbyte(0x1FE0,0);
+      break;
+     case 16:
+        Wbyte(0x1FE0,16);
+      break;
+    case 32:
+        Wbyte(0x1FE0,32);
+      break;
+    case 48:
+        Wbyte(0x1FE0,48);
+      break;
+    case 64:
+        Wbyte(0x1FE0,64);
+      break;
+    case 80:
+        Wbyte(0x1FE0,80);
+      break;
+    case 96:
+        Wbyte(0x1FE0,96);
+      break;
+    case 112:
+        Wbyte(0x1FE0,112);
+      break;
+    case 128:
+        Wbyte(0x1FE0,128);
+      break;
+    case 144:
+        Wbyte(0x1FE0,144);
+      break;
+    case 160:
+        Wbyte(0x1FE0,160);
+      break;
+    case 174:
+        Wbyte(0x1FE0,174);
+      break;
+    case 192:
+        Wbyte(0x1FE0,192);
+      break;
+    case 208:
+        Wbyte(0x1FE0,208);
+      break;
+    case 224:
+        Wbyte(0x1FE0,224);
+      break;
+    case 240:
+        Wbyte(0x1FE0,240);
+      break;
+   default:
+        Wbyte(0x1FE0,0xFF);
+      break;
+
+    }
+    FD1771 = 0;   //clear interrupt flag
+    interrupts(); //enable interrupts again
+    TIgo();
+  }
+}
+/*void loop() {
  
   //check if flag has set by interrupt routine 
   if (FD1771 == 0xBB) {
@@ -447,7 +494,7 @@ void loop() {
       //nope so prep with reading Command Register
       DSRAM = Rbyte(WCOMND & 0xF0); //keep command only, strip unneeded floppy bits
         
-      if ( DSRAM != lcmd ) {    //different to last command?
+      /*if ( DSRAM != lcmd ) {    //different to last command?
           ccmd = DSRAM;         //yes, set new command
           ncmd = HIGH;          //and set flag
       }
@@ -457,7 +504,7 @@ void loop() {
 
       //is the selected DSK available?
       cDSK = (Rbyte(CRURD) >> 1) & 0x07;    //determine selected disk
-      if ( !aDSK[cDSK] ) {                 //check availability
+      if ( !aDSK[cDSK] ) {                  //check availability
         Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set Not Ready bit in Status Register
         ncmd = LOW;                         //skip new command prep
         ccmd = 208;                         //exit via Force Interrupt command
@@ -613,8 +660,8 @@ void loop() {
     FD1771 = 0;   //clear interrupt flag
     interrupts(); //enable interrupts again
   }
-*/
-} //end of loop()
+
+} //end of loop()*/
 
 void listen1771() {
   noInterrupts();
