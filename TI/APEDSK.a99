@@ -3318,12 +3318,12 @@ H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 *-----------------------------------------
 * APEDSK constants
 *-----------------------------------------
-DSDRVS	DATA	>F000			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
+DSDRVS	DATA	>0F00			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
 SIDE01	DATA	>8000			floppy side select
 
 *-----------------------------------------
 *
-* The remaining bytes (>5D68 to >5FEB) all contain >00
+* The remaining bytes (>5xxx to >5FE9) all contain >00
 * Word >5FEA maps to the read counter (to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers
 * Bytes >5FF0 to >5FFE map to the FDC emulation registers

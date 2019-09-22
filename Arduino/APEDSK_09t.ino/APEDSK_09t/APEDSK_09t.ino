@@ -408,16 +408,8 @@ void loop() {
 
   //check if flag has set by interrupt routine 
   if (FD1771 == 0xBB) {
-
-    //wait until TI has finished write cycle
-    while ( isLow(WE) ) {
-    }
-
     
-
-    TIstop();
-
-    DSRAM = Rbyte(WCOMND & 0xF0); //keep command only, strip unneeded floppy bits
+    DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy bits
 
     Wbyte(0x1FDE,DSRAM);
 
@@ -664,6 +656,14 @@ void loop() {
 } //end of loop()*/
 
 void listen1771() {
+  /*//don't want our interrupt to be interrupted
   noInterrupts();
-  FD1771=0xBB;
+  //copy of TIstop(); faster than calling that function to prevent data corruption
+  pinAsOutput(TI_READY);   //switch from HighZ to output
+  digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
+  digitalHigh(TI_BUFFERS); //disables 74LS541's
+  ena_cbus();              //Arduino in control of RAM
+  
+  //set interrupt flag  
+  FD1771=0xBB;*/
 }
