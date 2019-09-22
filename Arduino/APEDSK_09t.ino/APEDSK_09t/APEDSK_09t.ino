@@ -659,11 +659,11 @@ void loop() {
 } //end of loop()*/
 
 void listen1771() {
-  //don't want our interrupt to be interrupted
+  /*//don't want our interrupt to be interrupted
   noInterrupts();
 
   TIstop();
   
   //set interrupt flag  
-  FD1771=0xBB;
+  FD1771=0xBB;*/
 }
