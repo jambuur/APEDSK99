@@ -3319,7 +3319,7 @@ H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 * APEDSK constants
 *-----------------------------------------
 DSDRVS	DATA	>0F00			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
-SIDE01	DATA	>8000			floppy side select
+SIDE01	DATA	>0100			floppy side select
 
 *-----------------------------------------
 *
