@@ -659,13 +659,10 @@ void loop() {
 } //end of loop()*/
 
 void listen1771() {
-  //don't want our interrupt to be interrupteD
-
+ 
    //pinAsOutput(TI_READY);   //switch from HighZ to output
    digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
    digitalHigh(TI_BUFFERS); //disables 74LS541's
-   noInterrupts();
-   ena_cbus();              //Arduino in control of RAM
   
   //set interrupt flag  
   FD1771=0xBB;
