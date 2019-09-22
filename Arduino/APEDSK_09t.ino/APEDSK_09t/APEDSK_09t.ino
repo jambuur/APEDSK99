@@ -397,7 +397,7 @@ void setup() {
 
   FD1771 = 0;   //clear interrupt flag
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, RISING);
+  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, FALLING);
 
   //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
   TIgo();  
@@ -409,7 +409,7 @@ void loop() {
   //check if flag has set by interrupt routine 
   if (FD1771 == 0xBB) {
 
-    TIstop();
+    //TIstop();
     
     DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy bits
 
@@ -659,11 +659,14 @@ void loop() {
 } //end of loop()*/
 
 void listen1771() {
-  /*//don't want our interrupt to be interrupted
-  noInterrupts();
+  //don't want our interrupt to be interrupteD
 
-  TIstop();
+   //pinAsOutput(TI_READY);   //switch from HighZ to output
+   digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
+   digitalHigh(TI_BUFFERS); //disables 74LS541's
+   noInterrupts();
+   ena_cbus();              //Arduino in control of RAM
   
   //set interrupt flag  
-  FD1771=0xBB;*/
+  FD1771=0xBB;
 }
