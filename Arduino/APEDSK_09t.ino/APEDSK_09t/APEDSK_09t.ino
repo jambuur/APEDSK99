@@ -408,10 +408,15 @@ void setup() {
 
 void loop() {
 
+  if (FD1771 == 0xBB) {
+    TIstop();
+  }
+
+/*
   //check if flag has set by interrupt routine 
   if (FD1771 == 0xBB) {
-
-    //TIstop();
+    
+    noInterrupts();
     
     DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy bits
 
@@ -471,12 +476,12 @@ void loop() {
         Wbyte(0x1FE0,0xFF);
       break;
 
-    }*/
+    }
     
   FD1771 = 0;   //clear interrupt flag
   interrupts(); //enable interrupts again
   TIgo();
-  }
+  }*/
 }
 /*void loop() {
  
@@ -663,11 +668,10 @@ void loop() {
 //Interrupt Service Routine (INT0 on pin 2).
 //void listen1771() {
 ISR(INT0_vect) { 
-   //local copy of TIstop() to make ISR respond as fast as possible
-   pinAsOutput(TI_READY);   //switch from HighZ to output
-   digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
-   digitalHigh(TI_BUFFERS); //disables 74LS541's
-  
+ 
+  //TIstop();
+    
   //set interrupt flag  
-  FD1771=0xBB;
+  FD1771=0xBB;  
+  
 }
