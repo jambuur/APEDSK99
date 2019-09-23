@@ -397,8 +397,10 @@ void setup() {
 
   FD1771 = 0;   //clear interrupt flag
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, FALLING);
-
+  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, FALLING);
+  EICRA = 1 << ISC00;  // sense any change on the INT0 pin
+  EIMSK = 1 << INT0;   // enable INT0 interrupt
+  
   //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
   TIgo();  
 
@@ -658,9 +660,11 @@ void loop() {
 
 } //end of loop()*/
 
-void listen1771() {
- 
-   //pinAsOutput(TI_READY);   //switch from HighZ to output
+//Interrupt Service Routine (INT0 on pin 2).
+//void listen1771() {
+ISR(INT0_vect) { 
+   //local copy of TIstop() to make ISR respond as fast as possible
+   pinAsOutput(TI_READY);   //switch from HighZ to output
    digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
    digitalHigh(TI_BUFFERS); //disables 74LS541's
   
