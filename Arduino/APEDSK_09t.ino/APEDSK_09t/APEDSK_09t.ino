@@ -100,7 +100,7 @@
 #define WDATA   0x1FFE  //write FD1771 Data register     (>5FFE in TI99/4a DSR memory block)
 
 //error blinking parameters: on (pwm), off, delay between sequence
-#define LED_on      524288
+#define LED_on      350
 #define LED_off     250
 #define LED_repeat  1500
 
@@ -196,9 +196,9 @@ void set_abus(unsigned int address)
 //disable TI I/O, enable Arduino shift registers and control bus
 void TIstop()
 {
-   digitalHigh(TI_BUFFERS); //disables 74LS541's
    pinAsOutput(TI_READY);   //switch from HighZ to output
-   digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers
+   digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers !!!CHECK IF NECESSARY (LOW DEFAULT)
+   digitalHigh(TI_BUFFERS); //disables 74LS541's
    ena_cbus();              //Arduino in control of RAM
 }
 
@@ -206,8 +206,8 @@ void TIstop()
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
-  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
   digitalLow(TI_BUFFERS);   //enable 74LS541's 
+  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
 //read a byte from RAM address
@@ -244,30 +244,31 @@ void Wbyte(unsigned int address, byte data)
   digitalHigh(CE);
   //disable write
   digitalHigh(WE);
-  //set databus for reading
+  //set databus to (default) input state
   dbus_in();
 }
 
 //flash error code
 void eflash(byte error)
 {
-  //no APEDSK99 for you but TI console still usable
-  digitalHigh(TI_BUFFERS);
-  digitalHigh(TI_READY);
-    
-  //make sure we can toggle Arduino CE* to flash the error code
+  //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
+  digitalHigh(TI_BUFFERS);	//disable 74LS541's
+  digitalHigh(TI_READY);	//enable TI but ...
+  //... enable Arduino CE* for flashing the error code
   pinAsOutput(CE);
 
   //error routine: stuck in code flashing loop until reset
-  while (1) {
+  while (TRUE) {
 
     for (byte flash = 0; flash < error; flash++)
     {
-      //poor man's PWM, reduce mA's through LED to prolong its life
-      for (unsigned long int ppwm = 0; ppwm < LED_on; ppwm++) {
-        digitalLow(CE);  //set RAM CE* LOW, turns on LED
-        digitalHigh(CE); //turn it off
-      }
+      //set RAM CE* LOW, turns on LED
+      digitalLow(CE);  
+      //LED is on for a bit
+      delay(LED_on);
+
+      //turn it off
+      digitalHigh(CE); 
       //LED is off for a bit
       delay(LED_off);
     } 
@@ -287,7 +288,7 @@ void sTrack0(byte track) {
 } 
 
 //interrupt routine flag: possible new / continued FD1771 command
-volatile byte FD1771 = 0;
+volatile boolean FD1771 = FALSE;
 
 //generic variable for RAM R/W
 byte DSRAM  = 0;
@@ -300,22 +301,22 @@ File DSK[7]; 	//read and write file pointers to DOAD's
 #define woff 3	//write file pointer (array index offset from read file pointer)
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
-boolean aDSK[4] = {LOW,HIGH,LOW,LOW};
+boolean aDSK[4] = {FALSE,TRUE,FALSE,FALSE};
 //current selected DSK
 byte cDSK = 0;
 //protected DSK flag
-boolean pDSK = LOW;
+boolean pDSK = FALSE;
 
 //various storage and flags for command interpretation and handling
 byte ccmd         = 0;    //current command
 byte lcmd         = 0;    //last command
-boolean ncmd      = LOW;  //flag new command
+boolean ncmd      = FALSE;  //flag new command
 byte ccruw        = 0;    //current CRUWRI value
 byte lcruw        = 0;    //last CRUWRI value
 int lrdi          = 0;    //byte counter for sector/track R/W
 int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
 long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
-boolean curdir    = LOW;  //current step direction, step in(wards) towards track 39 by default
+boolean curdir    = FALSE;  //current step direction, step in(wards) towards track 39 by default
 
 //------------  
 void setup() {
@@ -375,7 +376,7 @@ void setup() {
     //DSK2 is available, assign file pointer for writes ...
     DSK[2+woff] = SD.open("/DISKS/002.DSK", FILE_WRITE);
     //... and set flag
-    aDSK[2] = HIGH;
+    aDSK[2] = TRUE;
   }
    
   //try to open DSK3 for reads
@@ -384,7 +385,7 @@ void setup() {
     //DSK3 is available, assign file pointer for writes ...
     DSK[3+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
     //... and set flag
-    aDSK[3] = HIGH;
+    aDSK[3] = TRUE;
   }
   
   //initialise FD1771 (clear "CRU" and "FD1771 registers")
@@ -392,10 +393,9 @@ void setup() {
     Wbyte(ii,0x00); 
   } 
 
-  //initialise Status Register: set Head Loaded and Track 0 bits
+  //initialise Status Register: set bits Head Loaded and Track 0
   Wbyte(RSTAT,B00100100); 
 
-  FD1771 = 0;   //clear interrupt flag
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, FALLING);
   EICRA = 1 << ISC00;  // sense any change on the INT0 pin
@@ -408,85 +408,81 @@ void setup() {
 
 void loop() {
 
-  if (FD1771 == 0xBB) {
-    TIstop();
-  }
-
-/*
   //check if flag has set by interrupt routine 
-  if (FD1771 == 0xBB) {
+  if (FD1771) {
     
+    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino now can ... and will :-)
     noInterrupts();
     
-    DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy bits
-
-    Wbyte(0x1FDE,DSRAM);
+    DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy-specific bits
 
     /*switch (DSRAM) {
 
-      case 0:
-        Wbyte(0x1FE0,0);
+      case 0x00:
+        Wbyte(0x1FE0,0x00);
       break;
-     case 16:
-        Wbyte(0x1FE0,16);
+     case 0x10:
+        Wbyte(0x1FE0,0x10);
       break;
-    case 32:
-        Wbyte(0x1FE0,32);
+    case 0x20:
+        Wbyte(0x1FE0,0x20);
       break;
-    case 48:
-        Wbyte(0x1FE0,48);
+    case 0x30:
+        Wbyte(0x1FE0,0x30);
       break;
-    case 64:
-        Wbyte(0x1FE0,64);
+    case 0x40:
+        Wbyte(0x1FE0,0x40);
       break;
-    case 80:
-        Wbyte(0x1FE0,80);
+    case 50:
+        Wbyte(0x1FE0,0x50);
       break;
-    case 96:
-        Wbyte(0x1FE0,96);
+    case 0x60:
+        Wbyte(0x1FE0,0x60);
       break;
-    case 112:
-        Wbyte(0x1FE0,112);
+    case 0x70:
+        Wbyte(0x1FE0,0x70);
       break;
-    case 128:
-        Wbyte(0x1FE0,128);
+    case 0x80:
+        Wbyte(0x1FE0,0x80);
       break;
-    case 144:
-        Wbyte(0x1FE0,144);
+    case 0x90:
+        Wbyte(0x1FE0,0x90);
       break;
-    case 160:
-        Wbyte(0x1FE0,160);
+    case 0xA0:
+        Wbyte(0x1FE0,0xA0);
       break;
-    case 174:
-        Wbyte(0x1FE0,174);
+    case 0xB0:
+        Wbyte(0x1FE0,0xB0);
       break;
-    case 192:
-        Wbyte(0x1FE0,192);
+    case 0xC0:
+        Wbyte(0x1FE0,0xC0);
       break;
-    case 208:
-        Wbyte(0x1FE0,208);
+    case 0xD0:
+        Wbyte(0x1FE0,0xD0);
       break;
-    case 224:
-        Wbyte(0x1FE0,224);
+    case 0xE0:
+        Wbyte(0x1FE0,0xE0);
       break;
-    case 240:
-        Wbyte(0x1FE0,240);
+    case 0xF0:
+        Wbyte(0x1FE0,0cF0);
       break;
-   default:
+   default: //DEBUG
         Wbyte(0x1FE0,0xFF);
       break;
 
     }
     
-  FD1771 = 0;   //clear interrupt flag
-  interrupts(); //enable interrupts again
+  FD1771 = FALSE;   //clear interrupt flag
+  
+  interrupts(); //enable interrupts for the next round
+  
   TIgo();
-  }*/
+  }
 }
 /*void loop() {
  
   //check if flag has set by interrupt routine 
-  if (FD1771 == 0xBB) {
+  if (FD1771) {
 
     noInterrupts(); //we don't want our interrupt be interrupted
 
@@ -659,8 +655,8 @@ void loop() {
     lcruw   = Rbyte(CRUWRI);      //save current CRU write register for compare in next interrupt
     lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F 
     
-    FD1771 = 0;   //clear interrupt flag
-    interrupts(); //enable interrupts again
+    FD1771 = FALSE;   //clear interrupt flag
+    interrupts(); //enable interrupts for the next round
   }
 
 } //end of loop()*/
@@ -669,9 +665,9 @@ void loop() {
 //void listen1771() {
 ISR(INT0_vect) { 
  
-  //TIstop();
+  TIstop();
     
   //set interrupt flag  
-  FD1771=0xBB;  
+  FD1771=TRUE;  
   
 }
