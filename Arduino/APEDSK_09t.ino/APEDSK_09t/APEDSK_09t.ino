@@ -355,10 +355,8 @@ void setup() {
     //couldn't find DSR binary image: flash error 2
     eflash(2);
   }
-  //check for DSR header at first DSR RAM byte ...
-  DSRAM = Rbyte(0x0000); 
-  // ... and check for valid mark (>AA)
-  if ( DSRAM != 0xAA ) {
+  //check for valid DSR mark (>AA) at first DSR RAM byte
+  if (  Rbyte(0x0000) != 0xAA ) {
     //loading DSR unsuccessful -> flash error 3
     eflash(3);
   }
