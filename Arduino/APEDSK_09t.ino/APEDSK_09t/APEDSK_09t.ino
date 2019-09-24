@@ -126,10 +126,10 @@ void dis_cbus() {
  
 //enable Arduino control bus; CE* and WE* both HIGH
 void ena_cbus() {
-  pinAsOutput(WE);
-  digitalHigh(WE);  //default output state is LOW, could cause data corruption
   pinAsOutput(CE);
-  digitalHigh(CE);   //default output state is LOW, could cause data corruption
+  digitalHigh(CE);   //default output state is LOW, we obviously don't want that
+  pinAsOutput(WE);
+  digitalHigh(WE);  //default output state is LOW, we obviously don't want that
 }
 
 //read a byte from the databus
@@ -313,9 +313,9 @@ byte lcmd         = 0;    //last command
 boolean ncmd      = FALSE;  //flag new command
 byte ccruw        = 0;    //current CRUWRI value
 byte lcruw        = 0;    //last CRUWRI value
-int lrdi          = 0;    //byte counter for sector/track R/W
-int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
-long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
+unsigned int lrdi          = 0;    //byte counter for sector/track R/W
+unsigned int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
+unsigned long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir    = FALSE;  //current step direction, step in(wards) towards track 39 by default
 
 //------------  
@@ -351,12 +351,15 @@ void setup() {
       Wbyte(ii,DSRAM);
     }
     InDSR.close();
+  else {
+    //couldn't find DSR binary image: flash error 1
+    eflash(1);
   }
   //check for DSR header at first DSR RAM byte ...
   DSRAM = Rbyte(0x0000); 
   // ... and check for valid mark (>AA)
   if ( DSRAM != 0xAA ) {
-    //loading DSR unsuccessful -> flash LED error 2
+    //loading DSR unsuccessful -> flash error 2
     eflash(2);
   }
 
@@ -393,7 +396,7 @@ void setup() {
     Wbyte(ii,0x00); 
   } 
 
-  //initialise Status Register: set bits Head Loaded and Track 0
+  //initialise Status Register: set bits "Head Loaded" and "Track 0"
   Wbyte(RSTAT,B00100100); 
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
@@ -401,7 +404,7 @@ void setup() {
   EICRA = 1 << ISC00;  // sense any change on the INT0 pin
   EIMSK = 1 << INT0;   // enable INT0 interrupt
   
-  //disable Arduino control bus, disable 74HC595 shift registers, enable TI buffers 
+  //TI take it away
   TIgo();  
 
 } //end of setup()
@@ -484,9 +487,10 @@ void loop() {
   //check if flag has set by interrupt routine 
   if (FD1771) {
 
-    noInterrupts(); //we don't want our interrupt be interrupted
+    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino now can ... and will :-)
+    noInterrupts(); 
 
-    //if write to CRU Write Register we can go straight back to the TI
+    //if the CRU Write Register was updated we can go straight back to the TI
     if ( Rbyte(CRUWRI) == lcruw) {
 
       //nope so prep with reading Command Register
@@ -503,24 +507,24 @@ void loop() {
       //is the selected DSK available?
       cDSK = (Rbyte(CRURD) >> 1) & 0x07;    //determine selected disk
       if ( !aDSK[cDSK] ) {                  //check availability
-        Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set Not Ready bit in Status Register
+        Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set "Not Ready" bit in Status Register
         ncmd = LOW;                         //skip new command prep
         ccmd = 208;                         //exit via Force Interrupt command
       }
      
-      if ( ccmd < 128 ) { //step/seek commands; no additional prep needed
+      if ( ccmd < 0x80 ) { //step/seek commands; no additional prep needed
       
         Wbyte(
         switch (ccmd) {
   	
-         	case 0: //restore
+         	case 0x00: //restore
             Wbyte(RTRACK,0);  //clear read track register
         		Wbyte(WTRACK,0);  //clear write track register        
         		Wbyte(WDATA,0);   //clear write data register
             sTrack0(0);       //set Track 0 bit in Status Register      
         	break;
     	
-        	case 16: //seek; if RTRACK == WDATA direction doesn't change
+        	case 0x10: //seek; if RTRACK == WDATA direction doesn't change
             if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
         		  curdir == LOW;                            //step-in towards track 39
         		}	
@@ -532,13 +536,13 @@ void loop() {
             sTrack0(DSRAM);                             //check, possibly set Track 0 bit in Status Register
           break;
      
-    	    case 32: //step
+    	    case 0x20: //step
     	      if ( curdir == HIGH ) {         //we could be stepping out towards Track 0 ...
               sTrack0(Rbyte(RTRACK) - 1);   //... so check if we are on Track 1 and if yes set Track 0 bit
     	      }
     		  break;	    
     	
-        	case 48: //step+T (update Track register)
+        	case 0x30: //step+T (update Track register)
         		DSRAM = Rbyte(RTRACK);	//read current track #
         		//is current direction inwards and track # still within limits?
         		if ( curdir == LOW && DSRAM < 39 ) {
