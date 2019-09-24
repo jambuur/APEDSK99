@@ -352,21 +352,21 @@ void setup() {
     }
     InDSR.close();
   else {
-    //couldn't find DSR binary image: flash error 1
-    eflash(1);
+    //couldn't find DSR binary image: flash error 2
+    eflash(2);
   }
   //check for DSR header at first DSR RAM byte ...
   DSRAM = Rbyte(0x0000); 
   // ... and check for valid mark (>AA)
   if ( DSRAM != 0xAA ) {
-    //loading DSR unsuccessful -> flash error 2
-    eflash(2);
+    //loading DSR unsuccessful -> flash error 3
+    eflash(3);
   }
 
  //try to open DSK1 for reads
  DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
   if ( !DSK[1] ) {
-    eflash(3);	//could not open DSK1 -> flash error 3
+    eflash(4);	//could not open DSK1 -> flash error 3
   }
   else {
     //DSK1 is available, assign file pointer for writes	  
@@ -401,10 +401,11 @@ void setup() {
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, FALLING);
+  //direct interrupt register access for speed (attachInterrupt is too slow)
   EICRA = 1 << ISC00;  // sense any change on the INT0 pin
   EIMSK = 1 << INT0;   // enable INT0 interrupt
   
-  //TI take it away
+  //TI: take it away
   TIgo();  
 
 } //end of setup()
@@ -555,11 +556,11 @@ void loop() {
         		}			
           break;
          
-      	  case 64: //step-in (towards track 39)
+      	  case 0x40: //step-in (towards track 39)
       		  curdir == LOW; //set current direction		
           break;
     	
-        	case 80: //step-in+T (towards track 39, update Track Register)
+        	case 0x50: //step-in+T (towards track 39, update Track Register)
         		DSRAM = Rbyte(RTRACK);  //read current track #
         		//if track # still within limits update track register
         		if ( DSRAM < 39) { 
@@ -568,12 +569,12 @@ void loop() {
         		curdir == LOW; //set current direction		
           break;
     
-          case 96: //step-out (towards track 0)
+          case 0x60: //step-out (towards track 0)
       		  curdir == HIGH;               //set current direction		
             sTrack0(Rbyte(RTRACK) - 1);   //check if we are on Track 1 and if yes set Track 0 bit
           break;
       
-          case 112: //step-out+T
+          case 0x70: //step-out+T
             DSRAM = Rbyte(RTRACK);  //read current track #
             //if track # still within limits update track register
             if ( DSRAM > 0) { 
@@ -605,14 +606,14 @@ void loop() {
 
         switch (ccmd) {
            
-          case 128: //read sector
+          case 0x80: //read sector
             if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?
   		        DSRAM = DSK[cDSK].read();                 //nope, supply next byte
               Wbyte(RDATA,DSRAM);
   	        }
           break;
 		       
-          case 144: //read multiple sectors
+          case 0x90: //read multiple sectors
   	        if ( Rbyte(RSECTR) < 9 ) {      //are we still below the max # of sectors/track? CHECK sector # scheme in source
   	      	  //DSRAM = DSK[cDSK].read();   //yes, supply next byte
              	Wbyte(RDATA, DSK[cDSK].read());
@@ -620,7 +621,7 @@ void loop() {
   	        Wbyte(RSECTR, Rbyte(RSECTR) + ((DSK[cDSK].position() - btidx) / 256) ); //update Read Sector Register    
 	        break;   
 	      
-          case 160: //write sector
+          case 0xA0: //write sector
 	  	if (!pDSK) {	//only write if DOAD is not protected
 		if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we written all 256 bytes yet?
   		        //DSRAM =  DSK[cDSK].read();                 //nope, write next byte
@@ -631,21 +632,21 @@ void loop() {
 		}
 		
 		
-		case 176: //write multiple sectors
+		case 0xB0: //write multiple sectors
 	        break;
-	        case 192: //read ID
+	        case 0xC0: //read ID
             RTRACK -> WDATA
             SIDE -> WDATA
             RSECTR -> WDATA
             sector length -> WDATA
             CRC x2 -> WDATA
 	        break;
-	        case 208: //force interrupt
+	        case 0xD0: //force interrupt
 	        break;
-	        case 224: //read track
+	        case 0xE0: //read track
           while sector <  sectors p/t
 	        break;
-	        case 240: //write track
+	        case 0xF0: //write track
 	        break; 
         }
       }
