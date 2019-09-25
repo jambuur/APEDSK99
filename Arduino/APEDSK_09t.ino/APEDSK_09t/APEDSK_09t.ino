@@ -504,10 +504,10 @@ void loop() {
       }
 
       //is the selected DSK available?
-      cDSK = (Rbyte(CRURD) >> 1) & 0x07;    //determine selected disk
+      cDSK = (Rbyte(CRUWRI) >> 1) & 0x07;    //determine selected disk
       if ( !aDSK[cDSK] ) {                  //check availability
         Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set "Not Ready" bit in Status Register
-        ncmd = LOW;                         //skip new command prep
+        ncmd = FALSE;                         //skip new command prep
         ccmd = 0xD0;                         //exit via Force Interrupt command
       }
      
@@ -535,7 +535,7 @@ void loop() {
           break;
      
     	    case 0x20: //step
-    	     //fall through to step+T    
+    	     //KISS: always execute step+T, can't see it making a difference (FLW)    
     	
             case 0x30: //step+T (update Track register)
         		DSRAM = Rbyte(RTRACK);	//read current track #
@@ -551,7 +551,8 @@ void loop() {
                 break;
          
       	  case 0x40: //step-in (towards track 39)
-      		//fall through to step-in+T		
+      	    //KISS: always execute step-in+T, can't see it making a difference (FLW)
+		
         	case 0x50: //step-in+T (towards track 39, update Track Register)
         		DSRAM = Rbyte(RTRACK);  //read current track #
         		//if track # still within limits update track register
@@ -562,7 +563,7 @@ void loop() {
           break;
     
           case 0x60: //step-out (towards track 0)
-      	    //fall through to step-out+T
+      	    //KISS: always execute step-out+T, can't see it making a difference (FLW)
       
           case 0x70: //step-out+T
             DSRAM = Rbyte(RTRACK);  //read current track #
@@ -583,15 +584,9 @@ void loop() {
           DSK[cDSK].seek(0x10);     //select byte 0x10 in Volume Information Block
           //DSRAM = DSK[cDSK].read(); //read that byte
           pDSK = ( DSK[cDSK].read() != 32 ); //read protection byte and set flag accordingly (protected <> " ")
-	  
-	  /*if ( DSRAM != 32 ) {      //space?
-            pDSK = HIGH;            //no; disk protected
-          }
-          else {
-            pDSK = LOW;             //yes, disk unprotected
-          }*/
 
-          secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
+	  //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
+          secval = ( (Rbyte(CRUWRI) & 0x01) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); 
           btidx = secval * 256;                                                       //calc absolute DOAD byte index (0-92160)
           DSK[cDSK].seek(btidx);                                                      //set to first absolute byte for R/W
         }
@@ -599,15 +594,14 @@ void loop() {
         switch (ccmd) {
            
           case 0x80: //read sector
-            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?
-  		        DSRAM = DSK[cDSK].read();                 //nope, supply next byte
-              Wbyte(RDATA,DSRAM);
+            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?           
+              Wbyte(RDATA,DSK[cDSK].read() );	 //nope, supply next byte
   	        }
           break;
 		       
           case 0x90: //read multiple sectors
-  	        if ( Rbyte(RSECTR) < 9 ) {      //are we still below the max # of sectors/track? CHECK sector # scheme in source
-  	      	  //DSRAM = DSK[cDSK].read();   //yes, supply next byte
+  	        if ( Rbyte(RSECTR) < 9 ) {      //are we still below the max # of sectors/track? 
+  	      	 
              	Wbyte(RDATA, DSK[cDSK].read());
   	        }
   	        Wbyte(RSECTR, Rbyte(RSECTR) + ((DSK[cDSK].position() - btidx) / 256) ); //update Read Sector Register    
