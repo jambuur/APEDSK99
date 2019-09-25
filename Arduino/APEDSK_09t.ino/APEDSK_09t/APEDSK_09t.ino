@@ -104,9 +104,6 @@
 #define LED_off     250
 #define LED_repeat  1500
 
-#define TRUE  HIGH
-#define FALSE LOW
-
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
   DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) 
@@ -200,9 +197,9 @@ void set_abus(unsigned int address)
 void TIstop()
 {
    pinAsOutput(TI_READY);   //switch from HighZ to output
-   digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers !!!CHECK IF NECESSARY (LOW DEFAULT)
+   //digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers !!!CHECK IF NECESSARY (LOW DEFAULT)
    digitalHigh(TI_BUFFERS); //disables 74LS541's
-   ena_cbus();              //Arduino in control of RAM
+   ena_cbus();              //Arduino in RAM control
 }
 
 //enable TI I/O, disable Arduino shift registers and control bus
@@ -304,22 +301,22 @@ File DSK[7]; 	//read and write file pointers to DOAD's
 #define woff 3	//write file pointer (array index offset from read file pointer)
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
-boolean aDSK[4] = {FALSE,TRUE,FALSE,FALSE};
+boolean aDSK[4] = {false,true,false,false};
 //current selected DSK
 byte cDSK = 0;
 //protected DSK flag
-boolean pDSK = FALSE;
+boolean pDSK = false;
 
 //various storage and flags for command interpretation and handling
 byte ccmd         = 0;    //current command
 byte lcmd         = 0;    //last command
-boolean ncmd      = FALSE;  //flag new command
+boolean ncmd      = false;  //flag new command
 byte ccruw        = 0;    //current CRUWRI value
 byte lcruw        = 0;    //last CRUWRI value
 unsigned int lrdi          = 0;    //byte counter for sector/track R/W
 unsigned int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
 unsigned long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
-boolean curdir    = FALSE;  //current step direction, step in(wards) towards track 39 by default
+boolean curdir    = LOW;  //current step direction, step in(wards) towards track 39 by default
 
 //------------  
 void setup() {
@@ -381,7 +378,7 @@ void setup() {
     //DSK2 is available, assign file pointer for writes ...
     DSK[2+woff] = SD.open("/DISKS/002.DSK", FILE_WRITE);
     //... and set flag
-    aDSK[2] = TRUE;
+    aDSK[2] = true;
   }
    
   //try to open DSK3 for reads
@@ -390,7 +387,7 @@ void setup() {
     //DSK3 is available, assign file pointer for writes ...
     DSK[3+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
     //... and set flag
-    aDSK[3] = TRUE;
+    aDSK[3] = true;
   }
   
   //initialise FD1771 (clear "CRU" and "FD1771 registers")
@@ -404,8 +401,8 @@ void setup() {
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, FALLING);
   //direct interrupt register access for speed (attachInterrupt is too slow)
-  EICRA = 1 << ISC00;  // sense any change on the INT0 pin
-  EIMSK = 1 << INT0;   // enable INT0 interrupt
+  EICRA = 1 << ISC00;  //sense any change on the INT0 pin
+  EIMSK = 1 << INT0;   //enable INT0 interrupt
   
   //TI: take it away
   TIgo();  
@@ -422,6 +419,7 @@ void loop() {
     
     DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy-specific bits
     Wbyte(DSRAM,0x1FDE);
+	  
     /*switch (DSRAM) {
 
       case 0x00:
@@ -501,7 +499,7 @@ void loop() {
         
       /*if ( DSRAM != lcmd ) {    //different to last command?
           ccmd = DSRAM;         //yes, set new command
-          ncmd = HIGH;          //and set flag
+          ncmd = true;          //and set flag
       }
       else {
         ccmd = lcmd;            //no, continue with same command
@@ -511,7 +509,7 @@ void loop() {
       cDSK = (Rbyte(CRUWRI) >> 1) & 0x07;    //determine selected disk
       if ( !aDSK[cDSK] ) {                  //check availability
         Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set "Not Ready" bit in Status Register
-        ncmd = FALSE;                         //skip new command prep
+        ncmd = false;                         //skip new command prep
         ccmd = 0xD0;                         //exit via Force Interrupt command
       }
      
@@ -533,13 +531,14 @@ void loop() {
         		}	
         		else if ( Rbyte(RTRACK) < DSRAM) ) { 
         		  curdir == HIGH;                           //step-out towards track 0
+			  sTrack0(DSRAM);			//check, possibly set Track 0 bit in Status Register
         		}  
         	  Wbyte(RTRACK, DSRAM);                       //update track register
-            sTrack0(DSRAM);                             //check, possibly set Track 0 bit in Status Register
+                                         
           break;
      
     	    case 0x20: //step
-    	     //KISS: always execute step+T, can't see it making a difference (FLW)    
+    	     /always execute step+T, can't see it making a difference (FLW)    
     	
             case 0x30: //step+T (update Track register)
         		DSRAM = Rbyte(RTRACK);	//read current track #
@@ -555,7 +554,7 @@ void loop() {
                 break;
          
       	  case 0x40: //step-in (towards track 39)
-      	    //KISS: always execute step-in+T, can't see it making a difference (FLW)
+      	    //always execute step-in+T, can't see it making a difference (FLW)
 		
         	case 0x50: //step-in+T (towards track 39, update Track Register)
         		DSRAM = Rbyte(RTRACK);  //read current track #
@@ -567,7 +566,7 @@ void loop() {
           break;
     
           case 0x60: //step-out (towards track 0)
-      	    //KISS: always execute step-out+T, can't see it making a difference (FLW)
+      	    //always execute step-out+T, can't see it making a difference (FLW)
       
           case 0x70: //step-out+T
             DSRAM = Rbyte(RTRACK);  //read current track #
@@ -576,7 +575,7 @@ void loop() {
               Wbyte(RTRACK,--DSRAM); 
             }
             curdir == HIGH; //set current direction  
-            sTrack0(DSRAM); //check if we are on Track 1 and if yes set Track 0 bit  
+            sTrack0(DSRAM); //check for Track 0
           break;
       
         } //end switch seek/step commands
@@ -652,6 +651,8 @@ void loop() {
     
     FD1771 = FALSE;   //clear interrupt flag
     interrupts(); //enable interrupts for the next round
+
+    TIgo();
   }
 
 } //end of loop()
