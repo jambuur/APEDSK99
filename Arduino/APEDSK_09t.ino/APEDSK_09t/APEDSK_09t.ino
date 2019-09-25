@@ -104,6 +104,9 @@
 #define LED_off     250
 #define LED_repeat  1500
 
+#define TRUE  HIGH
+#define FALSE LOW
+
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
   DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) 
@@ -351,6 +354,7 @@ void setup() {
       Wbyte(ii,DSRAM);
     }
     InDSR.close();
+  }
   else {
     //couldn't find DSR binary image: flash error 2
     eflash(2);
@@ -417,7 +421,7 @@ void loop() {
     noInterrupts();
     
     DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy-specific bits
-
+    Wbyte(DSRAM,0x1FDE);
     /*switch (DSRAM) {
 
       case 0x00:
@@ -644,13 +648,13 @@ void loop() {
     lcmd    = ccmd;               //save current command for compare in next interrupt
     ccmd    = 0;                  //ready to store next command (which could be more of the same)
     lcruw   = Rbyte(CRUWRI);      //save current CRU write register for compare in next interrupt
-    lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F 
+    lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F */
     
     FD1771 = FALSE;   //clear interrupt flag
     interrupts(); //enable interrupts for the next round
   }
 
-} //end of loop()*/
+} //end of loop()
 
 //Interrupt Service Routine (INT0 on pin 2).
 //void listen1771() {
