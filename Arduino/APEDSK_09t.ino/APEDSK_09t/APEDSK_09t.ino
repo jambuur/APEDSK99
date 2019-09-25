@@ -414,13 +414,26 @@ void loop() {
   //check if flag has set by interrupt routine 
   if (FD1771) {
     
-    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino now can ... and will :-)
+    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is very much alivel :-)
     noInterrupts();
     
-    DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy-specific bits
-    Wbyte(DSRAM,0x1FDE);
+    //if only the CRU Write Register was updated we can go straight back to the TI
+    if ( Rbyte(CRUWRI) == lcruw) {
+
+      //nope so prep with reading Command Register
+      DSRAM = Rbyte(WCOMND & 0xF0); //keep command only, strip unneeded floppy bits
+        
+      if ( DSRAM != lcmd ) {    //different to last command?
+          ccmd = DSRAM;         //yes, set new command
+          ncmd = true;          //and set flag
+      }
+      else {
+        ccmd = lcmd;            //no, continue with same command
+      }
 	  
-    /*switch (DSRAM) {
+    DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy-specific bits
+	  
+    switch (DSRAM) {
 
       case 0x00:
         Wbyte(0x1FE0,0x00);
@@ -648,9 +661,9 @@ void loop() {
     DSRAM = Rbyte(CRUWRI);
     Wbyte(CRURD,( (DSRAM >> 4) & 0x07) + (DSRAM & 0x80) );
     
+    lcruw   = Rbyte(CRUWRI);      //save current CRU write register for compare in next interrupt
     lcmd    = ccmd;               //save current command for compare in next interrupt
     ccmd    = 0;                  //ready to store next command (which could be more of the same)
-    lcruw   = Rbyte(CRUWRI);      //save current CRU write register for compare in next interrupt
     lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F */
     
     FD1771 = FALSE;   //clear interrupt flag
