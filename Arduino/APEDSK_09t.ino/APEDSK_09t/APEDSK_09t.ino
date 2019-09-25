@@ -491,7 +491,7 @@ void loop() {
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino now can ... and will :-)
     noInterrupts(); 
 
-    //if the CRU Write Register was updated we can go straight back to the TI
+    //if only the CRU Write Register was updated we can go straight back to the TI
     if ( Rbyte(CRUWRI) == lcruw) {
 
       //nope so prep with reading Command Register
@@ -506,13 +506,17 @@ void loop() {
       }
 
       //is the selected DSK available?
-      cDSK = (Rbyte(CRUWRI) >> 1) & 0x07;    //determine selected disk
+      cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
       if ( !aDSK[cDSK] ) {                  //check availability
-        Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set "Not Ready" bit in Status Register
+        Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
         ncmd = false;                         //skip new command prep
         ccmd = 0xD0;                         //exit via Force Interrupt command
+      }  
+      else
+        {   
+	Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register
       }
-     
+	
       if ( ccmd < 0x80 ) { //step/seek commands; no additional prep needed
       
         switch (ccmd) {
