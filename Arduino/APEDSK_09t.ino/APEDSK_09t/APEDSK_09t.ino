@@ -508,12 +508,11 @@ void loop() {
       if ( !aDSK[cDSK] ) {                  //check availability
         Wbyte(RSTAT, Rbyte(RSTAT) & 0x80);  //no; set "Not Ready" bit in Status Register
         ncmd = LOW;                         //skip new command prep
-        ccmd = 208;                         //exit via Force Interrupt command
+        ccmd = 0xD0;                         //exit via Force Interrupt command
       }
      
       if ( ccmd < 0x80 ) { //step/seek commands; no additional prep needed
       
-        Wbyte(
         switch (ccmd) {
   	
          	case 0x00: //restore
@@ -524,24 +523,21 @@ void loop() {
         	break;
     	
         	case 0x10: //seek; if RTRACK == WDATA direction doesn't change
-            if ( Rbyte(RTRACK) > Rbyte(WDATA) ) { 
+            	DRSAM = Rbyte(WDATA);   //read track seek #
+	    if ( Rbyte(RTRACK) > DSRAM) ) { 
         		  curdir == LOW;                            //step-in towards track 39
         		}	
-        		else if ( Rbyte(RTRACK) < Rbyte(WDATA) ) { 
+        		else if ( Rbyte(RTRACK) < DSRAM) ) { 
         		  curdir == HIGH;                           //step-out towards track 0
-        		} 
-        	  DSRAM = Rbyte(WDATA);                       //read track seek #
+        		}  
         	  Wbyte(RTRACK, DSRAM);                       //update track register
             sTrack0(DSRAM);                             //check, possibly set Track 0 bit in Status Register
           break;
      
     	    case 0x20: //step
-    	      if ( curdir == HIGH ) {         //we could be stepping out towards Track 0 ...
-              sTrack0(Rbyte(RTRACK) - 1);   //... so check if we are on Track 1 and if yes set Track 0 bit
-    	      }
-    		  break;	    
+    	     //fall through to step+T    
     	
-        	case 0x30: //step+T (update Track register)
+            case 0x30: //step+T (update Track register)
         		DSRAM = Rbyte(RTRACK);	//read current track #
         		//is current direction inwards and track # still within limits?
         		if ( curdir == LOW && DSRAM < 39 ) {
@@ -550,14 +546,12 @@ void loop() {
         		//is current direction outwards and track # still within limits?
         		else if ( curdir == HIGH && DSRAM >  0) {
         		  Wbyte(RTRACK,--DSRAM);                  //decrease track #
-              sTrack0(DSRAM);                         //check/set Track 0
+                         sTrack0(DSRAM);                         //check/set Track 0
         		}			
-          break;
+                break;
          
       	  case 0x40: //step-in (towards track 39)
-      		  curdir == LOW; //set current direction		
-          break;
-    	
+      		//fall through to step-in+T		
         	case 0x50: //step-in+T (towards track 39, update Track Register)
         		DSRAM = Rbyte(RTRACK);  //read current track #
         		//if track # still within limits update track register
@@ -568,9 +562,7 @@ void loop() {
           break;
     
           case 0x60: //step-out (towards track 0)
-      		  curdir == HIGH;               //set current direction		
-            sTrack0(Rbyte(RTRACK) - 1);   //check if we are on Track 1 and if yes set Track 0 bit
-          break;
+      	    //fall through to step-out+T
       
           case 0x70: //step-out+T
             DSRAM = Rbyte(RTRACK);  //read current track #
@@ -589,13 +581,15 @@ void loop() {
         if ( ncmd ) { //new sector R/W, Track R/F     
 
           DSK[cDSK].seek(0x10);     //select byte 0x10 in Volume Information Block
-          DSRAM = DSK[cDSK].read(); //read that byte
-          if ( DSRAM != 32 ) {      //space?
-            pDSK = HIGH;            //yes; disk unprotected
+          //DSRAM = DSK[cDSK].read(); //read that byte
+          pDSK = ( DSK[cDSK].read() != 32 ); //read protection byte and set flag accordingly (protected <> " ")
+	  
+	  /*if ( DSRAM != 32 ) {      //space?
+            pDSK = HIGH;            //no; disk protected
           }
           else {
-            pDSK = LOW;             //nope, disk is protected
-          }
+            pDSK = LOW;             //yes, disk unprotected
+          }*/
 
           secval = ( (Rbyte(CRURD) >> 7) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
           btidx = secval * 256;                                                       //calc absolute DOAD byte index (0-92160)
