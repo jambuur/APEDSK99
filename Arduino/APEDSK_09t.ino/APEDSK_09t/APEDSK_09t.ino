@@ -302,8 +302,8 @@ File DSK[7]; 	//read and write file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
 boolean aDSK[4] = {false,true,false,false};
-//current selected DSK
-byte cDSK = 0;
+//current selected DSK; default is DSK1
+byte cDSK = 1;
 //protected DSK flag
 boolean pDSK = false;
 
@@ -422,22 +422,6 @@ void loop() {
     } 
     //ok we need to continue same or execute new FD1771 command
     else {
-     
-      //is the selected DSK available?
-      cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
-      if ( !aDSK[cDSK] ) {                  //check availability
-        Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
-        ncmd = false;                         //skip new command prep
-        Wbyte((WCOMND,0xD0);                         //exit via Force Interrupt command
-      }  
-      else
-        {   
-	Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register
-      }    
-
-      //check if disk is write protected
-      DSK[cDSK].seek(0x10);     //select byte 0x10 in Volume Information Block
-      pDSK = ( DSK[cDSK].read() != 32 ); //read protection byte and set flag accordingly (protected <> " ")
 	      
       //read Command Register, stripping unneeded floppy bits
       ccmd = Rbyte(WCOMND) & 0xF0;
@@ -445,6 +429,18 @@ void loop() {
       if ( ccmd != lcmd ) {   //different to last command?
 	lcmd = ccmd;          //save current command for compare in next interrupt
         ncmd = true;          //set flag for new command
+	      
+        //is the selected DSK available?
+        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
+        if ( !aDSK[cDSK] ) {                  //check availability
+          Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
+          ncmd = false;                         //skip new command prep
+          Wbyte((WCOMND,0xD0);                         //exit via Force Interrupt command
+        }  
+        else
+          {   
+	    Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register
+        }             
       }
 	   
       switch (ccmd) {
