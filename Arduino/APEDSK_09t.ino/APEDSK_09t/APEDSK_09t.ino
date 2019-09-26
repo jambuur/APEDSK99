@@ -85,10 +85,10 @@
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
 //R6 counter value to detect read access in sector, ReadID and track commands
-#define RDINT   0x1FEA  
+#define RDINT   0x1FEC  
 
 //CRU emulation bytes + FD1771 registers
-#define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
+//#define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
 #define CRUWRI  0x1FEE  //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
 #define RSTAT   0x1FF0  //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
 #define RTRACK  0x1FF2  //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
@@ -311,9 +311,7 @@ boolean pDSK = false;
 byte ccmd         = 0;    //current command
 byte lcmd         = 0;    //last command
 boolean ncmd      = false;  //flag new command
-byte ccruw        = 0;    //current CRUWRI value
 byte lcruw        = 0;    //last CRUWRI value
-unsigned int lrdi          = 0;    //byte counter for sector/track R/W
 unsigned int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
 unsigned long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir    = LOW;  //current step direction, step in(wards) towards track 39 by default
@@ -414,88 +412,88 @@ void loop() {
   //check if flag has set by interrupt routine 
   if (FD1771) {
     
-    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is very much alivel :-)
+    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is now very much alive
     noInterrupts();
     
     //if only the CRU Write Register was updated we can go straight back to the TI
     if ( Rbyte(CRUWRI) == lcruw) {
 
       //nope so prep with reading Command Register
-      DSRAM = Rbyte(WCOMND & 0xF0); //keep command only, strip unneeded floppy bits
+      DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy bits
         
       if ( DSRAM != lcmd ) {    //different to last command?
           ccmd = DSRAM;         //yes, set new command
+	  lcmd = ccmd;          //save current command for compare in next interrupt
           ncmd = true;          //and set flag
       }
-      else {
-        ccmd = lcmd;            //no, continue with same command
-      }
-	  
-    DSRAM = Rbyte(WCOMND) & 0xF0; //keep command only, strip unneeded floppy-specific bits
-	  
-    switch (DSRAM) {
+	   
+      switch (ccmd) {
 
       case 0x00:
         Wbyte(0x1FE0,0x00);
       break;
-     case 0x10:
+      case 0x10:
         Wbyte(0x1FE0,0x10);
       break;
-    case 0x20:
+      case 0x20:
         Wbyte(0x1FE0,0x20);
       break;
-    case 0x30:
+      case 0x30:
         Wbyte(0x1FE0,0x30);
       break;
-    case 0x40:
+      case 0x40:
         Wbyte(0x1FE0,0x40);
       break;
-    case 50:
+      case 50:
         Wbyte(0x1FE0,0x50);
       break;
-    case 0x60:
+      case 0x60:
         Wbyte(0x1FE0,0x60);
       break;
-    case 0x70:
+      case 0x70:
         Wbyte(0x1FE0,0x70);
       break;
-    case 0x80:
+      case 0x80:
         Wbyte(0x1FE0,0x80);
       break;
-    case 0x90:
+      case 0x90:
         Wbyte(0x1FE0,0x90);
       break;
-    case 0xA0:
+      case 0xA0:
         Wbyte(0x1FE0,0xA0);
       break;
-    case 0xB0:
+      case 0xB0:
         Wbyte(0x1FE0,0xB0);
       break;
-    case 0xC0:
+      case 0xC0:
         Wbyte(0x1FE0,0xC0);
       break;
-    case 0xD0:
+      case 0xD0:
         Wbyte(0x1FE0,0xD0);
       break;
-    case 0xE0:
+      case 0xE0:
         Wbyte(0x1FE0,0xE0);
       break;
-    case 0xF0:
+      case 0xF0:
         Wbyte(0x1FE0,0cF0);
       break;
-   default: //DEBUG
+      default: //DEBUG
         Wbyte(0x1FE0,0xFF);
       break;
-
-    }
-    
+    } //end switch
+  
+  } //end CRUWRI not changed
+  else {
+    lcruw = Rbyte(CRUWRI); //save new CRUWRI value
+  } //end CRUWRI changed
+	  
   FD1771 = FALSE;   //clear interrupt flag
-  
   interrupts(); //enable interrupts for the next round
-  
-  TIgo();
-  }
-}
+
+  TIgo();	  
+	  
+} //end loop()
+	
 /*void loop() {
  
   //check if flag has set by interrupt routine 
@@ -657,19 +655,13 @@ void loop() {
         }
       }
     }
-    //reflect disk select + side select bits in CRU Read register. 
-    DSRAM = Rbyte(CRUWRI);
-    Wbyte(CRURD,( (DSRAM >> 4) & 0x07) + (DSRAM & 0x80) );
     
     lcruw   = Rbyte(CRUWRI);      //save current CRU write register for compare in next interrupt
     lcmd    = ccmd;               //save current command for compare in next interrupt
     ccmd    = 0;                  //ready to store next command (which could be more of the same)
     lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F */
     
-    FD1771 = FALSE;   //clear interrupt flag
-    interrupts(); //enable interrupts for the next round
-
-    TIgo();
+    
   }
 
 } //end of loop()
