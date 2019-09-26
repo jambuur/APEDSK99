@@ -435,14 +435,16 @@ void loop() {
         if ( !aDSK[cDSK] ) {                  //check availability
           Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
           ncmd = false;                         //skip new command prep
-          Wbyte((WCOMND,0xD0);                         //exit via Force Interrupt command
+          Wbyte((WCOMND,0x00);                         //exit via Restore command
         }  
-        else
-          {   
-	    Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register
-        }             
+        else  { 
+	  Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register         
+          //check and set disk protect 
+	  DSK[cDSK].seek(0x10);			//byte 0x10 in Volume Information Block stores Protected flag
+	  pDSK = DSK[cDSK].read() != 0x20;	//flag is set when byte 0x10 <> " "
+        }
       }
-	   
+		
       switch (ccmd) {
 
         case 0x00:	//restore
