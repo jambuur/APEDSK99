@@ -415,14 +415,31 @@ void loop() {
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is now very much alive
     noInterrupts();
     
-    //if only the CRU Write Register was updated we can go straight back to the TI after saving new value
+    //if only the CRU Write Register was updated we can go straight back to the TI after saving its new value
     DSRAM = Rbyte(CRUWRI);
     if ( lcruw != DSRAM ) {
       lcruw = DSRAM; //save new CRUWRI value
     } 
-    //seems like we need to do a bit more (continue same or execute new FD1771 command)
+    //ok we need to continue same or execute new FD1771 command
     else {
-      //prep with reading Command Register, stripping unneeded floppy bits
+     
+      //is the selected DSK available?
+      cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
+      if ( !aDSK[cDSK] ) {                  //check availability
+        Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
+        ncmd = false;                         //skip new command prep
+        Wbyte((WCOMND,0xD0);                         //exit via Force Interrupt command
+      }  
+      else
+        {   
+	Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register
+      }    
+
+      //check if disk is write protected
+      DSK[cDSK].seek(0x10);     //select byte 0x10 in Volume Information Block
+      pDSK = ( DSK[cDSK].read() != 32 ); //read protection byte and set flag accordingly (protected <> " ")
+	      
+      //read Command Register, stripping unneeded floppy bits
       ccmd = Rbyte(WCOMND) & 0xF0;
         
       if ( ccmd != lcmd ) {   //different to last command?
@@ -432,52 +449,52 @@ void loop() {
 	   
       switch (ccmd) {
 
-        case 0x00:
+        case 0x00:	//restore
           Wbyte(0x1FE0,0x00);
         break;
-        case 0x10:
+        case 0x10:	//seek; if RTRACK == WDATA direction doesn't change
           Wbyte(0x1FE0,0x10);
         break;
-        case 0x20:
+        case 0x20:	//step
           Wbyte(0x1FE0,0x20);
         break;
-        case 0x30:
+        case 0x30:	//step+T (update Track register)
           Wbyte(0x1FE0,0x30);
         break;
-        case 0x40:
+        case 0x40:	//step-in (towards track 39)
           Wbyte(0x1FE0,0x40);
         break;
-        case 50:
+        case 50:	//step-in+T (towards track 39, update Track Register)
           Wbyte(0x1FE0,0x50);
         break;
-        case 0x60:
+        case 0x60:	//step-out (towards track 0)
           Wbyte(0x1FE0,0x60);
         break;
-        case 0x70:
+        case 0x70:	//step-out+T
           Wbyte(0x1FE0,0x70);
         break;
-        case 0x80:
+        case 0x80:	//read sector
           Wbyte(0x1FE0,0x80);
         break;
-        case 0x90:
+        case 0x90:	//read multiple sectors
           Wbyte(0x1FE0,0x90);
         break;
-        case 0xA0:
+        case 0xA0:	//write sector
           Wbyte(0x1FE0,0xA0);
         break;
-        case 0xB0:
+        case 0xB0:	//write multiple sectors
           Wbyte(0x1FE0,0xB0);
         break;
-        case 0xC0:
+        case 0xC0:	//read ID
           Wbyte(0x1FE0,0xC0);
         break;
-        case 0xD0:
+        case 0xD0:	//force interrupt
           Wbyte(0x1FE0,0xD0);
         break;
-        case 0xE0:
+        case 0xE0:	//read track
           Wbyte(0x1FE0,0xE0);
         break;
-        case 0xF0:
+        case 0xF0:	//write track
           Wbyte(0x1FE0,0cF0);
         break;
         default: //DEBUG
@@ -486,14 +503,14 @@ void loop() {
       } //end switch
   
     } //end CRUWRI not changed
-    
-  } //end FD1771 flag check
-	  
-  FD1771 = false;   //clear interrupt flag
-  interrupts(); //enable interrupts for the next round
 
-  TIgo();	  
-	  
+    FD1771 = false;   //clear interrupt flag
+    interrupts();     //enable interrupts for the next round  
+    
+    TIgo();
+
+  } //end FD1771 flag check
+
 } //end loop()
 	
 /*void loop() {
