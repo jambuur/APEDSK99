@@ -444,63 +444,71 @@ void loop() {
 	  pDSK = DSK[cDSK].read() != 0x20;	//flag is set when byte 0x10 <> " "
         }
       }
-		
-      switch (ccmd) {
 
-        case 0x00:	//restore
-          Wbyte(0x1FE0,0x00);
-        break;
-        case 0x10:	//seek; if RTRACK == WDATA direction doesn't change
-          Wbyte(0x1FE0,0x10);
-        break;
-        case 0x20:	//step
-          Wbyte(0x1FE0,0x20);
-        break;
-        case 0x30:	//step+T (update Track register)
-          Wbyte(0x1FE0,0x30);
-        break;
-        case 0x40:	//step-in (towards track 39)
-          Wbyte(0x1FE0,0x40);
-        break;
-        case 50:	//step-in+T (towards track 39, update Track Register)
-          Wbyte(0x1FE0,0x50);
-        break;
-        case 0x60:	//step-out (towards track 0)
-          Wbyte(0x1FE0,0x60);
-        break;
-        case 0x70:	//step-out+T
-          Wbyte(0x1FE0,0x70);
-        break;
-        case 0x80:	//read sector
-          Wbyte(0x1FE0,0x80);
-        break;
-        case 0x90:	//read multiple sectors
-          Wbyte(0x1FE0,0x90);
-        break;
-        case 0xA0:	//write sector
-          Wbyte(0x1FE0,0xA0);
-        break;
-        case 0xB0:	//write multiple sectors
-          Wbyte(0x1FE0,0xB0);
-        break;
-        case 0xC0:	//read ID
-          Wbyte(0x1FE0,0xC0);
-        break;
-        case 0xD0:	//force interrupt
-          Wbyte(0x1FE0,0xD0);
-        break;
-        case 0xE0:	//read track
-          Wbyte(0x1FE0,0xE0);
-        break;
-        case 0xF0:	//write track
-          Wbyte(0x1FE0,0cF0);
-        break;
-        default: //DEBUG
-          Wbyte(0x1FE0,0xFF);
-        break;
-      } //end switch
-  
-    } //end CRUWRI not changed
+      if ( ccmd < 0x80 ) { //step/seek commands; no additional prep needed
+      
+        switch (ccmd) { //switch step commands
+
+          case 0x00:	//restore
+            Wbyte(0x1FE0,0x00);
+          break;
+          case 0x10:	//seek; if RTRACK == WDATA direction doesn't change
+            Wbyte(0x1FE0,0x10);
+          break;
+          case 0x20:	//step
+            Wbyte(0x1FE0,0x20);
+          break;
+          case 0x30:	//step+T (update Track register)
+            Wbyte(0x1FE0,0x30);
+          break;
+          case 0x40:	//step-in (towards track 39)
+            Wbyte(0x1FE0,0x40);
+          break;
+          case 50:	//step-in+T (towards track 39, update Track Register)
+            Wbyte(0x1FE0,0x50);
+          break;
+          case 0x60:	//step-out (towards track 0)
+            Wbyte(0x1FE0,0x60);
+          break;
+          case 0x70:	//step-out+T
+            Wbyte(0x1FE0,0x70);
+          break;
+        } //end switch step commands
+
+      else {	
+      
+        switch (ccmd) {	//switch non-step commands
+      
+          case 0x80:	//read sector
+            Wbyte(0x1FE0,0x80);
+          break;
+          case 0x90:	//read multiple sectors
+            Wbyte(0x1FE0,0x90);
+          break;
+          case 0xA0:	//write sector
+            Wbyte(0x1FE0,0xA0);
+          break;
+          case 0xB0:	//write multiple sectors
+            Wbyte(0x1FE0,0xB0);
+          break;
+          case 0xC0:	//read ID
+            Wbyte(0x1FE0,0xC0);
+          break;
+          case 0xD0:	//force interrupt
+            Wbyte(0x1FE0,0xD0);
+          break;
+          case 0xE0:	//read track
+            Wbyte(0x1FE0,0xE0);
+          break;
+          case 0xF0:	//write track
+            Wbyte(0x1FE0,0cF0);
+          break;
+          default: //DEBUG
+            Wbyte(0x1FE0,0xFF);
+          break;
+        } //end switch non-step commands
+      
+      } //end CRUWRI not changed
 
     FD1771 = false;   //clear interrupt flag
     interrupts();     //enable interrupts for the next round  
@@ -515,19 +523,8 @@ void loop() {
  
 
   
-      //is the selected DSK available?
-      cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
-      if ( !aDSK[cDSK] ) {                  //check availability
-        Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
-        ncmd = false;                         //skip new command prep
-        ccmd = 0xD0;                         //exit via Force Interrupt command
-      }  
-      else
-        {   
-	Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register
-      }
+      
 	
-      if ( ccmd < 0x80 ) { //step/seek commands; no additional prep needed
       
         switch (ccmd) {
   	
