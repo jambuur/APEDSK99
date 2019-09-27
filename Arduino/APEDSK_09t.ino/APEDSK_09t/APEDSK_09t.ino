@@ -427,8 +427,8 @@ void loop() {
       ccmd = Rbyte(WCOMND) & 0xF0;
         
       if ( ccmd != lcmd ) {   //different to last command?
-	lcmd = ccmd;          //save current command for compare in next interrupt
-        ncmd = true;          //set flag for new command
+	lcmd = ccmd;          //yep save current command for compare in next interrupt and
+        ncmd = true;          //... set flag for new command
 	      
         //is the selected DSK available?
         cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
@@ -450,7 +450,12 @@ void loop() {
         switch (ccmd) { //switch step commands
 
           case 0x00:	//restore
-            Wbyte(0x1FE0,0x00);
+            Wbyte(RTRACK,0);  //clear read track register
+            Wbyte(WTRACK,0);  //clear write track register        
+            Wbyte(WDATA,0);   //clear write data register
+            sTrack0(0);       //set Track 0 bit in Status Register      
+          break;
+			
           break;
           case 0x10:	//seek; if RTRACK == WDATA direction doesn't change
             Wbyte(0x1FE0,0x10);
@@ -518,6 +523,16 @@ void loop() {
   } //end FD1771 flag check
 
 } //end loop()
+		
+//Interrupt Service Routine (INT0 on pin 2)
+ISR(INT0_vect) { 
+ 
+  TIstop();
+    
+  //set interrupt flag  
+  FD1771=true;  
+}
+
 	
 /*void loop() {
  
@@ -528,12 +543,8 @@ void loop() {
       
         switch (ccmd) {
   	
-         	case 0x00: //restore
-            Wbyte(RTRACK,0);  //clear read track register
-        		Wbyte(WTRACK,0);  //clear write track register        
-        		Wbyte(WDATA,0);   //clear write data register
-            sTrack0(0);       //set Track 0 bit in Status Register      
-        	break;
+      
+           
     	
         	case 0x10: //seek; if RTRACK == WDATA direction doesn't change
             	DRSAM = Rbyte(WDATA);   //read track seek #
@@ -659,13 +670,3 @@ void loop() {
 
 } //end of loop()
 
-//Interrupt Service Routine (INT0 on pin 2).
-//void listen1771() {
-ISR(INT0_vect) { 
- 
-  TIstop();
-    
-  //set interrupt flag  
-  FD1771=true;  
-  
-}
