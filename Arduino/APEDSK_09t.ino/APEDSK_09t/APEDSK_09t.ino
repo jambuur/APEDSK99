@@ -258,7 +258,7 @@ void eflash(byte error)
   pinAsOutput(CE);
 
   //error routine: stuck in code flashing loop until reset
-  while (TRUE) {
+  while (true) {
 
     for (byte flash = 0; flash < error; flash++)
     {
@@ -288,7 +288,7 @@ void sTrack0(byte track) {
 } 
 
 //interrupt routine flag: possible new / continued FD1771 command
-volatile boolean FD1771 = FALSE;
+volatile boolean FD1771 = false;
 
 //generic variable for RAM R/W
 byte DSRAM  = 0;
@@ -389,7 +389,7 @@ void setup() {
   }
   
   //initialise FD1771 (clear "CRU" and "FD1771 registers")
-  for (unsigned int ii = CRURD; ii < (WDATA+1) ; ii++) {
+  for (unsigned int ii = RDINT; ii < (WDATA+1) ; ii++) {
     Wbyte(ii,0x00); 
   } 
 
@@ -415,7 +415,7 @@ void loop() {
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is now very much alive
     noInterrupts();
     
-    //if only the CRU Write Register was updated we can go straight back to the TI after saving its new value
+/*    //if only the CRU Write Register was updated we can go straight back to the TI after saving its new value
     DSRAM = Rbyte(CRUWRI);
     if ( lcruw != DSRAM ) {
       lcruw = DSRAM; //save new CRUWRI value
@@ -513,7 +513,7 @@ void loop() {
           break;
         } //end switch non-step commands
       
-      } //end CRUWRI not changed
+      } //end CRUWRI not changed */
 
     FD1771 = false;   //clear interrupt flag
     interrupts();     //enable interrupts for the next round  
@@ -663,10 +663,9 @@ ISR(INT0_vect) {
       }
     }
  
-    lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F */
+    lrdi    = Rbyte(RDINT+1);     //save current LSB R6 counter value; next byte in sector R/W, ReadID and track R/F 
     
     
   }
 
-} //end of loop()
-
+} //end of loop() */
