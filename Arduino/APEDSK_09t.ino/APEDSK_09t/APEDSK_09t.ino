@@ -287,14 +287,9 @@ void sTrack0(byte track) {
  }
 } 
 
-//set/reset "already executed" flag
-void sExec(boolean exec) {
-  if ( exec ) {
-    Wbyte(WCOMND,Rbyte(WCOMND) | B00001000 );
-  }
-  else {
-    Wbyte(WCOMND,RByte(WCOMND) & B11110111 );
-  }
+//no further command execution (prevent seek/step commands to be executed multiple times)
+void noExec(void) {
+  Wbyte(WCOMND,0xD0);
 }
 
 //interrupt routine flag: possible new / continued FD1771 command
@@ -321,7 +316,6 @@ boolean pDSK = false;
 byte ccmd               = 0;      //current command
 byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
-byte lcruw              = 0;      //last CRUWRI value
 unsigned int secval     = 0;      //absolute sector number: (side * 359) + (track * 9) + WSECTR
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
@@ -402,12 +396,13 @@ void setup() {
   for (unsigned int ii = RDINT; ii < (WDATA+1) ; ii++) {
     Wbyte(ii,0x00); 
   } 
-
   //initialise Status Register: set bits "Head Loaded" and "Track 0"
   Wbyte(RSTAT,B00100100); 
+  //initialise Sector Registers
+  Wbyte(WSECTR,0x01);
+  Wbyte(RSECTR,0x01);
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  //attachInterrupt(digitalPinToInterrupt(TI_INT), listen1771, FALLING);
   //direct interrupt register access for speed (attachInterrupt is too slow)
   EICRA = 1 << ISC00;  //sense any change on the INT0 pin
   EIMSK = 1 << INT0;   //enable INT0 interrupt
@@ -425,28 +420,17 @@ void loop() {
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is now very much alive
     noInterrupts();
 
-    //read Command Register
-    DSRAM = Rbyte(WCOMND;
-    //has this command already been executed? (prevent step/seek commands being executed more than once)
-    if ( DSRAM & B00001000 )
+    //read Command Register, stripping away unnecessary floppy bits
+    ccmd = Rbyte(WCOMND) & 0xF0;
 
+    //the FD1771 "Force Interrupt" command is not needed for APEDSK anymore but 
+    //conveniently repurposed for exiting when command exec is not needed
+    if ( ccmd != 0xD0 ) {
     
-    //if only the CRU Write Register was updated we can go straight back to the TI after saving its new value
-    DSRAM = Rbyte(CRUWRI);
-    if ( lcruw != DSRAM ) {
-      lcruw = DSRAM; //set new CRUWRI value
-    } 
-    //ok we need to continue same or execute new FD1771 command
-    else {
-	      
-      //read Command Register, stripping unneeded floppy bits
-      ccmd = Rbyte(WCOMND) & 0xF0;
-        
-      /*if ( ccmd != lcmd ) {   //different to last command?
+      if ( ccmd != lcmd ) {   //different to last command?
 	      lcmd = ccmd;          //yep save current command for compare in next interrupt and
         ncmd = true;          //... set flag for new command
-	      
-       
+      }
 
       if ( ccmd < 0x80 ) { //step/seek commands; no additional prep needed
       
@@ -456,22 +440,23 @@ void loop() {
             Wbyte(RTRACK,0);  //clear read track register
             Wbyte(WTRACK,0);  //clear write track register        
             Wbyte(WDATA,0);   //clear write data register
-            sTrack0(0);       //set Track 0 bit in Status Register      
+            sTrack0(0);       //set Track 0 bit in Status Register  
+            noExec();         //prevent multiple exec   
           break;
 			
-          case 0x10:	//seek; if RTRACK == WDATA direction doesn't change
-            DSRAM = Rbyte(WDATA);                   //read track seek #
-            if ( Rbyte(RTRACK) > DSRAM ) { 
-              curdir == LOW;                        //step-in towards track 39
+          case 0x10:	//seek; if RTRACK == WDATA direction (curdir) doesn't change
+            DSRAM = Rbyte(WDATA);           //read track seek #
+            if ( DSRAM > Rbyte(RTRACK) ) { 
+              curdir == LOW;                //step-in towards track 39
             } 
             else {
-              if ( Rbyte(RTRACK) < DSRAM ) { 
-                curdir == HIGH;                       //step-out towards track 0
-                sTrack0(DSRAM);                       //check, possibly set Track 0 bit in Status Register
+              if ( DSRAM < Rbyte(RTRACK) ) { 
+                curdir == HIGH;             //step-out towards track 0
+                sTrack0(DSRAM);             //check, possibly set Track 0 bit in Status Register
               }  
             }
-            Wbyte(0x5FDA, curdir);
-            Wbyte(RTRACK, DSRAM);                   //update track register
+            Wbyte(RTRACK, DSRAM);           //update track register
+            noExec();                       //prevent multiple exec 
           break;
 
           case 0x20:	//step
