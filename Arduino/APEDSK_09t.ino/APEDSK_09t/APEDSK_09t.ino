@@ -413,14 +413,13 @@ void loop() {
   if (FD1771) {
     
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is now very much alive
-    //noInterrupts();
-
-    //Wbyte(0x1FE0,0xAA);
+    noInterrupts();
     
-/*    //if only the CRU Write Register was updated we can go straight back to the TI after saving its new value
+    //if only the CRU Write Register was updated we can go straight back to the TI after saving its new value
     DSRAM = Rbyte(CRUWRI);
     if ( lcruw != DSRAM ) {
       lcruw = DSRAM; //save new CRUWRI value
+      Wbyte(0x5FDE,lcruw);
     } 
     //ok we need to continue same or execute new FD1771 command
     else {
@@ -428,8 +427,8 @@ void loop() {
       //read Command Register, stripping unneeded floppy bits
       ccmd = Rbyte(WCOMND) & 0xF0;
         
-      if ( ccmd != lcmd ) {   //different to last command?
-	lcmd = ccmd;          //yep save current command for compare in next interrupt and
+      /*if ( ccmd != lcmd ) {   //different to last command?
+	      lcmd = ccmd;          //yep save current command for compare in next interrupt and
         ncmd = true;          //... set flag for new command
 	      
         //is the selected DSK available?
@@ -440,12 +439,12 @@ void loop() {
           Wbyte((WCOMND,0x00);                         //exit via Restore command
         }  
         else  { 
-	  Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register         
+	        Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register         
           //check and set disk protect 
-	  DSK[cDSK].seek(0x10);			//byte 0x10 in Volume Information Block stores Protected flag
-	  pDSK = DSK[cDSK].read() != 0x20;	//flag is set when byte 0x10 <> " "
+	        DSK[cDSK].seek(0x10);			//byte 0x10 in Volume Information Block stores Protected flag
+	        pDSK = DSK[cDSK].read() != 0x20;	//flag is set when byte 0x10 <> " "
         }
-      }
+      } */
 
       if ( ccmd < 0x80 ) { //step/seek commands; no additional prep needed
       
@@ -458,10 +457,21 @@ void loop() {
             sTrack0(0);       //set Track 0 bit in Status Register      
           break;
 			
-          break;
           case 0x10:	//seek; if RTRACK == WDATA direction doesn't change
-            Wbyte(0x1FE0,0x10);
+            DSRAM = Rbyte(WDATA);                   //read track seek #
+            if ( Rbyte(RTRACK) > DSRAM ) { 
+              curdir == LOW;                        //step-in towards track 39
+            } 
+            else {
+              if ( Rbyte(RTRACK) < DSRAM ) { 
+                curdir == HIGH;                       //step-out towards track 0
+                sTrack0(DSRAM);                       //check, possibly set Track 0 bit in Status Register
+              }  
+            }
+            Wbyte(0x5FDA, curdir);
+            Wbyte(RTRACK, DSRAM);                   //update track register
           break;
+
           case 0x20:	//step
             Wbyte(0x1FE0,0x20);
           break;
@@ -481,8 +491,9 @@ void loop() {
             Wbyte(0x1FE0,0x70);
           break;
         } //end switch step commands
-
-      else {	
+      }
+    }
+/*      else {	
       
         switch (ccmd) {	//switch non-step commands
       
@@ -519,9 +530,9 @@ void loop() {
 
     FD1771 = false;   //clear interrupt flag
 
-    //interrupts();     //enable interrupts for the next round  
+    interrupts();     //enable interrupts for the next round  
     
-    //TIgo();
+    TIgo();
 
   } //end FD1771 flag check
 
@@ -529,14 +540,14 @@ void loop() {
 		
 //Interrupt Service Routine (INT0 on pin 2)
 ISR(INT0_vect) { 
- 
-  pinAsOutput(TI_READY);   //switch from HighZ to output
-  //digitalHigh(TI_BUFFERS); //disables 74LS541's
 
-  //TIstop();
-  
+  pinAsOutput(TI_READY);   //switch from HighZ to output
+  digitalHigh(TI_BUFFERS); //disables 74LS541's
+  ena_cbus();
+
   //set interrupt flag  
   FD1771=true;  
+  
 }
 
 	
