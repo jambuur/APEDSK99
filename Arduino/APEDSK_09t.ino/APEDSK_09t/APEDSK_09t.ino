@@ -287,6 +287,16 @@ void sTrack0(byte track) {
  }
 } 
 
+//set/reset "already executed" flag
+void sExec(boolean exec) {
+  if ( exec ) {
+    Wbyte(WCOMND,Rbyte(WCOMND) | B00001000 );
+  }
+  else {
+    Wbyte(WCOMND,RByte(WCOMND) & B11110111 );
+  }
+}
+
 //interrupt routine flag: possible new / continued FD1771 command
 volatile boolean FD1771 = false;
 
@@ -308,13 +318,13 @@ byte cDSK = 1;
 boolean pDSK = false;
 
 //various storage and flags for command interpretation and handling
-byte ccmd         = 0;    //current command
-byte lcmd         = 0;    //last command
-boolean ncmd      = false;  //flag new command
-byte lcruw        = 0;    //last CRUWRI value
-unsigned int secval        = 0;    //absolute sector number: (side * 359) + (track * 9) + WSECTR
-unsigned long int btidx    = 0;    //absolute DOAD byte index: (secval * 256) + repeat R/W
-boolean curdir    = LOW;  //current step direction, step in(wards) towards track 39 by default
+byte ccmd               = 0;      //current command
+byte lcmd               = 0;      //last command
+boolean ncmd            = false;  //flag new command
+byte lcruw              = 0;      //last CRUWRI value
+unsigned int secval     = 0;      //absolute sector number: (side * 359) + (track * 9) + WSECTR
+unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
+boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
 
 //------------  
 void setup() {
@@ -414,12 +424,17 @@ void loop() {
     
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is now very much alive
     noInterrupts();
+
+    //read Command Register
+    DSRAM = Rbyte(WCOMND;
+    //has this command already been executed? (prevent step/seek commands being executed more than once)
+    if ( DSRAM & B00001000 )
+
     
     //if only the CRU Write Register was updated we can go straight back to the TI after saving its new value
     DSRAM = Rbyte(CRUWRI);
     if ( lcruw != DSRAM ) {
-      lcruw = DSRAM; //save new CRUWRI value
-      Wbyte(0x5FDE,lcruw);
+      lcruw = DSRAM; //set new CRUWRI value
     } 
     //ok we need to continue same or execute new FD1771 command
     else {
@@ -431,20 +446,7 @@ void loop() {
 	      lcmd = ccmd;          //yep save current command for compare in next interrupt and
         ncmd = true;          //... set flag for new command
 	      
-        //is the selected DSK available?
-        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
-        if ( !aDSK[cDSK] ) {                  //check availability
-          Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
-          ncmd = false;                         //skip new command prep
-          Wbyte((WCOMND,0x00);                         //exit via Restore command
-        }  
-        else  { 
-	        Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register         
-          //check and set disk protect 
-	        DSK[cDSK].seek(0x10);			//byte 0x10 in Volume Information Block stores Protected flag
-	        pDSK = DSK[cDSK].read() != 0x20;	//flag is set when byte 0x10 <> " "
-        }
-      } */
+       
 
       if ( ccmd < 0x80 ) { //step/seek commands; no additional prep needed
       
@@ -491,6 +493,9 @@ void loop() {
             Wbyte(0x1FE0,0x70);
           break;
         } //end switch step commands
+
+        //to prevent stepping commands 
+        Wbyte(WCOMND,0xD0);
       }
     }
 /*      else {	
@@ -561,7 +566,20 @@ ISR(INT0_vect) {
         switch (ccmd) {
   	
       
-           
+            //is the selected DSK available?
+        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
+        if ( !aDSK[cDSK] ) {                  //check availability
+          Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
+          ncmd = false;                         //skip new command prep
+          Wbyte((WCOMND,0x00);                         //exit via Restore command
+        }  
+        else  { 
+         Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register         
+          //check and set disk protect 
+          DSK[cDSK].seek(0x10);     //byte 0x10 in Volume Information Block stores Protected flag
+          pDSK = DSK[cDSK].read() != 0x20;  //flag is set when byte 0x10 <> " "
+        }
+      } */
     	
         	case 0x10: //seek; if RTRACK == WDATA direction doesn't change
             	DRSAM = Rbyte(WDATA);   //read track seek #
