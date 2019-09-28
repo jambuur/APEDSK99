@@ -413,7 +413,9 @@ void loop() {
   if (FD1771) {
     
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is now very much alive
-    noInterrupts();
+    //noInterrupts();
+
+    //Wbyte(0x1FE0,0xAA);
     
 /*    //if only the CRU Write Register was updated we can go straight back to the TI after saving its new value
     DSRAM = Rbyte(CRUWRI);
@@ -516,9 +518,10 @@ void loop() {
       } //end CRUWRI not changed */
 
     FD1771 = false;   //clear interrupt flag
-    interrupts();     //enable interrupts for the next round  
+
+    //interrupts();     //enable interrupts for the next round  
     
-    TIgo();
+    //TIgo();
 
   } //end FD1771 flag check
 
@@ -527,8 +530,11 @@ void loop() {
 //Interrupt Service Routine (INT0 on pin 2)
 ISR(INT0_vect) { 
  
-  TIstop();
-    
+  pinAsOutput(TI_READY);   //switch from HighZ to output
+  //digitalHigh(TI_BUFFERS); //disables 74LS541's
+
+  //TIstop();
+  
   //set interrupt flag  
   FD1771=true;  
 }
