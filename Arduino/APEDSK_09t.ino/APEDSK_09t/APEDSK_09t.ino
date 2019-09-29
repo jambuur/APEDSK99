@@ -194,6 +194,7 @@ void set_abus(unsigned int address)
 }  
 
 //disable TI I/O, enable Arduino shift registers and control bus
+//!CONSIDER _INLINE
 void TIstop()
 {
    pinAsOutput(TI_READY);   //switch from HighZ to output
