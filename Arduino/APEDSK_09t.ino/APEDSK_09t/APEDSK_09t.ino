@@ -428,13 +428,18 @@ void loop() {
     //it's conveniently repurposed for exiting when command exec is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
     
-      if ( ccmd != lcmd ) {   //yes we do; different to last command?
+      ncmd = (ccmd != lcmd)
+      if (ncmd) {
+        lcmd = ccmd;
+      }
+	      
+      /*if ( ccmd != lcmd ) {   //yes we do; different to last command?
 	      lcmd = ccmd;          //yep save current command for compare in next interrupt and
         ncmd = true;          //... set flag for new command
       }
       else {
         ncmd = false;         //no more of the same command
-      }
+      } */
 
       if ( ccmd < 0x80 ) { //step/seek commands?
       
