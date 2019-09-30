@@ -232,13 +232,10 @@ void Wbyte(unsigned int address, byte data)
 }
 
 //disable TI I/O, enable Arduino shift registers and control bus
-//!CONSIDER _INLINE inline void pulse(void) ;
-
+//INLINE for speed in ISR
 inline void TIstop() __attribute__((always_inline));
-
 void TIstop() {
    pinAsOutput(TI_READY);   //switch from HighZ to output
-   //digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers !!!CHECK IF NECESSARY (LOW DEFAULT)
    digitalHigh(TI_BUFFERS); //disables 74LS541's
    ena_cbus();              //Arduino in RAM control
 }
@@ -248,6 +245,7 @@ void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
   digitalLow(TI_BUFFERS);   //enable 74LS541's 
+  //delayMicroseconds(2);     //long live the Logic Analyser
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
@@ -430,7 +428,7 @@ void loop() {
       if (ncmd) {
         lcmd = ccmd;
       }
-	      
+   
       if ( ccmd < 0x80 ) { //step/seek commands?
       
         switch (ccmd) { //yep switch step/seek commands
@@ -550,10 +548,6 @@ void loop() {
 		
 //Interrupt Service Routine (INT0 on pin 2)
 ISR(INT0_vect) { 
-
-  //pinAsOutput(TI_READY);   //switch from HighZ to output
-  //digitalHigh(TI_BUFFERS); //disables 74LS541's
-  //ena_cbus();
 
   TIstop();
 
