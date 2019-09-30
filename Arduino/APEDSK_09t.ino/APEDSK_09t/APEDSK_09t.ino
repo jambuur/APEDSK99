@@ -193,24 +193,6 @@ void set_abus(unsigned int address)
   digitalHigh(LATCH);
 }  
 
-//disable TI I/O, enable Arduino shift registers and control bus
-//!CONSIDER _INLINE inline void pulse(void) __attribute__((always_inline));
-void TIstop()
-{
-   pinAsOutput(TI_READY);   //switch from HighZ to output
-   //digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers !!!CHECK IF NECESSARY (LOW DEFAULT)
-   digitalHigh(TI_BUFFERS); //disables 74LS541's
-   ena_cbus();              //Arduino in RAM control
-}
-
-//enable TI I/O, disable Arduino shift registers and control bus
-void TIgo()
-{
-  dis_cbus();               //cease Arduino RAM control
-  digitalLow(TI_BUFFERS);   //enable 74LS541's 
-  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
-}
-
 //read a byte from RAM address
 byte Rbyte(unsigned int address)
 {
@@ -247,6 +229,24 @@ void Wbyte(unsigned int address, byte data)
   digitalHigh(WE);
   //set databus to (default) input state
   dbus_in();
+}
+
+//disable TI I/O, enable Arduino shift registers and control bus
+//!CONSIDER _INLINE inline void pulse(void) __attribute__((always_inline));
+void TIstop()
+{
+   pinAsOutput(TI_READY);   //switch from HighZ to output
+   //digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers !!!CHECK IF NECESSARY (LOW DEFAULT)
+   digitalHigh(TI_BUFFERS); //disables 74LS541's
+   ena_cbus();              //Arduino in RAM control
+}
+
+//enable TI I/O, disable Arduino shift registers and control bus
+void TIgo()
+{
+  dis_cbus();               //cease Arduino RAM control
+  digitalLow(TI_BUFFERS);   //enable 74LS541's 
+  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
 //flash error code
@@ -293,12 +293,6 @@ void noExec(void) {
   Wbyte(WCOMND,0xD0);
 }
 
-//interrupt routine flag: possible new / continued FD1771 command
-volatile boolean FD1771 = false;
-
-//generic variable for RAM R/W
-byte DSRAM  = 0;
-
 //DSR binary input file pointer
 File InDSR;  
 
@@ -314,6 +308,8 @@ byte cDSK = 0;
 boolean pDSK = false;
 
 //various storage and flags for command interpretation and handling
+byte DSRAM		= 0;	  //generic variable for RAM R/W
+volatile boolean FD1771 = false;  //interrupt routine flag: possible new / continued FD1771 command
 byte ccmd               = 0;      //current command
 byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
@@ -576,30 +572,11 @@ ISR(INT0_vect) {
          Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register         
           //check and set disk protect 
           DSK[cDSK].seek(0x10);     //byte 0x10 in Volume Information Block stores Protected flag
-          pDSK = DSK[cDSK].read() != 0x20;  //flag is set when byte 0x10 <> " "
+          pDSK = ( DSK[cDSK].read() != 0x20 );  //flag is set when byte 0x10 <> " "
         }
       } 
     	
-	 DSRAM = Rbyte(WDATA); //read track seek #
-               if ( DSRAM > Rbyte(RTRACK) ) { 
-                curdir = LOW; //step-in towards track 39
-            } 
-            else {
-              if ( DSRAM < Rbyte(RTRACK) ) { 
-                curdir = HIGH;  //step-out towards track 0
-                
-              }  
-            }
-        
-          case 0x60: //step-out (towards track 0)
-      	    
-      
-          case 0x70: //step-out+T
-           
-          break;
-      
-        } //end switch seek/step commands
-      }
+	
       else { //rest of commands, needing more prep
           
         if ( ncmd ) { //new sector R/W, Track R/F     
