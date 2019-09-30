@@ -232,9 +232,11 @@ void Wbyte(unsigned int address, byte data)
 }
 
 //disable TI I/O, enable Arduino shift registers and control bus
-//!CONSIDER _INLINE inline void pulse(void) __attribute__((always_inline));
-void TIstop()
-{
+//!CONSIDER _INLINE inline void pulse(void) ;
+
+inline void TIstop() __attribute__((always_inline));
+
+void TIstop() {
    pinAsOutput(TI_READY);   //switch from HighZ to output
    //digitalLow(TI_READY);    //puts TI in wait state and enables 74HC595 shift registers !!!CHECK IF NECESSARY (LOW DEFAULT)
    digitalHigh(TI_BUFFERS); //disables 74LS541's
@@ -424,7 +426,7 @@ void loop() {
     //it's conveniently re-purposed for exiting when command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
     
-      ncmd = (ccmd != lcmd)
+      ncmd = (ccmd != lcmd);
       if (ncmd) {
         lcmd = ccmd;
       }
@@ -451,8 +453,8 @@ void loop() {
                 sTrack0(DSRAM);  	//check, possibly set Track 0 bit in Status Register
               }  
             }
-	     Wbyte(RTRACK, DSRAM); //update track register
-	  break;
+	          Wbyte(RTRACK, DSRAM); //update track register
+	        break;
 
           case 0x20:	//step
             //always execute step+T, can't see it making any difference (FLW)  
@@ -549,9 +551,11 @@ void loop() {
 //Interrupt Service Routine (INT0 on pin 2)
 ISR(INT0_vect) { 
 
-  pinAsOutput(TI_READY);   //switch from HighZ to output
-  digitalHigh(TI_BUFFERS); //disables 74LS541's
-  ena_cbus();
+  //pinAsOutput(TI_READY);   //switch from HighZ to output
+  //digitalHigh(TI_BUFFERS); //disables 74LS541's
+  //ena_cbus();
+
+  TIstop();
 
   //set interrupt flag  
   FD1771=true;  
