@@ -127,9 +127,10 @@ void dis_cbus() {
 //enable Arduino control bus; CE* and WE* both HIGH
 void ena_cbus() {
   pinAsOutput(CE);
-  digitalHigh(CE);   //default output state is LOW, we obviously don't want that
+  digitalHigh(CE);   	//default output state is LOW, we obviously don't want that
+  delayMicroseconds(2);	//DEBUG possible data corruption issue
   pinAsOutput(WE);
-  digitalHigh(WE);  //default output state is LOW, we obviously don't want that
+  digitalHigh(WE);  	//default output state is LOW, we obviously don't want that
 }
 
 //read a byte from the databus
@@ -232,7 +233,7 @@ void Wbyte(unsigned int address, byte data)
 }
 
 //disable TI I/O, enable Arduino shift registers and control bus
-//INLINE for speed in ISR
+//INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
    pinAsOutput(TI_READY);   //switch from HighZ to output
@@ -245,7 +246,6 @@ void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
   digitalLow(TI_BUFFERS);   //enable 74LS541's 
-  //delayMicroseconds(2);     //long live the Logic Analyser
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
