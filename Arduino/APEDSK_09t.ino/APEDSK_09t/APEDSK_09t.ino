@@ -279,7 +279,7 @@ void eflash(byte error)
 }
 
 //set Track 0 bit in Status Register
-void sTrack0(byte track) {
+void sTrack0(byte track) {  
   if ( track == 0 ) {
     Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register;
   }
@@ -309,7 +309,7 @@ File DSK[7]; 	//read and write file pointers to DOAD's
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
 boolean aDSK[4] = {false,true,false,false};
 //current selected DSK; default is DSK1
-byte cDSK = 1;
+byte cDSK = 0;
 //protected DSK flag
 boolean pDSK = false;
 
@@ -425,7 +425,7 @@ void loop() {
     ccmd = Rbyte(WCOMND) & 0xF0;
 
     //the FD1771 "Force Interrupt" command is not needed for APEDSK so 
-    //it's conveniently repurposed for exiting when command exec is not needed
+    //it's conveniently re-purposed for exiting when command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
     
       ncmd = (ccmd != lcmd)
@@ -433,14 +433,6 @@ void loop() {
         lcmd = ccmd;
       }
 	      
-      /*if ( ccmd != lcmd ) {   //yes we do; different to last command?
-	      lcmd = ccmd;          //yep save current command for compare in next interrupt and
-        ncmd = true;          //... set flag for new command
-      }
-      else {
-        ncmd = false;         //no more of the same command
-      } */
-
       if ( ccmd < 0x80 ) { //step/seek commands?
       
         switch (ccmd) { //yep switch step/seek commands
@@ -452,7 +444,7 @@ void loop() {
             sTrack0(0);       //set Track 0 bit in Status Register   
           break;
 			
-          case 0x10:	//seek; if RTRACK == WDATA direction (curdir) doesn't change
+          case 0x10:	//seek
             DSRAM = Rbyte(WDATA); //read track seek #
             if ( DSRAM > Rbyte(RTRACK) ) { 
               curdir = LOW; //step-in towards track 39
@@ -460,11 +452,11 @@ void loop() {
             else {
               if ( DSRAM < Rbyte(RTRACK) ) { 
                 curdir = HIGH;  //step-out towards track 0
-                sTrack0(DSRAM); //check, possibly set Track 0 bit in Status Register
+                sTrack0(DSRAM);  	//check, possibly set Track 0 bit in Status Register
               }  
             }
-            Wbyte(RTRACK, DSRAM); //update track register
-          break;
+	     Wbyte(RTRACK, DSRAM); //update track register
+	  break;
 
           case 0x20:	//step
             //always execute step+T, can't see it making any difference (FLW)  
@@ -588,6 +580,16 @@ ISR(INT0_vect) {
         }
       } 
     	
+	 DSRAM = Rbyte(WDATA); //read track seek #
+               if ( DSRAM > Rbyte(RTRACK) ) { 
+                curdir = LOW; //step-in towards track 39
+            } 
+            else {
+              if ( DSRAM < Rbyte(RTRACK) ) { 
+                curdir = HIGH;  //step-out towards track 0
+                
+              }  
+            }
         
           case 0x60: //step-out (towards track 0)
       	    
