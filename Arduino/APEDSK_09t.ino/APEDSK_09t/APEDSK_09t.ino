@@ -475,13 +475,14 @@ void loop() {
           case 0x40:	//step-in (towards track 39)
             //always execute step-in+T, can't see it making any difference (FLW)
          
-          case 50:	//step-in+T (towards track 39, update Track Register)
+          case 0x50:	//step-in+T (towards track 39, update Track Register)
             DSRAM = Rbyte(RTRACK);  //read current track #
             //if track # still within limits update track register
             if ( DSRAM < 39) { 
               Wbyte(RTRACK,++DSRAM); //increase track #
             }
-            curdir == LOW;  //set current direction    
+            curdir = LOW; //set current direction    
+            sTrack0(1);   //reset "Track 0" bit
           break;
           
           case 0x60:	//step-out (towards track 0)
@@ -493,7 +494,7 @@ void loop() {
             if ( DSRAM > 0) { 
               Wbyte(RTRACK,--DSRAM); //decrease track #
             }
-            curdir == HIGH; //set current direction  
+            curdir = HIGH; //set current direction  
             sTrack0(DSRAM); //check for Track 0
           break;
         } //end switch step commands
