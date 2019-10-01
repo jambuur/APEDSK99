@@ -100,7 +100,7 @@
 #define WDATA   0x1FFE  //write FD1771 Data register     (>5FFE in TI99/4a DSR memory block)
 
 //error blinking parameters: on (pwm), off, delay between sequence
-#define LED_on      350
+#define LED_on      500
 #define LED_off     250
 #define LED_repeat  1500
 
@@ -128,7 +128,6 @@ void dis_cbus() {
 void ena_cbus() {
   pinAsOutput(CE);
   digitalHigh(CE);   	//default output state is LOW, we obviously don't want that
-  delayMicroseconds(2);	//DEBUG possible data corruption issue
   pinAsOutput(WE);
   digitalHigh(WE);  	//default output state is LOW, we obviously don't want that
 }
@@ -244,9 +243,9 @@ void TIstop() {
 //enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
-  dis_cbus();               //cease Arduino RAM control
-  digitalLow(TI_BUFFERS);   //enable 74LS541's 
-  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
+  dis_cbus();                     //cease Arduino RAM control
+  digitalLow(TI_BUFFERS);         //enable 74LS541's 
+  pinAsInput     (TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
 //flash error code
@@ -420,7 +419,7 @@ void loop() {
     //read Command Register, stripping away unnecessary floppy bits
     ccmd = Rbyte(WCOMND) & 0xF0;
 
-    //the FD1771 "Force Interrupt" command is not needed for APEDSK so 
+   //the FD1771 "Force Interrupt" command is not needed for APEDSK so 
     //it's conveniently re-purposed for exiting when command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
     
