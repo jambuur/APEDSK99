@@ -104,6 +104,12 @@
 #define LED_off     250
 #define LED_repeat  1500
 
+//short delay function to let bus/signals settle
+//inline void NOP() __attribute__((always_inline));
+void NOP() {
+  delayMicroseconds(2);
+}  
+
 //switch databus to INPUT state for TI RAM access 
 void dbus_in() {
   DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) 
@@ -135,7 +141,7 @@ void ena_cbus() {
 //read a byte from the databus
 byte dbus_read() 
 {   
-  delayMicroseconds(2);                 //long live the Logic Analyser
+  NOP();
   return( ((PIND & B00000010) >> 1) +   //read PD1 (D0)
           ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
           ((PINB & B00000011) << 6) );  //read PB1, PBO (D7, D6) 
@@ -236,19 +242,29 @@ void Wbyte(unsigned int address, byte data)
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
    pinAsOutput(TI_READY);   //switch from HighZ to output
+   NOP;                     //settle delay
    digitalHigh(TI_BUFFERS); //disables 74LS541's
+   NOP;                     //settle delay
    ena_cbus();              //Arduino in RAM control
+   NOP;                     //settle delay
 }
 
 //enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
-  dis_cbus();                     //cease Arduino RAM control
-  digitalLow(TI_BUFFERS);         //enable 74LS541's 
-  pinAsInput     (TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
+  dis_cbus();               //cease Arduino RAM control
+  NOP;                      //settle delay
+  digitalLow(TI_BUFFERS);   //enable 74LS541's 
+  NOP;                      //settle delay
+  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
+  NOP;                      //settle delay
 }
 
-//flash error code
+//flash error code:
+//  1 flash   : SPI / SD Card fault/not ready
+//  2 flashes : can't read DSR binary image (/APEDSK.DSR) 
+//  3 flashes : no valid DSR header (>AA) at DSR RAM >0000
+//  4 flashes : can't read default DSK1 image (/001.DSK)
 void eflash(byte error)
 {
   //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
@@ -442,7 +458,8 @@ void loop() {
           case 0x10:	//seek
             DSRAM = Rbyte(WDATA); //read track seek #
             if ( DSRAM > Rbyte(RTRACK) ) { 
-              curdir = LOW; //step-in towards track 39
+              curdir = LOW;       //step-in towards track 39
+              sTrack0(1);     //reset Track 0 bit in Status Register
             } 
             else {
               if ( DSRAM < Rbyte(RTRACK) ) { 
@@ -457,16 +474,17 @@ void loop() {
             //always execute step+T, can't see it making any difference (FLW)  
     
           case 0x30:	//step+T (update Track register)
-            DSRAM = Rbyte(RTRACK);  //read current track #
+            DSRAM = Rbyte(RTRACK);    //read current track #
             //is current direction inwards and track # still within limits?
             if (  DSRAM < 39  && curdir == LOW ) {
               Wbyte(RTRACK,++DSRAM);  //increase track #
+              sTrack0(1);             //reset Track 0 bit in Status Register
             }
             else {
                //is current direction outwards and track # still within limits?
               if ( DSRAM >  0 && curdir == HIGH ) {
                 Wbyte(RTRACK,--DSRAM);  //decrease track #
-                sTrack0(DSRAM);         //check/set Track 0
+                sTrack0(DSRAM);         //check, possibly set Track 0 bit in Status Register
               }
             }      
           break;
@@ -550,7 +568,7 @@ void loop() {
 ISR(INT0_vect) { 
 
   TIstop();
-
+   
   //set interrupt flag  
   FD1771=true;  
   
