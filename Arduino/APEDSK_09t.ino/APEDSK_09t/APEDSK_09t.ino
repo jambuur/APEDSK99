@@ -105,7 +105,7 @@
 #define LED_repeat  1500
 
 //short delay function to let bus/signals settle
-//inline void NOP() __attribute__((always_inline));
+inline void NOP() __attribute__((always_inline));
 void NOP() {
   delayMicroseconds(2);
 }  
@@ -351,10 +351,8 @@ void setup() {
   pinAsInput(TI_INT);
 	
   //TI99-4a I/O control
-  pinAsOutput(TI_READY);
-  pinAsOutput(TI_BUFFERS);
-  
   //put TI on hold and enable 74HC595 shift registers
+  pinAsOutput(TI_BUFFERS);
   TIstop();
  
   //read DSR binary from SD and write into DSR RAM
@@ -410,9 +408,6 @@ void setup() {
   } 
   //initialise Status Register: set bits "Head Loaded" and "Track 0"
   Wbyte(RSTAT,B00100100); 
-  //initialise Sector Registers
-  Wbyte(WSECTR,0x01);
-  Wbyte(RSECTR,0x01);
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
@@ -429,7 +424,7 @@ void loop() {
   //check if flag has set by interrupt routine 
   if (FD1771) {
     
-    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is now very much alive
+    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is ready to rumble
     noInterrupts();
 
     //read Command Register, stripping away unnecessary floppy bits
@@ -438,11 +433,23 @@ void loop() {
    //the FD1771 "Force Interrupt" command is not needed for APEDSK so 
     //it's conveniently re-purposed for exiting when command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
-    
-      ncmd = (ccmd != lcmd);
-      if (ncmd) {
-        lcmd = ccmd;
-      }
+
+      //is the selected DSK available?
+      cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
+      if ( !aDSK[cDSK] ) {                        //check availability
+        Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);   //no; set "Not Ready" bit in Status Register
+        ncmd = false;                             //skip new command prep
+        noExec();                                 //exit via Force Interrupt command
+      }  
+      else  { 
+        Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);   //available -> reset "Not Ready" bit in Status Register         
+        //check and set disk protect 
+        DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
+        pDSK = ( DSK[cDSK].read() != 0x20 );      //flag is set when byte 0x10 <> " "
+        if ( pDSK ) {
+          Wbyte(RSTAT, Rbyte(RSTAT) | B01000000);
+        }
+      } 
    
       if ( ccmd < 0x80 ) { //step/seek commands?
       
@@ -517,11 +524,34 @@ void loop() {
         } //end switch step commands
         
         noExec(); //prevent multiple step/seek execution
-      }
+      } // end ccmd < 0x80
+    
+      else {  // read/write commands
+
+        //new or continue previous command?
+        ncmd = (ccmd != lcmd);
+        if (ncmd) {     //new command
+          lcmd = ccmd;  //remember new command for next compare
+
+          //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
+          secval = ( (Rbyte(CRUWRI) & 0x01) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); 
+          btidx = secval * 256;   //calc absolute DOAD byte index (0-92160)
+          DSK[cDSK].seek(btidx);  //set to first absolute byte for R/W
+        }
+        
+        switch (ccmd) {  //switch R/W commands
+
+           case 0x80: //read sector
+            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?           
+              Wbyte(RDATA,DSK[cDSK].read() );   //nope, supply next byte
+            }
+          break;
+    
     }
-/*      else {	
+/*      	
       
-        switch (ccmd) {	//switch non-step commands
+        
+
       
           case 0x80:	//read sector
             Wbyte(0x1FE0,0x80);
@@ -575,45 +605,11 @@ ISR(INT0_vect) {
 }
 
 	
-/*void loop() {
-      
-            //is the selected DSK available?
-        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
-        if ( !aDSK[cDSK] ) {                  //check availability
-          Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);  //no; set "Not Ready" bit in Status Register
-          ncmd = false;                         //skip new command prep
-          Wbyte((WCOMND,0x00);                         //exit via Restore command
-        }  
-        else  { 
-         Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);  //yes; reset "Not Ready" bit in Status Register         
-          //check and set disk protect 
-          DSK[cDSK].seek(0x10);     //byte 0x10 in Volume Information Block stores Protected flag
-          pDSK = ( DSK[cDSK].read() != 0x20 );  //flag is set when byte 0x10 <> " "
-        }
-      } 
-    	
-	
-      else { //rest of commands, needing more prep
-          
-        if ( ncmd ) { //new sector R/W, Track R/F     
 
-          DSK[cDSK].seek(0x10);     //select byte 0x10 in Volume Information Block
-          //DSRAM = DSK[cDSK].read(); //read that byte
-          pDSK = ( DSK[cDSK].read() != 32 ); //read protection byte and set flag accordingly (protected <> " ")
-
-	  //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
-          secval = ( (Rbyte(CRUWRI) & 0x01) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); 
-          btidx = secval * 256;                                                       //calc absolute DOAD byte index (0-92160)
-          DSK[cDSK].seek(btidx);                                                      //set to first absolute byte for R/W
-        }
 
         switch (ccmd) {
            
-          case 0x80: //read sector
-            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?           
-              Wbyte(RDATA,DSK[cDSK].read() );	 //nope, supply next byte
-  	        }
-          break;
+         
 		       
           case 0x90: //read multiple sectors
   	        if ( Rbyte(RSECTR) < 9 ) {      //are we still below the max # of sectors/track? 
