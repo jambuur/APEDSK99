@@ -121,7 +121,7 @@ void dbus_in() {
 //switch databus to OUTPUT state so Arduino can play bus master
 void dbus_out() {
   DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
-  DDRB  |= B00000011;  //set PB1, PB0 to output (D7, D6)
+  DDRB  |= B00000011;  //set PB1, PB0 to output (D7, D6)  
 }
 
 //disable Arduino control bus; CE* and WE* both HighZ
@@ -242,22 +242,16 @@ void Wbyte(unsigned int address, byte data)
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
    pinAsOutput(TI_READY);   //switch from HighZ to output
-   NOP;                     //settle delay
    digitalHigh(TI_BUFFERS); //disables 74LS541's
-   NOP;                     //settle delay
    ena_cbus();              //Arduino in RAM control
-   NOP;                     //settle delay
 }
 
 //enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
-  NOP;                      //settle delay
   digitalLow(TI_BUFFERS);   //enable 74LS541's 
-  NOP;                      //settle delay
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
-  NOP;                      //settle delay
 }
 
 //flash error code:
@@ -583,7 +577,8 @@ void loop() {
         } //end switch non-step commands
       
       } //end CRUWRI not changed */
-
+      }
+    }
     FD1771 = false;   //clear interrupt flag
 
     interrupts();     //enable interrupts for the next round  
@@ -605,7 +600,7 @@ ISR(INT0_vect) {
 }
 
 	
-
+/*
 
         switch (ccmd) {
            
