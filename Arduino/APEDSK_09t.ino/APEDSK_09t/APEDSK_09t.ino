@@ -105,12 +105,13 @@
 #define LED_repeat  1500
 
 //short delay function to let bus/signals settle
+//doesn't use timers so safe to use in a noInterrupt zone
 inline void NOP() __attribute__((always_inline));
 void NOP() {
   delayMicroseconds(2);
 }  
 
-//switch databus to INPUT state for TI RAM access 
+//switch databus to INPUT state for reading from RAM
 void dbus_in() {
   DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0) 
   PORTD &= B00000101;  //initialise input pins
@@ -118,7 +119,7 @@ void dbus_in() {
   PORTB &= B11111100;  //initialise input pins
 }
 
-//switch databus to OUTPUT state so Arduino can play bus master
+//switch databus to OUTPUT state for writing to RAM
 void dbus_out() {
   DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
   DDRB  |= B00000011;  //set PB1, PB0 to output (D7, D6)  
@@ -290,10 +291,30 @@ void eflash(byte error)
 //set Track 0 bit in Status Register
 void sTrack0(byte track) {  
   if ( track == 0 ) {
-    Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register;
+    Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register
   }
   else {
-    Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register;  
+    Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register 
+ }
+} 
+
+//set Not Ready bit in Status Register
+void sNReady(byte ready) {  
+  if ( ready ) {
+    Wbyte(RSTAT, Rbyte(RSTAT) | B10000000); //set Not Ready bit in Status Register
+  }
+  else {
+    Wbyte(RSTAT, Rbyte(RSTAT) & B01111111); //reset Not Ready bit in Status Register  
+ }
+} 
+
+//set Protected bit in Status Register
+void sProt(byte prot) {  
+  if ( prot ) {
+    Wbyte(RSTAT, Rbyte(RSTAT) | B01000000); //set Protected bit bit in Status Register
+  }
+  else {
+    Wbyte(RSTAT, Rbyte(RSTAT) & B10111111); //reset Protected bit bit in Status Register 
  }
 } 
 
@@ -431,7 +452,7 @@ void loop() {
       //is the selected DSK available?
       cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
       if ( !aDSK[cDSK] ) {                        //check availability
-        Wbyte(RSTAT, Rbyte(RSTAT) | B10000000);   //no; set "Not Ready" bit in Status Register
+        sNReady();				  //no; set "Not Ready" bit in Status Register
         ncmd = false;                             //skip new command prep
         noExec();                                 //exit via Force Interrupt command
       }  
@@ -440,8 +461,7 @@ void loop() {
         //check and set disk protect 
         DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
         pDSK = ( DSK[cDSK].read() != 0x20 );      //flag is set when byte 0x10 <> " "
-        if ( pDSK ) {
-          Wbyte(RSTAT, Rbyte(RSTAT) | B01000000);
+        sProt(pDSK);
         }
       } 
    
