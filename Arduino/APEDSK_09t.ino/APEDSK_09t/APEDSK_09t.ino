@@ -148,7 +148,7 @@ void ena_cbus() {
 //read a byte from the databus
 byte dbus_read() 
 {   
-  NOP();
+  NOP();				//long live the Logic Analyzer
   return( ((PIND & B00000010) >> 1) +   //read PD1 (D0)
           ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
           ((PINB & B00000011) << 6) );  //read PB1, PBO (D7, D6) 
