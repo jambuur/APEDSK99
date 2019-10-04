@@ -85,10 +85,10 @@
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
 //R6 counter value to detect read access in sector, ReadID and track commands
-#define RDINT   0x1FEC  
+#define RDINT   0x1FEA  
 
 //CRU emulation bytes + FD1771 registers
-//#define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
+#define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
 #define CRUWRI  0x1FEE  //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
 #define RSTAT   0x1FF0  //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
 #define RTRACK  0x1FF2  //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
@@ -103,6 +103,12 @@
 #define LED_on      500
 #define LED_off     250
 #define LED_repeat  1500
+
+//Status Register bits
+#define NotReady 0x80
+#define Protect  0x40
+#define Head     0x20
+#define Track0   0x04
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -256,10 +262,10 @@ void TIgo()
 }
 
 //flash error code:
-//  1 flash   : SPI / SD Card fault/not ready
-//  2 flashes : can't read DSR binary image (/APEDSK.DSR) 
-//  3 flashes : no valid DSR header (>AA) at DSR RAM >0000
-//  4 flashes : can't read default DSK1 image (/001.DSK)
+//  1 blink   : SPI / SD Card fault/not ready
+//  2 blinks  : can't read DSR binary image (/APEDSK.DSR) 
+//  3 blinks  : no valid DSR header (>AA) at DSR RAM >0000
+//  4 blinks  : can't read default DSK1 image (/001.DSK)
 void eflash(byte error)
 {
   //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
@@ -288,36 +294,16 @@ void eflash(byte error)
   }
 }
 
-//set Track 0 bit in Status Register
-void sTrack0(byte track) {  
-  if ( track == 0 ) {
-    Wbyte(RSTAT, Rbyte(RSTAT) | B00000100); //set Track 0 bit in Status Register
-  }
-  else {
-    Wbyte(RSTAT, Rbyte(RSTAT) & B11111011); //reset Track 0 bit in Status Register 
- }
-} 
-
-//set Not Ready bit in Status Register
-void sNReady(byte ready) {  
-  if ( ready ) {
-    Wbyte(RSTAT, Rbyte(RSTAT) | B10000000); //set Not Ready bit in Status Register
-  }
-  else {
-    Wbyte(RSTAT, Rbyte(RSTAT) & B01111111); //reset Not Ready bit in Status Register  
- }
-} 
-
-//set Protected bit in Status Register
-void sProt(byte prot) {  
-  if ( prot ) {
-    Wbyte(RSTAT, Rbyte(RSTAT) | B01000000); //set Protected bit bit in Status Register
-  }
-  else {
-    Wbyte(RSTAT, Rbyte(RSTAT) & B10111111); //reset Protected bit bit in Status Register 
- }
-} 
-
+//set Status Register bit(s):
+//B11100100: NotReady, Protect, Head Loaded and Track0
+void sStatus (byte bit, boolean set)
+if ( set )
+  Wbyte(RSTAT, Rbyte(RSTAT) | bit);
+}
+else {
+  Wbyte(RSTAT, Rbyte(RSTAT) & !bit);
+}
+	
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
   Wbyte(WCOMND,0xD0);
@@ -417,12 +403,9 @@ void setup() {
     aDSK[3] = true;
   }
   
-  //initialise FD1771 (clear "CRU" and "FD1771 registers")
-  for (unsigned int ii = RDINT; ii < (WDATA+1) ; ii++) {
-    Wbyte(ii,0x00); 
-  } 
   //initialise Status Register: set bits "Head Loaded" and "Track 0"
-  Wbyte(RSTAT,B00100100); 
+  sStatus(Head,1);
+  sStatus(Track0,1);
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
@@ -452,16 +435,16 @@ void loop() {
       //is the selected DSK available?
       cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
       if ( !aDSK[cDSK] ) {                        //check availability
-        sNReady();				  //no; set "Not Ready" bit in Status Register
+        sStatus(NotReady,1)			  //no; set "Not Ready" bit in Status Register
         ncmd = false;                             //skip new command prep
         noExec();                                 //exit via Force Interrupt command
       }  
       else  { 
-        Wbyte(RSTAT, Rbyte(RSTAT) & B01111111);   //available -> reset "Not Ready" bit in Status Register         
+        sStatus(NotReady,0)		          //available -> reset "Not Ready" bit in Status Register         
         //check and set disk protect 
         DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
         pDSK = ( DSK[cDSK].read() != 0x20 );      //flag is set when byte 0x10 <> " "
-        sProt(pDSK);
+        sStatus(Protect,pDSK);			  //set "Protect
         }
       } 
    
@@ -479,13 +462,13 @@ void loop() {
           case 0x10:	//seek
             DSRAM = Rbyte(WDATA); //read track seek #
             if ( DSRAM > Rbyte(RTRACK) ) { 
-              curdir = LOW;       //step-in towards track 39
-              sTrack0(1);     //reset Track 0 bit in Status Register
+              curdir = LOW;        //step-in towards track 39
+              sStatus(Track0, 1);  //reset Track 0 bit in Status Register
             } 
             else {
               if ( DSRAM < Rbyte(RTRACK) ) { 
                 curdir = HIGH;  //step-out towards track 0
-                sTrack0(DSRAM);  	//check, possibly set Track 0 bit in Status Register
+                sStatus(Track0, DSRAM==0);  	//check for Track 0 and Status Register accordingly
               }  
             }
 	          Wbyte(RTRACK, DSRAM); //update track register
@@ -499,13 +482,13 @@ void loop() {
             //is current direction inwards and track # still within limits?
             if (  DSRAM < 39  && curdir == LOW ) {
               Wbyte(RTRACK,++DSRAM);  //increase track #
-              sTrack0(1);             //reset Track 0 bit in Status Register
+              sStatus(Track0, 1);     //reset Track 0 bit in Status Register
             }
             else {
                //is current direction outwards and track # still within limits?
               if ( DSRAM >  0 && curdir == HIGH ) {
-                Wbyte(RTRACK,--DSRAM);  //decrease track #
-                sTrack0(DSRAM);         //check, possibly set Track 0 bit in Status Register
+                Wbyte(RTRACK,--DSRAM);  	//decrease track #
+               sStatus(Track0, DSRAM==0);       //check for Track 0 and Status Register accordingly
               }
             }      
           break;
@@ -519,8 +502,8 @@ void loop() {
             if ( DSRAM < 39) { 
               Wbyte(RTRACK,++DSRAM); //increase track #
             }
-            curdir = LOW; //set current direction    
-            sTrack0(1);   //reset "Track 0" bit
+            curdir = LOW; 	    //set current direction    
+            sStatus(Track0, 1);     //reset Track 0 bit in Status Register
           break;
           
           case 0x60:	//step-out (towards track 0)
@@ -533,7 +516,7 @@ void loop() {
               Wbyte(RTRACK,--DSRAM); //decrease track #
             }
             curdir = HIGH; //set current direction  
-            sTrack0(DSRAM); //check for Track 0
+            sStatus(Track0, DSRAM==0);       //check for Track 0 and Status Register accordingly
           break;
         } //end switch step commands
         
@@ -560,7 +543,9 @@ void loop() {
               Wbyte(RDATA,DSK[cDSK].read() );   //nope, supply next byte
             }
           break;
-    
+    		
+	  case 
+			
     }
 /*      	
       
