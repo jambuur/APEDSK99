@@ -352,8 +352,9 @@ void setup() {
   pinAsInput(TI_INT);
 	
   //TI99-4a I/O control
-  //put TI on hold and enable 74HC595 shift registers
   pinAsOutput(TI_BUFFERS);
+
+  //put TI on hold and enable 74HC595 shift registers
   TIstop();
  
   //read DSR binary from SD and write into DSR RAM
@@ -444,7 +445,7 @@ void loop() {
         //check and set disk protect 
         DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
         pDSK = ( DSK[cDSK].read() != 0x20 );      //flag is set when byte 0x10 <> " "
-        sStatus(Protect,pDSK);			  //set "Protect
+        sStatus(Protect,pDSK);			  //reflect "Protect" status accordingly
         }
       } 
    
@@ -544,14 +545,27 @@ void loop() {
             }
           break;
     		
-	  case 
-			
-    }
-/*      	
+	  case 0x90: //read multiple sectors
+	    if ( (DSK[cDSK].position() - btidx) < 2305 ) { //have we supplied all 9 * 256 bytes yet?	
+	      Wbyte(RDATA,DSK[cDSK].read() );   //nope, supply next byte
+	    }
+	  break;
+    
+	  case 0xA0: //write sector
+	    if ( !pDSK ) {//write protected?
+	      if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we written all 256 bytes yet?   
+	        DSK[cDSK].write(Rbyte(WDATA));   //nope, supply next byte
+	      }
+              else {
+                sSTatus(NotReady, 1);
+	      }
+	    }
+	   break;
+/*        
       
         
 
-      
+     }
           case 0x80:	//read sector
             Wbyte(0x1FE0,0x80);
           break;
