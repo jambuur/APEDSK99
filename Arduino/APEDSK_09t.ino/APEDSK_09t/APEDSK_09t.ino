@@ -1,5 +1,5 @@
 /* APEDISK99
-* 
+* CHECK: WTRACK/WSECTR update, READ ID byte counter
 * This sketch emulates 3 TI99/4a disk drives. Shopping list:
 *
 * - Arduino Uno
@@ -332,6 +332,7 @@ boolean ncmd            = false;  //flag new command
 unsigned int secval     = 0;      //absolute sector number: (side * 359) + (track * 9) + WSECTR
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
+byte cID		= 0;	  //READ ID byte counter (0-5)			= 
 
 //------------  
 void setup() {
@@ -543,6 +544,8 @@ void loop() {
             if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?           
               Wbyte(RDATA,DSK[cDSK].read() );   //nope, supply next byte
             }
+	    else {
+	      
           break;
     		
 	  case 0x90: //read multiple sectors
@@ -560,26 +563,28 @@ void loop() {
                 sSTatus(NotReady, 1);
 	      }
 	    }
-	   break;
-/*        
-      
+	  break;
         
-
-     }
-          case 0x80:	//read sector
-            Wbyte(0x1FE0,0x80);
-          break;
-          case 0x90:	//read multiple sectors
-            Wbyte(0x1FE0,0x90);
-          break;
-          case 0xA0:	//write sector
-            Wbyte(0x1FE0,0xA0);
-          break;
-          case 0xB0:	//write multiple sectors
-            Wbyte(0x1FE0,0xB0);
-          break;
+          case 0xB0: //write multiple sectors
+	    if ( !pDSK ) {//write protected?
+	      if ( (DSK[cDSK].position() - btidx) < 2305 ) { //have we written all 9 * 256 bytes yet?   
+	        DSK[cDSK].write(Rbyte(WDATA));   //nope, supply next byte
+	      }
+              else {
+                sSTatus(NotReady, 1);
+	      }
+	    }
+	  break; 
+            
           case 0xC0:	//read ID
-            Wbyte(0x1FE0,0xC0);
+	    
+			
+*/           
+	
+	
+	
+	
+	Wbyte(0x1FE0,0xC0);
           break;
           case 0xD0:	//force interrupt
             Wbyte(0x1FE0,0xD0);
