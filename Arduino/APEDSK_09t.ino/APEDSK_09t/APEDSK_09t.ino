@@ -264,10 +264,10 @@ void TIgo()
 }
 
 //flash error code:
-//  1 blink   : SPI / SD Card fault/not ready
-//  2 blinks  : can't read DSR binary image (/APEDSK.DSR) 
-//  3 blinks  : no valid DSR header (>AA) at DSR RAM >0000
-//  4 blinks  : can't read default DSK1 image (/001.DSK)
+//  flash                   : SPI / SD Card fault/not ready
+//  flash-flash             : can't read DSR binary image (/APEDSK.DSR) 
+//  flash-flash-flash       : no valid DSR header (>AA) at DSR RAM >0000
+//  flash-flash-flash-flash : can't read default DSK1 image (/001.DSK)
 void eflash(byte error)
 {
   //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
@@ -316,27 +316,25 @@ void noExec(void) {
 File InDSR;  
 
 //DSKx file pointers; x=3,2,1 for read, (x+3) for write
-File DSK[8]; 	//read and write file pointers to DOAD's
+File DSK[8]; 	  //read and write file pointers to DOAD's
 #define woff 3	//write file pointer (array index offset from read file pointer)
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
 //bit crooked as the TI Controller Card assigns CRU drive select bits backwards
-boolean aDSK[4] = {false,false,false,true};
-//current selected DSK
-byte cDSK = 0;
-//protected DSK flag
-boolean pDSK = false;
+boolean aDSK[5] = {false,false,false,false,true}; //DSK1=4, DSK2=2, DSK3=1
+byte cDSK = 0;                                    //current selected DSK
+boolean pDSK = false;                             //protected DSK flag
 
 //various storage and flags for command interpretation and handling
-byte DSRAM		= 0;	  //generic variable for RAM R/W
-volatile boolean FD1771 = false;  //interrupt routine flag: possible new / continued FD1771 command
+byte DSRAM		= 0;	              //generic variable for RAM R/W
+volatile boolean FD1771 = false;  //interrupt routine flag: new or continued FD1771 command
 byte ccmd               = 0;      //current command
 byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
 unsigned int secval     = 0;      //absolute sector number: (side * 359) + (track * 9) + WSECTR
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
-byte cID		            = 0;	    //READ ID byte counter (0-5)			= 
+byte cID		            = 0;	    //READ ID byte counter (0-5)
 
 //------------  
 void setup() {
