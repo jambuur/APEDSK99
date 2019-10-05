@@ -88,7 +88,8 @@
 #define RDINT   0x1FEA  
 
 //CRU emulation bytes + FD1771 registers
-#define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block)
+#define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block); not used but possible future use
+//B00001111: DSK1, DSK2, DSK2, side 0/1
 #define CRUWRI  0x1FEE  //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
 #define RSTAT   0x1FF0  //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
 #define RTRACK  0x1FF2  //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
@@ -314,13 +315,14 @@ void noExec(void) {
 //DSR binary input file pointer
 File InDSR;  
 
-//DSKx file pointers; x=1,2,3 for read, (x+3) for write
-File DSK[7]; 	//read and write file pointers to DOAD's
+//DSKx file pointers; x=3,2,1 for read, (x+3) for write
+File DSK[8]; 	//read and write file pointers to DOAD's
 #define woff 3	//write file pointer (array index offset from read file pointer)
 
-//flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Flash Error 3)
-boolean aDSK[4] = {false,true,false,false};
-//current selected DSK; default is DSK1
+//flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
+//bit crooked as the TI Controller Card assigns CRU drive select bits backwards
+boolean aDSK[4] = {false,false,false,true};
+//current selected DSK
 byte cDSK = 0;
 //protected DSK flag
 boolean pDSK = false;
@@ -380,13 +382,13 @@ void setup() {
   }
 
  //try to open DSK1 for reads
- DSK[1] = SD.open("/DISKS/001.DSK", FILE_READ);
-  if ( !DSK[1] ) {
-    eflash(4);	//could not open DSK1 -> flash error 3
+ DSK[4] = SD.open("/DISKS/001.DSK", FILE_READ);
+  if ( !DSK[4] ) {
+    eflash(4);	//could not open DSK1 -> flash error 4
   }
   else {
     //DSK1 is available, assign file pointer for writes	  
-    DSK[1+woff] = SD.open("/DISKS/001.DSK", FILE_WRITE);
+    DSK[4+woff] = SD.open("/DISKS/001.DSK", FILE_WRITE);
   }
   
   //try to open DSK2 for reads
@@ -399,17 +401,20 @@ void setup() {
   }
    
   //try to open DSK3 for reads
-  DSK[3] = SD.open("/DISKS/003.DSK", FILE_READ);
-  if ( DSK[3] ) {
+  DSK[1] = SD.open("/DISKS/003.DSK", FILE_READ);
+  if ( DSK[1] ) {
     //DSK3 is available, assign file pointer for writes ...
-    DSK[3+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
+    DSK[1+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
     //... and set flag
-    aDSK[3] = true;
+    aDSK[1] = true;
   }
   
   //initialise Status Register: set bits "Head Loaded" and "Track 0"
   sStatus(Head,1);
   sStatus(Track0,1);
+
+  //select DSK1 as default
+  Wbyte(CRUWRI, B00001000);
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
@@ -441,7 +446,7 @@ void loop() {
       cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
       if ( !aDSK[cDSK] ) {                        //check availability
         sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
-        ncmd = false;                             //skip new command prep
+        lcmd = ccmd;                               //skip new command prep
         noExec();                                 //exit via Force Interrupt command
       }  
       else  { 
@@ -525,9 +530,10 @@ void loop() {
         } //end switch step commands
         
         noExec(); //prevent multiple step/seek execution
+
       } // end ccmd < 0x80
     
-/*      else {  // read/write commands
+      else {  // read/write commands
 
         //new or continue previous command?
         ncmd = (ccmd != lcmd);
@@ -542,75 +548,20 @@ void loop() {
         
         switch (ccmd) {  //switch R/W commands
 
-           case 0x80: //read sector
-            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?           
-              Wbyte(RDATA,DSK[cDSK].read() );             //nope, supply next byte
-            }
-	          else {
-	            noExec();                                   //exit via Force Interrupt command
-	          }
+          case 0xD0:
           break;
-    		
-	        case 0x90: //read multiple sectors
-	          if ( (DSK[cDSK].position() - btidx) < 2305 ) {  //have we supplied all 9 * 256 bytes yet?	
-	            Wbyte(RDATA,DSK[cDSK].read() );               //nope, supply next byte
-	          }
-            else {
-              noExec();                                     //exit via Force Interrupt command
-            }
-	        break;
-/*    
-	        case 0xA0: //write sector
-	          if ( !pDSK ) {                                  //write protected?
-	            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we written all 256 bytes yet?   
-	              DSK[cDSK].write(Rbyte(WDATA));              //nope, supply next byte
-	            }
-              else {
-                sSTatus(NotReady, 1);
-                noExec();                                   //exit via Force Interrupt command
-	            }
-	          }
-	        break;
-        
-          case 0xB0: //write multiple sectors
-	          if ( !pDSK ) {//write protected?
-	            if ( (DSK[cDSK].position() - btidx) < 2305 ) { //have we written all 9 * 256 bytes yet?   
-	              DSK[cDSK].write(Rbyte(WDATA));   //nope, supply next byte
-	            }
-              else {
-                sSTatus(NotReady, 1);
-	            }
-	          }
-	        break; 
-            
-          case 0xC0:	//read ID
 
-	Wbyte(0x1FE0,0xC0);
-          break;
-          case 0xD0:	//force interrupt
-            Wbyte(0x1FE0,0xD0);
-          break;
-          case 0xE0:	//read track
-            Wbyte(0x1FE0,0xE0);
-          break;
-          case 0xF0:	//write track
-            Wbyte(0x1FE0,0cF0);
-          break;
-          default: //DEBUG
-            Wbyte(0x1FE0,0xFF);
-          break;
-        } //end switch non-step commands
-      
-      } //end CRUWRI not changed 
-      }
-    }*/
-  }//end FD1771 flag check
-  
-  FD1771 = false;   //clear interrupt flag
+        } //end switch non-step commands      
 
-  interrupts();     //enable interrupts for the next round  
+      } //end R/W commands
+
+    FD1771 = false;   //clear interrupt flag
+
+    interrupts();     //enable interrupts for the next round  
     
-  TIgo();
+    TIgo();
+
+  } //end FD1771 flag check
 
 } //end loop()
 		
@@ -630,6 +581,68 @@ ISR(INT0_vect) {
         switch (ccmd) {
            
          
+/*           case 0x80: //read sector
+            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?           
+              Wbyte(RDATA,DSK[cDSK].read() );             //nope, supply next byte
+            }
+           else {
+              noExec();                                   //exit via Force Interrupt command
+            }
+          break;
+        
+          case 0x90: //read multiple sectors
+            if ( (DSK[cDSK].position() - btidx) < 2305 ) {  //have we supplied all 9 * 256 bytes yet? 
+              Wbyte(RDATA,DSK[cDSK].read() );               //nope, supply next byte
+            }
+            else {
+              noExec();                                     //exit via Force Interrupt command
+            }
+          break;
+/*    
+          case 0xA0: //write sector
+            if ( !pDSK ) {                                  //write protected?
+              if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we written all 256 bytes yet?   
+                DSK[cDSK].write(Rbyte(WDATA));              //nope, supply next byte
+              }
+              else {
+                sSTatus(NotReady, 1);
+                noExec();                                   //exit via Force Interrupt command
+              }
+            }
+          break;
+        
+          case 0xB0: //write multiple sectors
+            if ( !pDSK ) {//write protected?
+              if ( (DSK[cDSK].position() - btidx) < 2305 ) { //have we written all 9 * 256 bytes yet?   
+                DSK[cDSK].write(Rbyte(WDATA));   //nope, supply next byte
+              }
+              else {
+                sSTatus(NotReady, 1);
+              }
+            }
+          break; 
+            
+          case 0xC0:  //read ID
+
+            Wbyte(0x1FE0,0xC0);
+                    break;
+                    case 0xD0:  //force interrupt
+                      Wbyte(0x1FE0,0xD0);
+                    break;
+                    case 0xE0:  //read track
+                      Wbyte(0x1FE0,0xE0);
+                    break;
+                    case 0xF0:  //write track
+                      Wbyte(0x1FE0,0cF0);
+                    break;
+                    default: //DEBUG
+                      Wbyte(0x1FE0,0xFF);
+                    break;
+                  } 
+                
+                } //end CRUWRI not changed 
+      }
+    }
 		       
           case 0x90: //read multiple sectors
   	        if ( Rbyte(RSECTR) < 9 ) {      //are we still below the max # of sectors/track? 
