@@ -414,9 +414,6 @@ void setup() {
   sStatus(Head,1);
   sStatus(Track0,1);
 
-  //select DSK1 as default
-  Wbyte(CRUWRI, B00001000);
-
   //"no command" as default
   Wbyte(WCOMND,0xD0);
 
