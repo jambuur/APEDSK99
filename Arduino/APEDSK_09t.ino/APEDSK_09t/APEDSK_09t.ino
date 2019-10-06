@@ -111,6 +111,9 @@
 #define Head     0x20
 #define Track0   0x04
 
+//maximum "track"
+#define maxtrack  0x27
+
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
 inline void NOP() __attribute__((always_inline));
@@ -300,10 +303,10 @@ void eflash(byte error)
 //B11100100: NotReady, Protect, Head Loaded and Track0
 void sStatus (byte bit, boolean set) {
   if ( set ) {
-    Wbyte(RSTAT, Rbyte(RSTAT) | bit);
+    Wbyte(RSTAT, (Rbyte(RSTAT) | bit) );
   }
   else {
-    Wbyte(RSTAT, Rbyte(RSTAT) & !bit);
+    Wbyte(RSTAT, (Rbyte(RSTAT) & !bit) );
   }
 }
 	
@@ -321,12 +324,12 @@ File DSK[8]; 	  //read and write file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
 //bit crooked as the TI Controller Card assigns CRU drive select bits backwards
-boolean aDSK[5] = {false,false,false,false,true}; //DSK1=4, DSK2=2, DSK3=1
-byte cDSK = 0;                                    //current selected DSK
-boolean pDSK = false;                             //protected DSK flag
+boolean aDSK[5] = {false,false,false,false,true}; //DSK3=1, DSK2=2, DSK1=4
+byte cDSK       = 0;                              //current selected DSK
+boolean pDSK    = false;                          //protected DSK flag
 
 //various storage and flags for command interpretation and handling
-byte DSRAM		= 0;	              //generic variable for RAM R/W
+byte DSRAM		          = 0;	    //generic variable for RAM R/W
 volatile boolean FD1771 = false;  //interrupt routine flag: new or continued FD1771 command
 byte ccmd               = 0;      //current command
 byte lcmd               = 0;      //last command
@@ -414,6 +417,9 @@ void setup() {
   //select DSK1 as default
   Wbyte(CRUWRI, B00001000);
 
+  //"no command" as default
+  Wbyte(WCOMND,0xD0);
+
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
   EICRA = 1 << ISC00;  //sense any change on the INT0 pin
@@ -442,60 +448,61 @@ void loop() {
 
       //is the selected DSK available?
       cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
-      if ( !aDSK[cDSK] ) {                        //check availability
+      if ( aDSK[cDSK] ) {                         //check availability
+        sStatus(NotReady,false);                  //available -> reset "Not Ready" bit in Status Register          
+        DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
+        pDSK = ( DSK[cDSK].read() != 0x20 );      //flag is set when byte 0x10 <> " "
+        sStatus(Protect,pDSK);                    //reflect "Protect" status 
+      }
+      else {      
         sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
         lcmd = ccmd;                              //skip new command prep
         noExec();                                 //exit via Force Interrupt command
       }  
-      else  { 
-        sStatus(NotReady,false);	                //available -> reset "Not Ready" bit in Status Register          
-        DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
-        pDSK = ( DSK[cDSK].read() != 0x20 );      //flag is set when byte 0x10 <> " "
-        sStatus(Protect,pDSK);			              //reflect "Protect" status 
-        }
-      } 
    
       if ( ccmd < 0x80 ) { //step/seek commands?
       
         switch (ccmd) { //yep switch step/seek commands
 
           case 0x00:	//restore
-            Wbyte(RTRACK,0);        //clear read track register
-            Wbyte(WTRACK,0);        //clear write track register        
-            Wbyte(WDATA,0);         //clear write data register
-            sStatus(Track0, true);  //set Track 0 bit in Status Register   
+            Wbyte(RTRACK,0);          //clear read track register
+            Wbyte(WTRACK,0);          //clear write track register        
+            Wbyte(WDATA,0);           //clear write data register
+            sStatus(Track0, true);    //set Track 0 bit in Status Register 
           break;
 			
           case 0x10:	//seek
             DSRAM = Rbyte(WDATA); //read track seek #
-            if ( DSRAM > Rbyte(RTRACK) ) { 
-              curdir = LOW;                 //step-in towards track 39
-              sStatus(Track0, false);       //reset Track 0 bit in Status Register
-            } 
-            else {
-              if ( DSRAM < Rbyte(RTRACK) ) { 
-                curdir = HIGH;  //step-out towards track 0
-                sStatus(Track0, DSRAM==0);  //check for Track 0 and Status Register accordingly
-              }  
+            if ( DSRAM <= maxtrack) {         //make sure we stay within max # of tracks
+              if ( DSRAM > Rbyte(RTRACK) ) { 
+                curdir = LOW;                 //step-in towards track 39
+                sStatus(Track0, false);       //reset Track 0 bit in Status Register
+              } 
+              else {
+                if ( DSRAM < Rbyte(RTRACK) ) { 
+                  curdir = HIGH;  //step-out towards track 0
+                  sStatus(Track0, DSRAM==0);  //check for Track 0 and Status Register accordingly
+                }  
+              }
+	            Wbyte(RTRACK, DSRAM); //update track register
             }
-	          Wbyte(RTRACK, DSRAM); //update track register
 	        break;
 
           case 0x20:	//step
             //always execute step+T, can't see it making any difference (FLW)  
     
           case 0x30:	//step+T (update Track register)
-            DSRAM = Rbyte(RTRACK);        //read current track #
+            DSRAM = Rbyte(RTRACK);          //read current track #
             //is current direction inwards and track # still within limits?
             if (  DSRAM < 39  && curdir == LOW ) {
-              Wbyte(RTRACK,++DSRAM);      //increase track #
-              sStatus(Track0, false);     //reset Track 0 bit in Status Register
+              Wbyte(RTRACK,++DSRAM);        //increase track #
+              sStatus(Track0, false);       //reset Track 0 bit in Status Register
             }
             else {
                //is current direction outwards and track # still within limits?
               if ( DSRAM >  0 && curdir == HIGH ) {
-                Wbyte(RTRACK,--DSRAM);  	//decrease track #
-               sStatus(Track0, DSRAM==0); //check for Track 0 and set Status Register accordingly
+                Wbyte(RTRACK,--DSRAM);  	  //decrease track #
+                sStatus(Track0, DSRAM==0);  //check for Track 0 and set Status Register accordingly
               }
             }      
           break;
@@ -557,6 +564,8 @@ void loop() {
         } //end switch non-step commands      
 
       } //end R/W commands
+
+    } //end we needed to do something
 
     FD1771 = false;   //clear interrupt flag
 
