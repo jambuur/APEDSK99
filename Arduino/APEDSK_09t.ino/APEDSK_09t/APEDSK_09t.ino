@@ -444,7 +444,7 @@ void loop() {
       cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
       if ( !aDSK[cDSK] ) {                        //check availability
         sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
-        lcmd = ccmd;                               //skip new command prep
+        lcmd = ccmd;                              //skip new command prep
         noExec();                                 //exit via Force Interrupt command
       }  
       else  { 
@@ -525,6 +525,11 @@ void loop() {
             curdir = HIGH; //set current direction  
             sStatus(Track0, DSRAM==0);  //check for Track 0 and Status Register accordingly
           break;
+
+          default: //expect the unexpected
+            noExec(); //prevent multiple step/seek execution
+          break;
+        
         } //end switch step commands
         
         noExec(); //prevent multiple step/seek execution
