@@ -114,7 +114,7 @@
 //"disk" characteristics
 #define maxtrack  0x27		//maximum track
 #define maxsect	  0x09		//# of sectors/track
-#define maxbyte  0x100		//# of bytes per sector
+#define maxbyte   0xFF		//# of bytes per sector
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -317,6 +317,15 @@ void noExec(void) {
   Wbyte(WCOMND,0xD0);
 }
 
+unsigned long int cbtidx (void) {
+  bi  = Rbyte(CRUWRI) & B00000001 ) * maxtrack; //add 0x027 tracks for side 0 if on side 1
+  bi += Rbyte(WTRACK)                         	//add current track #
+  bi *= 9;					//convert to # of sectors
+  bi += Rbyte(WSECTR);				//add current sector #
+  bi *= 256;					//calculate absolute DOAD byte index ((0-92160)
+  return (bi);
+}
+
 //DSR binary input file pointer
 File InDSR;  
 
@@ -336,7 +345,6 @@ volatile boolean FD1771 = false;  //interrupt routine flag: new or continued FD1
 byte ccmd               = 0;      //current command
 byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
-unsigned int secval     = 0;      //absolute sector number: (side * 359) + (track * 9) + WSECTR
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
 byte sectidx	        = 0;	    // R/W and READ ID index counter 
@@ -413,8 +421,8 @@ void setup() {
   }
   
   //initialise Status Register: set bits "Head Loaded" and "Track 0"
-  sStatus(Head,1);
-  sStatus(Track0,1);
+  sStatus(Head,true);
+  sStatus(Track0,true);
 
   //"no command" as default
   Wbyte(WCOMND,0xD0);
@@ -450,7 +458,7 @@ void loop() {
       if ( aDSK[cDSK] ) {                         //check availability
         sStatus(NotReady,false);                  //available -> reset "Not Ready" bit in Status Register          
         DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
-        pDSK = ( DSK[cDSK].read() != 0x20 );      //flag is set when byte 0x10 <> " "
+        pDSK = ( DSK[cDSK].read() != 0x20 );      //disk is protected when byte 0x10 <> " "
         sStatus(Protect,pDSK);                    //reflect "Protect" status 
       }
       else {      
@@ -553,9 +561,7 @@ void loop() {
         if (ncmd) {               //new command
           lcmd = ccmd;            //remember new command for next compare
           sectidx = 0; 	          //clear sector index counter
-          //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
-          secval = ( (Rbyte(CRUWRI) & 0x01) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); 
-          btidx = secval * 256;   //calc absolute DOAD byte index (0-92160)
+          btidx = cbtidx();	  //calc absolute DOAD byte index (0-92160)
           DSK[cDSK].seek(btidx);  //set to first absolute byte for R/W
         }
         
@@ -597,18 +603,15 @@ ISR(INT0_vect) {
         switch (ccmd) {
            
 	   
-	   case 0x90: //read multiple sectors (wrapper/fallthrough for 0x80: read sector
-	   if ( sectidx > 8 ) {
-	     break;
-	   }
+	   case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
 
 /*         case 0x80: //read sector
             if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
               Wbyte(RDATA,DSK[cDSK].read() );             //nope, supply next byte
             }
            else {
-              Wbyte(RSECTR, ++(Rbyte(RSECTR)) );		  //increase Sector Register
-	      sectidx++;					//increase index counter for multiple sector reads (0x90)
+              Wbyte(RSECTR, Rbyte(RSECTR)++ );		  //increase Sector Register
+	      sectidx++;				  //increase index counter for multiple sector reads (0x90)
 	      noExec();                                   //exit via Force Interrupt command
             }
           break;
