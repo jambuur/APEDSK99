@@ -339,7 +339,7 @@ boolean ncmd            = false;  //flag new command
 unsigned int secval     = 0;      //absolute sector number: (side * 359) + (track * 9) + WSECTR
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
-byte cID		            = 0;	    //READ ID byte counter (0-5)
+byte sectidx	        = 0;	    // R/W and READ ID index counter 
 
 //------------  
 void setup() {
@@ -551,7 +551,7 @@ void loop() {
         ncmd = (ccmd != lcmd);
         if (ncmd) {     //new command
           lcmd = ccmd;  //remember new command for next compare
-
+          sectidx = 0; 	//clear sector index counter
           //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
           secval = ( (Rbyte(CRUWRI) & 0x01) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); 
           btidx = secval * 256;   //calc absolute DOAD byte index (0-92160)
@@ -561,6 +561,7 @@ void loop() {
         switch (ccmd) {  //switch R/W commands
 
           case 0xD0:
+	    sectidx = 0; 	//clear index counter in case we have interrupted multi-byte response commands
           break;
 
         } //end switch non-step commands      
@@ -596,21 +597,17 @@ ISR(INT0_vect) {
            
 	   
 	   case 0x90: //read multiple sectors (wrapper/fallthrough for 0x80: read sector
-            if ( (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {  //have we supplied all 9 * 256 bytes yet? 
-              Wbyte(RDATA,DSK[cDSK].read() );               //nope, supply next byte
-            }
-            else {
-              Wbyte(
-	      noExec();                                     //exit via Force Interrupt command
-            }
-          break;
-         
-/*           case 0x80: //read sector
+	   if ( sectidx > 8 ) {
+	     break;
+	   }
+
+/*         case 0x80: //read sector
             if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
               Wbyte(RDATA,DSK[cDSK].read() );             //nope, supply next byte
             }
            else {
               Wbyte(RSECTR, ++(Rbyte(RSECTR)) );		  //increase Sector Register
+	      sectidx++;					//increase index counter for multiple sector reads (0x90)
 	      noExec();                                   //exit via Force Interrupt command
             }
           break;
