@@ -111,8 +111,10 @@
 #define Head     0x20
 #define Track0   0x04
 
-//maximum "track"
-#define maxtrack  0x27
+//"disk" characteristics
+#define maxtrack  0x27		//maximum track
+#define maxsect	  0x09		//# of sectors/track
+#define maxbyte  0x100		//# of bytes per sector
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -453,8 +455,9 @@ void loop() {
       }
       else {      
         sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
-        lcmd = ccmd;                              //skip new command prep
-        noExec();                                 //exit via Force Interrupt command
+        ccmd = 0xD0;					//exit via Force Interrupt command
+	lcmd = ccmd;                              //skip new command prep
+        noExec();                                 //prevent multiple step/seek execution
       }  
    
       if ( ccmd < 0x80 ) { //step/seek commands?
@@ -510,11 +513,13 @@ void loop() {
           case 0x50:	//step-in+T (towards track 39, update Track Register)
             DSRAM = Rbyte(RTRACK);    //read current track #
             //if track # still within limits update track register
-            if ( DSRAM < 39) { 
+            if ( DSRAM < maxtrack) { 
               Wbyte(RTRACK,++DSRAM);  //increase track #
-            }
-            curdir = LOW; 	          //set current direction    
-            sStatus(Track0, false);   //reset Track 0 bit in Status Register
+              curdir = LOW; 	          //set current direction    
+              sStatus(Track0, false);   //reset Track 0 bit in Status Register
+	    }
+	    else {
+	      sStatus(NotReady, true);  //seeking beyond maxtrack sets "Not Ready" bit
           break;
           
           case 0x60:	//step-out (towards track 0)
@@ -591,20 +596,22 @@ ISR(INT0_vect) {
            
          
 /*           case 0x80: //read sector
-            if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we supplied all 256 bytes yet?           
+            if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
               Wbyte(RDATA,DSK[cDSK].read() );             //nope, supply next byte
             }
            else {
-              noExec();                                   //exit via Force Interrupt command
+              Wbyte(RSECTR, ++(Rbyte(RSECTR)) );		  //increase Sector Register
+	      noExec();                                   //exit via Force Interrupt command
             }
           break;
         
           case 0x90: //read multiple sectors
-            if ( (DSK[cDSK].position() - btidx) < 2305 ) {  //have we supplied all 9 * 256 bytes yet? 
+            if ( (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {  //have we supplied all 9 * 256 bytes yet? 
               Wbyte(RDATA,DSK[cDSK].read() );               //nope, supply next byte
             }
             else {
-              noExec();                                     //exit via Force Interrupt command
+              Wbyte(
+	      noExec();                                     //exit via Force Interrupt command
             }
           break;
 /*    
@@ -614,10 +621,12 @@ ISR(INT0_vect) {
                 DSK[cDSK].write(Rbyte(WDATA));              //nope, supply next byte
               }
               else {
-                sSTatus(NotReady, 1);
                 noExec();                                   //exit via Force Interrupt command
               }
-            }
+	      else {
+		sSTatus(NotReady, 1);			   //trying to write to a protected disk
+              }
+	    }
           break;
         
           case 0xB0: //write multiple sectors
@@ -626,12 +635,17 @@ ISR(INT0_vect) {
                 DSK[cDSK].write(Rbyte(WDATA));   //nope, supply next byte
               }
               else {
-                sSTatus(NotReady, 1);
+                noExec();				//exit via Force Interrupt command
               }
+	      else {
+		sSTatus(NotReady, 1);			//trying to write to a protected disk
+	      }
             }
           break; 
             
           case 0xC0:  //read ID
+	    
+
 
             Wbyte(0x1FE0,0xC0);
                     break;
