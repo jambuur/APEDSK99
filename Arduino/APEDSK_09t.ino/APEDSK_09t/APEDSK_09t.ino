@@ -455,8 +455,8 @@ void loop() {
       }
       else {      
         sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
-        ccmd = 0xD0;					//exit via Force Interrupt command
-	lcmd = ccmd;                              //skip new command prep
+        ccmd = 0xD0;					                    //exit via Force Interrupt command
+	      lcmd = ccmd;                              //skip new command prep
         noExec();                                 //prevent multiple step/seek execution
       }  
    
@@ -480,11 +480,11 @@ void loop() {
               } 
               else {
                 if ( DSRAM < Rbyte(RTRACK) ) { 
-                  curdir = HIGH;  //step-out towards track 0
+                  curdir = HIGH;              //step-out towards track 0
                   sStatus(Track0, DSRAM==0);  //check for Track 0 and Status Register accordingly
                 }  
               }
-	            Wbyte(RTRACK, DSRAM); //update track register
+	            Wbyte(RTRACK, DSRAM);           //update track register
             }
 	        break;
 
@@ -499,7 +499,7 @@ void loop() {
               sStatus(Track0, false);       //reset Track 0 bit in Status Register
             }
             else {
-               //is current direction outwards and track # still within limits?
+              //is current direction outwards and track # still within limits?
               if ( DSRAM >  0 && curdir == HIGH ) {
                 Wbyte(RTRACK,--DSRAM);  	  //decrease track #
                 sStatus(Track0, DSRAM==0);  //check for Track 0 and set Status Register accordingly
@@ -511,16 +511,17 @@ void loop() {
             //always execute step-in+T, can't see it making any difference (FLW)
          
           case 0x50:	//step-in+T (towards track 39, update Track Register)
-            DSRAM = Rbyte(RTRACK);    //read current track #
+            DSRAM = Rbyte(RTRACK);      //read current track #
             //if track # still within limits update track register
             if ( DSRAM < maxtrack) { 
-              Wbyte(RTRACK,++DSRAM);  //increase track #
+              Wbyte(RTRACK,++DSRAM);    //increase track #
               curdir = LOW; 	          //set current direction    
               sStatus(Track0, false);   //reset Track 0 bit in Status Register
-	    }
-	    else {
-	      sStatus(NotReady, true);  //seeking beyond maxtrack sets "Not Ready" bit
-          break;
+      	    }
+      	    else {
+      	      sStatus(NotReady, true);  //seeking beyond maxtrack sets "Not Ready" bit
+      	    }
+           break;
           
           case 0x60:	//step-out (towards track 0)
             //always execute step-out+T, can't see it making any difference (FLW)
@@ -549,9 +550,9 @@ void loop() {
 
         //new or continue previous command?
         ncmd = (ccmd != lcmd);
-        if (ncmd) {     //new command
-          lcmd = ccmd;  //remember new command for next compare
-          sectidx = 0; 	//clear sector index counter
+        if (ncmd) {               //new command
+          lcmd = ccmd;            //remember new command for next compare
+          sectidx = 0; 	          //clear sector index counter
           //calc absolute sector (0-359): (side * 39) + (track * 9) + sector #
           secval = ( (Rbyte(CRUWRI) & 0x01) * 39) + (Rbyte(RTRACK) * 9) + Rbyte(RSECTR); 
           btidx = secval * 256;   //calc absolute DOAD byte index (0-92160)
@@ -561,7 +562,7 @@ void loop() {
         switch (ccmd) {  //switch R/W commands
 
           case 0xD0:
-	    sectidx = 0; 	//clear index counter in case we have interrupted multi-byte response commands
+	          sectidx = 0; 	//clear index counter in case we have interrupted multi-byte response commands
           break;
 
         } //end switch non-step commands      
