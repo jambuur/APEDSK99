@@ -594,6 +594,16 @@ ISR(INT0_vect) {
 
         switch (ccmd) {
            
+	   
+	   case 0x90: //read multiple sectors (wrapper/fallthrough for 0x80: read sector
+            if ( (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {  //have we supplied all 9 * 256 bytes yet? 
+              Wbyte(RDATA,DSK[cDSK].read() );               //nope, supply next byte
+            }
+            else {
+              Wbyte(
+	      noExec();                                     //exit via Force Interrupt command
+            }
+          break;
          
 /*           case 0x80: //read sector
             if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
@@ -605,15 +615,7 @@ ISR(INT0_vect) {
             }
           break;
         
-          case 0x90: //read multiple sectors
-            if ( (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {  //have we supplied all 9 * 256 bytes yet? 
-              Wbyte(RDATA,DSK[cDSK].read() );               //nope, supply next byte
-            }
-            else {
-              Wbyte(
-	      noExec();                                     //exit via Force Interrupt command
-            }
-          break;
+          
 /*    
           case 0xA0: //write sector
             if ( !pDSK ) {                                  //write protected?
