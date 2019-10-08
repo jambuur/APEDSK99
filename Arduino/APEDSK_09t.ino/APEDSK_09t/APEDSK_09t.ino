@@ -317,12 +317,13 @@ void noExec(void) {
   Wbyte(WCOMND,0xD0);
 }
 
+//calculate and return absolute DOAD byte index for R/W commands 
 unsigned long int cbtidx (void) {
-  bi  = Rbyte(CRUWRI) & B00000001 ) * maxtrack; //add 0x027 tracks for side 0 if on side 1
-  bi += Rbyte(WTRACK)                         	//add current track #
-  bi *= 9;					//convert to # of sectors
-  bi += Rbyte(WSECTR);				//add current sector #
-  bi *= 256;					//calculate absolute DOAD byte index ((0-92160)
+  bi  = Rbyte(CRUWRI) & B00000001 ) * (maxtrack+1); 	//add 0x28 tracks for side 0 if on side 1
+  bi += Rbyte(WTRACK)                         	 	//add current track #
+  bi *= 9;						//convert to # of sectors
+  bi += Rbyte(WSECTR);					//add current sector #
+  bi *= 256;						//calculate absolute DOAD byte index ((0-92160)
   return (bi);
 }
 
@@ -446,11 +447,10 @@ void loop() {
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is ready to rumble
     noInterrupts();
 
-    //read Command Register, stripping away unnecessary floppy bits
+    //read Command Register, stripping the unnecessary floppy bits
     ccmd = Rbyte(WCOMND) & 0xF0;
 
-    //the FD1771 "Force Interrupt" command is not needed for APEDSK so 
-    //it's conveniently re-purposed for exiting when command execution is not needed
+    //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
 
       //is the selected DSK available?
@@ -460,11 +460,12 @@ void loop() {
         DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
         pDSK = ( DSK[cDSK].read() != 0x20 );      //disk is protected when byte 0x10 <> " "
         sStatus(Protect,pDSK);                    //reflect "Protect" status 
+	DSK[cDSK].seek(btidx);			  //reset former seek position
       }
       else {      
         sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
+	lcmd = ccmd;                              //skip new command prep
         ccmd = 0xD0;					                    //exit via Force Interrupt command
-	      lcmd = ccmd;                              //skip new command prep
         noExec();                                 //prevent multiple step/seek execution
       }  
    
@@ -482,17 +483,17 @@ void loop() {
           case 0x10:	//seek
             DSRAM = Rbyte(WDATA); //read track seek #
             if ( DSRAM <= maxtrack) {         //make sure we stay within max # of tracks
-              if ( DSRAM > Rbyte(RTRACK) ) { 
+              if ( DSRAM > Rbyte(WTRACK) ) { 
                 curdir = LOW;                 //step-in towards track 39
                 sStatus(Track0, false);       //reset Track 0 bit in Status Register
               } 
               else {
-                if ( DSRAM < Rbyte(RTRACK) ) { 
+                if ( DSRAM < Rbyte(WTRACK) ) { 
                   curdir = HIGH;              //step-out towards track 0
-                  sStatus(Track0, DSRAM==0);  //check for Track 0 and Status Register accordingly
+                  sStatus(Track0, DSRAM==0);  //check for Track 0 and set Status Register accordingly
                 }  
               }
-	            Wbyte(RTRACK, DSRAM);           //update track register
+	            Wbyte(WTRACK, DSRAM);           //update track register
             }
 	        break;
 
@@ -500,16 +501,16 @@ void loop() {
             //always execute step+T, can't see it making any difference (FLW)  
     
           case 0x30:	//step+T (update Track register)
-            DSRAM = Rbyte(RTRACK);          //read current track #
+            DSRAM = Rbyte(WTRACK);          //read current track #
             //is current direction inwards and track # still within limits?
             if (  DSRAM < 39  && curdir == LOW ) {
-              Wbyte(RTRACK,++DSRAM);        //increase track #
+              Wbyte(WTRACK,++DSRAM);        //increase track #
               sStatus(Track0, false);       //reset Track 0 bit in Status Register
             }
             else {
               //is current direction outwards and track # still within limits?
               if ( DSRAM >  0 && curdir == HIGH ) {
-                Wbyte(RTRACK,--DSRAM);  	  //decrease track #
+                Wbyte(WTRACK,--DSRAM);  	  //decrease track #
                 sStatus(Track0, DSRAM==0);  //check for Track 0 and set Status Register accordingly
               }
             }      
@@ -519,10 +520,10 @@ void loop() {
             //always execute step-in+T, can't see it making any difference (FLW)
          
           case 0x50:	//step-in+T (towards track 39, update Track Register)
-            DSRAM = Rbyte(RTRACK);      //read current track #
+            DSRAM = Rbyte(WTRACK);      //read current track #
             //if track # still within limits update track register
             if ( DSRAM < maxtrack) { 
-              Wbyte(RTRACK,++DSRAM);    //increase track #
+              Wbyte(WTRACK,++DSRAM);    //increase track #
               curdir = LOW; 	          //set current direction    
               sStatus(Track0, false);   //reset Track 0 bit in Status Register
       	    }
@@ -535,10 +536,10 @@ void loop() {
             //always execute step-out+T, can't see it making any difference (FLW)
  
           case 0x70:	//step-out+T
-            DSRAM = Rbyte(RTRACK);      //read current track #
+            DSRAM = Rbyte(WTRACK);      //read current track #
             //if track # still within limits update track register
             if ( DSRAM > 0) { 
-              Wbyte(RTRACK,--DSRAM);    //decrease track #
+              Wbyte(WTRACK,--DSRAM);    //decrease track #
             }
             curdir = HIGH; //set current direction  
             sStatus(Track0, DSRAM==0);  //check for Track 0 and Status Register accordingly
@@ -550,6 +551,7 @@ void loop() {
         
         } //end switch step commands
         
+	Wbyte(RTRACK, RByte(WTRACK);	//sync track registers
         noExec(); //prevent multiple step/seek execution
 
       } // end ccmd < 0x80
@@ -604,16 +606,20 @@ ISR(INT0_vect) {
            
 	   
 	   case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
-
-/*         case 0x80: //read sector
-            if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
+	     sectidx++;		//increase multiple read sector # (starts with 1, not 0)
+/*         
+	   case 0x80: //read sector
+	    if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
               Wbyte(RDATA,DSK[cDSK].read() );             //nope, supply next byte
             }
-           else {
-              Wbyte(RSECTR, Rbyte(RSECTR)++ );		  //increase Sector Register
-	      sectidx++;				  //increase index counter for multiple sector reads (0x90)
-	      noExec();                                   //exit via Force Interrupt command
-            }
+            else {
+              Wbyte(WSECTR, Rbyte(WSECTR)++ );		  //increase Sector Register
+	      if ( ccmd == 0x90 && sectidx < 0x0A ) {	  //did we get all sectors in the track?
+	        btidx = cbtidx();	  	          //adjust absolute DOAD byte index for next sector
+	      }
+	      else {
+	      	noExec();                                 //we're done; exit via Force Interrupt command
+              }
           break;
         
           
