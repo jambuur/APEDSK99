@@ -89,7 +89,7 @@
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block); not used but possible future use
-//B00001111: DSK1, DSK2, DSK2, side 0/1
+//B00001111: DSK1, DSK2, DSK3, side 0/1
 #define CRUWRI  0x1FEE  //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
 #define RSTAT   0x1FF0  //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
 #define RTRACK  0x1FF2  //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
@@ -613,18 +613,59 @@ ISR(INT0_vect) {
               Wbyte(RDATA,DSK[cDSK].read() );             //nope, supply next byte
             }
             else {
-              Wbyte(WSECTR, Rbyte(WSECTR)++ );		  //increase Sector Register
-	      if ( ccmd == 0x90 && sectidx < 0x0A ) {	  //did we get all sectors in the track?
-	        btidx = cbtidx();	  	          //adjust absolute DOAD byte index for next sector
+              Wbyte(WSECTR, Rbyte(WSECTR)++ );			  //increase Sector Register
+	      if ( ccmd == 0x90 && sectidx <= maxsect ) {	  //did we get all sectors in the track?
+	        btidx = cbtidx();	  	          	//adjust absolute DOAD byte index for next sector
 	      }
 	      else {
 	      	noExec();                                 //we're done; exit via Force Interrupt command
               }
           break;
+	  
+          case 0xB0: //write multiple sectors (fallthrough to 0xB0: write sector)
+	     sectidx++;		//increase multiple write sector # (starts with 1, not 0)
         
+	   case 0xA0: //write sector
+	     if ( !pDSK ) {                                  		//write protected?
+	       if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { 	//have we supplied all 256 bytes yet?           
+                 DSK[cDSK].write(Rbyte(WDATA));              		//nope, supply next byte
+               }
+             else {
+              Wbyte(WSECTR, Rbyte(WSECTR)++ );			  //increase Sector Register
+	      if ( ccmd == 0xB0 && sectidx <= maxsect ) {	  //did we get all sectors in the track?
+	        btidx = cbtidx();	  	          	//adjust absolute DOAD byte index for next sector
+	      }
+	      else {
+	      	noExec();                                 //we're done; exit via Force Interrupt command
+              }
+	     else {
+	       sSTatus(NotReady, 1);			   //trying to write to a protected disk
+	       noExec();                                 //we're done; exit via Force Interrupt command
+	     ]
+          break;       
+       
           
 /*    
-          case 0xA0: //write sector
+         
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 case 0xA0: //write sector
             if ( !pDSK ) {                                  //write protected?
               if ( (DSK[cDSK].position() - btidx) < 257 ) { //have we written all 256 bytes yet?   
                 DSK[cDSK].write(Rbyte(WDATA));              //nope, supply next byte
