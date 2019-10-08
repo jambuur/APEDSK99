@@ -114,7 +114,7 @@
 //"disk" characteristics
 #define maxtrack  0x27		//# of tracks
 #define maxsect	  0x09		//# of sectors/track
-#define maxbyte   0xFF		//# of bytes per sector
+#define maxbyte   0x100		//# of bytes per sector
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -326,14 +326,14 @@ byte cDSK       = 0;                              //current selected DSK
 boolean pDSK    = false;                          //protected DSK flag
 
 //various storage and flags for command interpretation and handling
-byte DSRAM		          = 0;	    //generic variable for RAM R/W
+byte DSRAM	        = 0;	  //generic variable for RAM R/W
 volatile boolean FD1771 = false;  //interrupt routine flag: new or continued FD1771 command
 byte ccmd               = 0;      //current command
 byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
-byte sectidx	          = 0;	    // R/W and READ ID index counter 
+byte sectidx	        = 0;	  // R/W and READ ID index counter 
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
@@ -428,13 +428,13 @@ void setup() {
   sStatus(Track0,true);
 
   //"no command" as default
-  Wbyte(WCOMND,0xD0);
+  noExec();
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
   EICRA = 1 << ISC00;  //sense any change on the INT0 pin
   EIMSK = 1 << INT0;   //enable INT0 interrupt
-  
+	
   //TI: take it away
   TIgo();  
 
@@ -609,9 +609,9 @@ ISR(INT0_vect) {
             }
             else {
               Wbyte(WSECTR, Rbyte(WSECTR)++ );			  //increase Sector Register
-	      if ( ccmd == 0x90 && sectidx <= maxsect ) {	  //did we get all sectors in the track?
+	      if ( ccmd == 0x90 && sectidx <= maxsect ) {	  //multi-read: did we get all sectors in the track?
 	        btidx = cbtidx();	  	          	//adjust absolute DOAD byte index for next sector
-		sectidx++;		//increase multiple read sector # (starts with 1, not 0)
+		sectidx++;		//increase multiple read sector #
 	      }
 	      else {
 		noExec();                                 //we're done; exit via Force Interrupt command
@@ -620,7 +620,6 @@ ISR(INT0_vect) {
           break;
 	  
           case 0xB0: //write multiple sectors (fallthrough to 0xB0: write sector)
-	     sectidx++;		//increase multiple write sector # (starts with 1, not 0)
         
 	   case 0xA0: //write sector
 	     if ( !pDSK ) {                                  		//write protected?
@@ -629,7 +628,7 @@ ISR(INT0_vect) {
                }
              else {
               Wbyte(WSECTR, Rbyte(WSECTR)++ );			  //increase Sector Register
-	      if ( ccmd == 0xB0 && sectidx <= maxsect ) {	  //did we get all sectors in the track?
+	      if ( ccmd == 0xB0 && sectidx <= maxsect ) {	  //multi-write: did we get all sectors in the track?
 	        btidx = cbtidx();	  	          	//adjust absolute DOAD byte index for next sector
 		sectidx++;					//increase multiple read sector # (starts with 1, not 0)
 	      }
