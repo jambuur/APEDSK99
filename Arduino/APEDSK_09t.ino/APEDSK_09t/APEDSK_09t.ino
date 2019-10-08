@@ -112,7 +112,7 @@
 #define Track0   0x04
 
 //"disk" characteristics
-#define maxtrack  0x27		//maximum track
+#define maxtrack  0x27		//# of tracks
 #define maxsect	  0x09		//# of sectors/track
 #define maxbyte   0xFF		//# of bytes per sector
 
@@ -311,22 +311,6 @@ void sStatus (byte bit, boolean set) {
     Wbyte(RSTAT, (Rbyte(RSTAT) & !bit) );
   }
 }
-	
-//no further command execution (prevent seek/step commands to be executed multiple times)
-void noExec(void) {
-  Wbyte(WCOMND,0xD0);
-  ccmd = 0xD0;
-}
-
-//calculate and return absolute DOAD byte index for R/W commands 
-unsigned long int cbtidx (void) {
-  bi  = Rbyte(CRUWRI) & B00000001 ) * (maxtrack+1); 	//add 0x28 tracks for side 0 if on side 1
-  bi += Rbyte(WTRACK)                         	 	//add current track #
-  bi *= 9;						//convert to # of sectors
-  bi += Rbyte(WSECTR);					//add current sector #
-  bi *= 256;						//calculate absolute DOAD byte index ((0-92160)
-  return (bi);
-}
 
 //DSR binary input file pointer
 File InDSR;  
@@ -349,7 +333,24 @@ byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
-byte sectidx	        = 0;	    // R/W and READ ID index counter 
+byte sectidx	          = 0;	    // R/W and READ ID index counter 
+
+//no further command execution (prevent seek/step commands to be executed multiple times)
+void noExec(void) {
+  Wbyte(WCOMND,0xD0); //"force interrupt" command
+  ccmd = 0xD0;        //reset command history
+}
+
+//calculate and return absolute DOAD byte index for R/W commands 
+unsigned long int cbtidx (void) {
+  unsigned long int bi;
+  bi  = ( Rbyte(CRUWRI) & B00000001 ) * (maxtrack+1); //add 0x28 tracks for side 0 if on side 1
+  bi += Rbyte(WTRACK);                                //add current track #
+  bi *= 9;                                            //convert to # of sectors
+  bi += Rbyte(WSECTR);                                //add current sector #
+  bi *= 256;                                          //calculate absolute DOAD byte index ((0-92160)
+  return (bi);
+}
 
 //------------  
 void setup() {
@@ -461,12 +462,12 @@ void loop() {
         DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
         pDSK = ( DSK[cDSK].read() != 0x20 );      //disk is protected when byte 0x10 <> " "
         sStatus(Protect,pDSK);                    //reflect "Protect" status 
-	DSK[cDSK].seek(btidx);			  //reset former seek position
+	      DSK[cDSK].seek(btidx);			              //restore former seek position
       }
       else {      
         sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
         noExec();                                 //prevent multiple step/seek execution
-	lcmd = ccmd;                              //skip new command prep
+	      lcmd = ccmd;                              //skip new command prep
       }  
    
       if ( ccmd < 0x80 ) { //step/seek commands?
@@ -481,7 +482,7 @@ void loop() {
           break;
 			
           case 0x10:	//seek
-            DSRAM = Rbyte(WDATA); //read track seek #
+            DSRAM = Rbyte(WDATA);             //read track seek #
             if ( DSRAM <= maxtrack) {         //make sure we stay within max # of tracks
               if ( DSRAM > Rbyte(WTRACK) ) { 
                 curdir = LOW;                 //step-in towards track 39
@@ -500,18 +501,18 @@ void loop() {
           case 0x20:	//step
             //always execute step+T, can't see it making any difference (FLW)  
     
-          case 0x30:	//step+T (update Track register)
-            DSRAM = Rbyte(WTRACK);          //read current track #
+          case 0x30:	                              //step+T (update Track register)
+            DSRAM = Rbyte(WTRACK);                  //read current track #
             //is current direction inwards and track # still within limits?
             if (  DSRAM < 39  && curdir == LOW ) {
-              Wbyte(WTRACK,++DSRAM);        //increase track #
-              sStatus(Track0, false);       //reset Track 0 bit in Status Register
+              Wbyte(WTRACK,++DSRAM);                //increase track #
+              sStatus(Track0, false);               //reset Track 0 bit in Status Register
             }
             else {
               //is current direction outwards and track # still within limits?
               if ( DSRAM >  0 && curdir == HIGH ) {
-                Wbyte(WTRACK,--DSRAM);  	  //decrease track #
-                sStatus(Track0, DSRAM==0);  //check for Track 0 and set Status Register accordingly
+                Wbyte(WTRACK,--DSRAM);  	          //decrease track #
+                sStatus(Track0, DSRAM==0);          //check for Track 0 and set Status Register accordingly
               }
             }      
           break;
@@ -527,9 +528,6 @@ void loop() {
               curdir = LOW; 	          //set current direction    
               sStatus(Track0, false);   //reset Track 0 bit in Status Register
       	    }
-      	    else {
-      	      sStatus(NotReady, true);  //seeking beyond maxtrack sets "Not Ready" bit
-      	    }
            break;
           
           case 0x60:	//step-out (towards track 0)
@@ -544,15 +542,12 @@ void loop() {
             curdir = HIGH; //set current direction  
             sStatus(Track0, DSRAM==0);  //check for Track 0 and Status Register accordingly
           break;
-
-          default: //expect the unexpected
-            noExec(); //prevent multiple step/seek execution
-          break;
         
         } //end switch step commands
-        
-	Wbyte(RTRACK, RByte(WTRACK);	//sync track registers
-        noExec(); //prevent multiple step/seek execution
+       
+	      Wbyte(RTRACK, Rbyte(WTRACK) );  //sync track registers
+        //acts as default: in switch above as well
+        noExec();                       //prevent multiple step/seek execution
 
       } // end ccmd < 0x80
     
@@ -563,16 +558,15 @@ void loop() {
         if (ncmd) {               //new command
           lcmd = ccmd;            //remember new command for next compare
           sectidx = 0; 	          //clear sector index counter
-          btidx = cbtidx();	  //calc absolute DOAD byte index (0-92160)
+          btidx = cbtidx();	      //calc absolute DOAD byte index (0-92160)
           DSK[cDSK].seek(btidx);  //set to first absolute byte for R/W
         }
         
         switch (ccmd) {  //switch R/W commands
 
           case 0xD0:
-	   ccmd = 0xD0;	
+	          noExec();	
 	          sectidx = 0; 	//clear index counter in case we have interrupted multi-byte response commands
-			
           break;
 
         } //end switch non-step commands      
