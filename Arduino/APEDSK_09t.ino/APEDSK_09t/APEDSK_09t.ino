@@ -339,6 +339,8 @@ byte sectidx	        = 0;	  // R/W and READ ID index counter
 void noExec(void) {
   Wbyte(WCOMND,0xD0); //"force interrupt" command
   ccmd = 0xD0;        //reset command history
+  lcmd = ccmd;		//reset new command prep
+  sectidx = 0; 	//clear index counter in case we have interrupted multi-byte response commands
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
@@ -467,7 +469,6 @@ void loop() {
       else {      
         sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
         noExec();                                 //prevent multiple step/seek execution
-	      lcmd = ccmd;                              //skip new command prep
       }  
    
       if ( ccmd < 0x80 ) { //step/seek commands?
@@ -546,8 +547,7 @@ void loop() {
         } //end switch step commands
        
 	      Wbyte(RTRACK, Rbyte(WTRACK) );  //sync track registers
-        //acts as default: in switch above as well
-        noExec();                       //prevent multiple step/seek execution
+        noExec();                       //prevent multiple step/seek execution 
 
       } // end ccmd < 0x80
     
@@ -566,7 +566,6 @@ void loop() {
 
           case 0xD0:
 	          noExec();	
-	          sectidx = 0; 	//clear index counter in case we have interrupted multi-byte response commands
           break;
 
         } //end switch non-step commands      
