@@ -303,12 +303,12 @@ void eflash(byte error)
 
 //set Status Register bit(s):
 //B11100100: NotReady, Protect, Head Loaded and Track0
-void sStatus (byte bit, boolean set) {
+void sStatus (byte sbit, boolean set) {
   if ( set ) {
-    Wbyte(RSTAT, (Rbyte(RSTAT) | bit) );
+    Wbyte(RSTAT, (Rbyte(RSTAT) | sbit) );
   }
   else {
-    Wbyte(RSTAT, (Rbyte(RSTAT) & !bit) );
+    Wbyte(RSTAT, (Rbyte(RSTAT) & ~sbit) );
   }
 }
 
@@ -326,21 +326,21 @@ byte cDSK       = 0;                              //current selected DSK
 boolean pDSK    = false;                          //protected DSK flag
 
 //various storage and flags for command interpretation and handling
-byte DSRAM	        = 0;	  //generic variable for RAM R/W
+byte DSRAM	            = 0;	    //generic variable for RAM R/W
 volatile boolean FD1771 = false;  //interrupt routine flag: new or continued FD1771 command
 byte ccmd               = 0;      //current command
 byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
-byte sectidx	        = 0;	  // R/W and READ ID index counter 
+byte sectidx	          = 0;	    // R/W and READ ID index counter 
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
   Wbyte(WCOMND,0xD0); //"force interrupt" command
   ccmd = 0xD0;        //reset command history
-  lcmd = ccmd;		//reset new command prep
-  sectidx = 0; 	//clear index counter in case we have interrupted multi-byte response commands
+  lcmd = ccmd;		    //reset new command prep
+  sectidx = 0; 	      //clear index counter in case we have interrupted multi-byte response commands
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
@@ -462,7 +462,7 @@ void loop() {
       if ( aDSK[cDSK] ) {                         //check availability
         sStatus(NotReady,false);                  //available -> reset "Not Ready" bit in Status Register          
         DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
-        pDSK = ( DSK[cDSK].read() != 0x20 );      //disk is protected when byte 0x10 <> " "
+        pDSK = DSK[cDSK].read() != 0x20;          //disk is protected when byte 0x10 <> " "
         sStatus(Protect,pDSK);                    //reflect "Protect" status 
 	      DSK[cDSK].seek(btidx);			              //restore former seek position
       }
