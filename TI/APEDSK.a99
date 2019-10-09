@@ -608,20 +608,20 @@ ERROR1	MOV	*R11,R0			exit with error
 	BL	@SNDCMD			yes: reset drives
 *K013	DATA	>2F00			send force interrupt, no ints
 K013	DATA	>D000			APEDSK: send force interrupt, no ints (abort command)
-H065	MOVB	@RSTAT,R0		get status
-	SRC	R0,9			test busy flag
+*H065	MOVB	@RSTAT,R0		get status APEDSK: no need to test for "drive busy"
+*	SRC	R0,9			test busy flag
 *	JNC	H065			wait until done (inverted)
-	JOC	H065			APEDSK: wait until done
+*	JOC	H065			APEDSK: wait until done
 H064	B	@RTURN1			return to caller (address from stack)
 					
 SNDCMD	MOV	*R11+,R0		send command to FDC from data word
-	MOVB	@RSTAT,R6		get status
-	SLA	R6,1			test ready bit
+*	MOVB	@RSTAT,R6		get status APEDSK: no need to test for "drive busy" 
+*	SLA	R6,1			test ready bit
 *	SBZ	1			strobe motor. APEDSK: we don't have to strobe anything
 *	SBO	1			
 *	JOC	H066			ready (inverted)
-	JNC	H066			APEDSK: ready
-	JMP	SNDCMD			APEDSK: not ready, test again
+*	JNC	H066			APEDSK: ready
+*	JMP	SNDCMD			APEDSK: not ready, test again
 *	LI	R6,30000		wait a long time
 *H067	SRC	R5,4			
 *	SRC	R5,4			
