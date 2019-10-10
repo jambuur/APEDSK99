@@ -190,13 +190,14 @@ H005	SWPB	R0
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	SLA	R0,13			test seek error bit
 *	JOC	H008			try again, then error 11
+H007	LI	R6,5			APEDSK: H007 slightly re-arranged to sync proper ID byte read
+	MOV 	R6,@RDINT		APEDSK: interrupt Arduino for read operation
 H007	BL	@SNDCMD			send command
 *	DATA	>3F00			read ID E=0
 	DATA	>C000			APEDSK: read ID E=0 
 *	SBO	2			enable hold
 	MOVB	@RDATA,R0		skip track #
-	LI	R6,4		
-	MOV	R6,@RDINT		APEDSK: interrupt Arduino for read operation
+	DEC	@RDINT		
 	MOVB	@RDATA,R5		side #
 *	INV	R5			APEDSK: none of this inverted databus rubbish
 H009	MOVB	@RDATA,R0		skip next 4 bytes
@@ -231,11 +232,11 @@ H013	MOVB	R1,@WSECTR		load sector register
 	MOVB	@>004D(R9),R0		read or write ?
 	JEQ	H014			write
 	BL	@VDPWRI			read FD = write to VDP buffer
-H015	BL	@SNDCMD			send command
+H015	LI	R6,256			APEDSK: slightly re-arranged H015 to sync reading sector bytes
+	MOV	R6,@RDINT		APEDSK: 256 bytes / sector 
+BL	@SNDCMD				send command
 *	DATA	>7700			read sector m=0 S=1 E=0 C=0
 	DATA	>8800			APEDSK: read sector m=0 S=1 E=0 C=0
-	LI	R6,256			256 bytes / sector
-	MOV	R6,@RDINT		APEDSK: generate read interrupt
 	SETO	R5			
 *	SBO	2	
 *	MOVB	@>004D(R9),R0		read or write?
@@ -263,9 +264,9 @@ H016	MOVB	@RDATA,R0		get 1 byte from FDC
 	JNE	H016			next byte
 H019	CLR	R5			clear flag
 *H018	BL	@WTCPT2			SBZ 2, wait for command completion
-H018	BL	@WTCPT1			APEDSK: no need to wait for command completion
-	SLA	R0,13			test status bits
-	JOC	H020			not found: try again, then error 21
+*	BL	@WTCPT1			APEDSK: no need to wait for command completion
+*	SLA	R0,13			test status bits
+*	JOC	H020			not found: try again, then error 21
 *	JLT	H021			crc error: try again, then error 22
 *	MOV	R5,R5			
 *	JNE	H022			try again, then error 28
@@ -362,11 +363,11 @@ H029	SZCB	@SIDE01,@CRUWRI		APEDSK: set CRU bit for side 0
 READID	BL	@SKTRK0			seek track 0
 	MOV	@>004E(R9),R2		data buffer address
 	BL	@VDPWRI			set VDP to write
+	LI	R6,5			read 6 bytes (APEDSK: first will be available as part of @SNDCMD 
+	MOV	R6,@RDINT		APEDSK: slightly re-arranged READID/H032 to sync ID byte reads
 	BL	@SNDCMD			send command
 *	DATA	>3F00			read ID (E=0)
 	DATA	>C000			APEDSK: read ID (E=0)
-	LI	R6,6			read 6 bytes
-	MOV	R6,@RDINT		APEDSK:
 *	SBO	2			enable wait states
 H032	MOVB	@RDATA,R0		read data register
 *	INV	R0			APEDSK: none of that inverted databus rubbish
@@ -375,12 +376,12 @@ H032	MOVB	@RDATA,R0		read data register
 *	INV	R0			APEDSK: none of that inverted databus rubbish
 *	MOVB	R0,@-2(R15)			
 *	DECT	R6			
-	DEC	@RDINT			APEDSK:
+	DEC	@RDINT			APEDSK: generate interrupt for next read
 	JNE	H032			
 *	BL	@WTCPT2			SBZ 2 then wait for command completion
-	BL	@WTCPT1			APEDSK: no need to wait for command completion
-	SLA	R0,13			check status bits
-	JOC	H033			not found
+*	BL	@WTCPT1			APEDSK: no need to wait for command completion
+*	SLA	R0,13			check status bits
+*	JOC	H033			not found
 *	JLT	H034			CRC error
 *	SLA	R0,2			
 *	JOC	H035			lost data
