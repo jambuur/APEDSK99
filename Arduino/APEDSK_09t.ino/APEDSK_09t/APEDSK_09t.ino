@@ -457,20 +457,30 @@ void loop() {
     //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
 
-      //is the selected DSK available?
-      cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
-      if ( aDSK[cDSK] ) {                         //check availability
-        sStatus(NotReady,false);                  //available -> reset "Not Ready" bit in Status Register          
-        DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
-        pDSK = DSK[cDSK].read() != 0x20;          //disk is protected when byte 0x10 <> " "
-        sStatus(Protect,pDSK);                    //reflect "Protect" status 
-	      DSK[cDSK].seek(btidx);			              //restore former seek position
+      //new or continue previous command?
+      ncmd = (ccmd != lcmd);
+      if (ncmd) {                                   //new command
+        
+        //is the selected DSK available?
+        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
+        if ( aDSK[cDSK] ) {                         //is selected disk available?
+
+          lcmd = ccmd;                              //yes; remember new command for next compare
+          
+          sStatus(NotReady,false);                  //reset "Not Ready" bit in Status Register          
+          DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
+          pDSK = DSK[cDSK].read() != 0x20;          //disk is protected when byte 0x10 <> " "
+          sStatus(Protect,pDSK);                    //reflect "Protect" status 
+          btidx = cbtidx();                         //calc absolute DOAD byte index (0-92160)
+          DSK[cDSK].seek(btidx);                    //set to first absolute byte for R/W   
+          sectidx = 0;                              //clear sector index counter   
+        }
+        else {      
+          sStatus(NotReady,true);                   //no; set "Not Ready" bit in Status Register
+          noExec();                                 //prevent multiple step/seek execution
+        }   
       }
-      else {      
-        sStatus(NotReady,true);			              //no; set "Not Ready" bit in Status Register
-        noExec();                                 //prevent multiple step/seek execution
-      }  
-   
+
       if ( ccmd < 0x80 ) { //step/seek commands?
       
         switch (ccmd) { //yep switch step/seek commands
@@ -552,27 +562,35 @@ void loop() {
       } // end ccmd < 0x80
     
       else {  // read/write commands
-
-        //new or continue previous command?
-        ncmd = (ccmd != lcmd);
-        if (ncmd) {               //new command
-          lcmd = ccmd;            //remember new command for next compare
-          sectidx = 0; 	          //clear sector index counter
-          btidx = cbtidx();	      //calc absolute DOAD byte index (0-92160)
-          DSK[cDSK].seek(btidx);  //set to first absolute byte for R/W
-        }
         
         switch (ccmd) {  //switch R/W commands
 
           case 0xD0:
-	          noExec();	
+            noExec(); 
           break;
+          
+          //case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
+        
+          case 0x80: //read sector
+            sectidx++;                                    //increase byte index          
+            //if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
+            if ( sectidx <= maxbyte) {            //have we supplied all 256 bytes yet?  
+              DSRAM = DSK[cDSK].read();
+              Wbyte(RDATA, DSRAM); //DSK[cDSK].read() );     //nope, supply next byte
+              Wbyte(0x5FE8, sectidx);
+              Wbyte(0x5FE6, DSK[cDSK].position() );
+            }
+            else {
+              DSRAM = Rbyte(WSECTR);
+              Wbyte(WSECTR, ++DSRAM );                            //increase Sector Register
+              //if ( ccmd == 0x90 && sectidx <= (maxsect * maxbyte) ) {   //multi-read: did we get all sectors in the track?
+              //btidx = cbtidx();                                         //adjust absolute DOAD byte index for next sector
+              noExec();                                                   //we're done; exit via Force Interrupt command
+            }
+          break;     
 
       	  case 0xC0:  //read ID
-      	    if (ncmd) {
-      	      sectidx = 0;
-      	    }
-      	    sectidx++;
+      	    sectidx++;                                    //increase byte index
       	    switch (sectidx) {
       	      case 1:
       	        Wbyte(RDATA, Rbyte(RTRACK) );		          //track #
