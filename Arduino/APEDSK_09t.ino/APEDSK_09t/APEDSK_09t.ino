@@ -568,6 +568,35 @@ void loop() {
 	          noExec();	
           break;
 
+	  case 0xC0:  //read ID
+	    if (ncmd) {
+	      sectidx = 0;
+	    }
+	    sectidx++;
+	    switch (sectidx) {
+	      case 1:
+	        Wbyte(RDATA, Rbyte(RTRACK) );		//track #
+	      break;
+	      case 2:
+	        Wbyte(RDATA, Rbyte(CRUWRI) & B00000001);	//side #
+	      break;
+	      case 3:
+                Wbyte(RDATA, Rbyte(RSECTR) );		//sector #
+              break;
+	      case 4:
+                Wbyte(RDATA, 0x01); 		//sector size (256 bytes)
+              break;
+	      case 5:
+		Wbyte(RDATA, 0x0C);	//CC bogus byte #1
+              break;
+	      case 6:
+                Wbyte(RDATA, 0x0D);	//CC bogus byte #2
+		noExec();		//and we're done with READ ID
+	       break;
+	     break;
+	 
+			  
+			
         } //end switch non-step commands      
 
       } //end R/W commands
