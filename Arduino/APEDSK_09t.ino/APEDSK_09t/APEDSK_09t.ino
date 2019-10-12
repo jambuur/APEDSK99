@@ -112,7 +112,7 @@
 #define Track0   0x04
 
 //"disk" characteristics
-#define maxtrack  0x27		//# of tracks
+#define maxtrack  0x28		//# of tracks
 #define maxsect	  0x09		//# of sectors/track
 #define maxbyte   0x100		//# of bytes per sector
 
@@ -316,8 +316,7 @@ void sStatus (byte sbit, boolean set) {
 File InDSR;  
 
 //DSKx file pointers; x=3,2,1 for read, (x+3) for write
-File DSK[8]; 	  //read and write file pointers to DOAD's
-#define woff 3	//write file pointer (array index offset from read file pointer)
+File DSK[5]; 	  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
 //bit crooked as the TI Controller Card assigns CRU drive select bits backwards
@@ -346,7 +345,7 @@ void noExec(void) {
 //calculate and return absolute DOAD byte index for R/W commands 
 unsigned long int cbtidx (void) {
   unsigned long int bi;
-  bi  = ( Rbyte(CRUWRI) & B00000001 ) * (maxtrack+1); //add 0x28 tracks for side 0 if on side 1
+  bi  = ( Rbyte(CRUWRI) & B00000001 ) * (maxtrack);   //add 0x28 tracks for side 0 if on side 1
   bi += Rbyte(WTRACK);                                //add current track #
   bi *= 9;                                            //convert to # of sectors
   bi += Rbyte(WSECTR);                                //add current sector #
@@ -403,25 +402,22 @@ void setup() {
     eflash(4);	//could not open DSK1 -> flash error 4
   }
   else {
-    //DSK1 is available, assign file pointer for writes	  
-    DSK[4+woff] = SD.open("/DISKS/001.DSK", FILE_WRITE);
+    DSK[4].close;
   }
-  
+    
   //try to open DSK2 for reads
   DSK[2] = SD.open("/DISKS/002.DSK", FILE_READ);
   if ( DSK[2] ) {
-    //DSK2 is available, assign file pointer for writes ...
-    DSK[2+woff] = SD.open("/DISKS/002.DSK", FILE_WRITE);
-    //... and set flag
+    //close file and set flag
+    DSK[2].close;
     aDSK[2] = true;
   }
    
   //try to open DSK3 for reads
   DSK[1] = SD.open("/DISKS/003.DSK", FILE_READ);
   if ( DSK[1] ) {
-    //DSK3 is available, assign file pointer for writes ...
-    DSK[1+woff] = SD.open("/DISKS/003.DSK", FILE_WRITE);
-    //... and set flag
+    //close file and set flag
+    DSK[1].close;
     aDSK[1] = true;
   }
   
@@ -472,7 +468,7 @@ void loop() {
           pDSK = DSK[cDSK].read() != 0x20;          //disk is protected when byte 0x10 <> " "
           sStatus(Protect,pDSK);                    //reflect "Protect" status 
           btidx = cbtidx();                         //calc absolute DOAD byte index (0-92160)
-          DSK[cDSK].seek(btidx);                    //set to first absolute byte for R/W   
+          DSK[cDSK].seek(btidx);                    //set to first absolute byte for R/W  
           sectidx = 0;                              //clear sector index counter   
         }
         else {      
@@ -572,17 +568,13 @@ void loop() {
           //case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
         
           case 0x80: //read sector
-            sectidx++;                                    //increase byte index          
-            //if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
-            if ( sectidx <= maxbyte) {            //have we supplied all 256 bytes yet?  
-              DSRAM = DSK[cDSK].read();
-              Wbyte(RDATA, DSRAM); //DSK[cDSK].read() );     //nope, supply next byte
-              Wbyte(0x5FE8, sectidx);
-              Wbyte(0x5FE6, DSK[cDSK].position() );
+            sectidx++;                                                  //increase byte index                 
+            if ( sectidx <= maxbyte) {                                    //have we supplied all 256 bytes yet?  
+              Wbyte(RDATA, DSK[cDSK].read() );                            //nope, supply next byte
             }
             else {
               DSRAM = Rbyte(WSECTR);
-              Wbyte(WSECTR, ++DSRAM );                            //increase Sector Register
+              Wbyte(WSECTR, ++DSRAM );                                    //increase Sector Register
               //if ( ccmd == 0x90 && sectidx <= (maxsect * maxbyte) ) {   //multi-read: did we get all sectors in the track?
               //btidx = cbtidx();                                         //adjust absolute DOAD byte index for next sector
               noExec();                                                   //we're done; exit via Force Interrupt command
