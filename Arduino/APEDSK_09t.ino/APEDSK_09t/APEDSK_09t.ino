@@ -337,7 +337,7 @@ unsigned int sectidx    = 0;	    // R/W and READ ID index counter
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
-  DSK[cDSK].close();  //close SD DOAD file
+  DSK[cDSK].close();  //close current SD DOAD file
   Wbyte(WCOMND,0xD0); //"force interrupt" command
   ccmd = 0xD0;        //reset command history
   lcmd = ccmd;		    //reset new command prep
@@ -569,7 +569,7 @@ void loop() {
             noExec(); 
           break;
           
-          //case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
+          case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
         
           case 0x80: //read sector
             sectidx++;                                                  //increase byte index                 
@@ -578,14 +578,41 @@ void loop() {
             }
             else {
               DSRAM = Rbyte(WSECTR);
-              Wbyte(WSECTR, ++DSRAM );                                    //increase Sector Register
-              //if ( ccmd == 0x90 && sectidx <= (maxsect * maxbyte) ) {   //multi-read: did we get all sectors in the track?
-              //btidx = cbtidx();                                         //adjust absolute DOAD byte index for next sector
-              noExec();                                                   //we're done; exit via Force Interrupt command
-            }
+              Wbyte(WSECTR, ++DSRAM );                                    			//increase Sector Register
+              if ( ccmd == 0x90 && (DSK[cDSK].position - btidx) <= (maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
+              	sectidx = 0;                                         				//not all 2304 bytes/9 sectors supplied yet -> next one
+	      }
+	      else {
+	        noExec();                                                   			//we're done; exit via Force Interrupt command
+              ]
+	    }
           break;     
+          
+          case 0xB0: //write multiple sectors (fallthrough to 0xA0: write sector)
+        
+          case 0xA0: //read sector
+            if ( !pDSK) {    
+	      sectidx++;                                                  //increase byte index                 
+              if ( sectidx <= maxbyte) {                                  //have we written all 256 bytes yet?  
+                DSK[cDSK].write( Rbyte(RDATA) );			//nope, write next byte                            
+              }
+              else {
+                DSRAM = Rbyte(WSECTR);
+                Wbyte( WSECTR, ++DSRAM );                                    			//increase Sector Register
+                if ( ccmd == 0xB0 && (DSK[cDSK].position - btidx) <= (maxsect * maxbyte) ) {   	//multi-write: did we write all sectors in the track?
+              	  sectidx = 0;                                         				//not all 2304 bytes/9 sectors supplied yet -> next one
+	        }
+	        else {
+	          noExec();                                                   			//we're done; exit via Force Interrupt command
+		}
+	      }
+	    else {
+	      sSTatus(NotReady, 1);			   //trying to write to a protected disk (DEBUG: verify behaviour)
+	       noExec();                                 //we're done; exit via Force Interrupt command
+	    }
+          break;   	    
 
-      	  case 0xC0:  //read ID
+	  case 0xC0:  //read ID
       	    sectidx++;                                    //increase byte index
       	    switch (sectidx) {
       	      case 1:
@@ -639,61 +666,6 @@ ISR(INT0_vect) {
 	
 /*
 
-        switch (ccmd) {
-           
-	   
-	   case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
-
-	   case 0x80: //read sector
-	    if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { //have we supplied all 256 bytes yet?           
-              Wbyte(RDATA,DSK[cDSK].read() );             //nope, supply next byte
-            }
-            else {
-              Wbyte(WSECTR, Rbyte(WSECTR)++ );			  //increase Sector Register
-	      if ( ccmd == 0x90 && sectidx <= maxsect ) {	  //multi-read: did we get all sectors in the track?
-	        btidx = cbtidx();	  	          	//adjust absolute DOAD byte index for next sector
-		sectidx++;		//increase multiple read sector #
-	      }
-	      else {
-		noExec();                                 //we're done; exit via Force Interrupt command
-              }
-	    }
-          break;
-	  
-          case 0xB0: //write multiple sectors (fallthrough to 0xB0: write sector)
-        
-	   case 0xA0: //write sector
-	     if ( !pDSK ) {                                  		//write protected?
-	       if ( (DSK[cDSK].position() - btidx) <= maxbyte ) { 	//have we supplied all 256 bytes yet?           
-                 DSK[cDSK].write(Rbyte(WDATA));              		//nope, supply next byte
-               }
-             else {
-              Wbyte(WSECTR, Rbyte(WSECTR)++ );			  //increase Sector Register
-	      if ( ccmd == 0xB0 && sectidx <= maxsect ) {	  //multi-write: did we get all sectors in the track?
-	        btidx = cbtidx();	  	          	//adjust absolute DOAD byte index for next sector
-		sectidx++;					//increase multiple read sector # (starts with 1, not 0)
-	      }
-	      else {
-	      	noExec();                                 //we're done; exit via Force Interrupt command
-              }
-	     else {
-	       sSTatus(NotReady, 1);			   //trying to write to a protected disk
-	       noExec();                                 //we're done; exit via Force Interrupt command
-	     }
-          break;       
-                   
-          case 0xC0:  //read ID
-	    if (ncmd) {
-	      Sectidx = 0;
-	    }
-	    
-
-
-            Wbyte(0x1FE0,0xC0);
-                    break;
-                    case 0xD0:  //force interrupt
-                      Wbyte(0x1FE0,0xD0);
-                    break;
                     case 0xE0:  //read track
                       Wbyte(0x1FE0,0xE0);
                     break;
