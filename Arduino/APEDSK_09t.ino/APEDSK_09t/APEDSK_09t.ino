@@ -320,9 +320,10 @@ File DSK[5]; 	  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
 //bit crooked as the TI Controller Card assigns CRU drive select bits backwards
-boolean aDSK[5] = {false,false,false,false,true}; //DSK3=1, DSK2=2, DSK1=4
-byte cDSK       = 0;                              //current selected DSK
-boolean pDSK    = false;                          //protected DSK flag
+boolean aDSK[5] = {false,false,false,false,true};                               //DSK3=1, DSK2=2, DSK1=4
+String  nDSK[5] = {"","/DISKS/003.DSK","/DISKS/002.DSK","","/DISKS/001.DSK"};
+byte    cDSK    = 0;                                                            //current selected DSK
+boolean pDSK    = false;                                                        //protected DSK flag
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	            = 0;	    //generic variable for RAM R/W
@@ -336,6 +337,7 @@ byte sectidx	          = 0;	    // R/W and READ ID index counter
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
+  DSK[cDSK].close();  //close SD DOAD file
   Wbyte(WCOMND,0xD0); //"force interrupt" command
   ccmd = 0xD0;        //reset command history
   lcmd = ccmd;		    //reset new command prep
@@ -397,27 +399,28 @@ void setup() {
   }
 
  //try to open DSK1 for reads
- DSK[4] = SD.open("/DISKS/001.DSK", FILE_READ);
+ String disk = "/DISKS/001.DSK";
+ DSK[4] = SD.open(nDSK[4], FILE_READ);//"/DISKS/001.DSK", FILE_READ);
   if ( !DSK[4] ) {
     eflash(4);	//could not open DSK1 -> flash error 4
   }
   else {
-    DSK[4].close;
+    DSK[4].close();
   }
     
   //try to open DSK2 for reads
-  DSK[2] = SD.open("/DISKS/002.DSK", FILE_READ);
+  DSK[2] = SD.open(nDSK[2], FILE_READ);//"/DISKS/002.DSK", FILE_READ);
   if ( DSK[2] ) {
     //close file and set flag
-    DSK[2].close;
+    DSK[2].close();
     aDSK[2] = true;
   }
    
   //try to open DSK3 for reads
-  DSK[1] = SD.open("/DISKS/003.DSK", FILE_READ);
+  DSK[1] = SD.open(nDSK[1], FILE_READ);//"/DISKS/003.DSK", FILE_READ);
   if ( DSK[1] ) {
     //close file and set flag
-    DSK[1].close;
+    DSK[1].close();
     aDSK[1] = true;
   }
   
@@ -455,25 +458,26 @@ void loop() {
 
       //new or continue previous command?
       ncmd = (ccmd != lcmd);
-      if (ncmd) {                                   //new command
+      if (ncmd) {                                       //new command
         
         //is the selected DSK available?
-        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;    //determine selected disk
-        if ( aDSK[cDSK] ) {                         //is selected disk available?
+        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;        //determine selected disk
+        if ( aDSK[cDSK] ) {                             //is selected disk available?
 
-          lcmd = ccmd;                              //yes; remember new command for next compare
+          lcmd = ccmd;                                  //yes; remember new command for next compare
           
-          sStatus(NotReady,false);                  //reset "Not Ready" bit in Status Register          
-          DSK[cDSK].seek(0x10);                     //byte 0x10 in Volume Information Block stores Protected flag
-          pDSK = DSK[cDSK].read() != 0x20;          //disk is protected when byte 0x10 <> " "
-          sStatus(Protect,pDSK);                    //reflect "Protect" status 
-          btidx = cbtidx();                         //calc absolute DOAD byte index (0-92160)
-          DSK[cDSK].seek(btidx);                    //set to first absolute byte for R/W  
-          sectidx = 0;                              //clear sector index counter   
+          sStatus(NotReady,false);                      //reset "Not Ready" bit in Status Register  
+          DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
+          DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
+          pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
+          sStatus(Protect,pDSK);                        //reflect "Protect" status 
+          btidx = cbtidx();                             //calc absolute DOAD byte index (0-92160)
+          DSK[cDSK].seek(btidx);                        //set to first absolute byte for R/W  
+          sectidx = 0;                                  //clear sector index counter   
         }
         else {      
-          sStatus(NotReady,true);                   //no; set "Not Ready" bit in Status Register
-          noExec();                                 //prevent multiple step/seek execution
+          sStatus(NotReady,true);                       //no; set "Not Ready" bit in Status Register
+          noExec();                                     //prevent multiple step/seek execution
         }   
       }
 
