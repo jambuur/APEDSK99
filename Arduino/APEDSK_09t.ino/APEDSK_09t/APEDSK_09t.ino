@@ -333,7 +333,7 @@ byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
-byte sectidx	          = 0;	    // R/W and READ ID index counter 
+unsigned int sectidx    = 0;	    // R/W and READ ID index counter 
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
