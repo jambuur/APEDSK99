@@ -105,10 +105,9 @@
 #define LED_off     250
 #define LED_repeat  1500
 
-//Status Register bits
+//useful Status Register bits
 #define NotReady 0x80
 #define Protect  0x40
-#define Head     0x20
 #define Track0   0x04
 
 //"disk" characteristics
@@ -335,6 +334,17 @@ unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + r
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
 unsigned int sectidx    = 0;	    //R/W and READ ID index counter 
 
+//clear various FD1771 registers (for powerup and Restore command)
+void FDrstr(void) {
+  Wbyte(RTRACK,0);          //clear Read Track register
+  Wbyte(RSECTR,0);	      //clear Read Sector register
+  Wbyte(RDATA, 0);		//clear Read Data register
+  Wbyte(WTRACK,0);          //clear Write Track register  
+  Wbyte(WSECTR,0);	      //clear Write Sector register
+  Wbyte(WDATA,0);           //clear Write Data register
+  sStatus(Track0, true);    //set Track 0 bit in Status Register
+}
+
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
   DSK[cDSK].close();  //close current SD DOAD file
@@ -398,7 +408,7 @@ void setup() {
     eflash(3);
   }
 
- //try to open DSK1 for reads
+ //try to open DSK1 to see if it's available (it should)
  String disk = "/DISKS/001.DSK";
  DSK[4] = SD.open(nDSK[4], FILE_READ);//"/DISKS/001.DSK", FILE_READ);
   if ( !DSK[4] ) {
@@ -408,7 +418,7 @@ void setup() {
     DSK[4].close();
   }
     
-  //try to open DSK2 for reads
+  //try to open DSK2 and if yes set flag (default is false)
   DSK[2] = SD.open(nDSK[2], FILE_READ);//"/DISKS/002.DSK", FILE_READ);
   if ( DSK[2] ) {
     //close file and set flag
@@ -416,7 +426,7 @@ void setup() {
     aDSK[2] = true;
   }
    
-  //try to open DSK3 for reads
+  //try to open DSK3 and if yes set flag (default is false)
   DSK[1] = SD.open(nDSK[1], FILE_READ);//"/DISKS/003.DSK", FILE_READ);
   if ( DSK[1] ) {
     //close file and set flag
@@ -424,11 +434,12 @@ void setup() {
     aDSK[1] = true;
   }
   
-  //initialise Status Register: set bits "Head Loaded" and "Track 0"
-  sStatus(Head,true);
-  sStatus(Track0,true);
-
-  //"no command" as default
+  //initialize FD1771:
+  // - initialise Status Register: "Head Loaded" set
+  Wbyte(RSTATUS, 0x20); 
+  // - "Restore" command
+  FDrstr();
+  // - "no command" as default
   noExec();
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
@@ -442,7 +453,6 @@ void setup() {
 } //end of setup()
 
 void loop() {
-
 
   //check if flag has set by interrupt routine 
   if (FD1771) {
@@ -486,10 +496,7 @@ void loop() {
         switch (ccmd) { //yep switch step/seek commands
 
           case 0x00:	//restore
-            Wbyte(RTRACK,0);          //clear read track register
-            Wbyte(WTRACK,0);          //clear write track register        
-            Wbyte(WDATA,0);           //clear write data register
-            sStatus(Track0, true);    //set Track 0 bit in Status Register 
+            FDrstr();
           break;
 			
           case 0x10:	//seek
