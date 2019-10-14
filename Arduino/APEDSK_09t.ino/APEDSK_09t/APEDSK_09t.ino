@@ -320,7 +320,7 @@ File DSK[5];  //file pointers to DOAD's
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
 //bit crooked as the TI Controller Card assigns CRU drive select bits backwards
 boolean aDSK[5] = {false,false,false,false,true};                               //disk availability: DSK3=1, DSK2=2, DSK1=4
-String  nDSK[5] = {"0","/DISKS/003.DSK","/DISKS/002.DSK","0","/DISKS/001.DSK"};	  //DOAD file name: DSK3=1, DSK2=2, DSK1=4
+String  nDSK[5] = {" ","/DISKS/002.DSK","/DISKS/003.DSK"," ","/DISKS/001.DSK",};	  //DOAD file name: DSK3=1, DSK2=2, DSK1=4
 byte    cDSK    = 0;                                                            //current selected DSK
 boolean pDSK    = false;                                                        //protected DSK flag
 
