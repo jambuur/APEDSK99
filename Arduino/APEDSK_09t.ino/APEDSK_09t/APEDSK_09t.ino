@@ -556,7 +556,8 @@ void loop() {
         
         } //end switch step commands
        
-	      Wbyte(RTRACK, Rbyte(WTRACK) );  //sync track registers
+	      Wbyte(RTRACK, Rbyte(WTRACK) );  //sync Track Registers
+	      Wbyte(RDATA, Rbyte(WDATA) ); 	//sycn Data Registers
         noExec();                       //prevent multiple step/seek execution 
 
       } // end ccmd < 0x80
@@ -644,6 +645,7 @@ void loop() {
         } //end switch non-step commands      
 
 	 Wbyte(RSECTR, Rbyte(WSECTR) );  //sync Sector Registers
+	Wbyte(RDATA, Rbyte(WDATA) ); 	//sycn Data Registers
 		    
       } //end R/W commands
 
