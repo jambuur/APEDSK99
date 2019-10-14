@@ -320,8 +320,8 @@ File DSK[5]; 	  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
 //bit crooked as the TI Controller Card assigns CRU drive select bits backwards
-boolean aDSK[5] = {false,false,false,false,true};                               //DSK3=1, DSK2=2, DSK1=4
-String  nDSK[5] = {"","/DISKS/003.DSK","/DISKS/002.DSK","","/DISKS/001.DSK"};
+boolean aDSK[5] = {false,false,false,false,true};                               //disk availability: DSK3=1, DSK2=2, DSK1=4
+String  nDSK[5] = {"","/DISKS/003.DSK","/DISKS/002.DSK","","/DISKS/001.DSK"};	//DOAD file name: DSK3=1, DSK2=2, DSK1=4
 byte    cDSK    = 0;                                                            //current selected DSK
 boolean pDSK    = false;                                                        //protected DSK flag
 
@@ -333,25 +333,25 @@ byte lcmd               = 0;      //last command
 boolean ncmd            = false;  //flag new command
 unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
 boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
-unsigned int sectidx    = 0;	    // R/W and READ ID index counter 
+unsigned int sectidx    = 0;	    //R/W and READ ID index counter 
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
   DSK[cDSK].close();  //close current SD DOAD file
-  Wbyte(WCOMND,0xD0); //"force interrupt" command
-  ccmd = 0xD0;        //reset command history
+  Wbyte(WCOMND,0xD0); //"force interrupt" command (aka no further execution)
+  ccmd = 0xD0;        // "" ""
   lcmd = ccmd;		    //reset new command prep
-  sectidx = 0; 	      //clear index counter in case we have interrupted multi-byte response commands
+  sectidx = 0; 	      //clear index counter
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
 unsigned long int cbtidx (void) {
   unsigned long int bi;
-  bi  = ( Rbyte(CRUWRI) & B00000001 ) * (maxtrack);   //add 0x28 tracks for side 0 if on side 1
+  bi  = ( Rbyte(CRUWRI) & B00000001 ) * (maxtrack);   //add side 0 tracks (0x28) if on side 1
   bi += Rbyte(WTRACK);                                //add current track #
   bi *= 9;                                            //convert to # of sectors
   bi += Rbyte(WSECTR);                                //add current sector #
-  bi *= 256;                                          //calculate absolute DOAD byte index ((0-92160)
+  bi *= 256;                                          //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
 
@@ -458,10 +458,10 @@ void loop() {
 
       //new or continue previous command?
       ncmd = (ccmd != lcmd);
-      if (ncmd) {                                       //new command
+      if (ncmd) {                                       //new command?
         
         //is the selected DSK available?
-        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;        //determine selected disk
+        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;        //yes; determine selected disk
         if ( aDSK[cDSK] ) {                             //is selected disk available?
 
           lcmd = ccmd;                                  //yes; remember new command for next compare
@@ -471,7 +471,7 @@ void loop() {
           DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
           pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
           sStatus(Protect,pDSK);                        //reflect "Protect" status 
-          btidx = cbtidx();                             //calc absolute DOAD byte index (0-92160)
+          btidx = cbtidx();                             //calc absolute DOAD byte index
           DSK[cDSK].seek(btidx);                        //set to first absolute byte for R/W  
           sectidx = 0;                                  //clear sector index counter   
         }
@@ -569,9 +569,9 @@ void loop() {
             noExec(); 
           break;
           
-	  case 0xE0: //read entire track; which sounds a bit like reading multiple sectors		
+	  case 0xE0: //read entire track; which sounds like reading multiple sectors (fallthrough to 0x90: read multiple sectors)		
 			
-          case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
+          case 0x90: //read multiple sectors; which sounds like reading single sectors in a loop (fallthrough to 0x80: read sector)
         
           case 0x80: //read sector
             sectidx++;                                                  //increase byte index                 
@@ -590,9 +590,9 @@ void loop() {
 	    }
           break;     
           
-          case 0xF0: //write entire track; which sounds a bit like writing multiple sectors
+          case 0xF0: //write entire track; which sounds like writing multiple sectors (fallthrough to 0xB0: write multiple sectors)
 		    
-          case 0xB0: //write multiple sectors (fallthrough to 0xA0: write sector)
+          case 0xB0: //write multiple sectors; which sounds like writing single sectors in a loop (fallthrough to 0xA0: write sector)
         
           case 0xA0: //read sector
             if ( !pDSK) {    
@@ -643,6 +643,8 @@ void loop() {
 	     	  break;
         } //end switch non-step commands      
 
+	 Wbyte(RSECTR, Rbyte(WSECTR) );  //sync Sector Registers
+		    
       } //end R/W commands
 
     } //end we needed to do something
