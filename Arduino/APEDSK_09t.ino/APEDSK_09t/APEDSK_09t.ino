@@ -569,6 +569,8 @@ void loop() {
             noExec(); 
           break;
           
+	  case 0xE0: //read entire track; which sounds a bit like reading multiple sectors		
+			
           case 0x90: //read multiple sectors (fallthrough to 0x80: read sector)
         
           case 0x80: //read sector
@@ -579,7 +581,7 @@ void loop() {
             else {
               DSRAM = Rbyte(WSECTR);
               Wbyte(WSECTR, ++DSRAM );                                    			//increase Sector Register
-              if ( ccmd == 0x90 && (DSK[cDSK].position - btidx) <= (maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
+              if ( (ccmd == 0x90 || ccmd == 0xE0) && (DSK[cDSK].position - btidx) <= (maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
               	sectidx = 0;                                         				//not all 2304 bytes/9 sectors supplied yet -> next one
 	      }
 	      else {
@@ -588,6 +590,8 @@ void loop() {
 	    }
           break;     
           
+          case 0xF0: //write entire track; which sounds a bit like writing multiple sectors
+		    
           case 0xB0: //write multiple sectors (fallthrough to 0xA0: write sector)
         
           case 0xA0: //read sector
@@ -599,7 +603,7 @@ void loop() {
               else {
                 DSRAM = Rbyte(WSECTR);
                 Wbyte( WSECTR, ++DSRAM );                                    			//increase Sector Register
-                if ( ccmd == 0xB0 && (DSK[cDSK].position - btidx) <= (maxsect * maxbyte) ) {   	//multi-write: did we write all sectors in the track?
+                if ( (ccmd == 0xB0 || ccmd == 0xF0) && (DSK[cDSK].position - btidx) <= (maxsect * maxbyte) ) {   	//multi-write: did we write all sectors in the track?
               	  sectidx = 0;                                         				//not all 2304 bytes/9 sectors supplied yet -> next one
 	        }
 	        else {
@@ -662,25 +666,3 @@ ISR(INT0_vect) {
   FD1771=true;  
   
 }
-
-	
-/*
-
-                    case 0xE0:  //read track
-                      Wbyte(0x1FE0,0xE0);
-                    break;
-                    case 0xF0:  //write track
-                      Wbyte(0x1FE0,0cF0);
-                    break;
-                    default: //DEBUG
-                      Wbyte(0x1FE0,0xFF);
-                    break;
-                  } 
-                
-                } //end CRUWRI not changed 
-      }
-    }
-		       
-         
-
-} //end of loop() */
