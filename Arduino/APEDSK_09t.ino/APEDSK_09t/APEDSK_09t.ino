@@ -314,13 +314,12 @@ void sStatus (byte sbit, boolean set) {
 //DSR binary input file pointer
 File InDSR;  
 
-//DSKx file pointers; x=3,2,1 for read, (x+3) for write
-File DSK[5];  //file pointers to DOAD's
+//DSKx file pointers
+File DSK[4];  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
-//bit crooked as the TI Controller Card assigns CRU drive select bits backwards
 boolean aDSK[4] = {false,true,false,false};                                         //disk availability
-String  nDSK[4] = {" ","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"};	  //DOAD file name: DSK3=1, DSK2=2, DSK1=4
+String  nDSK[4] = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"};	        //DOAD file name
 byte    cDSK    = 0;                                                                //current selected DSK
 boolean pDSK    = false;                                                            //protected DSK flag
 
@@ -364,6 +363,8 @@ unsigned long int cbtidx (void) {
   bi *= 256;                                          //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
+
+unsigned int debug = 0x5D40;
 
 //------------  
 void setup() {
@@ -424,7 +425,7 @@ void setup() {
     DSK[2].close();
     aDSK[2] = true;
   }
-   
+  
   //try to open DSK3 and if yes set flag (default is false)
   DSK[3] = SD.open(nDSK[3], FILE_READ);
   if ( DSK[3] ) {
@@ -432,7 +433,7 @@ void setup() {
     DSK[3].close();
     aDSK[3] = true;
   }
-  
+     
   //initialize FD1771:
   // - initialise Status Register: "Head Loaded" set
   Wbyte(RSTAT, 0x20); 
@@ -470,7 +471,7 @@ void loop() {
       if (ncmd) {                                       //new command?
         
         //is the selected DSK available?
-        cDSK = (Rbyte(CRUWRI) >> 1) & B00000111;        //yes; determine selected disk
+        cDSK = (Rbyte(CRUWRI) >> 1) & B00000011;        //yes; determine selected disk
         if ( aDSK[cDSK] ) {                             //is selected disk available?
 
           lcmd = ccmd;                                  //yes; remember new command for next compare
