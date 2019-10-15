@@ -319,10 +319,10 @@ File DSK[5];  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
 //bit crooked as the TI Controller Card assigns CRU drive select bits backwards
-boolean aDSK[5] = {false,false,false,false,true};                               //disk availability: DSK3=1, DSK2=2, DSK1=4
-String  nDSK[5] = {" ","/DISKS/002.DSK","/DISKS/003.DSK"," ","/DISKS/001.DSK",};	  //DOAD file name: DSK3=1, DSK2=2, DSK1=4
-byte    cDSK    = 0;                                                            //current selected DSK
-boolean pDSK    = false;                                                        //protected DSK flag
+boolean aDSK[4] = {false,true,false,false};                                         //disk availability
+String  nDSK[4] = {" ","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"};	  //DOAD file name: DSK3=1, DSK2=2, DSK1=4
+byte    cDSK    = 0;                                                                //current selected DSK
+boolean pDSK    = false;                                                            //protected DSK flag
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	            = 0;	    //generic variable for RAM R/W
@@ -409,12 +409,12 @@ void setup() {
   }
 
   //try to open DSK1 to see if it's available (it should)
-  DSK[4] = SD.open(nDSK[4], FILE_READ);
-  if ( !DSK[4] ) {
+  DSK[1] = SD.open(nDSK[1], FILE_READ);
+  if ( !DSK[1] ) {
     eflash(4);	//could not open DSK1 -> flash error 4
   }
   else {
-    DSK[4].close();
+    DSK[1].close();
   }
     
   //try to open DSK2 and if yes set flag (default is false)
@@ -426,11 +426,11 @@ void setup() {
   }
    
   //try to open DSK3 and if yes set flag (default is false)
-  DSK[1] = SD.open(nDSK[1], FILE_READ);
-  if ( DSK[1] ) {
+  DSK[3] = SD.open(nDSK[3], FILE_READ);
+  if ( DSK[3] ) {
     //close file and set flag
-    DSK[1].close();
-    aDSK[1] = true;
+    DSK[3].close();
+    aDSK[3] = true;
   }
   
   //initialize FD1771:
