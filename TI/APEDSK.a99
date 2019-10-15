@@ -513,8 +513,8 @@ H055	CLR	R0
 	SWPB	R0			
 	CI	R0,>0003			
 	JH	H056			drive number can't be higher than 3: error #7
-	LI	R2,>0080			
-	SLA	R2,0			proper drive selection bit: >01 >02 or >04
+*	LI	R2,>0080			
+*	SLA	R2,0			proper drive selection bit: >01 >02 or >04
 *	AI	R12,8			CRU address of drive selection bits (4-6)
 	MOV	R5,R5			test same drive flag
 	JEQ	H057			
@@ -538,7 +538,9 @@ H055	CLR	R0
 *K011	BYTE	>00			
 					
 *H057	LDCR	R2,3			select drive
-H057	SOCB	R2,@CRUWRI		APEDSK: select drive
+H057	SWPB	R0			APEDSK: drive # back in MSB
+	SLA	R0,1			APEDSK: bit 7 is side select
+H057	MOVB	R0,@CRUWRI		APEDSK: select drive
 *	AI	R12,-8			back to cru base
 *	MOV	R5,R5			test same drive flag
 *	JEQ	H058			same: return
