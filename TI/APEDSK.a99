@@ -183,27 +183,28 @@ H005	SWPB	R0
 *	INV	R1			APEDSK: none of this inverted databus rubbish
 	MOVB	R1,@WSECTR		pass new sector # to sector register
 	CB	R0,@RTRACK		new track # same as current?
-	JEQ	H007			yes
+*	JEQ	H007			yes
+	JEQ	H013			APEDSK: no need to check if side is correct
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
 	DATA	>1E00			APEDSK: seek h=1 V=1 r1r0=10
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	SLA	R0,13			test seek error bit
 *	JOC	H008			try again, then error 11
-H007	LI	R6,5			APEDSK: H007 slightly re-arranged to sync proper ID byte read
-	MOV 	R6,@RDINT		APEDSK: interrupt Arduino for read operation
-	BL	@SNDCMD			send command
+*H007	LI	R6,5			APEDSK: H007 slightly re-arranged to sync proper ID byte read
+*	MOV 	R6,@RDINT		APEDSK: interrupt Arduino for read operation
+*	BL	@SNDCMD			send command
 *	DATA	>3F00			read ID E=0
-	DATA	>C000			APEDSK: read ID E=0 
+*	DATA	>C000			APEDSK: read ID E=0 
 *	SBO	2			enable hold
-	MOVB	@RDATA,R0		skip track #
-	DEC	@RDINT		
-	MOVB	@RDATA,R5		side #
+*	MOVB	@RDATA,R0		skip track #
+*	DEC	@RDINT		
+*	MOVB	@RDATA,R5		side #
 *	INV	R5			APEDSK: none of this inverted databus rubbish
-H009	MOVB	@RDATA,R0		skip next 4 bytes
+*H009	MOVB	@RDATA,R0		skip next 4 bytes
 *	DEC	R6			
-	DEC	@RDINT			APEDSK:
-	JNE	H009			
+*	DEC	@RDINT			APEDSK: read interrupt
+*	JNE	H009			
 *	BL	@WTCPT2			SBZ 2, wait for command completion
 *	BL	@WTCPT1			APEDSK not relevant: no need to wait for command completion and error check
 *	SLA	R0,13			test status bits
@@ -211,11 +212,11 @@ H009	MOVB	@RDATA,R0		skip next 4 bytes
 *	JLT	H011			crc error: try again, then error 22
 *	SLA	R0,2			
 *	JOC	H012			lost data: try again, then error 23
-	CB	R7,R5			side # matches?
-	JEQ	H013			yes: sector found, now access it
+*	CB	R7,R5			side # matches?
+*	JEQ	H013			yes: sector found, now access it
 					
-	BL	@ERROR1			no: error 6
-	DATA	>0600			
+*	BL	@ERROR1			no: error 6
+*	DATA	>0600			
 *H008	BL	@ERROR2			gracefull error 11
 *	DATA	>1100			
 H003	BL	@ERROR1			error 7
