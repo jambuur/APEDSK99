@@ -473,9 +473,10 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	BL	@WTCPT2			SBZ 2, then wait for command completion
 	BL	@WTCPT1			APEDSK: no need to wait for command completion
 	SLA	R0,11			check write protect bit
-	JNC	H042			
+*	JNC	H042			
+	JNC	H043			APEDSK:
 	B	@ERROR3			error code >34 ??
-H042	SLA	R0,4			test lost data bit
+*H042	SLA	R0,4			test lost data bit
 *	JNC	H043			ok: return
 *	DEC	R4			shall we try again?
 *	JNE	H040			yes
