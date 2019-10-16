@@ -185,9 +185,14 @@ H005	SWPB	R0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 *	CB	R0,@RTRACK		new track # same as current?
 *	JEQ	H007			yes
 *	JEQ	H013			APEDSK: no need to check if side is correct
+=======
+	CB	R0,@RTRACK		new track # same as current?
+	JEQ	H007			yes
+>>>>>>> parent of b96f531... Update APEDSK.a99
 =======
 	CB	R0,@RTRACK		new track # same as current?
 	JEQ	H007			yes
