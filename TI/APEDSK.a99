@@ -183,7 +183,7 @@ H005	SWPB	R0
 *	INV	R1			APEDSK: none of this inverted databus rubbish
 	MOVB	R1,@WSECTR		pass new sector # to sector register
 	CB	R0,@RTRACK		new track # same as current?
-*	JEQ	H007			yes
+	JEQ	H007			yes
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
 	DATA	>1E00			APEDSK: seek h=1 V=1 r1r0=10
