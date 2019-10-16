@@ -159,7 +159,8 @@ H002	MOVB	R0,@WTRACK		place >00 in track register
 	JHE	H003			error 7
 	CI	R1,>0168		on which side is it?
 	JL	H004			0-359: on side 0 
-*	AI	R1,-719			on side 1: sector # grow from in to out
+*	AI	R1,-719			on side 1: sector # grow from in to out APEDSK: keep track 0 scheme
+	AI	R1,-360			APEDSK: KISS and use DOAD scheme
 *	ABS	R1			719 - sector #
 *	CLR	R0			
 *	DIV	@K003,R0		sect/track (=9)
@@ -168,7 +169,8 @@ H002	MOVB	R0,@WTRACK		place >00 in track register
 *	SBO	7			side 1
 	SOCB	@SIDE01,@CRUWRI		APEDSK: side 1
 	LI	R7,>0100		side number = >01
-	JMP	H005			
+*	JMP	H005			
+	JMP	H006			APEDSK:
 H004	CI	R1,>0001		is it sector 0 or 1?
 	JH	H006			no
 	BL	@SKTRK0			yes: seek track 0
@@ -539,7 +541,7 @@ H055	CLR	R0
 					
 *H057	LDCR	R2,3			select drive
 H057	SWPB	R0			APEDSK: drive # back in MSB
-	SLA	R0,1			APEDSK: bit 7 is side select
+	SLA	R0,1			APEDSK: preserve bit 7 (side select)
 	SOCB	R0,@CRUWRI		APEDSK: select drive
 *	AI	R12,-8			back to cru base
 *	MOV	R5,R5			test same drive flag
