@@ -583,7 +583,7 @@ void loop() {
           case 0x90: //read multiple sectors; which sounds like reading single sectors in a loop (fallthrough to 0x80: read sector)
         
           case 0x80: //read sector                                                                                          
-            if ( sectidx < maxbyte) {                                                                             //have we supplied all 256 bytes yet?  
+            if ( sectidx <= maxbyte) {                                                                             //have we supplied all 256 bytes yet?  
               Wbyte(RDATA, DSK[cDSK].read() );                                                                    //nope, supply next byte
               sectidx++;                                                                                          //increase byte index    
             }
@@ -591,8 +591,8 @@ void loop() {
               DSRAM = Rbyte(WSECTR);
               Wbyte(WSECTR, ++DSRAM );                                    			                                  //increase Sector Register
               if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
-              	Wbyte(RDATA, DSK[cDSK].read() );
-		sectidx = 0;                                         				                                      //not all 2304 bytes/9 sectors supplied yet -> next one
+              	sectidx = 0;												//reset byte index for next sector
+		Wbyte(RDATA, DSK[cDSK].read() );									//supply first byte of next sector
               }
 	            else {
                 Wbyte(RSECTR, Rbyte(WSECTR) );                                                                   //sync Sector Registers
@@ -607,7 +607,7 @@ void loop() {
         
           case 0xA0: //write sector
             if ( !pDSK ) {          
-              if ( sectidx < maxbyte) {                                                                          //have we written all 256 bytes yet?  
+              if ( sectidx <= maxbyte) {                                                                          //have we written all 256 bytes yet?  
                 DSK[cDSK].write( Rbyte(RDATA) );			                                                            //nope, write next byte
                 sectidx++;                                                                                        //increase byte index                                       
               }
@@ -615,8 +615,9 @@ void loop() {
                 DSRAM = Rbyte(WSECTR);
                 Wbyte( WSECTR, ++DSRAM );                                    			                                //increase Sector Register
                 if ( (ccmd == 0xF0 || ccmd == 0xB0) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {  //multi-write: did we write all sectors in the track?
-              	  sectidx = 0;                                         				                                    //not all 2304 bytes/9 sectors supplied yet -> next one
-	              }
+              	  sectidx = 0;                                         				                                    //reset byte index for next sector
+		  DSK[cDSK].write( Rbyte(RDATA) );										   //write first byte of next sector
+		}
 	              else {
 	                Wbyte(RSECTR, Rbyte(WSECTR) );                                                                  //sync Sector Registers
 	                noExec();                                                   			                              //we're done; exit via Force Interrupt command
