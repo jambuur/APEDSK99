@@ -484,7 +484,7 @@ void loop() {
           pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
           sStatus(Protect,pDSK);                        //reflect "Protect" status 
           btidx = cbtidx();                             //calc absolute DOAD byte index
-          DSK[cDSK].seek(btidx);                        //set to first absolute byte for R/W  
+          DSK[cDSK].seek(btidx);                        //set to first absolute DOAD byte for R/W  
           sectidx = 0;                                  //clear sector index counter   
         }
         else {      
@@ -591,6 +591,7 @@ void loop() {
               DSRAM = Rbyte(WSECTR);
               Wbyte(WSECTR, ++DSRAM );                                    			                                  //increase Sector Register
               if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
+                DSK[cDSK].seek(DSK[cDSK].position() - 1 );                                                        //compensate for WSECTR update
               	sectidx = 0;                                         				                                      //not all 2304 bytes/9 sectors supplied yet -> next one
               }
 	            else {
