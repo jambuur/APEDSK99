@@ -162,6 +162,7 @@ byte dbus_read()
 //place a byte on the databus
 void dbus_write(byte data)
 {
+  NOP();
   PORTD |= ((data << 1) & B00000010); //write PD1 (D0)
   PORTD |= ((data << 2) & B11111000); //write PD7-PD3 (D5-D1)
   PORTB |= ((data >> 6) & B00000011); //write PB1, PBO (D7, D6)
@@ -364,7 +365,7 @@ unsigned long int cbtidx (void) {
   return (bi);
 }
 
-unsigned int debug = 0x5D40;
+unsigned int debug = 0xA000;
 
 //------------  
 void setup() {
@@ -592,6 +593,7 @@ void loop() {
               	sectidx = 0;                                         				                                      //not all 2304 bytes/9 sectors supplied yet -> next one
               }
 	            else {
+                 Wbyte(RSECTR, Rbyte(WSECTR) );                                                                   //sync Sector Registers
 	              noExec();                                                   			                                //we're done; exit via Force Interrupt command
 	            }
 	          }
@@ -614,6 +616,7 @@ void loop() {
               	  sectidx = 0;                                         				                                    //not all 2304 bytes/9 sectors supplied yet -> next one
 	              }
 	              else {
+	                Wbyte(RSECTR, Rbyte(WSECTR) );                                                                  //sync Sector Registers
 	                noExec();                                                   			                              //we're done; exit via Force Interrupt command
 		            }
 	            }
@@ -650,8 +653,6 @@ void loop() {
 	     	  
 	     	  break;
         } //end switch non-step commands      
-
-	      Wbyte(RSECTR, Rbyte(WSECTR) );  //sync Sector Registers
 		    
       } //end R/W commands
 
