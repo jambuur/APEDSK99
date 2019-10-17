@@ -591,7 +591,8 @@ void loop() {
               DSRAM = Rbyte(WSECTR);
               Wbyte(WSECTR, ++DSRAM );                                    			                                  //increase Sector Register
               if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
-              	sectidx = 0;                                         				                                      //not all 2304 bytes/9 sectors supplied yet -> next one
+              	Wbyte(RDATA, DSK[cDSK].read() );
+		sectidx = 0;                                         				                                      //not all 2304 bytes/9 sectors supplied yet -> next one
               }
 	            else {
                 Wbyte(RSECTR, Rbyte(WSECTR) );                                                                   //sync Sector Registers
