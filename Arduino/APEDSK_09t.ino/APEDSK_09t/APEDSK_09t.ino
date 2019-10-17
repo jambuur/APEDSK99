@@ -113,7 +113,7 @@
 //"disk" characteristics
 #define maxtrack  0x28		//# of tracks
 #define maxsect	  0x09		//# of sectors/track
-#define maxbyte   0x100		//# of bytes per sector
+#define maxbyte   0xFF		//# of bytes per sector
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -591,7 +591,6 @@ void loop() {
               DSRAM = Rbyte(WSECTR);
               Wbyte(WSECTR, ++DSRAM );                                    			                                  //increase Sector Register
               if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
-                DSK[cDSK].seek(DSK[cDSK].position() - 1 );                                                        //compensate for WSECTR update
               	sectidx = 0;                                         				                                      //not all 2304 bytes/9 sectors supplied yet -> next one
               }
 	            else {
