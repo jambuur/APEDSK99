@@ -190,7 +190,6 @@ H005	SWPB	R0
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
 	DATA	>1E00			APEDSK: seek h=1 V=1 r1r0=10
-	JMP	H013
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	SLA	R0,13			test seek error bit
 *	JOC	H008			try again, then error 11
@@ -218,8 +217,8 @@ H005	SWPB	R0
 *	CB	R7,R5			side # matches?
 *	JEQ	H013			yes: sector found, now access it
 					
-	BL	@ERROR1			no: error 6
-	DATA	>0600			
+*	BL	@ERROR1			no: error 6
+*	DATA	>0600			
 *H008	BL	@ERROR2			gracefull error 11
 *	DATA	>1100			
 H003	BL	@ERROR1			error 7

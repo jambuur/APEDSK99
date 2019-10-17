@@ -162,7 +162,6 @@ byte dbus_read()
 //place a byte on the databus
 void dbus_write(byte data)
 {
-  NOP();
   PORTD |= ((data << 1) & B00000010); //write PD1 (D0)
   PORTD |= ((data << 2) & B11111000); //write PD7-PD3 (D5-D1)
   PORTB |= ((data >> 6) & B00000011); //write PB1, PBO (D7, D6)
@@ -352,6 +351,8 @@ void noExec(void) {
   ccmd = 0xD0;        // "" ""
   lcmd = ccmd;		    //reset new command prep
   sectidx = 0; 	      //clear index counter
+  Wbyte(RTRACK,0);    //clear Read Track register
+  Wbyte(RSECTR,0);    //clear Read Sector register
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
@@ -581,10 +582,10 @@ void loop() {
 			
           case 0x90: //read multiple sectors; which sounds like reading single sectors in a loop (fallthrough to 0x80: read sector)
         
-          case 0x80: //read sector
-            sectidx++;                                                                                            //increase byte index                 
-            if ( sectidx <= maxbyte) {                                                                            //have we supplied all 256 bytes yet?  
+          case 0x80: //read sector                                                                                          
+            if ( sectidx < maxbyte) {                                                                             //have we supplied all 256 bytes yet?  
               Wbyte(RDATA, DSK[cDSK].read() );                                                                    //nope, supply next byte
+              sectidx++;                                                                                          //increase byte index    
             }
             else {
               DSRAM = Rbyte(WSECTR);
@@ -593,7 +594,7 @@ void loop() {
               	sectidx = 0;                                         				                                      //not all 2304 bytes/9 sectors supplied yet -> next one
               }
 	            else {
-                 Wbyte(RSECTR, Rbyte(WSECTR) );                                                                   //sync Sector Registers
+                Wbyte(RSECTR, Rbyte(WSECTR) );                                                                   //sync Sector Registers
 	              noExec();                                                   			                                //we're done; exit via Force Interrupt command
 	            }
 	          }
@@ -604,10 +605,10 @@ void loop() {
           case 0xB0: //write multiple sectors; which sounds like writing single sectors in a loop (fallthrough to 0xA0: write sector)
         
           case 0xA0: //write sector
-            if ( !pDSK ) {    
-	            sectidx++;                                                                                          //increase byte index                 
-              if ( sectidx <= maxbyte) {                                                                          //have we written all 256 bytes yet?  
-                DSK[cDSK].write( Rbyte(RDATA) );			                                                            //nope, write next byte                            
+            if ( !pDSK ) {          
+              if ( sectidx < maxbyte) {                                                                          //have we written all 256 bytes yet?  
+                DSK[cDSK].write( Rbyte(RDATA) );			                                                            //nope, write next byte
+                sectidx++;                                                                                        //increase byte index                                       
               }
               else {
                 DSRAM = Rbyte(WSECTR);
