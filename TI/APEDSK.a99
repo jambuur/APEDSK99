@@ -160,7 +160,7 @@ H002	MOVB	R0,@WTRACK		place >00 in track register
 	CI	R1,>0168		on which side is it?
 	JL	H004			0-359: on side 0 
 *	AI	R1,-719			on side 1: sector # grow from in to out APEDSK: keep track 0 scheme
-	AI	R1,-360			APEDSK: KISS and use DOAD scheme
+	AI	R1,-359			APEDSK: KISS and use DOAD scheme
 *	ABS	R1			719 - sector #
 *	CLR	R0			
 *	DIV	@K003,R0		sect/track (=9)
@@ -190,6 +190,7 @@ H005	SWPB	R0
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
 	DATA	>1E00			APEDSK: seek h=1 V=1 r1r0=10
+	JMP	H013
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	SLA	R0,13			test seek error bit
 *	JOC	H008			try again, then error 11
