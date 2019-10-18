@@ -578,9 +578,9 @@ void loop() {
             noExec(); 
           break;
           
-	        case 0xE0: //read entire track; which sounds like reading multiple sectors (fallthrough to 0x90: read multiple sectors)		
+	        case 0xE0: //read entire track; sounds suspiciously like reading multiple sectors (fallthrough to 0x90: read multiple sectors)		
 			
-          case 0x90: //read multiple sectors; which sounds like reading single sectors in a loop (fallthrough to 0x80: read sector)
+          case 0x90: //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)
         
           case 0x80: //read sector                                                                                          
             if ( sectidx <= maxbyte) {                                                                             //have we supplied all 256 bytes yet?  
@@ -601,9 +601,9 @@ void loop() {
 	          }
           break;     
           
-          case 0xF0: //write entire track; which sounds like writing multiple sectors (fallthrough to 0xB0: write multiple sectors)
+          case 0xF0: //write entire track; sounds suspiciously like writing multiple sectors (fallthrough to 0xB0: write multiple sectors)
 		    
-          case 0xB0: //write multiple sectors; which sounds like writing single sectors in a loop (fallthrough to 0xA0: write sector)
+          case 0xB0: //write multiple sectors; sounds suspiciously like writing single sectors in a loop (fallthrough to 0xA0: write sector)
         
           case 0xA0: //write sector
             if ( !pDSK ) {          
@@ -631,28 +631,30 @@ void loop() {
           break;   	    
 
       	  case 0xC0:  //read ID
-      	    sectidx++;                                    //increase byte index
       	    switch (sectidx) {
-      	      case 1:
+      	      case 0:
       	        Wbyte(RDATA, Rbyte(RTRACK) );		          //track #
       	      break;
-      	      case 2:
+      	      case 1:
       	        Wbyte(RDATA, Rbyte(CRUWRI) & B00000001);  //side #
       	      break;
-      	      case 3:
+      	      case 2:
                 Wbyte(RDATA, Rbyte(RSECTR) );		          //sector #
                 break;
-      	      case 4:
+      	      case 3:
                 Wbyte(RDATA, 0x01); 		                  //sector size (256 bytes)
               break;
-      	      case 5:
+      	      case 4:
       		      Wbyte(RDATA, 0x0C);	                      //CC bogus byte #1
               break;
-      	      case 6:
+      	      case 5:
                 Wbyte(RDATA, 0x0D);	                      //CC bogus byte #2
       		      noExec();		                              //and we're done with READ ID
       	      break;
-      	    } //end switch READ ID
+      	    
+	      sectidx++;					//increase byte index
+			    
+	    } //end switch READ ID
 	     	  
 	     	  break;
         } //end switch non-step commands      
