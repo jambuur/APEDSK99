@@ -303,8 +303,7 @@ H024	MOVB	@-1026(R15),R0		get a byte from data buffer
 	JNE	H024			next
 *	BL	@WTCPT2			SBZ 2, wait for command completion
 	BL	@WTCPT1			APEDSK: no need to wait for command completion
-*	SLA	R0,11			test status bits
-	SLA	R0,2			APEDSK: shift Protect bit into Carry
+	SLA	R0,11			test status bits
 	JOC	ERROR3			write protect: error 34
 *	SLA	R0,2			
 *	JOC	H025			not found: try again, then error 31
@@ -494,7 +493,7 @@ H044	MOVB	R0,@-2(R15)
 WTCPT1	MOVB	@RSTAT,R0		get status. APEDSK: Not Ready bit set when SD DSK file is unavailable
 *	INV	R0			APEDSK: none of that inverted databus rubbish
 	JLT	ERROR4			drive not ready
-*	SRC	R0,9			
+	SRC	R0,9			
 *	JOC	WTCPT1			FDC busy: keep waiting. APEDSK: no busy condition
 	B	*R11			
 ERROR4	BL	@ERROR1			exit with error code 6, reseting all drives
