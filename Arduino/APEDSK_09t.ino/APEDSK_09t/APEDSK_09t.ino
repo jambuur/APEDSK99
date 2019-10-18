@@ -112,7 +112,7 @@
 
 //"disk" characteristics
 #define maxtrack  0x28		//# of tracks
-#define maxsect	  0x09		//# of sectors/track
+#define maxsect	  0x08 //09		//# of sectors/track
 #define maxbyte   0xFF		//# of bytes per sector
 
 //short delay function to let bus/signals settle
@@ -335,13 +335,13 @@ unsigned int sectidx    = 0;	    //R/W and READ ID index counter
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
+  Wbyte(RSTAT,0);         //clear Status Register
   Wbyte(RTRACK,0);        //clear Read Track register
   Wbyte(RSECTR,0);	      //clear Read Sector register
   Wbyte(RDATA, 0);		    //clear Read Data register
   Wbyte(WTRACK,0);        //clear Write Track register  
   Wbyte(WSECTR,0);	      //clear Write Sector register
   Wbyte(WDATA,0);         //clear Write Data register
-  sStatus(Track0, true);  //set Track 0 bit in Status Register
 }
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
@@ -351,8 +351,8 @@ void noExec(void) {
   ccmd = 0xD0;        // "" ""
   lcmd = ccmd;		    //reset new command prep
   sectidx = 0; 	      //clear index counter
-  Wbyte(RTRACK,0);    //clear Read Track register
-  Wbyte(RSECTR,0);    //clear Read Sector register
+  //Wbyte(RTRACK,0);    //clear Read Track register
+  //Wbyte(RSECTR,0);    //clear Read Sector register
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
@@ -574,6 +574,8 @@ void loop() {
         
         switch (ccmd) {  //switch R/W commands
 
+          Wbyte(RSTAT, 0); //debug
+
           case 0xD0:
             noExec(); 
           break;
@@ -583,16 +585,16 @@ void loop() {
           case 0x90: //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)
         
           case 0x80: //read sector                                                                                          
-            if ( sectidx <= maxbyte) {                                                                             //have we supplied all 256 bytes yet?  
+            if ( sectidx <  maxbyte) {                                                                            //have we supplied all 256 bytes yet?  
               Wbyte(RDATA, DSK[cDSK].read() );                                                                    //nope, supply next byte
               sectidx++;                                                                                          //increase byte index    
             }
             else {
               DSRAM = Rbyte(WSECTR);
               Wbyte(WSECTR, ++DSRAM );                                    			                                  //increase Sector Register
-              if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
-              	sectidx = 0;												//reset byte index for next sector
-		Wbyte(RDATA, DSK[cDSK].read() );									//supply first byte of next sector
+              if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= 2304 ) {//(maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
+              	sectidx = 0;												                                                              //reset byte index for next sector
+		            Wbyte(RDATA, DSK[cDSK].read() );									                                                //supply first byte of next sector
               }
 	            else {
                 Wbyte(RSECTR, Rbyte(WSECTR) );                                                                   //sync Sector Registers
