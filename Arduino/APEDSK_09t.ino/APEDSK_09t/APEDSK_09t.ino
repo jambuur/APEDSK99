@@ -106,14 +106,15 @@
 #define LED_repeat  1500
 
 //useful Status Register bits
-#define NotReady 0x80
-#define Protect  0x40
-#define Track0   0x04
+#define NotReady  0x80
+#define Protect   0x40
+#define Head      0x20 
+#define Track0    0x04
 
 //"disk" characteristics
 #define maxtrack  0x28		//# of tracks
-#define maxsect	  0x08 //09		//# of sectors/track
-#define maxbyte   0xFF		//# of bytes per sector
+#define maxsect	  0x09		//# of sectors/track
+#define maxbyte   0x100		//# of bytes per sector
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -342,6 +343,7 @@ void FDrstr(void) {
   Wbyte(WTRACK,0);        //clear Write Track register  
   Wbyte(WSECTR,0);	      //clear Write Sector register
   Wbyte(WDATA,0);         //clear Write Data register
+  sStatus(Track0, true);  //set Track 0 bit
 }
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
@@ -437,12 +439,8 @@ void setup() {
   }
      
   //initialize FD1771:
-  // - initialise Status Register: "Head Loaded" set
-  Wbyte(RSTAT, 0x20); 
-  // - "Restore" command
-  FDrstr();
-  // - "no command" as default
-  noExec();
+  FDrstr();   //"Restore" command
+  noExec();   //"no command" as default
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
@@ -493,9 +491,11 @@ void loop() {
         }   
       }
 
-      if ( ccmd < 0x80 ) { //step/seek commands?
+      if ( ccmd < 0x80 ) {    //step/seek commands?
+
+        sStatus(Head, true);  //yes; head loaded (probably not necessary)
       
-        switch (ccmd) { //yep switch step/seek commands
+        switch (ccmd) {       //switch step/seek commands
 
           case 0x00:	//restore
             FDrstr();
@@ -572,9 +572,9 @@ void loop() {
     
       else {  // read/write commands
         
+        Wbyte(RSTAT, 0);  //clear possible step commands status bits
+        
         switch (ccmd) {  //switch R/W commands
-
-          Wbyte(RSTAT, 0); //debug
 
           case 0xD0:
             noExec(); 
@@ -591,16 +591,22 @@ void loop() {
             }
             else {
               DSRAM = Rbyte(WSECTR);
-              Wbyte(WSECTR, ++DSRAM );                                    			                                  //increase Sector Register
-              if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= 2304 ) {//(maxsect * maxbyte) ) {   	//multi-read: did we get all sectors in the track?
-              	sectidx = 0;												                                                              //reset byte index for next sector
-		            Wbyte(RDATA, DSK[cDSK].read() );									                                                //supply first byte of next sector
+              if ( DSRAM < maxsect) {
+                Wbyte(WSECTR, ++DSRAM );                                                                         //increase Sector Register
               }
-	            else {
-                Wbyte(RSECTR, Rbyte(WSECTR) );                                                                   //sync Sector Registers
-	              noExec();                                                   			                                //we're done; exit via Force Interrupt command
+              else {
+                Wbyte(WSECTR, 0);
+              }
+              Wbyte(RSECTR, DSRAM );                                                                          //sync Sector Registers
+              
+              if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {    //multi-read: did we get all sectors in the track? 
+                Wbyte(RDATA, DSK[cDSK].read() );                                                                 //supply first byte of next sector
+                sectidx = 1;                                                                                     //adjust byte index for next sector
+              }
+              else {
+    	          noExec();                                                   			                                //we're done; exit via Force Interrupt command
 	            }
-	          }
+            }
           break;     
           
           case 0xF0: //write entire track; sounds suspiciously like writing multiple sectors (fallthrough to 0xB0: write multiple sectors)
@@ -618,8 +624,9 @@ void loop() {
                 Wbyte( WSECTR, ++DSRAM );                                    			                                //increase Sector Register
                 if ( (ccmd == 0xF0 || ccmd == 0xB0) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {  //multi-write: did we write all sectors in the track?
               	  sectidx = 0;                                         				                                    //reset byte index for next sector
-		  DSK[cDSK].write( Rbyte(RDATA) );										   //write first byte of next sector
-		}
+		              DSK[cDSK].write( Rbyte(RDATA) );										                                            //write first byte of next sector
+		              sectidx = 1;                                                                                    //adjust byte index for next sector
+		            }
 	              else {
 	                Wbyte(RSECTR, Rbyte(WSECTR) );                                                                  //sync Sector Registers
 	                noExec();                                                   			                              //we're done; exit via Force Interrupt command
@@ -627,7 +634,8 @@ void loop() {
 	            }
             }
 	          else {
-	            //sStatus(NotReady, 1);			                                                                        //trying to write to a protected disk (DEBUG: verify behaviour)
+	            //sStatus(NotReady, 1);			                                                                      //trying to write to a protected disk (DEBUG: verify behaviour)
+	            sStatus(Protect,pDSK);                                                                            //restore "Protect" status
 	            noExec();                                                                                         //we're done; exit via Force Interrupt command
 	          }
           break;   	    
@@ -654,9 +662,9 @@ void loop() {
       		      noExec();		                              //and we're done with READ ID
       	      break;
       	    
-	      sectidx++;					//increase byte index
+	            sectidx++;					//increase byte index
 			    
-	    } //end switch READ ID
+	          } //end switch READ ID
 	     	  
 	     	  break;
         } //end switch non-step commands      
