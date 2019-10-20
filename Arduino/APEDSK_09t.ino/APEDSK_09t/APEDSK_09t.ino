@@ -587,39 +587,42 @@ void loop() {
             }
             else {
               DSRAM = Rbyte(WSECTR);
-              if ( DSRAM < (maxsect - 1) ) {
+              if ( DSRAM < (maxsect-1) ) {
                 Wbyte(WSECTR, ++DSRAM );                  //increase Sector Register
+                Wbyte(RSECTR, Rbyte(WSECTR) );            //sync Sector Registers
               }
               else {
-                Wbyte(RSECTR, Rbyte(WSECTR) );            //sync Sector Registers
                 noExec();
               }
             }
           break;     
           
           case 0xC0:  //read ID
+
+            sectidx++;
+                	    
       	    switch (sectidx) {
-      	      case 0:
+      	      case 1:
       	        Wbyte(RDATA, Rbyte(RTRACK) );		          //track #
       	      break;
-      	      case 1:
+      	      case 2:
       	        Wbyte(RDATA, Rbyte(CRUWRI) & B00000001);  //side #
       	      break;
-      	      case 2:
+      	      case 3:
                 Wbyte(RDATA, Rbyte(RSECTR) );		          //sector #
                 break;
-      	      case 3:
+      	      case 4:
                 Wbyte(RDATA, 0x01); 		                  //sector size (256 bytes)
               break;
-      	      case 4:
+      	      case 5:
       		      Wbyte(RDATA, 0x0C);	                      //CC bogus byte #1
               break;
-      	      case 5:
+      	      case 6:
                 Wbyte(RDATA, 0x0D);	                      //CC bogus byte #2
       		      noExec();		                              //and we're done with READ ID
       	      break;
       	    
-	            sectidx++;					//increase byte index
+	            //sectidx++;					//increase byte index
 			    
 	          } //end switch READ ID
 	     	  
