@@ -366,7 +366,7 @@ unsigned long int cbtidx (void) {
   return (bi);
 }
 
-unsigned int debug = 0xA000;
+unsigned int TIdebug = 0x1D10;
 
 //------------  
 void setup() {
@@ -581,19 +581,13 @@ void loop() {
           break;
           
           case 0x80: //read sector                                                                                          
-            if ( sectidx <  maxbyte) {                    //have we supplied all 256 bytes yet?  
+            if ( sectidx <  maxbyte ) {                   //have we supplied all 256 bytes yet?  
               Wbyte(RDATA, DSK[cDSK].read() );            //nope, supply next byte
               sectidx++;                                  //increase byte index    
             }
             else {
-              DSRAM = Rbyte(WSECTR);
-              if ( DSRAM < (maxsect-1) ) {
-                Wbyte(WSECTR, ++DSRAM );                  //increase Sector Register
-                Wbyte(RSECTR, Rbyte(WSECTR) );            //sync Sector Registers
-              }
-              else {
-                noExec();
-              }
+              noExec();                                   //done with sector
+              Wbyte( RSECTR, Rbyte(WSECTR) );             //sync Sector Registers
             }
           break;     
           
@@ -622,8 +616,6 @@ void loop() {
       		      noExec();		                              //and we're done with READ ID
       	      break;
       	    
-	            //sectidx++;					//increase byte index
-			    
 	          } //end switch READ ID
 	     	  
 	     	  break;
