@@ -353,14 +353,12 @@ void noExec(void) {
   ccmd = 0xD0;        // "" ""
   lcmd = ccmd;		    //reset new command prep
   sectidx = 0; 	      //clear index counter
-  //Wbyte(RTRACK,0);    //clear Read Track register
-  //Wbyte(RSECTR,0);    //clear Read Sector register
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
 unsigned long int cbtidx (void) {
   unsigned long int bi;
-  bi  = ( Rbyte(CRUWRI) & B00000001 ) * (maxtrack);   //add side 0 tracks (0x28) if on side 1
+  bi  = ( Rbyte(CRUWRI) & B00000001 ) * maxtrack;     //add side 0 tracks (0x28) if on side 1
   bi += Rbyte(WTRACK);                                //add current track #
   bi *= 9;                                            //convert to # of sectors
   bi += Rbyte(WSECTR);                                //add current sector #
@@ -471,7 +469,7 @@ void loop() {
       if (ncmd) {                                       //new command?
         
         //is the selected DSK available?
-        cDSK = (Rbyte(CRUWRI) >> 1) & B00000011;        //yes; determine selected disk
+        cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;       //yes; determine selected disk
         if ( aDSK[cDSK] ) {                             //is selected disk available?
 
           lcmd = ccmd;                                  //yes; remember new command for next compare
@@ -480,7 +478,7 @@ void loop() {
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
           DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
           pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
-          sStatus(Protect,pDSK);                        //reflect "Protect" status 
+          sStatus(Protect, pDSK);                       //reflect "Protect" status 
           btidx = cbtidx();                             //calc absolute DOAD byte index
           DSK[cDSK].seek(btidx);                        //set to first absolute DOAD byte for R/W  
           sectidx = 0;                                  //clear sector index counter   
@@ -494,7 +492,7 @@ void loop() {
       if ( ccmd < 0x80 ) {    //step/seek commands?
 
         sStatus(Head, true);  //yes; head loaded (probably not necessary)
-      
+              
         switch (ccmd) {       //switch step/seek commands
 
           case 0x00:	//restore
@@ -502,37 +500,37 @@ void loop() {
           break;
 			
           case 0x10:	//seek
-            DSRAM = Rbyte(WDATA);             //read track seek #
-            if ( DSRAM <= maxtrack) {         //make sure we stay within max # of tracks
-              if ( DSRAM > Rbyte(WTRACK) ) { 
-                curdir = LOW;                 //step-in towards track 39
-                sStatus(Track0, false);       //reset Track 0 bit in Status Register
-              } 
-              else {
-                if ( DSRAM < Rbyte(WTRACK) ) { 
-                  curdir = HIGH;              //step-out towards track 0
-                  sStatus(Track0, DSRAM==0);  //check for Track 0 and set Status Register accordingly
-                }  
+            DSRAM = Rbyte(WDATA);                         //read track seek #
+            if ( DSRAM < maxtrack ) {                     //make sure we stay within max # of tracks
+              if (DSRAM > Rbyte(WTRACK) ) {
+                curdir = LOW;                             //step-in towards track 39
+                sStatus(Track0, false);                   //reset Track 0 bit in Status Register
               }
-	            Wbyte(WTRACK, DSRAM);           //update track register
+              else {
+                if (DSRAM < Rbyte(WTRACK) ) {
+                  curdir = HIGH;                          //step-out towards track 0
+                  sStatus(Track0, DSRAM == 0);            //check for Track 0 and set Status Register accordingly
+                }
+              }
+              Wbyte(WTRACK, DSRAM);                       //update track register
             }
-	        break;
+          break;
 
           case 0x20:	//step
             //always execute step+T, can't see it making any difference (FLW)  
     
-          case 0x30:	                              //step+T (update Track register)
-            DSRAM = Rbyte(WTRACK);                  //read current track #
+          case 0x30:	                                    //step+T (update Track register)
+            DSRAM = Rbyte(WTRACK);                        //read current track #
             //is current direction inwards and track # still within limits?
-            if (  DSRAM < 39  && curdir == LOW ) {
-              Wbyte(WTRACK,++DSRAM);                //increase track #
-              sStatus(Track0, false);               //reset Track 0 bit in Status Register
+            if (  DSRAM < maxtrack  && curdir == LOW ) {
+              Wbyte(WTRACK, ++DSRAM);                     //increase track #
+              sStatus(Track0, false);                     //reset Track 0 bit in Status Register
             }
             else {
               //is current direction outwards and track # still within limits?
               if ( DSRAM >  0 && curdir == HIGH ) {
-                Wbyte(WTRACK,--DSRAM);  	          //decrease track #
-                sStatus(Track0, DSRAM==0);          //check for Track 0 and set Status Register accordingly
+                Wbyte(WTRACK, --DSRAM);  	                //decrease track #
+                sStatus(Track0, DSRAM == 0);               //check for Track 0 and set Status Register accordingly
               }
             }      
           break;
@@ -541,12 +539,12 @@ void loop() {
             //always execute step-in+T, can't see it making any difference (FLW)
          
           case 0x50:	//step-in+T (towards track 39, update Track Register)
-            DSRAM = Rbyte(WTRACK);      //read current track #
+            DSRAM = Rbyte(WTRACK);                        //read current track #
             //if track # still within limits update track register
             if ( DSRAM < maxtrack) { 
-              Wbyte(WTRACK,++DSRAM);    //increase track #
-              curdir = LOW; 	          //set current direction    
-              sStatus(Track0, false);   //reset Track 0 bit in Status Register
+              Wbyte(WTRACK, ++DSRAM);                     //increase track #
+              curdir = LOW; 	                            //set current direction    
+              sStatus(Track0, false);                     //reset Track 0 bit in Status Register
       	    }
            break;
           
@@ -554,26 +552,26 @@ void loop() {
             //always execute step-out+T, can't see it making any difference (FLW)
  
           case 0x70:	//step-out+T
-            DSRAM = Rbyte(WTRACK);      //read current track #
+            DSRAM = Rbyte(WTRACK);                        //read current track #
             //if track # still within limits update track register
             if ( DSRAM > 0) { 
-              Wbyte(WTRACK,--DSRAM);    //decrease track #
+              Wbyte(WTRACK, --DSRAM);                     //decrease track #
             }
             curdir = HIGH; //set current direction  
-            sStatus(Track0, DSRAM==0);  //check for Track 0 and Status Register accordingly
+            sStatus(Track0, DSRAM == 0);                   //check for Track 0 and Status Register accordingly
           break;
         
         } //end switch step commands
        
-	      Wbyte(RTRACK, Rbyte(WTRACK) );  //sync Track Registers
-        noExec();                       //prevent multiple step/seek execution 
+	      Wbyte(RTRACK, Rbyte(WTRACK) );                    //sync Track Registers
+        noExec();                                         //prevent multiple step/seek execution 
 
       } // end ccmd < 0x80
     
       else {  // read/write commands
         
         if (ncmd) {
-          Wbyte(RSTAT, 0);  //clear possible step commands status bits
+          Wbyte(RSTAT, Rbyte(RSTAT) & B11000000);         //clear possible step commands status bits
         }
         
         switch (ccmd) {  //switch R/W commands
@@ -583,20 +581,19 @@ void loop() {
           break;
           
           case 0x80: //read sector                                                                                          
-            if ( sectidx <  maxbyte) {                                                                            //have we supplied all 256 bytes yet?  
-              Wbyte(RDATA, DSK[cDSK].read() );                                                                    //nope, supply next byte
-              sectidx++;                                                                                          //increase byte index    
+            if ( sectidx <  maxbyte) {                    //have we supplied all 256 bytes yet?  
+              Wbyte(RDATA, DSK[cDSK].read() );            //nope, supply next byte
+              sectidx++;                                  //increase byte index    
             }
             else {
               DSRAM = Rbyte(WSECTR);
               if ( DSRAM < (maxsect - 1) ) {
-                Wbyte(WSECTR, ++DSRAM );                                                                          //increase Sector Register
+                Wbyte(WSECTR, ++DSRAM );                  //increase Sector Register
               }
               else {
-                DSK[cDSK].seek( DSK[cDSK].position() - maxbyte );
+                Wbyte(RSECTR, Rbyte(WSECTR) );            //sync Sector Registers
+                noExec();
               }
-              Wbyte(RSECTR, Rbyte(WSECTR) );                                                                              //sync Sector Registers
-              noExec();
             }
           break;     
           
