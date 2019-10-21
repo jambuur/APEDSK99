@@ -189,6 +189,7 @@ H005	SWPB	R0
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
 	DATA	>1E00			APEDSK: seek h=1 V=1 r1r0=10
+	JMP	H013			APEDSK
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	SLA	R0,13			test seek error bit
 *	JOC	H008			try again, then error 11
@@ -519,10 +520,10 @@ H055	CLR	R0
 *	LI	R2,>0080			
 *	SLA	R2,0			proper drive selection bit: >01 >02 or >04
 *	AI	R12,8			CRU address of drive selection bits (4-6)
-	MOV	R5,R5			test same drive flag
-	JEQ	H057			
+*	MOV	R5,R5			test same drive flag
+*	JEQ	H057			
 *	LDCR	@K011,3			deselect all drives
-	SZCB	@DSDRVS,@CRUWRI		APEDSK: deselect all drives + side
+*	SZCB	@DSDRVS,@CRUWRI		APEDSK: deselect all drives + side
 *	AI	R12,-6			selection bits are echoed in CRU bits 1-3
 *	STCR	R0,3			load CRU bits 2-4
 *	MOVB	@CRURD,R0		APEDSK: read drive selection bits etc
@@ -3326,7 +3327,6 @@ H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 *-----------------------------------------
 DSDRVS	DATA	>0F00			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
 SIDE01	DATA	>0100			floppy side select
-
 *-----------------------------------------
 *
 * The remaining bytes (>5xxx to >5FE9) all contain >00
