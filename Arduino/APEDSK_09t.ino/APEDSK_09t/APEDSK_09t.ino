@@ -593,8 +593,8 @@ void loop() {
           
           case 0xC0:  //read ID
 
-            sectidx++;
-                	    
+            sectidx++;                                      //index to READ ID values
+                    
       	    switch (sectidx) {
       	      case 1:
       	        Wbyte(RDATA, Rbyte(RTRACK) );		          //track #
@@ -604,26 +604,23 @@ void loop() {
       	      break;
       	      case 3:
                 Wbyte(RDATA, Rbyte(RSECTR) );		          //sector #
-                break;
+              break;
       	      case 4:
                 Wbyte(RDATA, 0x01); 		                  //sector size (256 bytes)
               break;
       	      case 5:
       		      Wbyte(RDATA, 0x0C);	                      //CC bogus byte #1
               break;
-      	      case 6:
-                Wbyte(RDATA, 0x0D);	                      //CC bogus byte #2
-      		      noExec();		                              //and we're done with READ ID
-      	      break;
-      	    
-	          } //end switch READ ID
-	     	  
-	     	  break;
-        } //end switch non-step commands      
-		    
-      } //end R/W commands
+              case 6:
+                Wbyte(RDATA, 0x0D);                       //CC bogus byte #2
+                noExec();                                 //and we're done with READ ID
+              break;
+      	    }                
+          break;
 
-    } //end we needed to do something
+        } //end R/W switch
+      } //end else R/W commands   
+    } //end we needed to do something */
 
     FD1771 = false;   //clear interrupt flag
 
