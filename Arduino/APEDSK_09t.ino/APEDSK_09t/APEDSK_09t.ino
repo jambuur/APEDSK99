@@ -591,21 +591,24 @@ void loop() {
           case 0x90:      //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)
             
           case 0x80: //read sector                                                                                          
-            if ( Sbtidx <  maxbyte ) {                                      //have we supplied all 256 bytes yet?  
-              Wbyte(RDATA, DSK[cDSK].read() );                              //nope, supply next byte
-              Sbtidx++;                                                     //increase byte index    
+            if ( Sbtidx <  maxbyte ) {                                          //have we supplied all 256 bytes yet?  
+              Wbyte(RDATA, DSK[cDSK].read() );                                  //nope, supply next byte
+              Sbtidx++;                                                         //increase byte index    
             }
             else {
-              if ( (ccmd == 0xE0 || ccmd == 0x90) && MSidx <= maxsect) {    //have we read all 9 sectors?
-                DSRAM = Rbyte(WSECTR);                                      //no; first sync Sector Registers
-                Wbyte( RSECTR, ++DSRAM );                                   //""
-                Sbtidx = 0;                                                 //clear byte index for next round
-                MSidx++;                                                    //increase our 9-sector counter
+              if ( (ccmd == 0xE0 || ccmd == 0x90) && MSidx < (maxsect - 1) ) {  //have we read all 9 sectors?
+                Wbyte(RDATA, DSK[cDSK].read() );                                //supply 1st byte of next sector
+                DSRAM = Rbyte(WSECTR);                                          //no; first sync Sector Registers
+                Wbyte(WSECTR, ++DSRAM );                                        //""
+                Wbyte(RSECTR, DSRAM);                                           //""
+                MSidx++;                                                        //increase our 9-sector counter
+                Sbtidx = 0;                                                     //clear byte index for next roun
               }
               else {
-                noExec();                                                   //done with (multi)sector
-                DSRAM = Rbyte(WSECTR);                                      //sync Sector Registers
-                Wbyte( RSECTR, ++DSRAM );                                   //""
+                noExec();                                                       //done with (multi)sector
+                DSRAM = Rbyte(WSECTR);                                          //sync Sector Registers
+                Wbyte(WSECTR, ++DSRAM );                                        //""
+                Wbyte(RSECTR, DSRAM);                                           //""
               } 
             }
           break;     
@@ -614,27 +617,30 @@ void loop() {
           case 0xB0: //write multiple sectors; sounds suspiciously like writing single sectors in a loop (fallthrough to 0xA0: write sector
           
           case 0xA0: //write sector
-            if ( !pDSK ) {                                                  //is current disk protected?    
-              if ( Sbtidx <  maxbyte ) {                                    //nope; have we written all 256 bytes yet? 
-              DSK[cDSK].write(Rbyte(RDATA));                                //nope, supply next byte      
-              Sbtidx++;                                                     //increase byte index    
+            if ( !pDSK ) {                                                        //is current disk protected ...?    
+              if ( Sbtidx <  maxbyte ) {                                          //... nope; have we written all 256 bytes yet? 
+              DSK[cDSK].write(Rbyte(RDATA));                                      //nope, supply next byte      
+              Sbtidx++;                                                           //increase byte index    
               }
               else {
-                if ( (ccmd == 0xF0 || ccmd == 0xB0) && MSidx <= maxsect) {  //have we read all 9 sectors?
-                  DSRAM = Rbyte(WSECTR);                                    //no; first sync Sector Registers
-                  Wbyte( RSECTR, ++DSRAM );                                 //""
-                  Sbtidx = 0;                                               //clear byte index for next round
-                  MSidx++;                                                  //increase our 9-sector counter
+                if ( (ccmd == 0xF0 || ccmd == 0xB0) && MSidx <  (maxsect- 1) ) {  //have we read all 9 sectors?
+                  DSK[cDSK].write(Rbyte(RDATA));                                  //write first byte of next sector
+                  DSRAM = Rbyte(WSECTR);                                          //no; first sync Sector Registers
+                  Wbyte(WSECTR, ++DSRAM );                                        //""
+                  Wbyte(RSECTR, DSRAM);                                           //""
+                  MSidx++;                                                        //increase our 9-sector counter
+                  Sbtidx = 0;                                                     //clear byte index for next round
                 }
                 else {
-                  noExec();                                                 //done with (multi)sector
-                  DSRAM = Rbyte(WSECTR);                                    //sync Sector Registers
-                  Wbyte( RSECTR, ++DSRAM );                                 //""
+                  noExec();                                                       //done with (multi)sector
+                  DSRAM = Rbyte(WSECTR);                                          //sync Sector Registers
+                  Wbyte(WSECTR, ++DSRAM );                                        //""
+                  Wbyte(RSECTR, DSRAM);                                           //""
                 } 
               }
             } 
             else {
-              noExec();                                                     //yes; disk write protected so stop
+              noExec();                                                           //... yes; disk write protected so stop
             }
           break;     
  
