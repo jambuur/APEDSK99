@@ -163,6 +163,7 @@ byte dbus_read()
 //place a byte on the databus
 void dbus_write(byte data)
 {
+  NOP();                              //long live the Logic Analyzer
   PORTD |= ((data << 1) & B00000010); //write PD1 (D0)
   PORTD |= ((data << 2) & B11111000); //write PD7-PD3 (D5-D1)
   PORTB |= ((data >> 6) & B00000011); //write PB1, PBO (D7, D6)
@@ -263,6 +264,7 @@ void TIstop() {
 //enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
+  NOP();
   dis_cbus();               //cease Arduino RAM control
   digitalLow(TI_BUFFERS);   //enable 74LS541's 
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
@@ -325,14 +327,16 @@ byte    cDSK    = 0;                                                            
 boolean pDSK    = false;                                                            //protected DSK flag
 
 //various storage and flags for command interpretation and handling
-byte DSRAM	            = 0;	    //generic variable for RAM R/W
-volatile boolean FD1771 = false;  //interrupt routine flag: new or continued FD1771 command
-byte ccmd               = 0;      //current command
-byte lcmd               = 0;      //last command
-boolean ncmd            = false;  //flag new command
-unsigned long int btidx = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
-boolean curdir          = LOW;    //current step direction, step in(wards) towards track 39 by default
-unsigned int sectidx    = 0;	    //R/W and READ ID index counter 
+byte DSRAM	              = 0;	    //generic variable for RAM R/W
+volatile boolean FD1771   = false;  //interrupt routine flag: new or continued FD1771 command
+byte ccmd                 = 0;      //current command
+byte lcmd                 = 0;      //last command
+boolean ncmd              = false;  //flag new command
+unsigned long int Dbtidx  = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
+boolean curdir            = LOW;    //current step direction, step in(wards) towards track 39 by default
+unsigned int Sbtidx       = 0;	    //R/W sector/byte index counter 
+byte MSidx                = 0;      //R/W multiple sector counter 
+byte Ridx                 = 0;      //READ ID counter
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -352,11 +356,12 @@ void noExec(void) {
   Wbyte(WCOMND,0xD0); //"force interrupt" command (aka no further execution)
   ccmd = 0xD0;        // "" ""
   lcmd = ccmd;		    //reset new command prep
-  sectidx = 0; 	      //clear index counter
+  Sbtidx = 0; 	      //clear index counter
+  MSidx = 0;          //clear multiple sector / READ index counter
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
-unsigned long int cbtidx (void) {
+unsigned long int cDbtidx (void) {
   unsigned long int bi;
   bi  = ( Rbyte(CRUWRI) & B00000001 ) * maxtrack;     //add side 0 tracks (0x28) if on side 1
   bi += Rbyte(WTRACK);                                //add current track #
@@ -479,9 +484,11 @@ void loop() {
           DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
           pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
           sStatus(Protect, pDSK);                       //reflect "Protect" status 
-          btidx = cbtidx();                             //calc absolute DOAD byte index
-          DSK[cDSK].seek(btidx);                        //set to first absolute DOAD byte for R/W  
-          sectidx = 0;                                  //clear sector index counter   
+          Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
+          DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W  
+          Sbtidx = 0;                                   //clear sector/byte counter   
+          MSidx = 0;                                    //clear multiple sector counter
+          Ridx = 0;                                     //clear READ ID counter
         }
         else {      
           sStatus(NotReady,true);                       //no; set "Not Ready" bit in Status Register
@@ -579,23 +586,63 @@ void loop() {
           case 0xD0:
             noExec(); 
           break;
-          
+
+          case 0xE0:      //read entire track; sounds suspiciously like reading multiple sectors (fallthrough to 0x90: read multiple sectors)   
+          case 0x90:      //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)
+            
           case 0x80: //read sector                                                                                          
-            if ( sectidx <  maxbyte ) {                   //have we supplied all 256 bytes yet?  
-              Wbyte(RDATA, DSK[cDSK].read() );            //nope, supply next byte
-              sectidx++;                                  //increase byte index    
+            if ( Sbtidx <  maxbyte ) {                                      //have we supplied all 256 bytes yet?  
+              Wbyte(RDATA, DSK[cDSK].read() );                              //nope, supply next byte
+              Sbtidx++;                                                     //increase byte index    
             }
             else {
-              noExec();                                   //done with sector
-              Wbyte( RSECTR, Rbyte(WSECTR) );             //sync Sector Registers
+              if ( (ccmd == 0xE0 || ccmd == 0x90) && MSidx <= maxsect) {    //have we read all 9 sectors?
+                DSRAM = Rbyte(WSECTR);                                      //no; first sync Sector Registers
+                Wbyte( RSECTR, ++DSRAM );                                   //""
+                Sbtidx = 0;                                                 //clear byte index for next round
+                MSidx++;                                                    //increase our 9-sector counter
+              }
+              else {
+                noExec();                                                   //done with (multi)sector
+                DSRAM = Rbyte(WSECTR);                                      //sync Sector Registers
+                Wbyte( RSECTR, ++DSRAM );                                   //""
+              } 
             }
           break;     
+
+          case 0xF0: //write entire track; sounds suspiciously like writing multiple sectors (fallthrough to 0xB0: write multiple sectors)
+          case 0xB0: //write multiple sectors; sounds suspiciously like writing single sectors in a loop (fallthrough to 0xA0: write sector
           
+          case 0xA0: //write sector
+            if ( !pDSK ) {                                                  //is current disk protected?    
+              if ( Sbtidx <  maxbyte ) {                                    //nope; have we written all 256 bytes yet? 
+              DSK[cDSK].write(Rbyte(RDATA));                                //nope, supply next byte      
+              Sbtidx++;                                                     //increase byte index    
+              }
+              else {
+                if ( (ccmd == 0xF0 || ccmd == 0xB0) && MSidx <= maxsect) {  //have we read all 9 sectors?
+                  DSRAM = Rbyte(WSECTR);                                    //no; first sync Sector Registers
+                  Wbyte( RSECTR, ++DSRAM );                                 //""
+                  Sbtidx = 0;                                               //clear byte index for next round
+                  MSidx++;                                                  //increase our 9-sector counter
+                }
+                else {
+                  noExec();                                                 //done with (multi)sector
+                  DSRAM = Rbyte(WSECTR);                                    //sync Sector Registers
+                  Wbyte( RSECTR, ++DSRAM );                                 //""
+                } 
+              }
+            } 
+            else {
+              noExec();                                                     //yes; disk write protected so stop
+            }
+          break;     
+ 
           case 0xC0:  //read ID
 
-            sectidx++;                                      //index to READ ID values
+            Ridx++;                                       //index to READ ID values
                     
-      	    switch (sectidx) {
+      	    switch (Ridx) {
       	      case 1:
       	        Wbyte(RDATA, Rbyte(RTRACK) );		          //track #
       	      break;
@@ -643,43 +690,10 @@ ISR(INT0_vect) {
 }
 
 /*
- *  //case 0xE0: //read entire track; sounds suspiciously like reading multiple sectors (fallthrough to 0x90: read multiple sectors)   
-      
-          //case 0x90: //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)
-        
- * 
- * case 0x80: //read sector                                                                                          
-            if ( sectidx <  maxbyte) {                                                                            //have we supplied all 256 bytes yet?  
-              Wbyte(RDATA, DSK[cDSK].read() );                                                                    //nope, supply next byte
-              sectidx++;                                                                                          //increase byte index    
-            }
-            else {
-              DSRAM = Rbyte(WSECTR);
-              if ( DSRAM < maxsect) {
-                Wbyte(WSECTR, ++DSRAM );                                                                         //increase Sector Register
-              }
-              else {
-                Wbyte(WSECTR, 0);
-              }
-              Wbyte(RSECTR, DSRAM );                                                                          //sync Sector Registers
-              
-              if ( (ccmd == 0xE0 || ccmd == 0x90) && (DSK[cDSK].position() - btidx) <= (maxsect * maxbyte) ) {    //multi-read: did we get all sectors in the track? 
-                Wbyte(RDATA, DSK[cDSK].read() );                                                                 //supply first byte of next sector
-                sectidx = 1;                                                                                     //adjust byte index for next sector
-              }
-              else {
-                noExec();                                                                                         //we're done; exit via Force Interrupt command
-              }
-            }
-          break;     
           
-          case 0xF0: //write entire track; sounds suspiciously like writing multiple sectors (fallthrough to 0xB0: write multiple sectors)
+          
         
-          case 0xB0: //write multiple sectors; sounds suspiciously like writing single sectors in a loop (fallthrough to 0xA0: write sector)
-        
-          case 0xA0: //write sector
-            if ( !pDSK ) {          
-              if ( sectidx <= maxbyte) {                                                                          //have we written all 256 bytes yet?  
+         
                 DSK[cDSK].write( Rbyte(RDATA) );                                                                  //nope, write next byte
                 sectidx++;                                                                                        //increase byte index                                       
               }
