@@ -588,28 +588,28 @@ void loop() {
           break;
 
           case 0xE0:      //read entire track; sounds suspiciously like reading multiple sectors (fallthrough to 0x90: read multiple sectors)   
-          case 0x90:      //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)
-            
+          case 0x90:      //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)         
+            if ( MSidx > (maxsect -1) ) {                                       //all 9 sectors supplied?
+              ccmd = 0x80;                                                      //yes; make sure 0x80 terminates
+              Sbtidx = maxbyte;                                                 //""
+            }
+
           case 0x80: //read sector                                                                                          
             if ( Sbtidx <  maxbyte ) {                                          //have we supplied all 256 bytes yet?  
               Wbyte(RDATA, DSK[cDSK].read() );                                  //nope, supply next byte
               Sbtidx++;                                                         //increase byte index    
             }
             else {
-              if ( (ccmd == 0xE0 || ccmd == 0x90) && MSidx < (maxsect - 1) ) {  //have we read all 9 sectors?
-                Wbyte(RDATA, DSK[cDSK].read() );                                //supply 1st byte of next sector
-                DSRAM = Rbyte(WSECTR);                                          //no; first sync Sector Registers
-                Wbyte(WSECTR, ++DSRAM );                                        //""
-                Wbyte(RSECTR, DSRAM);                                           //""
-                MSidx++;                                                        //increase our 9-sector counter
-                Sbtidx = 0;                                                     //clear byte index for next roun
+              if ( ccmd == 0xE0 || ccmd == 0x90 ) {                             //multi-sector command?
+                 DSRAM = Rbyte(WSECTR);                                         //yes; update/sync Sector Registers
+                 Wbyte(WSECTR, ++DSRAM );                                       //""
+                 Wbyte(RSECTR, DSRAM);                                          //""
+                 Wbyte(RDATA, DSK[cDSK].read() );                             //supply 1st byte of next sector ...
+                 Sbtidx = 1;                                                    //adjust byte index for next sector
               }
               else {
-                noExec();                                                       //done with (multi)sector
-                DSRAM = Rbyte(WSECTR);                                          //sync Sector Registers
-                Wbyte(WSECTR, ++DSRAM );                                        //""
-                Wbyte(RSECTR, DSRAM);                                           //""
-              } 
+                noExec();                                                       //we're done for both single and multiple reads
+              }   
             }
           break;     
 
