@@ -595,7 +595,7 @@ void loop() {
             }
             else {
               if ( ccmd == 0xE0 || ccmd == 0x90 ) {                             //multi-sector command?
-                if ( MSidx < (maxsect - 1) ) {
+                if ( MSidx < (maxsect - 2) ) {
                   DSRAM = Rbyte(WSECTR);                                        //yes; update/sync Sector Registers
                   Wbyte(WSECTR, ++DSRAM );                                      //""
                   Wbyte(RSECTR, DSRAM);                                         //""  
