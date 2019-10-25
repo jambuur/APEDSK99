@@ -112,9 +112,9 @@
 #define Track0    0x04
 
 //"disk" characteristics
-#define maxtrack  0x28		//# of tracks
-#define maxsect	  0x09		//# of sectors/track
-#define maxbyte   0x100		//# of bytes per sector
+#define maxtrack  0x28		//# of tracks/side
+#define maxsect	  0x09		//# sectors/track
+#define maxbyte   0x100		//# bytes/sector
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -264,7 +264,7 @@ void TIstop() {
 //enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
-  NOP();
+  NOP();                    //long live the Logic Analyzer
   dis_cbus();               //cease Arduino RAM control
   digitalLow(TI_BUFFERS);   //enable 74LS541's 
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
@@ -332,7 +332,7 @@ volatile boolean FD1771   = false;  //interrupt routine flag: new or continued F
 byte ccmd                 = 0;      //current command
 byte lcmd                 = 0;      //last command
 boolean ncmd              = false;  //flag new command
-unsigned long int Dbtidx  = 0;      //absolute DOAD byte index: (secval * 256) + repeat R/W
+unsigned long int Dbtidx  = 0;      //absolute DOAD byte index
 boolean curdir            = LOW;    //current step direction, step in(wards) towards track 39 by default
 unsigned int Sbtidx       = 0;	    //R/W sector/byte index counter 
 byte MSidx                = 0;      //R/W multiple sector counter 
@@ -357,7 +357,8 @@ void noExec(void) {
   ccmd = 0xD0;        // "" ""
   lcmd = ccmd;		    //reset new command prep
   Sbtidx = 0; 	      //clear index counter
-  MSidx = 0;          //clear multiple sector / READ index counter
+  MSidx = 0;          //clear multiple sector counter
+  Ridx = 0;           //clear READ ID index counter 
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
@@ -365,9 +366,9 @@ unsigned long int cDbtidx (void) {
   unsigned long int bi;
   bi  = ( Rbyte(CRUWRI) & B00000001 ) * maxtrack;     //add side 0 tracks (0x28) if on side 1
   bi += Rbyte(WTRACK);                                //add current track #
-  bi *= 9;                                            //convert to # of sectors
+  bi *= maxsect;                                      //convert to # of sectors
   bi += Rbyte(WSECTR);                                //add current sector #
-  bi *= 256;                                          //convert to absolute DOAD byte index (max 184320 for DS/SD)
+  bi *= maxbyte;                                      //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
 
@@ -486,9 +487,6 @@ void loop() {
           sStatus(Protect, pDSK);                       //reflect "Protect" status 
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W  
-          Sbtidx = 0;                                   //clear sector/byte counter   
-          MSidx = 0;                                    //clear multiple sector counter
-          Ridx = 0;                                     //clear READ ID counter
         }
         else {      
           sStatus(NotReady,true);                       //no; set "Not Ready" bit in Status Register
@@ -578,7 +576,7 @@ void loop() {
       else {  // read/write commands
         
         if (ncmd) {
-          Wbyte(RSTAT, Rbyte(RSTAT) & B11000000);         //clear possible step commands status bits
+          Wbyte(RSTAT, Rbyte(RSTAT) & Protect);         //clear possible step commands status bits, only keep Protect
         }
         
         switch (ccmd) {  //switch R/W commands
@@ -589,11 +587,7 @@ void loop() {
 
           case 0xE0:      //read entire track; sounds suspiciously like reading multiple sectors (fallthrough to 0x90: read multiple sectors)   
           case 0x90:      //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)         
-            if ( MSidx > (maxsect -1) ) {                                       //all 9 sectors supplied?
-              ccmd = 0x80;                                                      //yes; make sure 0x80 terminates
-              Sbtidx = maxbyte;                                                 //""
-            }
-
+              
           case 0x80: //read sector                                                                                          
             if ( Sbtidx <  maxbyte ) {                                          //have we supplied all 256 bytes yet?  
               Wbyte(RDATA, DSK[cDSK].read() );                                  //nope, supply next byte
@@ -601,18 +595,24 @@ void loop() {
             }
             else {
               if ( ccmd == 0xE0 || ccmd == 0x90 ) {                             //multi-sector command?
-                 DSRAM = Rbyte(WSECTR);                                         //yes; update/sync Sector Registers
-                 Wbyte(WSECTR, ++DSRAM );                                       //""
-                 Wbyte(RSECTR, DSRAM);                                          //""
-                 Wbyte(RDATA, DSK[cDSK].read() );                             //supply 1st byte of next sector ...
-                 Sbtidx = 1;                                                    //adjust byte index for next sector
+                if ( MSidx < (maxsect - 1) ) {
+                  DSRAM = Rbyte(WSECTR);                                        //yes; update/sync Sector Registers
+                  Wbyte(WSECTR, ++DSRAM );                                      //""
+                  Wbyte(RSECTR, DSRAM);                                         //""  
+                  MSidx++;                                                      //increase multi-sector counter
+                  Sbtidx = 0;                                                   //adjust byte index for next sector
+                }
+                else { 
+                  ccmd = 0x80;                                                  //make sure 0x80 terminates
+                  Sbtidx = maxbyte;                                             //""
+                }
               }
               else {
-                noExec();                                                       //we're done for both single and multiple reads
-              }   
+                noExec();
+              }
             }
-          break;     
-
+          break;
+          
           case 0xF0: //write entire track; sounds suspiciously like writing multiple sectors (fallthrough to 0xB0: write multiple sectors)
           case 0xB0: //write multiple sectors; sounds suspiciously like writing single sectors in a loop (fallthrough to 0xA0: write sector
           
