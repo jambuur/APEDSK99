@@ -595,15 +595,15 @@ void loop() {
             }
             else {
               if ( ccmd == 0xE0 || ccmd == 0x90 ) {                             //multi-sector command?
-                if ( MSidx < (maxsect - 2) ) {
-                  DSRAM = Rbyte(WSECTR);                                        //yes; update/sync Sector Registers
+                MSidx++;                                                        //increase multi-sector counter
+                if ( MSidx < (maxsect - 1 ) ) {                                 //done all 9 sectors?
+                  DSRAM = Rbyte(WSECTR);                                        //no; update/sync Sector Registers
                   Wbyte(WSECTR, ++DSRAM );                                      //""
-                  Wbyte(RSECTR, DSRAM);                                         //""  
-                  MSidx++;                                                      //increase multi-sector counter
+                  Wbyte(RSECTR, DSRAM);                                         //""
                   Sbtidx = 0;                                                   //adjust byte index for next sector
                 }
-                else { 
-                  ccmd = 0x80;                                                  //make sure 0x80 terminates
+                else {
+                  ccmd = 0x80;                                                  //yes; make sure 0x80 terminates
                   Sbtidx = maxbyte;                                             //""
                 }
               }
