@@ -591,9 +591,8 @@ void loop() {
           case 0x90:          //read multiple sectors; sounds suspiciously like reading single sectors in a loop (fallthrough to 0x80: read sector)         
                        
           case 0x80: //read sector                                                                                          
-            if ( Sbtidx <  maxbyte ) {                //have we supplied all 256 bytes yet?  
+            if ( ++Sbtidx <  maxbyte ) {                //increase byte index and check if we supplied all 256 bytes yet  
               Wbyte(RDATA, DSK[cDSK].read() );        //nope, supply next byte
-              Sbtidx++;                               //increase byte index    
             }
             else {
               DSRAM = Rbyte(WSECTR);                  //sync Sector Registers
