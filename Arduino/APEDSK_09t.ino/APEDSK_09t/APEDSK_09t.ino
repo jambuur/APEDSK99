@@ -602,9 +602,8 @@ void loop() {
                   Wbyte(WSECTR, ++DSRAM);             //yes; increase Sector Register
                   Sbtidx = 0;                         //reset sector/byte counter for next round;
                 }
-                else {                                //exit via ending 0x80
-                  ccmd = 0x80;                        //""
-                  Sbtidx = maxbyte;                   //""
+                else {                               
+                 noExec();			//done all sectors
                 }
               }
               else {
