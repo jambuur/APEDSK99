@@ -544,7 +544,7 @@ H055	CLR	R0
 *H057	LDCR	R2,3			select drive
 H057	SWPB	R0			APEDSK: drive # back in MSB
 	SLA	R0,1			APEDSK: preserve bit 7 (side select)
-	SOCB	R0,@CRUWRI		APEDSK: select drive
+	MOVB	R0,@CRUWRI		APEDSK: select drive
 *	AI	R12,-8			back to cru base
 *	MOV	R5,R5			test same drive flag
 *	JEQ	H058			same: return

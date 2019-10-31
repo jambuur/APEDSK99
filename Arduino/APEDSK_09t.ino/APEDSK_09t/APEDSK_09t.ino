@@ -469,6 +469,8 @@ void loop() {
     //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
 
+      //Wbyte(TIdebug++, ccmd);
+
       //new or continue previous command?
       ncmd = (ccmd != lcmd);
       if (ncmd) {                                       //new command?
@@ -488,7 +490,8 @@ void loop() {
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
         }
         else {      
-          sStatus(NotReady,true);                       //no; set "Not Ready" bit in Status Register
+          //sStatus(NotReady,true);                       //no; set "Not Ready" bit in Status Register
+          FDrstr();                                     //DEBUG
           noExec();                                     //prevent multiple step/seek execution
         }   
       }
@@ -603,11 +606,11 @@ void loop() {
                   Sbtidx = 0;                         //reset sector/byte counter for next round;
                 }
                 else {                               
-                 noExec();			//done all sectors
+                 noExec();			                      //done multiple sectors
                 }
               }
               else {
-                noExec();
+                noExec();                             //done sector
               }
             }
           break;
