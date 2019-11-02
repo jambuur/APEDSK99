@@ -335,7 +335,6 @@ boolean ncmd              = false;  //flag new command
 unsigned long int Dbtidx  = 0;      //absolute DOAD byte index
 boolean curdir            = LOW;    //current step direction, step in(wards) towards track 39 by default
 unsigned int Sbtidx       = 0;	    //R/W sector/byte index counter 
-byte MSidx                = 0;      //R/W multiple sector counter 
 byte Ridx                 = 0;      //READ ID counter
 
 //clear various FD1771 registers (for powerup and Restore command)
@@ -490,8 +489,8 @@ void loop() {
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
         }
         else {      
-          //sStatus(NotReady,true);                     //no; set "Not Ready" bit in Status Register
-          FDrstr();                                     //DEBUG
+          sStatus(NotReady,true);                     //no; set "Not Ready" bit in Status Register
+          //FDrstr();                                     //DEBUG
           noExec();                                     //prevent multiple step/seek execution
         }   
       }
@@ -602,7 +601,7 @@ void loop() {
           case 0x80:                                  //read sector                                                                                    
           case 0xA0:                                  //write sector
             if ( ++Sbtidx <  maxbyte ) {              //increase byte index; have we done all 256 bytes yet?  
-              if (ccmd == 0x80) {
+              if (ccmd < 0xA0 || ccmd == 0xE0 ) {
                 Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
               }
               else {
