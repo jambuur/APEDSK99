@@ -1495,7 +1495,7 @@ H139	SETO	R4
 	DEC	R1			now point to drive #
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
-	MOVB	R5,@-2(R15)		save drive #
+	MOVB	R6,@-2(R15)		save drive #
 	LI	R4,11			size to compare (drive # + filename)
 	BL	@CMPFN			compare filenames
 	BLWP	@>005A(R9)		retrieve R2
