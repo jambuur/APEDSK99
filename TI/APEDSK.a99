@@ -145,11 +145,12 @@ SECRW1	MOVB	@K002,@>0050(R9)	no error
 	MOVB	@-1026(R15),R0		get # of last track accessed
 *	CI	R0,>D700		inverted
 	CI	R0,>2800		APEDSK: none of this inverting databus rubbish
-	JH	H002			too high: drive was reset
+*	JH	H002			too high: drive was reset
+	JL	H002			APEDSK: last track within range
 	BL	@SKTRK0			seek track 0
 *	SETO	R0			
 	CLR	R0			APEDSK: none of this inverting databus rubbish
-H002	MOVB	R0,@WTRACK		place >00 in track register
+H002	MOVB	R0,@WTRACK		place last track or >00 in track register
 	MOV	@>004A(R9),R1		sector #
 *	SBZ	7			side 0
 	SZCB	@SIDE01,@CRUWRI		APEDSK: side 0 
