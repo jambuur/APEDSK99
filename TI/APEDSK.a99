@@ -722,8 +722,8 @@ ECUSTM	MOV	R13,R10			save wregs ptr
 	SRL	R9,4			keep parameter
 	ANDI	R8,3			four possible operations
 	A	R8,R8			make it a word ptr
-	MOV	@>001E(13),R11		get old R15, i.e. VDP port (>8C02)
-	MOV	@VECRTN(8),R8		get vector for operation
+	MOV	@>001E(R13),R11		get old R15, i.e. VDP port (>8C02)
+	MOV	@VECRTN(R8),R8		get vector for operation
 	B	*R8			branch to it
 					
 VECRTN	DATA	SVRVDP			save registers to VDP stack
@@ -1721,7 +1721,7 @@ H159	MOV	@>0054(R9),R0		PAB ptr
 	CI	R1,>000C			
 	JH	ERROR8			others are illegal
 H161	A	R1,R1			make it a word ptr
-	MOV	@OPCVEC(1),R1		get vector
+	MOV	@OPCVEC(R1),R1		get vector
 	B	*R1			branch to it
 					
 OPCVEC	DATA	OPEN			open
