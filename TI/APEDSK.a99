@@ -1392,7 +1392,7 @@ RDFDR2	MOV	R0,R4			sector read/write
 	CLR	R5
 RDFDR1	A	@>0056(R9),R5		point to FDR or data buffer
 RWSEC0	CLR	R7			
-RWSEC1	MOVB	R5,R2			add drive # for r/w flag
+RWSEC1	MOVB	R6,R2			add drive # for r/w flag
 RWSEC2	BLWP	@>005A(R9)		save R0-R8
 	DATA	>FF80			
 	MOV	R4,@>004A(R9)		sector #
@@ -1424,7 +1424,7 @@ FFFDRV	MOV	@>0058(R9),R1		save filename in compare buffer and find its FDR
 	AI	R1,256			
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1: filename compare buffer
-	MOVB	R5,@-2(R15)		write drive #
+	MOVB	R6,@-2(R15)		write drive #
 	INC	R1			
 	BL	@CPCKFN			copy (+ check) filename from R3 to R1
 	MOV	R2,R2			all chars copied (or was there a . or a >00
