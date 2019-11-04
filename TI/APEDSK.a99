@@ -266,7 +266,7 @@ H016	MOVB	@RDATA,R0		get 1 byte from FDC
 *	DECT	R6			
 	DEC	@RDINT			APEDSK:
 	JNE	H016			next byte
-*H019	CLR	R5			clear flag
+H019	CLR	R5			clear flag
 *H018	BL	@WTCPT2			SBZ 2, wait for command completion
 *	BL	@WTCPT1			APEDSK: no need to wait for command completion
 *	SLA	R0,13			test status bits
@@ -276,7 +276,7 @@ H016	MOVB	@RDATA,R0		get 1 byte from FDC
 *	JNE	H022			try again, then error 28
 *	SLA	R0,2			
 *	JOC	H023			lost data: try again, then error 23
-H019	B	@RTURN1			return
+	B	@RTURN1			return
 					
 *H020	BL	@ERROR2			gracefull error 21
 *	DATA	>2100			
