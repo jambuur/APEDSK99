@@ -867,7 +867,7 @@ H078	BLWP	@>005A(R9)		set VDP to write
 	AI	R1,3			ptr to drive #
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
-	MOVB	R5,@-2(R15)		write drive # before FDR in VDP buffer
+	MOVB	R6,@-2(R15)		write drive # before FDR in VDP buffer
 	CLR	R2			code for write
 	INC	R1			
 	BL	@CALSUB			call subroutine
@@ -921,7 +921,7 @@ CLRFBT	MOV	@>0056(R9),R5
 	CLR	R6			
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
-	MOVB	R5,@-2(R15)		clr first byte of filename in FDR
+	MOVB	R6,@-2(R15)		clr first byte of filename in FDR
 	B	@RWVIB			
 					
 UPDBF	MOV	@>0056(R9),R4		check if data buffer must be updated
@@ -1265,7 +1265,7 @@ H116	AI	R6,>0100		next drive
 	DEC	R5			before sector 0 copy
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
-	MOVB	R5,@-2(R15)		copy drive # before VIB
+	MOVB	R6,@-2(R15)		copy drive # before VIB
 	JMP	H115			done
 					
 H118	CI	R6,>0300		did we do all drives?
@@ -1377,7 +1377,7 @@ H128	SETO	R2			flag for read
 	DEC	R5			point at drive #
 H129	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
-	MOVB	R5,@-2(R15)		write drive # in control block, before FDR
+	MOVB	R6,@-2(R15)		write drive # in control block, before FDR
 H126	INC	R5			point back to FDR
 	BLWP	@>005A(R9)			
 	DATA	>3001			retrieve R2 + R3 from stack
@@ -3262,7 +3262,7 @@ UFNCB	CLR	@>0054(R9)		write drive # and filename in compare buffer
 	AI	R1,256			ptr to filename compare buffer
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
-	MOVB	R5,@-2(R15)		write drive #
+	MOVB	R6,@-2(R15)		write drive #
 CFNFDR	LI	R2,10			filename must be exactly 10 chars
 H273	INC	R1			next char in compare buffer
 	BLWP	@>005A(R9)		set VDP to read
