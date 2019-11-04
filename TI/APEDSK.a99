@@ -305,7 +305,8 @@ H024	MOVB	@-1026(R15),R0		get a byte from data buffer
 	JNE	H024			next
 *	BL	@WTCPT2			SBZ 2, wait for command completion
 	BL	@WTCPT1			APEDSK: no need to wait for command completion
-	SLA	R0,11			test status bits
+*	SLA	R0,11			test status bits
+	SLA	R0,2			APEDSK: WP bit in Carry
 	JOC	ERROR3			write protect: error 34
 *	SLA	R0,2			
 *	JOC	H025			not found: try again, then error 31
@@ -473,7 +474,8 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 	JGT	H041			next (pair of bytes) byte
 *	BL	@WTCPT2			SBZ 2, then wait for command completion
 	BL	@WTCPT1			APEDSK: no need to wait for command completion
-	SLA	R0,11			check write protect bit
+*	SLA	R0,11			check write protect bit
+	SLA	R0,2			APEDSK: check write protect bit
 *	JNC	H042			
 	JNC	H043			APEDSK:
 	B	@ERROR3			error code >34 ??
@@ -495,7 +497,7 @@ H044	MOVB	R0,@-2(R15)
 WTCPT1	MOVB	@RSTAT,R0		get status. APEDSK: Not Ready bit set when SD DSK file is unavailable
 *	INV	R0			APEDSK: none of that inverted databus rubbish
 	JLT	ERROR4			drive not ready
-	SRC	R0,9			
+*	SRC	R0,9			
 *	JOC	WTCPT1			FDC busy: keep waiting. APEDSK: no busy condition
 	B	*R11			
 ERROR4	BL	@ERROR1			exit with error code 6, reseting all drives
@@ -598,7 +600,7 @@ H061	MOVB	R0,@-2(R15)		write four >00 (i.e. clear drive info)
 					
 *ERROR2	DEC	R4			gracefull error
 *	JEQ	ERROR1			no more tries: error
-ERROR2	JMP	ERROR1			APEDSK
+*ERROR2	JMP	ERROR1			APEDSK
 *	MOV	*R11,R11		try again: get data word
 *	SRC	R11,1			test return flag
 *	JNC	H062			
