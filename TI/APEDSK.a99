@@ -1475,7 +1475,7 @@ ERROR6	BL	@ERROR5			no:
 					
 H137	MOV	R5,@>0056(R9)		save ptr to free ctrl block (drive #)
 	BL	@CALSUB			call subroutine
-	DATA	RWSEC1			read sector 1
+	DATA	RDSEC1			read sector 1
 FFDRFN	MOV	@>0056(R9),R8		entry point if sector 1 already read
 	AI	R8,382			point to middle of sector 1
 	LI	R2,64			distance: start with 1/4 sector
