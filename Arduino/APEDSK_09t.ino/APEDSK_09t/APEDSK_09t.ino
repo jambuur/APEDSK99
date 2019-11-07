@@ -578,7 +578,7 @@ void loop() {
       else {  // read/write commands
         
         if (ncmd) {
-          Wbyte(RSTAT, Rbyte(RSTAT) & Protect);         //clear possible step commands status bits, only keep Protect
+          //Wbyte(RSTAT, Rbyte(RSTAT) & Protect);         //clear possible step commands status bits, only keep Protect
         }
         
         switch (ccmd) {  //switch R/W commands
@@ -607,7 +607,7 @@ void loop() {
               }
               else {
                 if (!pDSK) {                          //only write if DOAD is not protected
-                  DSK[cDSK].write( Rbyte(RDATA) );    //write -> next byte to DOAD
+                  DSK[cDSK].write( Rbyte(WDATA) );    //write -> next byte to DOAD
                 }
               }
             }
