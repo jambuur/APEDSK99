@@ -485,7 +485,7 @@ void loop() {
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
           DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
           pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
-          sStatus(Protect, pDSK);                       //reflect "Protect" status 
+          //sStatus(Protect, pDSK);                       //reflect "Protect" status 
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
         }
@@ -606,9 +606,9 @@ void loop() {
                 Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
               }
               else {
-                if (!pDSK) {                          //only write if DOAD is not protected
+                //if (!pDSK) {                          //only write if DOAD is not protected
                   DSK[cDSK].write( Rbyte(WDATA) );    //write -> next byte to DOAD
-                }
+                //}
               }
             }
             else {                                    //yes, all 256 bytes done
