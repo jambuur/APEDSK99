@@ -601,7 +601,7 @@ void loop() {
           // R/W individual sector
           case 0x80:                                  //read sector                                                                                    
           case 0xA0:                                  //write sector
-            if ( ++Sbtidx <  maxbyte ) {              //increase byte index; have we done all 256 bytes yet?  
+            if ( ++Sbtidx <=  maxbyte ) {              //increase byte index; have we done all 256 bytes yet?  
               if (ccmd < 0xA0 || ccmd == 0xE0 ) {
                 Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
               }
