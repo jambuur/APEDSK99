@@ -321,10 +321,10 @@ File InDSR;
 File DSK[4];  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
-boolean aDSK[4] = {false,true,false,false};                                         //disk availability
-String  nDSK[4] = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"};	        //DOAD file name
-byte    cDSK    = 0;                                                                //current selected DSK
-boolean pDSK    = false;                                                            //protected DSK flag
+boolean aDSK[4]           = {false,true,false,false};                                 //disk availability
+String  nDSK[4]           = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"}; //DOAD file name
+byte    cDSK              = 0;                                                        //current selected DSK
+boolean pDSK              = false;                                                    //protected DSK flag
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic variable for RAM R/W
@@ -339,25 +339,24 @@ byte Ridx                 = 0;      //READ ID counter
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
-  Wbyte(RSTAT,0);         //clear Status Register
-  Wbyte(RTRACK,0);        //clear Read Track register
-  Wbyte(RSECTR,0);	      //clear Read Sector register
-  Wbyte(RDATA, 0);		    //clear Read Data register
-  Wbyte(WTRACK,0);        //clear Write Track register  
-  Wbyte(WSECTR,0);	      //clear Write Sector register
-  Wbyte(WDATA,0);         //clear Write Data register
+  Wbyte(RSTAT, 0x00);     //clear Status Register
+  Wbyte(RTRACK,0x00);     //clear Read Track register
+  Wbyte(RSECTR,0x00);	    //clear Read Sector register
+  Wbyte(RDATA, 0x00);	    //clear Read Data register
+  Wbyte(WTRACK,0x00);     //clear Write Track register  
+  Wbyte(WSECTR,0x00);	    //clear Write Sector register
+  Wbyte(WDATA, 0x00);     //clear Write Data register
   sStatus(Track0, true);  //set Track 0 bit
 }
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
-  DSK[cDSK].close();  //close current SD DOAD file
-  Wbyte(WCOMND,0xD0); //"force interrupt" command (aka no further execution)
-  //FDrstr();           //DEBUG
-  ccmd = 0xD0;        // "" ""
-  lcmd = ccmd;		    //reset new command prep
-  Sbtidx = 0; 	      //clear index counter
-  Ridx = 0;           //clear READ ID index counter 
+  DSK[cDSK].close();      //close current SD DOAD file
+  Wbyte(WCOMND,0xD0);     //"force interrupt" command (aka no further execution)
+  ccmd = 0xD0;            // "" ""
+  lcmd = ccmd;		        //reset new command prep
+  Sbtidx = 0; 	          //clear index counter
+  Ridx = 0;               //clear READ ID index counter 
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
@@ -371,7 +370,7 @@ unsigned long int cDbtidx (void) {
   return (bi);
 }
 
-unsigned int TIdebug = 0x1D10;
+unsigned int TIdebug = 0x1D20;
 
 //------------  
 void setup() {
@@ -469,8 +468,6 @@ void loop() {
     //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
 
-      //Wbyte(TIdebug++, ccmd);
-
       //new or continue previous command?
       ncmd = (ccmd != lcmd);
       if (ncmd) {                                       //new command?
@@ -485,15 +482,10 @@ void loop() {
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
           DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
           pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
-          //sStatus(Protect, pDSK);                       //reflect "Protect" status 
+          sStatus(Protect, pDSK);                       //reflect "Protect" status 
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
-        }
-        else {      
-          sStatus(NotReady,true);                     //no; set "Not Ready" bit in Status Register
-          //FDrstr();                                     //DEBUG
-          noExec();                                     //prevent multiple step/seek execution
-        }   
+        } 
       }
 
       if ( ccmd < 0x80 ) {    //step/seek commands?
@@ -578,7 +570,7 @@ void loop() {
       else {  // read/write commands
         
         if (ncmd) {
-          //Wbyte(RSTAT, Rbyte(RSTAT) & Protect);         //clear possible step commands status bits, only keep Protect
+          Wbyte(RSTAT, Rbyte(RSTAT) & Protect);         //clear possible step commands status bits, only keep Protect
         }
         
         switch (ccmd) {  //switch R/W commands
@@ -601,13 +593,14 @@ void loop() {
           // R/W individual sector
           case 0x80:                                  //read sector                                                                                    
           case 0xA0:                                  //write sector
-            if ( ++Sbtidx <=  maxbyte ) {              //increase byte index; have we done all 256 bytes yet?  
+            if ( Sbtidx++ <  maxbyte ) {              //increase byte index; have we done all 256 bytes yet?  
               if (ccmd < 0xA0 || ccmd == 0xE0 ) {
                 Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
               }
               else {
                 //if (!pDSK) {                          //only write if DOAD is not protected
-                  DSK[cDSK].write( Rbyte(WDATA) );    //write -> next byte to DOAD
+                    DSK[cDSK].write( Rbyte(WDATA) );             //write -> next byte to DOAD
+                  //}
                 //}
               }
             }
