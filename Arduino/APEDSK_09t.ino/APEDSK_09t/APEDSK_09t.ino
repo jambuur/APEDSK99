@@ -354,7 +354,6 @@ void FDrstr(void) {
 void noExec(void) {
   DSK[cDSK].close();  //close current SD DOAD file
   Wbyte(WCOMND,0xD0); //"force interrupt" command (aka no further execution)
-  //FDrstr();           //DEBUG
   ccmd = 0xD0;        // "" ""
   lcmd = ccmd;		    //reset new command prep
   Sbtidx = 0; 	      //clear index counter
