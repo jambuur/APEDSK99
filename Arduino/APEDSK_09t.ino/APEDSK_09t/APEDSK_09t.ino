@@ -320,19 +320,12 @@ File InDSR;
 //DSKx file pointers
 File DSK[4];  //file pointers to DOAD's
 
-<<<<<<< HEAD
 //flags for "drives" (aka DOAD files) available 
 //(DSK1 should always be available, if not Error 4)
-boolean aDSK[4]           = {false,true,false,false};                                 //disk availability
-String  nDSK[4]           = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"}; //DOAD file name
-byte    cDSK              = 0;                                                        //current selected DSK
-=======
-//flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
 boolean aDSK[4] = {false,true,false,false};                                         //disk availability
 String  nDSK[4] = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"};	        //DOAD file name
 byte    cDSK    = 0;                                                                //current selected DSK
 boolean pDSK    = false;                                                            //protected DSK flag
->>>>>>> parent of 3c099d0... update
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic variable for RAM R/W
@@ -347,12 +340,6 @@ byte Ridx                 = 0;      //READ ID counter
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
-<<<<<<< HEAD
-  for (unsigned int ii = RSTAT; ii <= WDATA; ii++) {
-    Wbyte(ii, 0x00);
-  }
-  
-=======
   Wbyte(RSTAT,0);         //clear Status Register
   Wbyte(RTRACK,0);        //clear Read Track register
   Wbyte(RSECTR,0);	      //clear Read Sector register
@@ -360,7 +347,6 @@ void FDrstr(void) {
   Wbyte(WTRACK,0);        //clear Write Track register  
   Wbyte(WSECTR,0);	      //clear Write Sector register
   Wbyte(WDATA,0);         //clear Write Data register
->>>>>>> parent of 3c099d0... update
   sStatus(Track0, true);  //set Track 0 bit
 }
 
@@ -386,12 +372,6 @@ unsigned long int cDbtidx (void) {
   return (bi);
 }
 
-<<<<<<< HEAD
-=======
-unsigned int TIdebug = 0x1D10;
-
->>>>>>> parent of 3c099d0... update
-//------------  
 void setup() {
 
   //see if the SD card is present and can be initialized
@@ -501,17 +481,6 @@ void loop() {
           
           sStatus(NotReady, false);                     //reset "Not Ready" bit in Status Register  
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
-<<<<<<< HEAD
-         
-          Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
-          DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
-        }
-        else {
-          //if ( cDSK != 0 ) {
-            //sStatus(NotReady, true);                    //DSK2 or DSK3 not available
-          }
-        }
-=======
           DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
           pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
           //sStatus(Protect, pDSK);                       //reflect "Protect" status 
@@ -524,7 +493,6 @@ void loop() {
           noExec();                                     //prevent multiple step/seek execution
         }   
       }
->>>>>>> parent of 3c099d0... update
 
       if ( ccmd < 0x80 ) {    //step/seek commands?
 
@@ -608,11 +576,7 @@ void loop() {
       else {  // read/write commands
         
         if (ncmd) {
-<<<<<<< HEAD
-          Wbyte(RSTAT, 0x00);                             //clear possible step commands status bits
-=======
           //Wbyte(RSTAT, Rbyte(RSTAT) & Protect);         //clear possible step commands status bits, only keep Protect
->>>>>>> parent of 3c099d0... update
         }
         
         switch (ccmd) {  //switch R/W commands
@@ -640,13 +604,7 @@ void loop() {
                 Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
               }
               else {
-<<<<<<< HEAD
                 DSK[cDSK].write( Rbyte(WDATA) );      //write -> next byte to DOAD
-=======
-                //if (!pDSK) {                          //only write if DOAD is not protected
-                  DSK[cDSK].write( Rbyte(WDATA) );    //write -> next byte to DOAD
-                //}
->>>>>>> parent of 3c099d0... update
               }
             }
             else {                                    //yes, all 256 bytes done
