@@ -475,22 +475,19 @@ void loop() {
           
           sStatus(NotReady, false);                     //reset "Not Ready" bit in Status Register  
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
-          //DSK[cDSK].seek(0x10);                       //byte 0x10 in Volume Information Block stores Protected flag
-          //pDSK = DSK[cDSK].read() != 0x20;            //disk is protected when byte 0x10 <> " "
-          //sStatus(Protect, pDSK);                     //reflect "Protect" status 
+         
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
         }
         else {
-          if ( cDSK != 0 ) {
-            sStatus(NotReady, true);                    //DSK2 or DSK3 not available
+          //if ( cDSK != 0 ) {
+            //sStatus(NotReady, true);                    //DSK2 or DSK3 not available
           }
         }
-      }
 
       if ( ccmd < 0x80 ) {    //step/seek commands?
 
-        //sStatus(Head, true);  //yes; head loaded (probably not necessary)
+        sStatus(Head, true);  //yes; head loaded (probably not necessary)
               
         switch (ccmd) {       //switch step/seek commands
 
@@ -569,9 +566,9 @@ void loop() {
     
       else {  // read/write commands
         
-        //if (ncmd) {
+        if (ncmd) {
           Wbyte(RSTAT, 0x00);                             //clear possible step commands status bits
-        //}
+        }
         
         switch (ccmd) {  //switch R/W commands
 
@@ -669,3 +666,9 @@ ISR(INT0_vect) {
   FD1771=true;  
   
 }
+
+/*
+    //DSK[cDSK].seek(0x10);                       //byte 0x10 in Volume Information Block stores Protected flag
+          //pDSK = DSK[cDSK].read() != 0x20;            //disk is protected when byte 0x10 <> " "
+          //sStatus(Protect, pDSK);                     //reflect "Protect" status 
+ */
