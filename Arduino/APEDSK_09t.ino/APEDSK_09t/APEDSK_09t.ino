@@ -325,7 +325,7 @@ File DSK[4];  //file pointers to DOAD's
 boolean aDSK[4] = {false,true,false,false};                                         //disk availability
 String  nDSK[4] = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"};	        //DOAD file name
 byte    cDSK    = 0;                                                                //current selected DSK
-boolean pDSK    = false;                                                            //protected DSK flag
+//boolean pDSK    = false;                                                            //protected DSK flag
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic variable for RAM R/W
@@ -480,16 +480,17 @@ void loop() {
           
           sStatus(NotReady, false);                     //reset "Not Ready" bit in Status Register  
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
-          DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
-          pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
+          //DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
+          //pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
           //sStatus(Protect, pDSK);                       //reflect "Protect" status 
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
         }
         else {      
-          sStatus(NotReady,true);                     //no; set "Not Ready" bit in Status Register
-          //FDrstr();                                     //DEBUG
-          noExec();                                     //prevent multiple step/seek execution
+          if ( cDSK != 0 ) {
+            sStatus(NotReady,true);                     //no; set "Not Ready" bit in Status Register
+            noExec();                                     //prevent multiple step/seek execution
+          }
         }   
       }
 
