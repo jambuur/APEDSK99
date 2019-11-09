@@ -585,7 +585,7 @@ RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK: reset all drives including side
 *	AI	R12,-8			
 *	SBZ	1			motor strobe
 *	SBO	1			
-	MOVB	@K013,@WCOMND		APEDSK: send Restore command
+	MOVB	@K013,@WCOMND		send Force interrupt with no interrupt flag set
 	MOV	@>0058(R9),R2		ptr to VIB buffer
 	AI	R2,-10			now points to drive info buffer
 	BL	@VDPWRI			set VDP to write to address in R2
@@ -617,7 +617,7 @@ ERROR1	MOV	*R11,R0			exit with error
 	JNE	H064			no: exit
 	BL	@SNDCMD			yes: reset drives
 *K013	DATA	>2F00			send force interrupt, no ints
-K013	DATA	>0000			APEDSK: send Restore command
+K013	DATA	>D000			APEDSK: send force interrupt, no ints (abort command)
 *H065	MOVB	@RSTAT,R0		get status APEDSK: no need to test for "drive busy"
 *	SRC	R0,9			test busy flag
 *	JNC	H065			wait until done (inverted)
