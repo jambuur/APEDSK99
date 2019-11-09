@@ -320,11 +320,11 @@ File InDSR;
 //DSKx file pointers
 File DSK[4];  //file pointers to DOAD's
 
-//flags for "drives" (aka DOAD files) available (DSK1 should always be available, if not Error 4)
+//flags for "drives" (aka DOAD files) available 
+//(DSK1 should always be available, if not Error 4)
 boolean aDSK[4]           = {false,true,false,false};                                 //disk availability
 String  nDSK[4]           = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"}; //DOAD file name
 byte    cDSK              = 0;                                                        //current selected DSK
-boolean pDSK              = false;                                                    //protected DSK flag
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic variable for RAM R/W
@@ -339,13 +339,10 @@ byte Ridx                 = 0;      //READ ID counter
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
-  Wbyte(RSTAT, 0x00);     //clear Status Register
-  Wbyte(RTRACK,0x00);     //clear Read Track register
-  Wbyte(RSECTR,0x00);	    //clear Read Sector register
-  Wbyte(RDATA, 0x00);	    //clear Read Data register
-  Wbyte(WTRACK,0x00);     //clear Write Track register  
-  Wbyte(WSECTR,0x00);	    //clear Write Sector register
-  Wbyte(WDATA, 0x00);     //clear Write Data register
+  for (unsigned int ii = RSTAT; ii <= WDATA; ii++) {
+    Wbyte(ii, 0x00);
+  }
+  
   sStatus(Track0, true);  //set Track 0 bit
 }
 
@@ -369,8 +366,6 @@ unsigned long int cDbtidx (void) {
   bi *= maxbyte;                                      //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
-
-unsigned int TIdebug = 0x1D20;
 
 //------------  
 void setup() {
@@ -471,26 +466,31 @@ void loop() {
       //new or continue previous command?
       ncmd = (ccmd != lcmd);
       if (ncmd) {                                       //new command?
+
+        lcmd = ccmd;                                    //yes; remember new command for next compare
         
         //is the selected DSK available?
         cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;       //yes do some prep; determine selected disk
-        if ( aDSK[cDSK] ) {                             //is selected disk available?
-
-          lcmd = ccmd;                                  //yes; remember new command for next compare
+        if ( aDSK[cDSK] ) {                             //is selected disk available?      
           
-          sStatus(NotReady,false);                      //reset "Not Ready" bit in Status Register  
+          sStatus(NotReady, false);                     //reset "Not Ready" bit in Status Register  
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
-          DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
-          pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
-          sStatus(Protect, pDSK);                       //reflect "Protect" status 
+          //DSK[cDSK].seek(0x10);                       //byte 0x10 in Volume Information Block stores Protected flag
+          //pDSK = DSK[cDSK].read() != 0x20;            //disk is protected when byte 0x10 <> " "
+          //sStatus(Protect, pDSK);                     //reflect "Protect" status 
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
-        } 
+        }
+        else {
+          if ( cDSK != 0 ) {
+            sStatus(NotReady, true);                    //DSK2 or DSK3 not available
+          }
+        }
       }
 
       if ( ccmd < 0x80 ) {    //step/seek commands?
 
-        sStatus(Head, true);  //yes; head loaded (probably not necessary)
+        //sStatus(Head, true);  //yes; head loaded (probably not necessary)
               
         switch (ccmd) {       //switch step/seek commands
 
@@ -569,9 +569,9 @@ void loop() {
     
       else {  // read/write commands
         
-        if (ncmd) {
-          Wbyte(RSTAT, Rbyte(RSTAT) & Protect);         //clear possible step commands status bits, only keep Protect
-        }
+        //if (ncmd) {
+          Wbyte(RSTAT, 0x00);                             //clear possible step commands status bits
+        //}
         
         switch (ccmd) {  //switch R/W commands
 
@@ -598,10 +598,7 @@ void loop() {
                 Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
               }
               else {
-                //if (!pDSK) {                          //only write if DOAD is not protected
-                    DSK[cDSK].write( Rbyte(WDATA) );             //write -> next byte to DOAD
-                  //}
-                //}
+                DSK[cDSK].write( Rbyte(WDATA) );      //write -> next byte to DOAD
               }
             }
             else {                                    //yes, all 256 bytes done
