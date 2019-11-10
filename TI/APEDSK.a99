@@ -304,10 +304,10 @@ H024	MOVB	@-1026(R15),R0		get a byte from data buffer
 	DEC	R6			APEDSK:
 	JNE	H024			next
 *	BL	@WTCPT2			SBZ 2, wait for command completion
-	BL	@WTCPT1			APEDSK: no need to wait for command completion
+*	BL	@WTCPT1			APEDSK: no need to wait for command completion
 *	SLA	R0,11			test status bits
-	SLA	R0,2			APEDSK: WP bit in Carry
-	JOC	ERROR3			write protect: error 34
+*	SLA	R0,2			APEDSK: WP bit in Carry
+*	JOC	ERROR3			write protect: error 34
 *	SLA	R0,2			
 *	JOC	H025			not found: try again, then error 31
 *	SLA	R0,2			
@@ -473,12 +473,12 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 	DEC	R6			APEDSK:
 	JGT	H041			next (pair of bytes) byte
 *	BL	@WTCPT2			SBZ 2, then wait for command completion
-	BL	@WTCPT1			APEDSK: no need to wait for command completion
+*	BL	@WTCPT1			APEDSK: no need to wait for command completion
 *	SLA	R0,11			check write protect bit
-	SLA	R0,2			APEDSK: check write protect bit
+*	SLA	R0,2			APEDSK: check write protect bit
 *	JNC	H042			
-	JNC	H043			APEDSK:
-	B	@ERROR3			error code >34 ??
+*	JNC	H043			APEDSK:
+*	B	@ERROR3			error code >34 ??
 *H042	SLA	R0,4			test lost data bit
 *	JNC	H043			ok: return
 *	DEC	R4			shall we try again?
