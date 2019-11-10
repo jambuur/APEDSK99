@@ -107,7 +107,7 @@
 
 //useful Status Register bits
 #define NotReady  0x80
-#define Protect   0x40
+#define Protect   0x40  //not used; possible future use
 #define Head      0x20 
 #define Track0    0x04
 
@@ -325,7 +325,6 @@ File DSK[4];  //file pointers to DOAD's
 boolean aDSK[4] = {false,true,false,false};                                         //disk availability
 String  nDSK[4] = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"};	        //DOAD file name
 byte    cDSK    = 0;                                                                //current selected DSK
-//boolean pDSK    = false;                                                            //protected DSK flag
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic variable for RAM R/W
@@ -347,7 +346,6 @@ void FDrstr(void) {
   Wbyte(WTRACK,0);        //clear Write Track register  
   Wbyte(WSECTR,0);	      //clear Write Sector register
   Wbyte(WDATA,0);         //clear Write Data register
-  sStatus(Track0, true);  //set Track 0 bit
 }
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
@@ -370,6 +368,8 @@ unsigned long int cDbtidx (void) {
   bi *= maxbyte;                                      //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
+
+//unsigned int TIDebug = 0x1E00;
 
 void setup() {
 
@@ -413,28 +413,18 @@ void setup() {
     eflash(3);
   }
 
-  //try to open DSK1 to see if it's available (it should)
-  DSK[1] = SD.open(nDSK[1], FILE_READ);
-  if ( !DSK[1] ) {
+  //check if DSK1 is available (it should)
+  if ( !SD.exists(nDSK[1]) ) {
     eflash(4);	//could not open DSK1 -> flash error 4
   }
-  else {
-    DSK[1].close();
-  }
-    
-  //try to open DSK2 and if yes set flag (default is false)
-  DSK[2] = SD.open(nDSK[2], FILE_READ);
-  if ( DSK[2] ) {
-    //close file and set flag
-    DSK[2].close();
+     
+  //check if DSK2 is available and flag if it is
+  if ( SD.exists(nDSK[2]) ) {
     aDSK[2] = true;
   }
   
-  //try to open DSK3 and if yes set flag (default is false)
-  DSK[3] = SD.open(nDSK[3], FILE_READ);
-  if ( DSK[3] ) {
-    //close file and set flag
-    DSK[3].close();
+  //check if DSK3 is available and flag if it is
+  if ( SD.exists(nDSK[3]) ) {
     aDSK[3] = true;
   }
      
@@ -466,8 +456,6 @@ void loop() {
     //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
     if ( ccmd != 0xD0 ) { //do we need to do anything?
 
-      //Wbyte(TIdebug++, ccmd);
-
       //new or continue previous command?
       ncmd = (ccmd != lcmd);
       if (ncmd) {                                       //new command?
@@ -480,23 +468,18 @@ void loop() {
           
           sStatus(NotReady, false);                     //reset "Not Ready" bit in Status Register  
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
-          //DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected flag
-          //pDSK = DSK[cDSK].read() != 0x20;              //disk is protected when byte 0x10 <> " "
-          //sStatus(Protect, pDSK);                       //reflect "Protect" status 
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
         }
         else {      
-          if ( cDSK != 0 ) {
+          if ( cDSK != 0 ) {                            //ignore DSK0; either DSK2 or DSK3 is not available
             sStatus(NotReady,true);                     //no; set "Not Ready" bit in Status Register
-            noExec();                                     //prevent multiple step/seek execution
+            noExec();                                   //prevent multiple step/seek execution
           }
         }   
       }
 
       if ( ccmd < 0x80 ) {    //step/seek commands?
-
-        sStatus(Head, true);  //yes; head loaded (probably not necessary)
               
         switch (ccmd) {       //switch step/seek commands
 
@@ -509,12 +492,10 @@ void loop() {
             if ( DSRAM < maxtrack ) {                     //make sure we stay within max # of tracks
               if (DSRAM > Rbyte(WTRACK) ) {
                 curdir = LOW;                             //step-in towards track 39
-                sStatus(Track0, false);                   //reset Track 0 bit in Status Register
               }
               else {
                 if (DSRAM < Rbyte(WTRACK) ) {
                   curdir = HIGH;                          //step-out towards track 0
-                  sStatus(Track0, DSRAM == 0);            //check for Track 0 and set Status Register accordingly
                 }
               }
               Wbyte(WTRACK, DSRAM);                       //update track register
@@ -529,13 +510,11 @@ void loop() {
             //is current direction inwards and track # still within limits?
             if (  DSRAM < maxtrack  && curdir == LOW ) {
               Wbyte(WTRACK, ++DSRAM);                     //increase track #
-              sStatus(Track0, false);                     //reset Track 0 bit in Status Register
             }
             else {
               //is current direction outwards and track # still within limits?
               if ( DSRAM >  0 && curdir == HIGH ) {
                 Wbyte(WTRACK, --DSRAM);  	                //decrease track #
-                sStatus(Track0, DSRAM == 0);               //check for Track 0 and set Status Register accordingly
               }
             }      
           break;
@@ -549,7 +528,6 @@ void loop() {
             if ( DSRAM < maxtrack) { 
               Wbyte(WTRACK, ++DSRAM);                     //increase track #
               curdir = LOW; 	                            //set current direction    
-              sStatus(Track0, false);                     //reset Track 0 bit in Status Register
       	    }
            break;
           
@@ -563,7 +541,6 @@ void loop() {
               Wbyte(WTRACK, --DSRAM);                     //decrease track #
             }
             curdir = HIGH; //set current direction  
-            sStatus(Track0, DSRAM == 0);                   //check for Track 0 and Status Register accordingly
           break;
         
         } //end switch step commands
@@ -574,10 +551,6 @@ void loop() {
       } // end ccmd < 0x80
     
       else {  // read/write commands
-        
-        if (ncmd) {
-          //Wbyte(RSTAT, Rbyte(RSTAT) & Protect);         //clear possible step commands status bits, only keep Protect
-        }
         
         switch (ccmd) {  //switch R/W commands
 
@@ -604,10 +577,10 @@ void loop() {
                 Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
               }
               else {
-                DSK[cDSK].write( Rbyte(WDATA) );      //write -> next byte to DOAD
+                //DSK[cDSK].write( Rbyte(WDATA) );      //write -> next byte to DOAD         
               }
             }
-            else {                                    //yes, all 256 bytes done
+            else {                                    //yes, all 256 bytes done         
               DSRAM = Rbyte(WSECTR);                  //sync Sector Registers
               Wbyte(RSECTR, DSRAM);                   //""                 
               if ( ccmd > 0x80 && ccmd != 0xA0) {     //multi-sector R/W?
@@ -680,4 +653,81 @@ ISR(INT0_vect) {
     //DSK[cDSK].seek(0x10);                       //byte 0x10 in Volume Information Block stores Protected flag
           //pDSK = DSK[cDSK].read() != 0x20;            //disk is protected when byte 0x10 <> " "
           //sStatus(Protect, pDSK);                     //reflect "Protect" status 
+
+          sStatus(Head, true);  //yes; head loaded (probably not necessary)
+              
+        switch (ccmd) {       //switch step/seek commands
+
+          case 0x00:  //restore
+            FDrstr();
+          break;
+      
+          case 0x10:  //seek
+            DSRAM = Rbyte(WDATA);                         //read track seek #
+            if ( DSRAM < maxtrack ) {                     //make sure we stay within max # of tracks
+              if (DSRAM > Rbyte(WTRACK) ) {
+                curdir = LOW;                             //step-in towards track 39
+                sStatus(Track0, false);                   //reset Track 0 bit in Status Register
+              }
+              else {
+                if (DSRAM < Rbyte(WTRACK) ) {
+                  curdir = HIGH;                          //step-out towards track 0
+                  sStatus(Track0, DSRAM == 0);            //check for Track 0 and set Status Register accordingly
+                }
+              }
+              Wbyte(WTRACK, DSRAM);                       //update track register
+            }
+          break;
+
+          case 0x20:  //step
+            //always execute step+T, can't see it making any difference (FLW)  
+    
+          case 0x30:                                      //step+T (update Track register)
+            DSRAM = Rbyte(WTRACK);                        //read current track #
+            //is current direction inwards and track # still within limits?
+            if (  DSRAM < maxtrack  && curdir == LOW ) {
+              Wbyte(WTRACK, ++DSRAM);                     //increase track #
+              sStatus(Track0, false);                     //reset Track 0 bit in Status Register
+            }
+            else {
+              //is current direction outwards and track # still within limits?
+              if ( DSRAM >  0 && curdir == HIGH ) {
+                Wbyte(WTRACK, --DSRAM);                   //decrease track #
+                sStatus(Track0, DSRAM == 0);               //check for Track 0 and set Status Register accordingly
+              }
+            }      
+          break;
+                   
+          case 0x40:  //step-in (towards track 39)
+            //always execute step-in+T, can't see it making any difference (FLW)
+         
+          case 0x50:  //step-in+T (towards track 39, update Track Register)
+            DSRAM = Rbyte(WTRACK);                        //read current track #
+            //if track # still within limits update track register
+            if ( DSRAM < maxtrack) { 
+              Wbyte(WTRACK, ++DSRAM);                     //increase track #
+              curdir = LOW;                               //set current direction    
+              sStatus(Track0, false);                     //reset Track 0 bit in Status Register
+            }
+           break;
+          
+          case 0x60:  //step-out (towards track 0)
+            //always execute step-out+T, can't see it making any difference (FLW)
+ 
+          case 0x70:  //step-out+T
+            DSRAM = Rbyte(WTRACK);                        //read current track #
+            //if track # still within limits update track register
+            if ( DSRAM > 0) { 
+              Wbyte(WTRACK, --DSRAM);                     //decrease track #
+            }
+            curdir = HIGH; //set current direction  
+            sStatus(Track0, DSRAM == 0);                   //check for Track 0 and Status Register accordingly
+          break;
+        
+        } //end switch step commands
+       
+        Wbyte(RTRACK, Rbyte(WTRACK) );                    //sync Track Registers
+        noExec();                                         //prevent multiple step/seek execution 
+
+      } // end ccmd < 0x80
  */
