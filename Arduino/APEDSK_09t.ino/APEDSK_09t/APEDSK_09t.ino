@@ -471,7 +471,7 @@ void loop() {
             FDrstr();
           break;
 			
-          case 0x10:	//seek
+          case 0x10:	//seek                              //note: when maxtrack == WTRACK curdir doesn't change
             DSRAM = Rbyte(WDATA);                         //read track seek #
             if ( DSRAM < maxtrack ) {                     //make sure we stay within max # of tracks
               if (DSRAM > Rbyte(WTRACK) ) {
@@ -569,6 +569,7 @@ void loop() {
               Wbyte(RSECTR, DSRAM);                   //""                 
               if ( ccmd != 0x80 && ccmd != 0xA0) {    //multi-sector R/W?
                 if ( DSRAM < (maxsect - 1) ) {        //yes; still sectors left to read in current track?
+                  //DEBUG: need additional check on R/W track, i.e. does the real thing update SR's with these commands?
                   Wbyte(WSECTR, ++DSRAM);             //yes; increase Sector Register
                   Sbtidx = 0;                         //reset sector/byte counter for next round;
                 }
