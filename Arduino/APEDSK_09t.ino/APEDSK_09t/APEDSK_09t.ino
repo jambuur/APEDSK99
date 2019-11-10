@@ -107,9 +107,6 @@
 
 //useful Status Register bits
 #define NotReady  0x80
-#define Protect   0x40  //not used; possible future use
-#define Head      0x20 
-#define Track0    0x04
 
 //"disk" characteristics
 #define maxtrack  0x28		//# of tracks/side
@@ -303,17 +300,6 @@ void eflash(byte error)
   }
 }
 
-//set Status Register bit(s):
-//B11100100: NotReady, Protect, Head Loaded and Track0
-void sStatus (byte sbit, boolean set) {
-  if ( set ) {
-    Wbyte(RSTAT, (Rbyte(RSTAT) | sbit) );
-  }
-  else {
-    Wbyte(RSTAT, (Rbyte(RSTAT) & ~sbit) );
-  }
-}
-
 //DSR binary input file pointer
 File InDSR;  
 
@@ -368,8 +354,6 @@ unsigned long int cDbtidx (void) {
   bi *= maxbyte;                                      //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
-
-//unsigned int TIDebug = 0x1E00;
 
 void setup() {
 
@@ -428,7 +412,7 @@ void setup() {
     aDSK[3] = true;
   }
      
-  //initialize FD1771:
+  //"initialize FD1771":
   FDrstr();   //"Restore" command
   noExec();   //"no command" as default
 
@@ -465,16 +449,16 @@ void loop() {
         //is the selected DSK available?
         cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;       //yes do some prep; determine selected disk
         if ( aDSK[cDSK] ) {                             //is selected disk available?      
-          
-          sStatus(NotReady, false);                     //reset "Not Ready" bit in Status Register  
+           
+          Wbyte(RSTAT, 0x00);                           //reset "Not Ready" bit in Status Register
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
         }
         else {      
           if ( cDSK != 0 ) {                            //ignore DSK0; either DSK2 or DSK3 is not available
-            sStatus(NotReady,true);                     //no; set "Not Ready" bit in Status Register
-            noExec();                                   //prevent multiple step/seek execution
+            Wbyte(RSTAT, 0x80);                         //no; set "Not Ready" bit in Status Register
+            ccmd = 0xD0;                                //exit
           }
         }   
       }
@@ -573,7 +557,7 @@ void loop() {
           case 0x80:                                  //read sector                                                                                    
           case 0xA0:                                  //write sector
             if ( ++Sbtidx <=  maxbyte ) {              //increase byte index; have we done all 256 bytes yet?  
-              if (ccmd < 0xA0 || ccmd == 0xE0 ) {
+              if (ccmd == 0x80 || ccmd == 90 || ccmd == 0xE0 ) {
                 Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
               }
               else {
@@ -583,7 +567,7 @@ void loop() {
             else {                                    //yes, all 256 bytes done         
               DSRAM = Rbyte(WSECTR);                  //sync Sector Registers
               Wbyte(RSECTR, DSRAM);                   //""                 
-              if ( ccmd > 0x80 && ccmd != 0xA0) {     //multi-sector R/W?
+              if ( ccmd != 0x80 && ccmd != 0xA0) {    //multi-sector R/W?
                 if ( DSRAM < (maxsect - 1) ) {        //yes; still sectors left to read in current track?
                   Wbyte(WSECTR, ++DSRAM);             //yes; increase Sector Register
                   Sbtidx = 0;                         //reset sector/byte counter for next round;
