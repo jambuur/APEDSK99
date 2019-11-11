@@ -448,8 +448,7 @@ void loop() {
         
         //is the selected DSK available?
         cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;       //yes do some prep; determine selected disk
-        if ( aDSK[cDSK] ) {                             //is selected disk available?      
-           
+        if ( aDSK[cDSK] ) {                             //is selected disk available?             
           Wbyte(RSTAT, 0x00);                           //reset "Not Ready" bit in Status Register
           DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
@@ -543,42 +542,44 @@ void loop() {
           break;
 
           // R/W entire track; sounds suspiciously like R/W multiple sectors (some prep, then fallthrough)
-          case 0xE0:            //read track
-          case 0xF0:            //write track     
-            if (ncmd) {         //do some prep in first round
-              Wbyte(WSECTR, 0); //to read entire track we need to start from sector 0
+          case 0xE0:                                    //read track
+          case 0xF0:                                    //write track     
+            if (ncmd) {                                 //do some prep in first round
+              Wbyte(WSECTR, 0);                         //to read entire track we need to start from sector 0
+              Wbyte(RSECTR, 0);                         //sync Sector Registers
             }
 
           // R/W multiple sectors; sounds suspiciously like R/W single sectors in a loop (fallthrough)  
-          case 0x90:                                  //read multiple sectors                 
-          case 0xB0:                                  //write multiple sectors
+          case 0x90:                                    //read multiple sectors                 
+          case 0xB0:                                    //write multiple sectors
                       
           // R/W individual sector
-          case 0x80:                                  //read sector                                                                                    
-          case 0xA0:                                  //write sector
-            if ( Sbtidx++ <  maxbyte ) {              //increase byte index; have we done all 256 bytes yet?  
-              if (ccmd == 0x80 || ccmd == 90 || ccmd == 0xE0 ) {
-                Wbyte(RDATA, DSK[cDSK].read() );      //read -> supply next byte
+          case 0x80:                                    //read sector                                                                                    
+          case 0xA0:                                    //write sector
+            if ( Sbtidx++ <  maxbyte ) {                //increase byte index; have we done all 256 bytes yet?  
+              if (ccmd < 0xA0 || ccmd == 0xE0 ) {       //read command (0x80, 0x90, 0xE0)?
+                Wbyte(RDATA, DSK[cDSK].read() );        //yes -> supply next byte
               }
               else {
-                //DSK[cDSK].write( Rbyte(WDATA) );      //write -> next byte to DOAD         
+                DSK[cDSK].write( Rbyte(WDATA) );        //no -> next byte to DOAD         
               }
             }
-            else {                                    //yes, all 256 bytes done         
-              DSRAM = Rbyte(WSECTR);                  //sync Sector Registers
-              Wbyte(RSECTR, DSRAM);                   //""                 
-              if ( ccmd != 0x80 && ccmd != 0xA0) {    //multi-sector R/W?
-                if ( DSRAM < (maxsect - 1) ) {        //yes; still sectors left to read in current track?
-                  //DEBUG: need additional check on R/W track, i.e. does the real thing update SR's with these commands?
-                  Wbyte(WSECTR, ++DSRAM);             //yes; increase Sector Register
-                  Sbtidx = 0;                         //reset sector/byte counter for next round;
+            else {                                      //yes, all 256 bytes done         
+              if ( ccmd != 0x80 && ccmd != 0xA0) {      //multi-sector R/W?
+                if ( DSRAM < (maxsect - 1) ) {          //yes; still sectors left to read in current track?
+                  if ( ccmd != 0xE0 && ccmd != 0xF0) {  //track R/W does not update Sector Registers (guess)            
+                    DSRAM = Rbyte(WSECTR);              //read current sector #
+                    Wbyte(WSECTR, ++DSRAM);             //increase Sector Register
+                    Wbyte(RSECTR, DSRAM);               //sync Sector Registers    
+                  }
+                  Sbtidx = 0;                           //reset sector/byte counter for next round;
                 }
                 else {                               
-                 noExec();			                      //done multiple sectors
+                 noExec();			                        //done multiple sectors
                 }
               }
               else {
-                noExec();                             //done sector
+                noExec();                               //done sector
               }
             }
           break;
