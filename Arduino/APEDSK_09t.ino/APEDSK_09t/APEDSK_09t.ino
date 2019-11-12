@@ -561,7 +561,9 @@ void loop() {
                 Wbyte(RDATA, DSK[cDSK].read() );        //yes -> supply next byte
               }
               else {
-                DSK[cDSK].write( Rbyte(WDATA) );        //no -> next byte to DOAD         
+                if (!ncmd) {
+                  DSK[cDSK].write( Rbyte(WDATA) );        //no -> next byte to DOAD     
+                }    
               }
               Sbtidx++;
             }
