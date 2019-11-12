@@ -450,7 +450,7 @@ void loop() {
         cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;       //yes do some prep; determine selected disk
         if ( aDSK[cDSK] ) {                             //is selected disk available?             
           Wbyte(RSTAT, 0x00);                           //reset "Not Ready" bit in Status Register
-          DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);  //open SD DOAD file        
+          DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file        
           Dbtidx = cDbtidx();                           //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                       //set to first absolute DOAD byte for R/W
         }
@@ -556,13 +556,14 @@ void loop() {
           // R/W individual sector
           case 0x80:                                    //read sector                                                                                    
           case 0xA0:                                    //write sector
-            if ( Sbtidx++ <  maxbyte ) {                //increase byte index; have we done all 256 bytes yet?  
+            if ( Sbtidx <  maxbyte ) {                  //increase byte index; have we done all 256 bytes yet?  
               if (ccmd < 0xA0 || ccmd == 0xE0 ) {       //read command (0x80, 0x90, 0xE0)?
                 Wbyte(RDATA, DSK[cDSK].read() );        //yes -> supply next byte
               }
               else {
                 DSK[cDSK].write( Rbyte(WDATA) );        //no -> next byte to DOAD         
               }
+              Sbtidx++;
             }
             else {                                      //yes, all 256 bytes done         
               if ( ccmd != 0x80 && ccmd != 0xA0) {      //multi-sector R/W?
