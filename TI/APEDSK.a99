@@ -461,6 +461,10 @@ H038	BL	@VDPRPW			write it 256 times
 *	LI	R4,3			try 3 times
 H040	MOVB	@>004E(R9),R2		top of data buffer
 	BL	@VDPRD			set VDP to read from it
+* APEDSK: the first byte to be written needs to be in the data register 
+*         before the write command is given
+	MOVB	@-1026(R15),R0		read one byte from buffer
+	MOVB	R0,@WDATA		send it to data register
 	BL	@SNDCMD			send command
 *	DATA	>0B00			write track (E=1)
 	DATA	>F400			APEDSK: write track (E=1)
