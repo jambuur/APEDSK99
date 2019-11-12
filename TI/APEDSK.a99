@@ -290,11 +290,15 @@ H019	CLR	R5			clear flag
 					
 H014	BL	@VDPRD			write to FD = read from VDP buffer
 	LI	R6,256			APEDSK:
+* APEDSK: the first byte to be written needs to be in the data register 
+*         before the write command is given
+	MOVB	@-1026(R15),R0		APEDSK:get a byte from data buffer
+	MOVB	R0,@WDATA		APEDSK:write first byte to data register
 	BL	@SNDCMD			send command
 *	DATA	>5700			write sector m=0 S=1 E=0 C=0 a=0
 	DATA	>A800			APEDSK: write sector m=0 S=1 E=0 C=0 a=0
 *	SBO	2			enable holds
-H024	MOVB	@-1026(R15),R0		get a byte from data buffer
+H024	MOVB	@-1026(R15),R0		get a (APEDSK: next) byte from data buffer
 *	INV	R0			APEDSK: none of this inverting databus rubbish
 	MOVB	R0,@WDATA		pass it to data register
 *	MOVB	@-1026(R15),R0		again
