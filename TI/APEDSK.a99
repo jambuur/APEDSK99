@@ -367,26 +367,26 @@ H029	SZCB	@SIDE01,@CRUWRI		APEDSK: set CRU bit for side 0
 	MOV	@>004A(R9),@>004A(R9)	check # of sides
 	JEQ	H031			single-side
 *	SBO	7			
-	SOCB	@SIDE01,@CRUWRI		APEDSK: select side 1
+*	SOCB	@SIDE01,@CRUWRI		APEDSK: select side 1
 *	LI	R4,10			try 10 times
-READID	BL	@SKTRK0			seek track 0
-	MOV	@>004E(R9),R2		data buffer address
-	BL	@VDPWRI			set VDP to write
-	LI	R6,5			read 6 bytes (APEDSK: first will be available as part of @SNDCMD 
-	MOV	R6,@RDINT		APEDSK: slightly re-arranged READID/H032 to sync ID byte reads
-	BL	@SNDCMD			send command
+*READID	BL	@SKTRK0			seek track 0
+*	MOV	@>004E(R9),R2		data buffer address
+*	BL	@VDPWRI			set VDP to write
+*	LI	R6,5			read 6 bytes (APEDSK: first will be available as part of @SNDCMD 
+*	MOV	R6,@RDINT		APEDSK: slightly re-arranged READID/H032 to sync ID byte reads
+*	BL	@SNDCMD			send command
 *	DATA	>3F00			read ID (E=0)
-	DATA	>C000			APEDSK: read ID (E=0)
+*	DATA	>C000			APEDSK: read ID (E=0)
 *	SBO	2			enable wait states
-H032	MOVB	@RDATA,R0		read data register
+*H032	MOVB	@RDATA,R0		read data register
 *	INV	R0			APEDSK: none of that inverted databus rubbish
-	MOVB	R0,@-2(R15)		write it to data buffer
+*	MOVB	R0,@-2(R15)		write it to data buffer
 *	MOVB	@RDATA,R0		again, why write this twice ?
 *	INV	R0			APEDSK: none of that inverted databus rubbish
 *	MOVB	R0,@-2(R15)			
 *	DECT	R6			
-	DEC	@RDINT			APEDSK: generate interrupt for next read
-	JNE	H032			
+*	DEC	@RDINT			APEDSK: generate interrupt for next read
+*	JNE	H032			
 *	BL	@WTCPT2			SBZ 2 then wait for command completion
 *	BL	@WTCPT1			APEDSK: no need to wait for command completion
 *	SLA	R0,13			check status bits
@@ -394,12 +394,12 @@ H032	MOVB	@RDATA,R0		read data register
 *	JLT	H034			CRC error
 *	SLA	R0,2			
 *	JOC	H035			lost data
-	MOV	@>004E(R9),R2		address of data buffer
-	INC	R2			skip track #
-	BL	@VDPRD			set VDP to read from it
-	CLR	R0			
-	MOVB	@-1026(R15),R0		read one byte
-	JEQ	H031			side 0
+*	MOV	@>004E(R9),R2		address of data buffer
+*	INC	R2			skip track #
+*	BL	@VDPRD			set VDP to read from it
+*	CLR	R0			
+*	MOVB	@-1026(R15),R0		read one byte
+*	JEQ	H031			side 0
 	MOVB	@>004D(R9),R0		side 1: get tracks/side
 	SLA	R0,1			times two (since 2 sides)
 	JMP	H036			
