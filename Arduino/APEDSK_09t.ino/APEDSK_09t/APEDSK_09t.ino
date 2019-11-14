@@ -567,15 +567,17 @@ void loop() {
             }
             else {                                      //yes, all 256 bytes done         
               if ( ccmd != 0x80 && ccmd != 0xA0) {      //multi-sector R/W?
-                if ( DSRAM < (maxsect - 1) ) {          //yes; still sectors left to read in current track?
-                  if ( ccmd != 0xE0 && ccmd != 0xF0) {  //track R/W does not update Sector Registers (guess)            
-                    DSRAM = Rbyte(WSECTR);              //read current sector #
-                    Wbyte(WSECTR, ++DSRAM);             //increase Sector Register
-                    Wbyte(RSECTR, DSRAM);               //sync Sector Registers    
-                  }
+                DSRAM = Rbyte(WSECTR);                  //read current sector #
+                if ( DSRAM < (maxsect - 1) ) {          //yes; still sectors left to read in current track?     
+                  Wbyte(WSECTR, ++DSRAM);               //increase Sector Register
+                  Wbyte(RSECTR, DSRAM);                 //sync Sector Registers    
                   Sbtidx = 0;                           //reset sector/byte counter for next round;
                 }
                 else {                               
+                  if ( ccmd == 0xE0 && ccmd == 0xF0) {  //track R/W does not update Sector Registers (guess)  
+                    Wbyte(WSECTR, 0x00)   ;             //zero Sector Register
+                    Wbyte(RSECTR, 0x00);                //sync Sector Registers        
+                  }
                  noExec();			                        //done multiple sectors
                 }
               }
