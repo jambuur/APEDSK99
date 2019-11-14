@@ -89,7 +89,7 @@
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block); not used but possible future use
-//B00001111: DSK1, DSK2, DSK3, side 0/1
+//B00001111: DSK3 (6), DSK2 (4), DSK1 (2), side 0/1
 #define CRUWRI  0x1FEE  //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
 #define RSTAT   0x1FF0  //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
 #define RTRACK  0x1FF2  //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
@@ -320,7 +320,7 @@ byte lcmd                 = 0;      //last command
 boolean ncmd              = false;  //flag new command
 unsigned long int Dbtidx  = 0;      //absolute DOAD byte index
 boolean curdir            = LOW;    //current step direction, step in(wards) towards track 39 by default
-unsigned int Sbtidx       = 0;	    //R/W sector/byte index counter 
+unsigned int Sbtidx       = 0;	    // R/W sector/byte index counter 
 byte Ridx                 = 0;      //READ ID counter
 
 //clear various FD1771 registers (for powerup and Restore command)
