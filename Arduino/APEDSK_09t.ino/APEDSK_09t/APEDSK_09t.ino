@@ -574,7 +574,7 @@ void loop() {
                   Sbtidx = 0;                           //reset sector/byte counter for next round;
                 }
                 else {                               
-                  if ( ccmd == 0xE0 && ccmd == 0xF0) {  //track R/W does not update Sector Registers (guess)  
+                  if ( ccmd == 0xE0 || ccmd == 0xF0) {  //track R/W does not update Sector Registers (guess)  
                     Wbyte(WSECTR, 0x00)   ;             //zero Sector Register
                     Wbyte(RSECTR, 0x00);                //sync Sector Registers        
                   }
