@@ -469,7 +469,7 @@ H040	MOVB	@>004E(R9),R2		top of data buffer
 *	DATA	>0B00			write track (E=1)
 	DATA	>F400			APEDSK: write track (E=1)
 *	LI	R6,3235			3235 bytes to write
-	LI	R6,2303			APEDSK: (9*256)-1 already written = 2303 bytes to write
+	LI	R6,2304			APEDSK: (9*256)-1 already written = 2303 bytes to write
 *	SBO	2			enable wait states
 H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	INV	R0			APEDSK: none of this inverting databus rubbish

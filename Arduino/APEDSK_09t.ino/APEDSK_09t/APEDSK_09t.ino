@@ -571,7 +571,7 @@ void loop() {
                 if ( DSRAM < (maxsect - 1) ) {          //yes; still sectors left to read in current track?     
                   Wbyte(WSECTR, ++DSRAM);               //increase Sector Register
                   Wbyte(RSECTR, DSRAM);                 //sync Sector Registers    
-                  Sbtidx = 0;                           //reset sector/byte counter for next round;
+                  Sbtidx = 1;                           //reset sector/byte counter for next round;
                 }
                 else {                               
                   if ( ccmd == 0xE0 || ccmd == 0xF0) {  //track R/W does not update Sector Registers (guess)  
