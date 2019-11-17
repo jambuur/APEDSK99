@@ -289,7 +289,7 @@ H019	CLR	R5			clear flag
 *	DATA	>2800			
 					
 H014	BL	@VDPRD			write to FD = read from VDP buffer
-	LI	R6,255			APEDSK: 256 - 1 already written = 255 bytes
+	LI	R6,256			APEDSK:256 bytes to write
 * APEDSK: the first byte to be written needs to be in the data register 
 *         before the write command is given
 	MOVB	@-1026(R15),R0		APEDSK:get a byte from data buffer
