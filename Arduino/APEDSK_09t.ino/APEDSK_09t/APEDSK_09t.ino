@@ -556,12 +556,12 @@ void loop() {
           // R/W individual sector
           case 0x80:                                    //read sector                                                                                    
           case 0xA0:                                    //write sector
-            if ( Sbtidx <  maxbyte ) {                  //increase byte index; have we done all 256 bytes yet?  
+            if ( Sbtidx < maxbyte ) {                   //increase byte index; have we done all 256 bytes yet?  
               if (ccmd < 0xA0 || ccmd == 0xE0 ) {       //read command (0x80, 0x90, 0xE0)?
                 Wbyte(RDATA, DSK[cDSK].read() );        //yes -> supply next byte
               }
               else {
-                  DSK[cDSK].write( Rbyte(WDATA) );        //no -> next byte to DOAD       
+                DSK[cDSK].write( Rbyte(WDATA) );        //no -> next byte to DOAD       
               }
               Sbtidx++;
             }
@@ -571,12 +571,12 @@ void loop() {
                 if ( DSRAM < (maxsect - 1) ) {          //yes; still sectors left to read in current track?     
                   Wbyte(WSECTR, ++DSRAM);               //increase Sector Register
                   Wbyte(RSECTR, DSRAM);                 //sync Sector Registers    
-                  Sbtidx = 1;                           //reset sector/byte counter for next round;
+                  Sbtidx = 0;                           //reset sector/byte counter for next round;
                 }
                 else {                               
                   if ( ccmd == 0xE0 || ccmd == 0xF0) {  //track R/W does not update Sector Registers (guess)  
                     Wbyte(WSECTR, 0x00)   ;             //zero Sector Register
-                    Wbyte(RSECTR, 0x00);                //sync Sector Registers        
+                    Wbyte(RSECTR, 0x00);                //sync Sector Registers 
                   }
                  noExec();			                        //done multiple sectors
                 }
