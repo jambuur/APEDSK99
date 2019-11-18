@@ -479,7 +479,8 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	MOVB	R0,@WDATA		send next byte
 *	DECT	R6			
 	DEC	R6			APEDSK:
-	JGT	H041			next (pair of bytes) byte
+*	JGT	H041			next (pair of bytes) byte
+	JNE	H041			APEDSK: next byte
 *	BL	@WTCPT2			SBZ 2, then wait for command completion
 *	BL	@WTCPT1			APEDSK: no need to wait for command completion
 *	SLA	R0,11			check write protect bit
