@@ -544,7 +544,7 @@ void loop() {
           // R/W entire track; sounds suspiciously like R/W multiple sectors (some prep, then fallthrough)
           case 0xE0:                                    //read track
           case 0xF0:                                    //write track     
-            if (ncmd) {                                 //do some prep in first round
+            if ( ncmd ) {                               //do some prep in first round
               Wbyte(WSECTR, 0);                         //to read entire track we need to start from sector 0
               Wbyte(RSECTR, 0);                         //sync Sector Registers
             }
