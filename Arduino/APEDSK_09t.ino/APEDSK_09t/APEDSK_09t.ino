@@ -568,7 +568,7 @@ void loop() {
             else {                                      //yes, all 256 bytes done         
               if ( ccmd != 0x80 && ccmd != 0xA0) {      //multi-sector R/W?
                 DSRAM = Rbyte(WSECTR);                  //read current sector
-                if ( DSRAM < (maxsect - 2) ) {          //can we still increase sector # (max 8)?
+                if ( DSRAM < (maxsect - 1) ) {          //can we still increase sector # (max 8)?
                   Wbyte(WSECTR, ++DSRAM);               //yes; sync Sector Registers
                   Wbyte(RSECTR,   DSRAM);               //""
                   Sbtidx = 0;                           //reset sector byte index
