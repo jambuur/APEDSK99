@@ -451,7 +451,11 @@ void loop() {
         if ( aDSK[cDSK] ) {                                   //is selected disk available?             
           Wbyte(RSTAT, 0x00);                                 //reset "Not Ready" bit in Status Register
           DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file        
-          Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
+          if ( ccmd == 0xE0 || ccmd == 0xF0 ) {
+              Wbyte(WSECTR, 0);                         //to read entire track we need to start from sector 0
+              Wbyte(RSECTR, 0);                         //sync Sector Registers
+            }
+		Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
         }
         else {      
@@ -544,10 +548,6 @@ void loop() {
           // R/W entire track; sounds suspiciously like R/W multiple sectors (some prep, then fallthrough)
           case 0xE0:                                    //read track
           case 0xF0:                                    //write track     
-            if ( ncmd ) {                               //do some prep in first round
-              Wbyte(WSECTR, 0);                         //to read entire track we need to start from sector 0
-              Wbyte(RSECTR, 0);                         //sync Sector Registers
-            }
 
           // R/W multiple sectors; sounds suspiciously like R/W single sectors in a loop (fallthrough)  
           case 0x90:                                    //read multiple sectors                 
