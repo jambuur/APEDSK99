@@ -452,10 +452,10 @@ void loop() {
           Wbyte(RSTAT, 0x00);                                 //reset "Not Ready" bit in Status Register
           DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file        
           if ( ccmd == 0xE0 || ccmd == 0xF0 ) {
-              Wbyte(WSECTR, 0);                         //to read entire track we need to start from sector 0
-              Wbyte(RSECTR, 0);                         //sync Sector Registers
+              Wbyte(WSECTR, 0);                               //to read entire track we need to start from sector 0
+              Wbyte(RSECTR, 0);                               //sync Sector Registers
             }
-		Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
+		      Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
         }
         else {      
@@ -556,7 +556,7 @@ void loop() {
           // R/W individual sector
           case 0x80:                                    //read sector                                                                                    
           case 0xA0:                                    //write sector
-            if ( Sbtidx < maxbyte ) {                   //increase byte index; have we done all 256 bytes yet?  
+            if ( Sbtidx <= maxbyte ) {                   //increase byte index; have we done all 256 bytes yet?  
               if (ccmd < 0xA0 || ccmd == 0xE0 ) {       //read command (0x80, 0x90, 0xE0)?
                 Wbyte(RDATA, DSK[cDSK].read() );        //yes -> supply next byte
               }
@@ -571,7 +571,7 @@ void loop() {
                 if ( DSRAM < (maxsect - 1) ) {          //can we still increase sector # (max 8)?
                   Wbyte(WSECTR, ++DSRAM);               //yes; sync Sector Registers
                   Wbyte(RSECTR,   DSRAM);               //""
-                  Sbtidx = 0;                           //reset sector byte index
+                  Sbtidx = 1;                           //reset sector byte index
                 }
                 else {                               
                   if ( ccmd == 0xE0 || ccmd == 0xF0) {  //track R/W does not update Sector Registers (guess)  
