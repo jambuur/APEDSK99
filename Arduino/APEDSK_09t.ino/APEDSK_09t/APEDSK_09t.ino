@@ -355,6 +355,18 @@ unsigned long int cDbtidx (void) {
   return (bi);
 }
 
+void RWsector( boolean Read ) {
+  if ( unsigned int Sbtidx <= maxbyte ) {	//have we done all 256 bytes yet? 
+    if ( Read ) {				//no; do we need to read a sector?
+      Wbyte(RDATA, DSK[cDSK].read() );        	//yes -> supply next byte
+    }
+    else {
+      DSK[cDSK].write( Rbyte(WDATA) );        	//no -> next byte to DOAD
+    }
+    Sbtidx++;					//increase sector byte counter
+  }
+}						//yes; done all 256 bytes in the sector
+
 void setup() {
 
   //see if the SD card is present and can be initialized
@@ -451,11 +463,7 @@ void loop() {
         if ( aDSK[cDSK] ) {                                   //is selected disk available?             
           Wbyte(RSTAT, 0x00);                                 //reset "Not Ready" bit in Status Register
           DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file        
-          if ( ccmd == 0xE0 || ccmd == 0xF0 ) {
-              Wbyte(WSECTR, 0);                               //to read entire track we need to start from sector 0
-              Wbyte(RSECTR, 0);                               //sync Sector Registers
-            }
-		      Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
+          Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
           DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
         }
         else {      
@@ -540,31 +548,44 @@ void loop() {
       else {  // read/write commands
         
         switch (ccmd) {  //switch R/W commands
-
+	
+	  if ( ncmd ) {					  //new command prep
+	    if ( ccmd == 0xE0 || ccmd == 0xF0 ) {
+	      Wbyte(WSECTR, 0);                           //to R/W entire track we need to start from sector 0
+              Wbyte(RSECTR, 0);                           //sync Sector Registers
+	    }
+	  }
+		  
           case 0xD0:
             noExec(); 
           break;
+	  
+          //read or write individual sectors
+	  case 0x80:                                    //read sector  
+	    RWsector( true );
+	    break;
+          case 0xA0:         				//write sector
+	    RWsector( false );	
+	    break;
 
-          // R/W entire track; sounds suspiciously like R/W multiple sectors (some prep, then fallthrough)
+          // R/W entire track
           case 0xE0:                                    //read track
-          case 0xF0:                                    //write track     
+	  case 0xF0:                                    //write track     
+            for (byte csect = 0; csect < maxsect; csect++ ) {
+	      if ( 
+	      
+	     
+            
+          
+		
+		
 
           // R/W multiple sectors; sounds suspiciously like R/W single sectors in a loop (fallthrough)  
           case 0x90:                                    //read multiple sectors                 
           case 0xB0:                                    //write multiple sectors
                       
-          // R/W individual sector
-          case 0x80:                                    //read sector                                                                                    
-          case 0xA0:                                    //write sector
-            if ( Sbtidx <= maxbyte ) {                   //increase byte index; have we done all 256 bytes yet?  
-              if (ccmd < 0xA0 || ccmd == 0xE0 ) {       //read command (0x80, 0x90, 0xE0)?
-                Wbyte(RDATA, DSK[cDSK].read() );        //yes -> supply next byte
-              }
-              else {
-                DSK[cDSK].write( Rbyte(WDATA) );        //no -> next byte to DOAD       
-              }
-              Sbtidx++;
-            }
+         
+			
             else {                                      //yes, all 256 bytes done         
               if ( ccmd != 0x80 && ccmd != 0xA0) {      //multi-sector R/W?
                 DSRAM = Rbyte(WSECTR);                  //read current sector
