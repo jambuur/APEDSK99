@@ -365,6 +365,11 @@ void RWsector( boolean rw ) {
     }
     Sbtidx++;					                                //increase sector byte counter
   }
+  else {
+    if (ccmd == 0x80 || ccmd == 0xA0) {               //done with R/W single sector
+      noExec();
+    }
+  }
 }						                                          //yes; done all 256 bytes in the sector
 
 void setup() {
@@ -570,7 +575,7 @@ void loop() {
           case 0xB0:                                              //write multiple sectors
 	        case 0xE0:                                              //read track
 	        case 0xF0:                                              //write track              
-	   
+	        // he Oelewapper: R/W last sector by changing command to single R/W -> cancel will be done by sector R/W routine
 	          Wbyte(WSECTR, DSRAM);
 	          Wbyte(RSECTR, DSRAM);
 
