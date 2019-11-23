@@ -355,18 +355,17 @@ unsigned long int cDbtidx (void) {
   return (bi);
 }
 
-void RWsector( boolean Read ) {
-  unsigned int Sbtidx = 0; 
-  if ( Sbtidx <= maxbyte ) {			//have we done all 256 bytes yet? 
-    if ( Read ) {				//no; do we need to read a sector?
-      Wbyte(RDATA, DSK[cDSK].read() );        	//yes -> supply next byte
+void RWsector( boolean rw ) {
+  if ( Sbtidx < maxbyte ) {			                      //have we done all 256 bytes yet? 
+    if ( rw ) {				                                //no; do we need to read a sector?
+      Wbyte(RDATA, DSK[cDSK].read() );        	      //yes -> supply next byte
     }
     else {
-      DSK[cDSK].write( Rbyte(WDATA) );        	//no -> next byte to DOAD
+      DSK[cDSK].write( Rbyte(WDATA) );        	      //no -> next byte to DOAD
     }
-    Sbtidx++;					//increase sector byte counter
+    Sbtidx++;					                                //increase sector byte counter
   }
-}						//yes; done all 256 bytes in the sector
+}						                                          //yes; done all 256 bytes in the sector
 
 void setup() {
 
@@ -534,55 +533,48 @@ void loop() {
         
         switch (ccmd) {  //switch R/W commands
 	
-	  if ( ncmd ) {					  //new command pre
-	    //is the selected DSK available?
+	        if ( ncmd ) {					                                  //new command prep
             cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
             if ( aDSK[cDSK] ) {                                   //is selected disk available?             
               Wbyte(RSTAT, 0x00);                                 //reset "Not Ready" bit in Status Register
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file        
               Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
               DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W  
-              if ( ccmd == 0xE0 || ccmd == 0xF0 ) {
-	        Wbyte(WSECTR, 0);                           //to R/W entire track we need to start from sector 0
-	      }
-	      DSRAM = Rbyte(WSECTR);
-	    }
-          }
-          else {      
-            if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
-              Wbyte(RSTAT, 0x80);                               //no; set "Not Ready" bit in Status Register
-              ccmd = 0xD0;                                      //exit            }    
-            }
-	  }	 	  
-		    
+              if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               //R/W whole track?
+	              Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
+	            }
+	            DSRAM = Rbyte(WSECTR);                              //store starting sector #
+	          }
+            else {      
+              if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
+                Wbyte(RSTAT, 0x80);                               //no; set "Not Ready" bit in Status Register
+                ccmd = 0xD0;                                      //exit            }    
+              }
+	          }	 	  
+	        }
+         
           case 0xD0:
             noExec(); 
           break;
 	  
           //read or write individual sectors
-	  case 0x80:                                    //read sector  
-	    RWsector( true );
-	    break;
-          case 0xA0:         				//write sector
-	    RWsector( false );	
-	    break;
+	        case 0x80:                                              //read sector  
+	          RWsector( true );
+	        break;
+          case 0xA0:         				                              //write sector
+	          RWsector( false );	
+	        break;
 
           // R/W entire track
-          case 0x90:                                    //read multiple sectors                 
-          case 0xB0:                                    //write multiple sectors
-	  case 0xE0:                                    //read track
-	  case 0xF0:                                    //write track              
-	    for ( DSRAM; DSRAM < (maxsect - 1); DSRAM++ ) {
-	      if ( ccmd == 0x90 || ccmd == 0xE0 ) {
-                RWsector( true );
-	      }
-              else {
-		RWsector( false );
-	      }
-	      Wbyte(WSECTR, DSRAM);
-	      Wbyte(RSECTR, DSRAM);
-	    }
-	  break;
+          case 0x90:                                              //read multiple sectors                 
+          case 0xB0:                                              //write multiple sectors
+	        case 0xE0:                                              //read track
+	        case 0xF0:                                              //write track              
+	   
+	          Wbyte(WSECTR, DSRAM);
+	          Wbyte(RSECTR, DSRAM);
+
+      	  break;
 	
           case 0xC0:  //read ID
 
