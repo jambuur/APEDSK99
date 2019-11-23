@@ -535,29 +535,29 @@ void loop() {
       } // end ccmd < 0x80
     
       else {  // read/write commands
-        
-        switch (ccmd) {  //switch R/W commands
 	
-	        if ( ncmd ) {					                                  //new command prep
-            cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
-            if ( aDSK[cDSK] ) {                                   //is selected disk available?             
-              Wbyte(RSTAT, 0x00);                                 //reset "Not Ready" bit in Status Register
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file        
-              Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
-              DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W  
-              if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               //R/W whole track?
-	              Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
-	            }
-	            DSRAM = Rbyte(WSECTR);                              //store starting sector #
-	          }
-            else {      
-              if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
-                Wbyte(RSTAT, 0x80);                               //no; set "Not Ready" bit in Status Register
-                ccmd = 0xD0;                                      //exit            }    
-              }
-	          }	 	  
+        if ( ncmd ) {					                                  //new command prep
+          cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
+          if ( aDSK[cDSK] ) {                                   //is selected disk available?             
+            Wbyte(RSTAT, 0x00);                                 //reset "Not Ready" bit in Status Register
+            if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               //R/W whole track?
+              Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
+            }
+            DSRAM = Rbyte(WSECTR);                              //store starting sector #
+            DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file        
+            Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
+            DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W  
 	        }
-         
+          else {      
+            if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
+              Wbyte(RSTAT, 0x80);                               //no; set "Not Ready" bit in Status Register
+              ccmd = 0xD0;                                      //exit            }    
+            }
+	        }	 	  
+	      }
+
+         switch (ccmd) {  //switch R/W commands
+          
           case 0xD0:
             noExec(); 
           break;
