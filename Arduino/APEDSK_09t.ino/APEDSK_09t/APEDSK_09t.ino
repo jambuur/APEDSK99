@@ -562,7 +562,7 @@ void loop() {
 	        }
           else {      
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
-              Wbyte(RSTAT, 0x80);                               //no; set "Not Ready" bit in Status Register
+              Wbyte(RSTAT, NotReady);                               //no; set "Not Ready" bit in Status Register
               ccmd = 0xD0;                                      //exit            }    
             }
 	        }	 	  
