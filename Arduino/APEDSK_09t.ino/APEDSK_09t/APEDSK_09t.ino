@@ -364,10 +364,22 @@ void RWsector( boolean rw ) {
       DSK[cDSK].write( Rbyte(WDATA) );        	      //no -> next byte to DOAD
     }
     Sbtidx++;					                                //increase sector byte counter
+    Wbyte(0x1EEE, Sbtidx);
   }
   else {
     if (ccmd == 0x80 || ccmd == 0xA0) {               //done with R/W single sector
       noExec();
+    }
+    else {
+      if ( DSRAM < (maxsect - 1) ){
+        DSRAM++;
+        Wbyte(WSECTR, DSRAM);
+        Wbyte(RSECTR, DSRAM);
+        Sbtidx = 0;
+      }
+      else {
+        noExec();
+      }
     }
   }
 }						                                          //yes; done all 256 bytes in the sector
@@ -556,8 +568,8 @@ void loop() {
 	        }	 	  
 	      }
 
-         switch (ccmd) {  //switch R/W commands
-          
+        switch (ccmd) {  //switch R/W commands
+    
           case 0xD0:
             noExec(); 
           break;
@@ -575,10 +587,12 @@ void loop() {
           case 0xB0:                                              //write multiple sectors
 	        case 0xE0:                                              //read track
 	        case 0xF0:                                              //write track              
-	        // he Oelewapper: R/W last sector by changing command to single R/W -> cancel will be done by sector R/W routine
-	          Wbyte(WSECTR, DSRAM);
-	          Wbyte(RSECTR, DSRAM);
-
+            if ( ccmd == 0x90 || ccmd == 0xE0 ) {
+              RWsector( true );
+            }
+            else {
+              RWsector( false );
+            }
       	  break;
 	
           case 0xC0:  //read ID
