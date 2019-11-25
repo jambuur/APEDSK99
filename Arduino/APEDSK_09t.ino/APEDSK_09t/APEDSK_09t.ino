@@ -101,17 +101,21 @@
 #define WDATA   0x1FFE  //write FD1771 Data register     (>5FFE in TI99/4a DSR memory block)
 
 //error blinking parameters: on (pwm), off, delay between sequence
-#define LED_on      500
-#define LED_off     250
-#define LED_repeat  1500
+#define LED_ON      500
+#define LED_OFF     250
+#define LED_REPEAT  1500
 
-//useful Status Register bits
-#define NotReady  0x80
+//useful Status Register bit(s)
+#define NOTREADY  0x80
+#define NOERROR	0x00
+
+//"Force Interrupt" command
+#define FDINT	0xD0
 
 //"disk" characteristics
-#define maxtrack  40		//# of tracks/side
-#define maxsect	  9		  //# sectors/track
-#define maxbyte   256		//# bytes/sector
+#define NRTRACKS  40		//# of tracks/side
+#define NRSECTS	  9		  //# sectors/track
+#define NRBYSECT  256		//# bytes/sector
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -288,15 +292,15 @@ void eflash(byte error)
       //set RAM CE* LOW, turns on LED
       digitalLow(CE);  
       //LED is on for a bit
-      delay(LED_on);
+      delay(LED_ON);
 
       //turn it off
       digitalHigh(CE); 
       //LED is off for a bit
-      delay(LED_off);
+      delay(LED_OFF);
     } 
       //allow human error interpretation
-      delay(LED_repeat);
+      delay(LED_REPEAT);
   }
 }
 
@@ -313,7 +317,7 @@ String  nDSK[4] = {"x","/DISKS/001.DSK","/DISKS/002.DSK","/DISKS/003.DSK"};	    
 byte    cDSK    = 0;                                                                //current selected DSK
 
 //various storage and flags for command interpretation and handling
-byte DSRAM	              = 0;	    //generic variable for RAM R/W
+byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
 volatile boolean FD1771   = false;  //interrupt routine flag: new or continued FD1771 command
 byte ccmd                 = 0;      //current command
 byte lcmd                 = 0;      //last command
@@ -337,8 +341,8 @@ void FDrstr(void) {
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
   DSK[cDSK].close();  //close current SD DOAD file
-  Wbyte(WCOMND,0xD0); //"force interrupt" command (aka no further execution)
-  ccmd = 0xD0;        // "" ""
+  Wbyte(WCOMND, FDINT); //"force interrupt" command (aka no further execution)
+  ccmd = FDINT;        // "" ""
   lcmd = ccmd;		    //reset new command prep
   Sbtidx = 0; 	      //clear index counter
   Ridx = 0;           //clear READ ID index counter 
@@ -347,16 +351,16 @@ void noExec(void) {
 //calculate and return absolute DOAD byte index for R/W commands 
 unsigned long int cDbtidx (void) {
   unsigned long int bi;
-  bi  = ( Rbyte(CRUWRI) & B00000001 ) * maxtrack;     //add side 0 tracks (0x28) if on side 1
+  bi  = ( Rbyte(CRUWRI) & B00000001 ) * NRTRACKS;     //add side 0 tracks (0x28) if on side 1
   bi += Rbyte(WTRACK);                                //add current track #
-  bi *= maxsect;                                      //convert to # of sectors
+  bi *= NRSECTS;                                      //convert to # of sectors
   bi += Rbyte(WSECTR);                                //add current sector #
-  bi *= maxbyte;                                      //convert to absolute DOAD byte index (max 184320 for DS/SD)
+  bi *= NRBYSECT;                                      //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
 
 void RWsector( boolean rw ) {
-  if ( Sbtidx < maxbyte ) {			                      //have we done all 256 bytes yet? 
+  if ( Sbtidx < NRBYSECT ) {			                      //have we done all 256 bytes yet? 
     if ( rw ) {				                                //no; do we need to read a sector?
       Wbyte(RDATA, DSK[cDSK].read() );        	      //yes -> supply next byte
     }
@@ -371,7 +375,7 @@ void RWsector( boolean rw ) {
       noExec();
     }
     else {
-      if ( DSRAM < (maxsect - 1) ){
+      if ( DSRAM < (NRSECTS - 1) ){
         DSRAM++;
         Wbyte(WSECTR, DSRAM);
         Wbyte(RSECTR, DSRAM);
@@ -467,7 +471,7 @@ void loop() {
     ccmd = Rbyte(WCOMND) & 0xF0;
 
     //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
-    if ( ccmd != 0xD0 ) { //do we need to do anything?
+    if ( ccmd != FDINT ) { //do we need to do anything?
 
       //new or continue previous command?
       ncmd = (ccmd != lcmd);
@@ -485,7 +489,7 @@ void loop() {
 			
           case 0x10:	//seek                              //note: when maxtrack == WTRACK curdir doesn't change
             DSRAM = Rbyte(WDATA);                         //read track seek #
-            if ( DSRAM < maxtrack ) {                     //make sure we stay within max # of tracks
+            if ( DSRAM < NRTRACKS ) {                     //make sure we stay within max # of tracks
               if (DSRAM > Rbyte(WTRACK) ) {
                 curdir = LOW;                             //step-in towards track 39
               }
@@ -504,7 +508,7 @@ void loop() {
           case 0x30:	                                    //step+T (update Track register)
             DSRAM = Rbyte(WTRACK);                        //read current track #
             //is current direction inwards and track # still within limits?
-            if (  DSRAM < maxtrack  && curdir == LOW ) {
+            if (  DSRAM < NRTRACKS  && curdir == LOW ) {
               Wbyte(WTRACK, ++DSRAM);                     //increase track #
             }
             else {
@@ -521,7 +525,7 @@ void loop() {
           case 0x50:	//step-in+T (towards track 39, update Track Register)
             DSRAM = Rbyte(WTRACK);                        //read current track #
             //if track # still within limits update track register
-            if ( DSRAM < maxtrack) { 
+            if ( DSRAM < NRTRACKS) { 
               Wbyte(WTRACK, ++DSRAM);                     //increase track #
               curdir = LOW; 	                            //set current direction    
       	    }
@@ -553,7 +557,7 @@ void loop() {
           if ( aDSK[cDSK] ) {                                   //is selected disk available?             
             Wbyte(RSTAT, 0x00);                                 //reset "Not Ready" bit in Status Register
             if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               //R/W whole track?
-              Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
+              Wbyte(WSECTR, NOERROR);                              //yes; start from sector 0
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file        
