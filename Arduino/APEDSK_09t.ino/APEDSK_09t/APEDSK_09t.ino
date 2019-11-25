@@ -322,7 +322,7 @@ volatile boolean FD1771   = false;  //interrupt routine flag: new or continued F
 byte ccmd                 = 0;      //current command
 byte lcmd                 = 0;      //last command
 boolean ncmd              = false;  //flag new command
-unsigned long int Dbtidx  = 0;      //absolute DOAD byte index
+unsigned long Dbtidx  = 0;      //absolute DOAD byte index
 boolean curdir            = LOW;    //current step direction, step in(wards) towards track 39 by default
 unsigned int Sbtidx       = 0;	    // R/W sector/byte index counter 
 byte Ridx                 = 0;      //READ ID counter
@@ -349,8 +349,8 @@ void noExec(void) {
 }
 
 //calculate and return absolute DOAD byte index for R/W commands 
-unsigned long int cDbtidx (void) {
-  unsigned long int bi;
+unsigned long cDbtidx (void) {
+  unsigned long bi;
   bi  = ( Rbyte(CRUWRI) & B00000001 ) * NRTRACKS;     //add side 0 tracks (0x28) if on side 1
   bi += Rbyte(WTRACK);                                //add current track #
   bi *= NRSECTS;                                      //convert to # of sectors
