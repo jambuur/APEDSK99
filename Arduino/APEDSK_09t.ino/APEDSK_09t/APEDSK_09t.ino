@@ -467,8 +467,8 @@ void loop() {
     //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is ready to rumble
     noInterrupts();
 
-    //read Command Register, stripping the unnecessary floppy bits
-    ccmd = Rbyte(WCOMND) & 0xF0;
+    //read Command Register, stripping the unnecessary floppy bits but keeping command nybble
+    ccmd = Rbyte(WCOMND) & B11110000;
 
     //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
     if ( ccmd != FDINT ) { //do we need to do anything?
@@ -555,9 +555,9 @@ void loop() {
         if ( ncmd ) {					                                  //new command prep
           cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
           if ( aDSK[cDSK] ) {                                   //is selected disk available?
-            Wbyte(RSTAT, 0x00);                                 //reset "Not Ready" bit in Status Register
+            Wbyte(RSTAT, NOERROR);                                 //reset "Not Ready" bit in Status Register
             if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               //R/W whole track?
-              Wbyte(WSECTR, NOERROR);                           //yes; start from sector 0
+              Wbyte(WSECTR, 0x00);                           //yes; start from sector 0
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
@@ -567,7 +567,7 @@ void loop() {
           else {
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
               Wbyte(RSTAT, NOTREADY);                           //no; set "Not Ready" bit in Status Register
-              ccmd = 0xD0;                                      //exit            }
+              ccmd = FDINT;                                      //exit            }
             }
           }
         }
@@ -588,17 +588,14 @@ void loop() {
 
           // R/W entire track
           case 0x90:                                              //read multiple sectors
-          case 0xB0:                                              //write multiple sectors
-          case 0xE0:                                              //read track
+	  case 0xE0:                                              //read track
+            RWsector( true );
+	  break;
+	  case 0xB0:                                              //write multiple sectors
           case 0xF0:                                              //write track
-            if ( ccmd == 0x90 || ccmd == 0xE0 ) {
-              RWsector( true );
-            }
-            else {
-              RWsector( false );
-            }
-            break;
-
+	    RWsector( false );
+	  break;
+			
           case 0xC0:  //read ID
 
             Ridx++;                                       //index to READ ID values
