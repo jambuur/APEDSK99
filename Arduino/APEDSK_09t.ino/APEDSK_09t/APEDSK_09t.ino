@@ -326,6 +326,7 @@ unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 boolean curdir            = LOW;    //current step direction, step in(wards) towards track 39 by default
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
 byte Ridx                 = 0;      //READ ID counter
+byte kTrack               = 0;      //keep track of Track # :-)
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -355,7 +356,7 @@ unsigned long cDbtidx (void) {
   bi += Rbyte(WTRACK);                                //add current track #
   bi *= NRSECTS;                                      //convert to # of sectors
   bi += Rbyte(WSECTR);                                //add current sector #
-  bi *= NRBYSECT;                                      //convert to absolute DOAD byte index (max 184320 for DS/SD)
+  bi *= NRBYSECT;                                     //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
 
@@ -368,7 +369,6 @@ void RWsector( boolean rw ) {
       DSK[cDSK].write( Rbyte(WDATA) );        	      //no -> next byte to DOAD
     }
     Sbtidx++;					                                //increase sector byte counter
-    Wbyte(0x1EEE, Sbtidx);
   }
   else {
     if (ccmd == 0x80 || ccmd == 0xA0) {               //done with R/W single sector
@@ -475,30 +475,30 @@ void loop() {
 
       //new or continue previous command?
       ncmd = (ccmd != lcmd);
-      if (ncmd) {                                             //new command?
-        lcmd = ccmd;                                          //yes; remember new command for next compare
+      if (ncmd) {                                         //new command?
+        lcmd = ccmd;                                      //yes; remember new command for next compare
       }
 
-      if ( ccmd < 0x80 ) {    //step/seek commands?
+      if ( ccmd < 0x80 ) {                                //step/seek commands?
 
-        switch (ccmd) {       //switch step/seek commands
+        switch (ccmd) {                                   //switch step/seek commands
 
           case 0x00:	//restore
             FDrstr();
             break;
 
           case 0x10:	//seek                              //note: when maxtrack == WTRACK curdir doesn't change
-            DSRAM = Rbyte(WDATA);                         //read track seek #
-            if ( DSRAM < NRTRACKS ) {                     //make sure we stay within max # of tracks
-              if (DSRAM > Rbyte(WTRACK) ) {
+            kTrack = Rbyte(WDATA);                        //store 
+            if ( Rbyte(WDATA) < NRTRACKS ) {              //make sure we stay within max # of tracks
+              if (Rbyte(WDATA) > kTrack ) {
                 curdir = LOW;                             //step-in towards track 39
               }
               else {
-                if (DSRAM < Rbyte(WTRACK) ) {
+                if (Rbyte(WDATA) < kTrack ) {
                   curdir = HIGH;                          //step-out towards track 0
                 }
               }
-              Wbyte(WTRACK, DSRAM);                       //update track register
+              Wbyte(WTRACK, Rbyte(WDATA));                //update track register
             }
             break;
 
@@ -506,9 +506,8 @@ void loop() {
           //always execute step+T, can't see it making any difference (FLW)
 
           case 0x30:	                                    //step+T (update Track register)
-            DSRAM = Rbyte(WTRACK);                        //read current track #
             //is current direction inwards and track # still within limits?
-            if (  DSRAM < NRTRACKS  && curdir == LOW ) {
+            if (  Rbyte(WTRACK) < NRTRACKS  && curdir == LOW ) {
               Wbyte(WTRACK, ++DSRAM);                     //increase track #
             }
             else {
@@ -555,9 +554,9 @@ void loop() {
         if ( ncmd ) {					                                  //new command prep
           cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
           if ( aDSK[cDSK] ) {                                   //is selected disk available?
-            Wbyte(RSTAT, NOERROR);                                 //reset "Not Ready" bit in Status Register
-            if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               //R/W whole track?
-              Wbyte(WSECTR, 0x00);                           //yes; start from sector 0
+            Wbyte(RSTAT, NOERROR);                              //reset "Not Ready" bit in Status Register
+            if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               // R/W whole track?
+              Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
@@ -567,7 +566,7 @@ void loop() {
           else {
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
               Wbyte(RSTAT, NOTREADY);                           //no; set "Not Ready" bit in Status Register
-              ccmd = FDINT;                                      //exit            }
+              ccmd = FDINT;                                     //exit            }
             }
           }
         }
@@ -578,15 +577,14 @@ void loop() {
             noExec();
             break;
 
-          //read or write individual sectors
-          case 0x80:                                              //read sector
-	  case 0x90:                                              //read multiple sectors
-	  case 0xE0:                                              //read track		
+          case 0x80:                                      //read sector
+	        case 0x90:                                      //read multiple sectors
+	        case 0xE0:                                      //read track		
             RWsector( true );
-            reak;
-          case 0xA0:         				          //write sector
-	  case 0xB0:                                              //write multiple sectors
-          case 0xF0:                                              //write track
+            break;
+          case 0xA0:         				                      //write sector
+	        case 0xB0:                                      //write multiple sectors
+          case 0xF0:                                      //write track
             RWsector( false );
             break;
 
