@@ -580,22 +580,16 @@ void loop() {
 
           //read or write individual sectors
           case 0x80:                                              //read sector
+	  case 0x90:                                              //read multiple sectors
+	  case 0xE0:                                              //read track		
             RWsector( true );
-            break;
-          case 0xA0:         				                              //write sector
+            reak;
+          case 0xA0:         				          //write sector
+	  case 0xB0:                                              //write multiple sectors
+          case 0xF0:                                              //write track
             RWsector( false );
             break;
 
-          // R/W entire track
-          case 0x90:                                              //read multiple sectors
-	  case 0xE0:                                              //read track
-            RWsector( true );
-	  break;
-	  case 0xB0:                                              //write multiple sectors
-          case 0xF0:                                              //write track
-	    RWsector( false );
-	  break;
-			
           case 0xC0:  //read ID
 
             Ridx++;                                       //index to READ ID values
