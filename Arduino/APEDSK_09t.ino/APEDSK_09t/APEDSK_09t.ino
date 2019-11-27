@@ -348,6 +348,8 @@ void noExec(void) {
   lcmd = ccmd;		        //reset new command prep
   Sbtidx = 0; 	          //clear index counter
   Ridx = 0;               //clear READ ID index counter
+  cTrack = 0;             //clear current Track #
+  nTrack = 0;             //clear new Track #
 }
 
 //calculate and return absolute DOAD byte index for R/W commands
@@ -471,7 +473,7 @@ void loop() {
     //read Command Register, stripping the unnecessary floppy bits but keeping command nybble
     ccmd = Rbyte(WCOMND) & B11110000;
 
-    //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
+    //the FD1771 "Force Interrupt" command is used to stop further command execution
     if ( ccmd != FDINT ) { //do we need to do anything?
       
       ncmd = (ccmd != lcmd);                                //new or continue previous command?
@@ -483,45 +485,48 @@ void loop() {
 
         cTrack = Rbyte(WTRACK);                             //read current Track #
         nTrack = Rbyte(WDATA);                              //read new Track # (Seek)
-  
-        if ( ccmd == 0x10 ) {                               //seek                  
-          if ( nTrack < NRTRACKS && nTrack != cTrack ) {    //only seek within maximum track limit and if new track is different to current track
-            cDir = (nTrack > cTrack);                       //HIGH: track # increase; LOW: track # decrease
-            Wbyte(WTRACK, nTrack);                          //update Track Register for Seek command
-          }   
-        }
-        else {
-          if ( cTrack > 0 && cDir == LOW) {                 //not on Track 0 and stepping towards it
-            switch (ccmd) {                                 //switch step/seek commands towards track 0
-              case 20:      //Step
-              case 30:      //Step+T
-              case 60:      //Step-out
-              case 70:      //Step-out+T
-                cTrack--;   //decrease Track #
-                break;
-            }
-            Wbyte(WTRACK, cTrack);                          //update Track Registers for Seek and Step commands 
-          }
-          else {
-            if ( cTrack < NRTRACKS && cDir == HIGH ) {      //not on track 39 and stepping towards it
-              switch (ccmd) {
-                case 20:      //Step                        //switch step/seek commands towards track 0
-                case 30:      //Step+T
-                case 40:      //Step-in
-                case 50:      //Step-in+T
-                  cTrack++; 
-                  break;
-              }  
-              Wbyte(WTRACK, cTrack);                        //update Track Registers for Seek and Step commands
-            } 
-          }               
-        }   
-        Wbyte(RTRACK, Rbyte(WTRACK) );                      //sync Track Registers
 
-        if ( ccmd == 0x00 ) {                               //Restore
-            FDrstr();
-          }
-          
+        switch(ccmd) {
+
+          case 0x00:
+             FDrstr();
+             break;
+
+          case 0x10:
+            cDir = (nTrack > cTrack);                       //HIGH: track # increase; LOW: track # decrease
+            Wbyte(WTRACK, nTrack);                          //update Track Register for Seek command  
+            break;
+            
+          case 20:                                          //Step
+          case 30:                                          //Step+T
+            if ( cDir == LOW ) {
+              cTrack--;
+            }
+            else {
+              cTrack++;
+            }
+            Wbyte(WTRACK, cTrack);                          //update Track Register
+            break;
+
+          case 40:                                          //Step-In
+          case 50:                                          //Step-In+T
+            if ( cTrack < NRTRACKS ) {
+              cTrack++;                                     //increase Track #
+              Wbyte(WTRACK, cTrack);                        //update Track Register
+              cDir = HIGH;                                  //set stepping direction towards last track 
+            }
+            break;
+
+          case 60:                                          //Step-Out
+          case 70:                                          //Step-Out+T
+            if ( cTrack > 0 ) {
+              cTrack--;                                     //decrease Track #
+              Wbyte(WTRACK, cTrack);                        //update Track Register
+              cDir = LOW;                                   //set stepping direction towards track 0
+            }
+            break;
+        }
+        Wbyte(RTRACK, Rbyte(WTRACK) );                      //sync Track Registers
         noExec();                                           //prevent multiple step/seek execution                                        
       } // end ccmd < 0x80
 
@@ -772,5 +777,40 @@ ISR(INT0_vect) {
             }
             curdir = HIGH; //set current direction
             break;
+
+            if ( ccmd == 0x10 ) {                               //seek                  
+          
+        }
+        else {          
+          if ( cTrack > 0 && cDir == LOW) {                 //not on Track 0 and stepping towards it
+            switch (ccmd) {                                 //switch step/seek commands towards track 0
+             case 60:                                      //Step-out
+          case 70:                                      //Step-out+T
+        
+                cTrack--;                                   //decrease Track #
+                cDir = LOW;                                 //set stepping direction
+                break;
+            }
+            Wbyte(0x1EEE,0xAA);//WTRACK, cTrack);                          //update Track Registers for Seek and Step commands 
+          }
+          else {
+            if ( cTrack < NRTRACKS && cDir == HIGH ) {      //not on track 39 and stepping towards it
+              switch (ccmd) {                               //switch step/seek commands towards track 0
+                case 20:                                    //Step
+                case 30:                                    //Step+T
+                case 40:                                    //Step-in
+                case 50:                                    //Step-in+T
+                  cTrack++;                                 //decrease Track #
+                  cDir = HIGH;                              //set stepping direction
+                  break;
+              }  
+              Wbyte(0x1EEE,0xBB);//WTRACK, cTrack);                        //update Track Registers for Seek and Step commands
+            } 
+          }               
+        }   
+        Wbyte(RTRACK, Rbyte(WTRACK) );                      //sync Track Registers
+
+        if ( ccmd == 0x00 ) {                               //Restore
+           
 
 */
