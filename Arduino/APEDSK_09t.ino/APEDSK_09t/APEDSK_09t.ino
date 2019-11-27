@@ -323,10 +323,11 @@ byte ccmd                 = 0;      //current command
 byte lcmd                 = 0;      //last command
 boolean ncmd              = false;  //flag new command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
-boolean curdir            = LOW;    //current step direction, step in(wards) towards track 39 by default
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
 byte Ridx                 = 0;      //READ ID counter
-byte kTrack               = 0;      //keep track of Track # :-)
+byte cTrack               = 0;      //current Track #
+byte nTrack               = 0;      //new Track # (Seek)
+boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -361,7 +362,7 @@ unsigned long cDbtidx (void) {
 }
 
 void RWsector( boolean rw ) {
-  if ( Sbtidx < NRBYSECT ) {			                      //have we done all 256 bytes yet?
+  if ( Sbtidx < NRBYSECT ) {			                    //have we done all 256 bytes yet?
     if ( rw ) {				                                //no; do we need to read a sector?
       Wbyte(RDATA, DSK[cDSK].read() );        	      //yes -> supply next byte
     }
@@ -372,17 +373,17 @@ void RWsector( boolean rw ) {
   }
   else {
     if (ccmd == 0x80 || ccmd == 0xA0) {               //done with R/W single sector
-      noExec();
+      noExec();                                       //exit
     }
     else {
-      if ( DSRAM < (NRSECTS - 1) ) {
-        DSRAM++;
-        Wbyte(WSECTR, DSRAM);
-        Wbyte(RSECTR, DSRAM);
-        Sbtidx = 0;
+      if ( DSRAM < (NRSECTS - 1) ) {                  //not yet last sector (8)?
+        DSRAM++;                                      //no; increase Sector #
+        Wbyte(WSECTR, DSRAM);                         //sync Sector Registers
+        Wbyte(RSECTR, DSRAM);                         //""
+        Sbtidx = 0;                                   //reset sector byte counter
       }
       else {
-        noExec();
+        noExec();                                     //all sectors done; exit
       }
     }
   }
@@ -472,81 +473,56 @@ void loop() {
 
     //the FD1771 "Force Interrupt" command is used to flag further command execution is not needed
     if ( ccmd != FDINT ) { //do we need to do anything?
-
-      //new or continue previous command?
-      ncmd = (ccmd != lcmd);
-      if (ncmd) {                                         //new command?
-        lcmd = ccmd;                                      //yes; remember new command for next compare
+      
+      ncmd = (ccmd != lcmd);                                //new or continue previous command?
+      if (ncmd) {                                           //new command?
+        lcmd = ccmd;                                        //yes; remember new command for next compare
       }
 
-      if ( ccmd < 0x80 ) {                                //step/seek commands?
+      if ( ccmd < 0x80 ) {                                  //step/seek commands?
 
-        switch (ccmd) {                                   //switch step/seek commands
+        cTrack = Rbyte(WTRACK);                             //read current Track #
+        nTrack = Rbyte(WDATA);                              //read new Track # (Seek)
+  
+        if ( ccmd == 0x10 ) {                               //seek                  
+          if ( nTrack < NRTRACKS && nTrack != cTrack ) {    //only seek within maximum track limit and if new track is different to current track
+            cDir = (nTrack > cTrack);                       //HIGH: track # increase; LOW: track # decrease
+            Wbyte(WTRACK, nTrack);                          //update Track Register for Seek command
+          }   
+        }
+        else {
+          if ( cTrack > 0 && cDir == LOW) {                 //not on Track 0 and stepping towards it
+            switch (ccmd) {                                 //switch step/seek commands towards track 0
+              case 20:      //Step
+              case 30:      //Step+T
+              case 60:      //Step-out
+              case 70:      //Step-out+T
+                cTrack--;   //decrease Track #
+                break;
+            }
+            Wbyte(WTRACK, cTrack);                          //update Track Registers for Seek and Step commands 
+          }
+          else {
+            if ( cTrack < NRTRACKS && cDir == HIGH ) {      //not on track 39 and stepping towards it
+              switch (ccmd) {
+                case 20:      //Step                        //switch step/seek commands towards track 0
+                case 30:      //Step+T
+                case 40:      //Step-in
+                case 50:      //Step-in+T
+                  cTrack++; 
+                  break;
+              }  
+              Wbyte(WTRACK, cTrack);                        //update Track Registers for Seek and Step commands
+            } 
+          }               
+        }   
+        Wbyte(RTRACK, Rbyte(WTRACK) );                      //sync Track Registers
 
-          case 0x00:	//restore
+        if ( ccmd == 0x00 ) {                               //Restore
             FDrstr();
-            break;
-
-          case 0x10:	//seek                              //note: when maxtrack == WTRACK curdir doesn't change
-            kTrack = Rbyte(WDATA);                        //store 
-            if ( Rbyte(WDATA) < NRTRACKS ) {              //make sure we stay within max # of tracks
-              if (Rbyte(WDATA) > kTrack ) {
-                curdir = LOW;                             //step-in towards track 39
-              }
-              else {
-                if (Rbyte(WDATA) < kTrack ) {
-                  curdir = HIGH;                          //step-out towards track 0
-                }
-              }
-              Wbyte(WTRACK, Rbyte(WDATA));                //update track register
-            }
-            break;
-
-          case 0x20:	//step
-          //always execute step+T, can't see it making any difference (FLW)
-
-          case 0x30:	                                    //step+T (update Track register)
-            //is current direction inwards and track # still within limits?
-            if (  Rbyte(WTRACK) < NRTRACKS  && curdir == LOW ) {
-              Wbyte(WTRACK, ++DSRAM);                     //increase track #
-            }
-            else {
-              //is current direction outwards and track # still within limits?
-              if ( DSRAM >  0 && curdir == HIGH ) {
-                Wbyte(WTRACK, --DSRAM);  	                //decrease track #
-              }
-            }
-            break;
-
-          case 0x40:	//step-in (towards track 39)
-          //always execute step-in+T, can't see it making any difference (FLW)
-
-          case 0x50:	//step-in+T (towards track 39, update Track Register)
-            DSRAM = Rbyte(WTRACK);                        //read current track #
-            //if track # still within limits update track register
-            if ( DSRAM < NRTRACKS) {
-              Wbyte(WTRACK, ++DSRAM);                     //increase track #
-              curdir = LOW; 	                            //set current direction
-            }
-            break;
-
-          case 0x60:	//step-out (towards track 0)
-          //always execute step-out+T, can't see it making any difference (FLW)
-
-          case 0x70:	//step-out+T
-            DSRAM = Rbyte(WTRACK);                        //read current track #
-            //if track # still within limits update track register
-            if ( DSRAM > 0) {
-              Wbyte(WTRACK, --DSRAM);                     //decrease track #
-            }
-            curdir = HIGH; //set current direction
-            break;
-
-        } //end switch step commands
-
-        Wbyte(RTRACK, Rbyte(WTRACK) );                    //sync Track Registers
-        noExec();                                         //prevent multiple step/seek execution
-
+          }
+          
+        noExec();                                           //prevent multiple step/seek execution                                        
       } // end ccmd < 0x80
 
       else {  // read/write commands
@@ -741,4 +717,60 @@ ISR(INT0_vect) {
               }
             }
           break;
+
+          case 0x10:  //seek                              //note: when maxtrack == WTRACK curdir doesn't change
+            kTrack = Rbyte(WDATA);                        //store 
+            if ( Rbyte(WDATA) < NRTRACKS ) {              //make sure we stay within max # of tracks
+              if (Rbyte(WDATA) > kTrack ) {
+                curdir = LOW;                             //step-in towards track 39
+              }
+              else {
+                if (Rbyte(WDATA) < kTrack ) {
+                  curdir = HIGH;                          //step-out towards track 0
+                }
+              }
+              Wbyte(WTRACK, Rbyte(WDATA));                //update track register
+            }
+            break;
+
+          case 0x20:  //step
+          //always execute step+T, can't see it making any difference (FLW)
+
+          case 0x30:                                      //step+T (update Track register)
+            //is current direction inwards and track # still within limits?
+            if (  Rbyte(WTRACK) < NRTRACKS  && curdir == LOW ) {
+              Wbyte(WTRACK, ++DSRAM);                     //increase track #
+            }
+            else {
+              //is current direction outwards and track # still within limits?
+              if ( DSRAM >  0 && curdir == HIGH ) {
+                Wbyte(WTRACK, --DSRAM);                   //decrease track #
+              }
+            }
+            break;
+
+          case 0x40:  //step-in (towards track 39)
+          //always execute step-in+T, can't see it making any difference (FLW)
+
+          case 0x50:  //step-in+T (towards track 39, update Track Register)
+            DSRAM = Rbyte(WTRACK);                        //read current track #
+            //if track # still within limits update track register
+            if ( DSRAM < NRTRACKS) {
+              Wbyte(WTRACK, ++DSRAM);                     //increase track #
+              curdir = LOW;                               //set current direction
+            }
+            break;
+
+          case 0x60:  //step-out (towards track 0)
+          //always execute step-out+T, can't see it making any difference (FLW)
+
+          case 0x70:  //step-out+T
+            DSRAM = Rbyte(WTRACK);                        //read current track #
+            //if track # still within limits update track register
+            if ( DSRAM > 0) {
+              Wbyte(WTRACK, --DSRAM);                     //decrease track #
+            }
+            curdir = HIGH; //set current direction
+            break;
+
 */
