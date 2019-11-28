@@ -379,7 +379,7 @@ void RWsector( boolean rw ) {
         DSRAM++;                                      //no; increase Sector #
         Wbyte(WSECTR, DSRAM);                         //sync Sector Registers
         Wbyte(RSECTR, DSRAM);                         //""
-        Sbtidx = 0;                                   //reset sector byte counter
+        Sbtidx = 1;                                   //reset sector byte counter
       }
       else {
         noExec();                                     //all sectors done; exit
