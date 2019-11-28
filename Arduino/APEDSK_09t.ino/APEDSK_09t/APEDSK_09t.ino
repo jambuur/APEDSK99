@@ -486,41 +486,42 @@ void loop() {
         switch(ccmd) {
 
           case 0x00:					//Restore
+             cTrack = 0;                                    //reset cTrack so Track Registers will be cleared after switch{}
              FDrstr();
              break;
 
           case 0x10:					//Seek
-            cTrack = nTrack;                        //prepare to update Track Register
-	    cDir = (nTrack > cTrack);               //set direction: HIGH=track # increase, LOW=track # decrease
+            cTrack = nTrack;                                //prepare to update Track Register
+	          cDir = (nTrack > cTrack);                       //set direction: HIGH=track # increase, LOW=track # decrease
             break;
             
-          case 0x20:                                          //Step
-          case 0x30:                                          //Step+T
+          case 0x20:                                        //Step
+          case 0x30:                                        //Step+T
             if ( cDir == LOW ) {
-              ccmd = 0x70;				     //execute Step-Out+T
+              ccmd = 0x70;				                          //execute Step-Out+T
             }
             else {
-              ccmd = 0x50;				     //execute Step-In+T
-	    }
+              ccmd = 0x50;				                          //execute Step-In+T
+	          }
 
-          case 0x40:                                          //Step-In
-          case 0x50:                                          //Step-In+T
-            if ( cTrack < NRTRACKS ) {			 //any tracks left to step to?
+          case 0x40:                                        //Step-In
+          case 0x50:                                        //Step-In+T
+            if ( cTrack < NRTRACKS ) {			                //any tracks left to step to?
               cTrack++;                                     //yes; increase Track #
               cDir = HIGH;                                  //set stepping direction towards last track 
             }
             break;
 
-          case 0x60:                                          //Step-Out
-          case 0x70:                                          //Step-Out+T
-            if ( cTrack > 0 ) {				 //any tracks left to step to?
+          case 0x60:                                        //Step-Out
+          case 0x70:                                        //Step-Out+T
+            if ( cTrack > 0 ) {				                      //any tracks left to step to?
               cTrack--;                                     //decrease Track #
               cDir = LOW;                                   //set stepping direction towards track 0
             }
             break;
-        }
-        Wbute(WTRACK, cTrack);				    //update Track Register
-	Wbyte(RTRACK, cTrack);                              //sync Track Registers
+        } //end switch ccmd
+        Wbyte(WTRACK, cTrack);				                      //update Track Register
+	      Wbyte(RTRACK, cTrack);                              //sync Track Registers
         noExec();                                           //prevent multiple step/seek execution                                        
       } // end ccmd < 0x80
 
