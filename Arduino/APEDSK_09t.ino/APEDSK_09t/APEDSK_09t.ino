@@ -493,40 +493,37 @@ void loop() {
              break;
 
           case 0x10:
-            cDir = (nTrack > cTrack);                       //HIGH: track # increase; LOW: track # decrease
-            Wbyte(WTRACK, nTrack);                          //update Track Register for Seek command  
+            cTrack = nTrack;                        //prepare to update Track Register
+	    cDir = (nTrack > cTrack);               //set direction: HIGH=track # increase, LOW=track # decrease
             break;
             
-          case 20:                                          //Step
-          case 30:                                          //Step+T
+          case 0x20:                                          //Step
+          case 0x30:                                          //Step+T
             if ( cDir == LOW ) {
-              cTrack--;
+              ccmd = 0x70;				     //execute Step-Out+T
             }
             else {
-              cTrack++;
-            }
-            Wbyte(WTRACK, cTrack);                          //update Track Register
-            break;
+              ccmd = 0x50;				     //execute Step-In+T
+	    }
 
-          case 40:                                          //Step-In
-          case 50:                                          //Step-In+T
+          case 0x40:                                          //Step-In
+          case 0x50:                                          //Step-In+T
             if ( cTrack < NRTRACKS ) {
               cTrack++;                                     //increase Track #
-              Wbyte(WTRACK, cTrack);                        //update Track Register
               cDir = HIGH;                                  //set stepping direction towards last track 
             }
             break;
 
-          case 60:                                          //Step-Out
-          case 70:                                          //Step-Out+T
+          case 0x60:                                          //Step-Out
+          case 0x70:                                          //Step-Out+T
             if ( cTrack > 0 ) {
               cTrack--;                                     //decrease Track #
-              Wbyte(WTRACK, cTrack);                        //update Track Register
               cDir = LOW;                                   //set stepping direction towards track 0
             }
             break;
         }
-        Wbyte(RTRACK, Rbyte(WTRACK) );                      //sync Track Registers
+        Wbute(WTRACK, cTrack);				    //update Track Register
+	Wbyte(RTRACK, cTrack);                              //sync Track Registers
         noExec();                                           //prevent multiple step/seek execution                                        
       } // end ccmd < 0x80
 
