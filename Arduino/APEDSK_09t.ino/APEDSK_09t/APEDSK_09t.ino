@@ -378,7 +378,7 @@ void RWsector( boolean rw ) {
       noExec();                                       //exit
     }
     else {
-      if ( DSRAM < (NRSECTS - 1) ) {                  //not yet last sector (8)?
+      if ( DSRAM < (NRSECTS - 1) ) {                  //last sector (8)?
         DSRAM++;                                      //no; increase Sector #
         Wbyte(WSECTR, DSRAM);                         //sync Sector Registers
         Wbyte(RSECTR, DSRAM);                         //""
