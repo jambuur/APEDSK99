@@ -1,13 +1,12 @@
 /* APEDISK99
-  CHECK: WTRACK/WSECTR update, READ ID byte counter
   This sketch emulates 3 TI99/4a disk drives. Shopping list:
 
   - Arduino Uno
 	- SD shield (RTC optional but potentially super handy)
-	- APEDSK99 shield
+	- APEDSK99 shield (github.com/jambuur/APEDSK99)
 
   The Arduino RAM interface is based on Mario's EEPROM programmer:
-  https://github.com/mkeller0815/MEEPROMMER
+  github.com/mkeller0815/MEEPROMMER
 
   (much) faster digitalRead / Write by:
   http://masteringarduino.blogspot.com/2013/10/fastest-and-smallest-digitalread-and.html
@@ -30,8 +29,6 @@
   Use this code at your own risk.
   I'm not responsible for any bad effect or damages caused by this software
 */
-
-//----- definitions, functions and initialisations
 
 //faster digitalRead / digitalWrite definitions
 #define portOfPin(P)\
@@ -65,8 +62,8 @@
 #define CLOCK	19	//PC5
 
 //IO lines for RAM databus
-//skip 2 as we need it for interrupts
 #define D0 1	//PD1
+//skip 2 as we need it for interrupts
 #define D1 3	//PD3
 #define D2 4	//PD4
 #define D3 5	//PD5
@@ -100,12 +97,12 @@
 #define WSECTR  0x1FFC  //write FD1771 Sector register   (>5FFC in TI99/4a DSR memory block)
 #define WDATA   0x1FFE  //write FD1771 Data register     (>5FFE in TI99/4a DSR memory block)
 
-//error blinking parameters: on (pwm), off, delay between sequence
+//error blinking parameters: on, off, delay between sequence
 #define LED_ON      500
 #define LED_OFF     250
 #define LED_REPEAT  1500
 
-//useful Status Register bit(s)
+//Status Register error signalling
 #define NOTREADY  0x80
 #define NOERROR	  0x00
 
@@ -488,11 +485,11 @@ void loop() {
 
         switch(ccmd) {
 
-          case 0x00:
+          case 0x00:					//Restore
              FDrstr();
              break;
 
-          case 0x10:
+          case 0x10:					//Seek
             cTrack = nTrack;                        //prepare to update Track Register
 	    cDir = (nTrack > cTrack);               //set direction: HIGH=track # increase, LOW=track # decrease
             break;
@@ -508,15 +505,15 @@ void loop() {
 
           case 0x40:                                          //Step-In
           case 0x50:                                          //Step-In+T
-            if ( cTrack < NRTRACKS ) {
-              cTrack++;                                     //increase Track #
+            if ( cTrack < NRTRACKS ) {			 //any tracks left to step to?
+              cTrack++;                                     //yes; increase Track #
               cDir = HIGH;                                  //set stepping direction towards last track 
             }
             break;
 
           case 0x60:                                          //Step-Out
           case 0x70:                                          //Step-Out+T
-            if ( cTrack > 0 ) {
+            if ( cTrack > 0 ) {				 //any tracks left to step to?
               cTrack--;                                     //decrease Track #
               cDir = LOW;                                   //set stepping direction towards track 0
             }
