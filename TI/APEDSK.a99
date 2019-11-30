@@ -296,7 +296,7 @@ H014	BL	@VDPRD			write to FD = read from VDP buffer
 	MOVB	R0,@WDATA		APEDSK:write first byte to data register
 	BL	@SNDCMD			send command
 *	DATA	>5700			write sector m=0 S=1 E=0 C=0 a=0
-	DATA	>A800			APEDSK: write sector m=0 S=1 E=0 C=0 a=0
+	DATA	>A800			APEDSK: write sector
 *	SBO	2			enable holds
 H024	MOVB	@-1026(R15),R0		get a (APEDSK: next) byte from data buffer
 *	INV	R0			APEDSK: none of this inverting databus rubbish
@@ -320,8 +320,8 @@ H024	MOVB	@-1026(R15),R0		get a (APEDSK: next) byte from data buffer
 *	JMP	H015			and verify sector
 	JMP	H019			APEDSK: no need to verify		
 					
-ERROR3	BL	@ERROR1			error 34
-	DATA	>3400			
+*ERROR3	BL	@ERROR1			error 34
+*	DATA	>3400			
 *H025	BL	@ERROR2			gracefull error 31
 *	DATA	>3100			
 *H026	BL	@ERROR2			gracefull error 33
@@ -479,8 +479,8 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	MOVB	R0,@WDATA		send next byte
 *	DECT	R6			
 	DEC	R6			APEDSK:
-*	JGT	H041			next (pair of bytes) byte
-	JNE	H041			APEDSK: next byte
+	JGT	H041			next (pair of bytes) byte
+*	JNE	H041			APEDSK: next byte
 *	BL	@WTCPT2			SBZ 2, then wait for command completion
 *	BL	@WTCPT1			APEDSK: no need to wait for command completion
 *	SLA	R0,11			check write protect bit
