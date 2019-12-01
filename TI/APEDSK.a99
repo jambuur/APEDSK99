@@ -1,13 +1,15 @@
 *====================================
-*
 * TI DISK CONTROLLER ROM   >4000-5FFF
 * 
 * initial commented disassembly by Thierry Nouspikel
 * (see http://www.unige.ch/medecine/nouspikel/ti99/titechpages.htm)
 *
+* and
+* 
+* Monthy Schmidt's book: TI Technical Drive
+*
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
-*
 *====================================
 
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
