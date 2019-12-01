@@ -1585,7 +1585,7 @@ H144	MOV	R1,R3			byte #
 	CI	R1,>00C8		end of VIB?
 	JLT	H145			no
 	CLR	R1			yes: top of bitmap
-H145	A	R5,1			
+H145	A	R5,R1			
 	AI	R1,56			make another bitmap ptr
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R1
@@ -1610,7 +1610,7 @@ H148	C	R1,R3			are we back to where we started?
 	INC	R0			try sectors just before ours (no mask this time)
 	JEQ	H149			full: return with EQ
 H147	DEC	R0			restore original byte
-	MOV	R0,2			
+	MOV	R0,R2			
 	CLR	R0			bit counter
 	SWPB	R2			
 H150	INC	R0			increment bit count
