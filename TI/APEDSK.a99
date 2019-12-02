@@ -1573,7 +1573,7 @@ FFSBMP	BLWP	@>005A(R9)		find a free sector in bitmap
 	DATA	>7800			
 	BL	@CALSUB			call subroutine
 	DATA	RWVIB			load VIB for drive in R6
-	MOV	R1,1			first sector specified in R1 ?
+	MOV	R1,R1			first sector specified in R1 ?
 	JNE	H143			yes
 	LI	R1,33			no: start with sector 34
 H143	INC	R1			
@@ -1669,11 +1669,11 @@ H152	LI	R0,8			free sectors in first byte
 	S	R2,R0			
 	SRC	R4,0			adjust mask
 	MOV	R3,R0			original bit # of starting sector
-	JEQ	H154			(JB: this possibly needs to be JMP >4FFE)
+	JEQ	H154			
 	SLA	R4,0			don't erase before starting sector
 H154	JMP	H155			
 					
-A4FFE	SRL	R9,3			what the heck is that??? (JB: see above comment) 
+	SRL	R9,3			what the heck is that??? 
 					
 H155	SWPB	R4			
 	JMP	H158			goto erase last byte
