@@ -379,13 +379,13 @@ void RWsector( boolean rw ) {
         DSRAM++;                                      //no; increase Sector #
         Wbyte(WSECTR, DSRAM);                         //sync Sector Registers
         Wbyte(RSECTR, DSRAM);                         //""
-        if ( rw ) {                                   //read 1st byte of new sector?
+        /*if ( rw ) {                                   //read 1st byte of new sector?
           Wbyte(RDATA, DSK[cDSK].read() );            //yes -> supply next byte
         }
         else {
           DSK[cDSK].write( Rbyte(WDATA) );            //no -> write next byte to DOAD
-        }    
-        Sbtidx = 1;                                   //adjust sector byte counter
+        }  */
+        Sbtidx = 0;                                   //adjust sector byte counter
       }
       else {
         noExec();                                     //all sectors done; exit
