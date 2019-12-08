@@ -293,7 +293,7 @@ H019	CLR	R5			clear flag
 *	DATA	>2800			
 					
 H014	BL	@VDPRD			write to FD = read from VDP buffer
-	LI	R6,256			APEDSK:256 bytes to write
+	LI	R6,255			APEDSK:256 bytes to write but first will already be written when command is given
 * APEDSK: the first byte to be written needs to be in the data register 
 *         before the write command is given
 	MOVB	@-1026(R15),R0		APEDSK:get a byte from data buffer
@@ -473,7 +473,7 @@ H040	MOVB	@>004E(R9),R2		top of data buffer
 *	DATA	>0B00			write track (E=1)
 	DATA	>F400			APEDSK: write track (E=1)
 *	LI	R6,3235			3235 bytes to write
-	LI	R6,2304			APEDSK: (9*256) bytes to write
+	LI	R6,2303			APEDSK: (9*256=2304) bytes to write but first is already written 
 *	SBO	2			enable wait states
 H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	INV	R0			APEDSK: none of this inverting databus rubbish
@@ -483,8 +483,8 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	MOVB	R0,@WDATA		send next byte
 *	DECT	R6			
 	DEC	R6			APEDSK:
-	JGT	H041			next (pair of bytes) byte
-*	JNE	H041			APEDSK: next byte
+*	JGT	H041			next (pair of bytes) byte
+	JNE	H041			APEDSK: next byte
 *	BL	@WTCPT2			SBZ 2, then wait for command completion
 *	BL	@WTCPT1			APEDSK: no need to wait for command completion
 *	SLA	R0,11			check write protect bit
