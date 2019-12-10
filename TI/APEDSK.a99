@@ -364,7 +364,8 @@ H029	SZCB	@SIDE01,@CRUWRI		APEDSK: set CRU bit for side 0
 	DATA	>5A00			APEDSK: step-in (T=1, h=1, V=0, r0r1=10)
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion and error check
 	AI	R3,>0100		one more track
-	CB	R3,@>004D(R9)		all done?
+*	CB	R3,@>004D(R9)		all done? DEBUG
+	CB	R3,13			DEBUG
 	JNE	H030			no: format next one
 	MOV	@>004A(R9),@>004A(R9)	check # of sides
 	JEQ	H031			single-side
@@ -461,21 +462,24 @@ H038	BL	@VDPRPW			write it 256 times
 *	DATA	231			
 					
 *	LI	R4,3			try 3 times
+	LI	R4,>A000		DEBUG
 H040	MOVB	@>004E(R9),R2		top of data buffer
 	BL	@VDPRD			set VDP to read from it
 * APEDSK: the first byte to be written needs to be in the data register 
 *         before the write command is given
 	MOVB	@-1026(R15),R0		read one byte from buffer
-	MOVB	R0,@WDATA		send it to data register
-	BL	@SNDCMD			send command
+*	MOVB	R0,@WDATA		send it to data register
+	MOVB	R0,*R4+			DEBUG
+*	BL	@SNDCMD			send command DEBUG
 *	DATA	>0B00			write track (E=1)
-	DATA	>F400			APEDSK: write track (E=1)
+*	DATA	>F400			APEDSK: write track (E=1) DEBUG
 *	LI	R6,3235			3235 bytes to write
 	LI	R6,2303			APEDSK: (9*256=2304) bytes to write but first is already written 
 *	SBO	2			enable wait states
 H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	INV	R0			APEDSK: none of this inverting databus rubbish
-	MOVB	R0,@WDATA		send it to data register
+*	MOVB	R0,@WDATA		send it to data register DEBUG
+	MOVB	R0,*R4+			DEBUG	
 *	MOVB	@-1026(R15),R0		why on earth is it done like that???
 *	INV	R0			APEDSK: none of this inverting databus rubbish
 *	MOVB	R0,@WDATA		send next byte
