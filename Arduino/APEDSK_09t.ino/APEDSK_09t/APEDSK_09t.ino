@@ -118,7 +118,7 @@
 //doesn't use timers so safe to use in a noInterrupt zone
 inline void NOP() __attribute__((always_inline));
 void NOP() {
-  delayMicroseconds(3);
+  delayMicroseconds(7);
 }
 
 //switch databus to INPUT state for reading from RAM
