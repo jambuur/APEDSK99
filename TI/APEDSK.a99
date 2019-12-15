@@ -2532,7 +2532,7 @@ H210	B	*R11
 *-------------------------------------					
 STATUS	BL	@CALSUB			call subroutine
 	DATA	FFFDRV			save filename in comp buf, then find FDR in VDP
-A57FA	MOV	R4,R4			found?
+	MOV	R4,R4			found?
 	JEQ	H211			yes
 					
 	BL	@CALSUB			no: call subroutine
