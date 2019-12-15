@@ -13,7 +13,7 @@
 *====================================
 
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
-CRURD	EQU	>5FEC			APEDSK: we don't seem to need emulated 8 CRU input bits
+CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
 CRUWRI	EQU	>5FEE			emulated 8 CRU output bits
 RSTAT	EQU	>5FF0			read FD1771 Status register
 RTRACK	EQU	>5FF2			read FD1771 Track register
@@ -90,10 +90,10 @@ DSR04	DATA	>0000			no more
 * Power-up routine
 *=====================================					
 EPWRUP	MOV	R12,R7			Dhr. F.G. Kaal check: are we powering up CRU >1000 peripheral?
-	CI	R7,>1000
-	JNE	NOCRU	
+	CI	R7,>1000		is console checking for 1st CRU perpheral?
+	JNE	NOCRU			nope; return
 
-	MOV	R11,R7			save return address
+	MOV	R11,R7			yes; save return address
 	STWP	R9			get workspace (should be >83E0)
 	AI	R9,-224			point to top of scratch-pad mem (>8300)
 	MOV	@>0070(R9),R0		highest free address in vdp mem (>8370)
@@ -114,7 +114,7 @@ H001	CLR	@-2(R15)		clear these >828 bytes
 	SWPB	R2			
 	MOVB	R2,@-2(R15)			
 	NOP				
-	MOVB	R12,@-2(R15)		APEDSK: write CRU base of disk controller; not necessary but it ups VDP address
+	MOVB	R12,@-2(R15)		write CRU address (>1000 for APEDSK99)
 	SWPB	R3			
 	MOVB	R3,@-2(R15)		write number of files (3)
 	BL	@PRPRTN			preparation routine
@@ -138,77 +138,77 @@ VDPSET	ORI	R0,>4000		set VDP for a write
 *---------------------------------------
 * Sector read/write
 *---------------------------------------					
-*SECRW1	LI	R4,10			try ten times. APEDSK: no need to retry
-SECRW1	MOVB	@K002,@>0050(R9)	no error
+*SECRW1	LI	R4,10			try ten times. APEDSK99: no need to retry
+SECRW1	MOVB	@K002,@>0050(R9)	APEDSK99: no error
 *SECRW2	MOVB	@K002,@>0050(R9)	no error
 	BL	@SELDRV			select drive
 	BL	@LASTRK			point to # of last track
 	CLR	R0			
 	MOVB	@-1026(R15),R0		get # of last track accessed
 *	CI	R0,>D700		inverted
-	CI	R0,>2800		APEDSK: none of this inverting databus rubbish
+	CI	R0,>2800		APEDSK99: none of this inverting databus rubbish
 *	JH	H002			too high: drive was reset
-	JL	H002			APEDSK: last track within range
+	JL	H002			APEDSK99: last track within range
 	BL	@SKTRK0			seek track 0
 *	SETO	R0			
-	CLR	R0			APEDSK: none of this inverting databus rubbish
+	CLR	R0			APEDSK99: none of this inverting databus rubbish
 H002	MOVB	R0,@WTRACK		place last track or >00 in track register
 	MOV	@>004A(R9),R1		sector #
 *	SBZ	7			side 0
-	SZCB	@SIDE01,@CRUWRI		APEDSK: side 0 
+	SZCB	@SIDE01,@CRUWRI		APEDSK99: side 0 
 	CLR	R7			
 	CI	R1,>02D0		max 720 (DS/SD)
 	JHE	H003			error 7
 	CI	R1,>0168		on which side is it?
 	JL	H004			0-359: on side 0 
 *	AI	R1,-719			on side 1: sector # grow from in to out
-	AI	R1,-359			APEDSK: KISS and use DOAD scheme
+	AI	R1,-359			APEDSK99: KISS and use DOAD scheme
 *	ABS	R1			719 - sector #
 *	CLR	R0			
 *	DIV	@K003,R0		sect/track (=9)
 *	AI	R1,-8			invert: 8=0, 0=8, 7=1, etc
 *	ABS	R1			
 *	SBO	7			side 1
-	SOCB	@SIDE01,@CRUWRI		APEDSK: side 1
+	SOCB	@SIDE01,@CRUWRI		APEDSK99: side 1
 	LI	R7,>0100		side number = >01
 *	JMP	H005			
-	JMP	H006			APEDSK:
+	JMP	H006			APEDSK99:
 H004	CI	R1,>0001		is it sector 0 or 1?
 	JH	H006			no
 	BL	@SKTRK0			yes: seek track 0
 H006	CLR	R0			
 	DIV	@K003,R0		R0=track #, R1=sector #
 H005	SWPB	R0			
-*	INV	R0			APEDSK: none of this inverted databus rubbish		
+*	INV	R0			APEDSK99: none of this inverted databus rubbish		
 	BL	@VDPWRI			set VDP to write
 	MOVB	R0,@-2(R15)		save # of last track accessed
 	MOVB	R0,@WDATA		pass to data register
 	SWPB	R1			
-*	INV	R1			APEDSK: none of this inverted databus rubbish
+*	INV	R1			APEDSK99: none of this inverted databus rubbish
 	MOVB	R1,@WSECTR		pass new sector # to sector register
 	CB	R0,@RTRACK		new track # same as current?
 *	JEQ	H007			yes
-	JEQ 	H013			APEDSK: yes (don't need READ ID to check side)
+	JEQ 	H013			APEDSK99: yes (don't need READ ID to check side)
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
-	DATA	>1E00			APEDSK: seek h=1 V=1 r1r0=10
+	DATA	>1E00			APEDSK99: seek h=1 V=1 r1r0=10
 	JMP	H013			APEDSK
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	SLA	R0,13			test seek error bit
 *	JOC	H008			try again, then error 11
-*H007	LI	R6,5			APEDSK: H007 slightly re-arranged to sync proper ID byte read
-*	MOV 	R6,@RDINT		APEDSK: interrupt Arduino for read operation
+*H007	LI	R6,5			APEDSK99: H007 slightly re-arranged to sync proper ID byte read
+*	MOV 	R6,@RDINT		APEDSK99: interrupt Arduino for read operation
 *	BL	@SNDCMD			send command
 *	DATA	>3F00			read ID E=0
-*	DATA	>C000			APEDSK: read ID E=0 
+*	DATA	>C000			APEDSK99: read ID E=0 
 *	SBO	2			enable hold
 *	MOVB	@RDATA,R0		skip track #
 *	DEC	@RDINT		
 *	MOVB	@RDATA,R5		side #
-*	INV	R5			APEDSK: none of this inverted databus rubbish
+*	INV	R5			APEDSK99: none of this inverted databus rubbish
 *H009	MOVB	@RDATA,R0		skip next 4 bytes
 *	DEC	R6			
-*	DEC	@RDINT			APEDSK:
+*	DEC	@RDINT			APEDSK99:
 *	JNE	H009			
 *	BL	@WTCPT2			SBZ 2, wait for command completion
 *	BL	@WTCPT1			APEDSK not relevant: no need to wait for command completion and error check
@@ -238,11 +238,11 @@ H013	MOVB	R1,@WSECTR		load sector register
 	MOVB	@>004D(R9),R0		read or write ?
 	JEQ	H014			write
 	BL	@VDPWRI			read FD = write to VDP buffer
-H015	LI	R6,256			APEDSK: slightly re-arranged H015 to sync reading sector bytes
-	MOV	R6,@RDINT		APEDSK: 256 bytes / sector 
+H015	LI	R6,256			APEDSK99: slightly re-arranged H015 to sync reading sector bytes
+	MOV	R6,@RDINT		APEDSK99: 256 bytes / sector 
 	BL	@SNDCMD			send command
 *	DATA	>7700			read sector m=0 S=1 E=0 C=0
-	DATA	>8800			APEDSK: read sector m=0 S=1 E=0 C=0
+	DATA	>8800			APEDSK99: read sector m=0 S=1 E=0 C=0
 *	SETO	R5			
 *	SBO	2	
 *	MOVB	@>004D(R9),R0		read or write?
@@ -256,21 +256,21 @@ H015	LI	R6,256			APEDSK: slightly re-arranged H015 to sync reading sector bytes
 *	SB	@-1026(R15),R0			
 *	JNE	H018			mismatch
 *	DECT	R6			
-*	DEC	R6			APEDSK:
+*	DEC	R6			APEDSK99:
 *	JNE	H017			next byte
 *	JMP	H019			done
 H016	MOVB	@RDATA,R0		get 1 byte from FDC
-*	INV	R0			APEDSK: none of that inverted databus rubbish
+*	INV	R0			APEDSK99: none of that inverted databus rubbish
 	MOVB	R0,@-2(R15)		save it to VDP
 *	MOVB	@RDATA,R0		again
-*	INV	R0			APEDSK: none of that inverted databus rubbish
+*	INV	R0			APEDSK99: none of that inverted databus rubbish
 *	MOVB	R0,@-2(R15)			
 *	DECT	R6			
-	DEC	@RDINT			APEDSK:
+	DEC	@RDINT			APEDSK99:
 	JNE	H016			next byte
 H019	CLR	R5			clear flag
 *H018	BL	@WTCPT2			SBZ 2, wait for command completion
-*	BL	@WTCPT1			APEDSK: no need to wait for command completion
+*	BL	@WTCPT1			APEDSK99: no need to wait for command completion
 *	SLA	R0,13			test status bits
 *	JOC	H020			not found: try again, then error 21
 *	JLT	H021			crc error: try again, then error 22
@@ -291,28 +291,28 @@ H019	CLR	R5			clear flag
 *	DATA	>2800			
 					
 H014	BL	@VDPRD			write to FD = read from VDP buffer
-	LI	R6,255			APEDSK:256 bytes to write but first will already be written when command is given
-* APEDSK: the first byte to be written needs to be in the data register 
+	LI	R6,255			APEDSK99:256 bytes to write but first will already be written when command is given
+* APEDSK99: the first byte to be written needs to be in the data register 
 *         before the write command is given
-	MOVB	@-1026(R15),R0		APEDSK:get a byte from data buffer
-	MOVB	R0,@WDATA		APEDSK:write first byte to data register
+	MOVB	@-1026(R15),R0		APEDSK99:get a byte from data buffer
+	MOVB	R0,@WDATA		APEDSK99:write first byte to data register
 	BL	@SNDCMD			send command
 *	DATA	>5700			write sector m=0 S=1 E=0 C=0 a=0
-	DATA	>A800			APEDSK: write sector
+	DATA	>A800			APEDSK99: write sector
 *	SBO	2			enable holds
-H024	MOVB	@-1026(R15),R0		get a (APEDSK: next) byte from data buffer
-*	INV	R0			APEDSK: none of this inverting databus rubbish
+H024	MOVB	@-1026(R15),R0		get a (APEDSK99: next) byte from data buffer
+*	INV	R0			APEDSK99: none of this inverting databus rubbish
 	MOVB	R0,@WDATA		pass it to data register
 *	MOVB	@-1026(R15),R0		again
-*	INV	R0			APEDSK: none of this inverting databus rubbish
+*	INV	R0			APEDSK99: none of this inverting databus rubbish
 *	MOVB	R0,@WDATA			
 *	DECT	R6			
-	DEC	R6			APEDSK:
+	DEC	R6			APEDSK99:
 	JNE	H024			next
 *	BL	@WTCPT2			SBZ 2, wait for command completion
-*	BL	@WTCPT1			APEDSK: no need to wait for command completion
+*	BL	@WTCPT1			APEDSK99: no need to wait for command completion
 *	SLA	R0,11			test status bits
-*	SLA	R0,2			APEDSK: WP bit in Carry
+*	SLA	R0,2			APEDSK99: WP bit in Carry
 *	JOC	ERROR3			write protect: error 34
 *	SLA	R0,2			
 *	JOC	H025			not found: try again, then error 31
@@ -320,7 +320,7 @@ H024	MOVB	@-1026(R15),R0		get a (APEDSK: next) byte from data buffer
 *	JOC	H026			lost data: try again, then error 33
 *	BL	@VDPRD			now, set VDP to read
 *	JMP	H015			and verify sector
-	JMP	H019			APEDSK: no need to verify		
+	JMP	H019			APEDSK99: no need to verify		
 					
 *ERROR3	BL	@ERROR1			error 34
 *	DATA	>3400			
@@ -352,16 +352,16 @@ H028	MOVB	@K002,@>0050(R9)	no error
 H030	MOV	@>004A(R9),@>004A(R9)	check # of sides flag
 	JEQ	H029			single-side
 *	SBO	7			set CRU bit for side 1
-	SOCB	@SIDE01,@CRUWRI		APEDSK: set CRU bit for side 1
+	SOCB	@SIDE01,@CRUWRI		APEDSK99: set CRU bit for side 1
 	LI	R7,>0100		value for side 1 in sector ID
 	BL	@FMTTRK			format one track
 *H029	SBZ	7			set CRU bit for side 0
-H029	SZCB	@SIDE01,@CRUWRI		APEDSK: set CRU bit for side 0
+H029	SZCB	@SIDE01,@CRUWRI		APEDSK99: set CRU bit for side 0
 	CLR	R7			>00 = value for side 0 in sector ID
 	BL	@FMTTRK			format one track
 	BL	@SNDCMD			send command
 *	DATA	>A500			step-in (T=1, h=1, V=0, r0r1=10)
-	DATA	>5A00			APEDSK: step-in (T=1, h=1, V=0, r0r1=10)
+	DATA	>5A00			APEDSK99: step-in (T=1, h=1, V=0, r0r1=10)
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion and error check
 	AI	R3,>0100		one more track
 	CB	R3,@>004D(R9)		all done?
@@ -369,28 +369,28 @@ H029	SZCB	@SIDE01,@CRUWRI		APEDSK: set CRU bit for side 0
 	MOV	@>004A(R9),@>004A(R9)	check # of sides
 	JEQ	H031			single-side
 *	SBO	7			
-*	SOCB	@SIDE01,@CRUWRI		APEDSK: select side 1
+*	SOCB	@SIDE01,@CRUWRI		APEDSK99: select side 1
 *	LI	R4,10			try 10 times
 *READID	BL	@SKTRK0			seek track 0
 *	MOV	@>004E(R9),R2		data buffer address
 *	BL	@VDPWRI			set VDP to write
-*	LI	R6,5			read 6 bytes (APEDSK: first will be available as part of @SNDCMD 
-*	MOV	R6,@RDINT		APEDSK: slightly re-arranged READID/H032 to sync ID byte reads
+*	LI	R6,5			read 6 bytes (APEDSK99: first will be available as part of @SNDCMD 
+*	MOV	R6,@RDINT		APEDSK99: slightly re-arranged READID/H032 to sync ID byte reads
 *	BL	@SNDCMD			send command
 *	DATA	>3F00			read ID (E=0)
-*	DATA	>C000			APEDSK: read ID (E=0)
+*	DATA	>C000			APEDSK99: read ID (E=0)
 *	SBO	2			enable wait states
 *H032	MOVB	@RDATA,R0		read data register
-*	INV	R0			APEDSK: none of that inverted databus rubbish
+*	INV	R0			APEDSK99: none of that inverted databus rubbish
 *	MOVB	R0,@-2(R15)		write it to data buffer
 *	MOVB	@RDATA,R0		again, why write this twice ?
-*	INV	R0			APEDSK: none of that inverted databus rubbish
+*	INV	R0			APEDSK99: none of that inverted databus rubbish
 *	MOVB	R0,@-2(R15)			
 *	DECT	R6			
-*	DEC	@RDINT			APEDSK: generate interrupt for next read
+*	DEC	@RDINT			APEDSK99: generate interrupt for next read
 *	JNE	H032			
 *	BL	@WTCPT2			SBZ 2 then wait for command completion
-*	BL	@WTCPT1			APEDSK: no need to wait for command completion
+*	BL	@WTCPT1			APEDSK99: no need to wait for command completion
 *	SLA	R0,13			check status bits
 *	JOC	H033			not found
 *	JLT	H034			CRC error
@@ -463,32 +463,32 @@ H038	BL	@VDPRPW			write it 256 times
 *	LI	R4,3			try 3 times
 H040	MOVB	@>004E(R9),R2		top of data buffer
 	BL	@VDPRD			set VDP to read from it
-* APEDSK: the first byte to be written needs to be in the data register 
+* APEDSK99: the first byte to be written needs to be in the data register 
 *         before the write command is given
 	MOVB	@-1026(R15),R0		read one byte from buffer
 	MOVB	R0,@WDATA		send it to data register
 	BL	@SNDCMD			send command
 *	DATA	>0B00			write track (E=1)
-	DATA	>F400			APEDSK: write track (E=1)
+	DATA	>F400			APEDSK99: write track (E=1)
 *	LI	R6,3235			3235 bytes to write
-	LI	R6,2303			APEDSK: (9*256=2304) bytes to write but first is already written 
+	LI	R6,2303			APEDSK99: (9*256=2304) bytes to write but first is already written 
 *	SBO	2			enable wait states
 H041	MOVB	@-1026(R15),R0		read one byte from buffer
-*	INV	R0			APEDSK: none of this inverting databus rubbish
+*	INV	R0			APEDSK99: none of this inverting databus rubbish
 	MOVB	R0,@WDATA		send it to data register
 *	MOVB	@-1026(R15),R0		why on earth is it done like that???
-*	INV	R0			APEDSK: none of this inverting databus rubbish
+*	INV	R0			APEDSK99: none of this inverting databus rubbish
 *	MOVB	R0,@WDATA		send next byte
 *	DECT	R6			
-	DEC	R6			APEDSK:
+	DEC	R6			APEDSK99:
 *	JGT	H041			next (pair of bytes) byte
-	JNE	H041			APEDSK: next byte
+	JNE	H041			APEDSK99: next byte
 *	BL	@WTCPT2			SBZ 2, then wait for command completion
-*	BL	@WTCPT1			APEDSK: no need to wait for command completion
+*	BL	@WTCPT1			APEDSK99: no need to wait for command completion
 *	SLA	R0,11			check write protect bit
-*	SLA	R0,2			APEDSK: check write protect bit
+*	SLA	R0,2			APEDSK99: check write protect bit
 *	JNC	H042			
-*	JNC	H043			APEDSK:
+*	JNC	H043			APEDSK99:
 *	B	@ERROR3			error code >34 ??
 *H042	SLA	R0,4			test lost data bit
 *	JNC	H043			ok: return
@@ -505,11 +505,11 @@ H044	MOVB	R0,@-2(R15)
 	B	*R11			
 
 *WTCPT2	SBZ	2			wait for command completion				
-WTCPT1	MOVB	@RSTAT,R0		get status. APEDSK: Not Ready bit set when SD DSK file is unavailable
-*	INV	R0			APEDSK: none of that inverted databus rubbish
+WTCPT1	MOVB	@RSTAT,R0		get status. APEDSK99: Not Ready bit set when SD DSK file is unavailable
+*	INV	R0			APEDSK99: none of that inverted databus rubbish
 	JLT	ERROR4			drive not ready
 *	SRC	R0,9			
-*	JOC	WTCPT1			FDC busy: keep waiting. APEDSK: no busy condition
+*	JOC	WTCPT1			FDC busy: keep waiting. APEDSK99: no busy condition
 	B	*R11			
 ERROR4	BL	@ERROR1			exit with error code 6, reseting all drives
 	DATA	>0600			
@@ -537,11 +537,11 @@ H055	CLR	R0
 *	MOV	R5,R5			test same drive flag
 *	JEQ	H057			
 *	LDCR	@K011,3			deselect all drives
-*	SZCB	@DSDRVS,@CRUWRI		APEDSK: deselect all drives + side
+*	SZCB	@DSDRVS,@CRUWRI		APEDSK99: deselect all drives + side
 *	AI	R12,-6			selection bits are echoed in CRU bits 1-3
 *	STCR	R0,3			load CRU bits 2-4
-*	MOVB	@CRURD,R0		APEDSK: read drive selection bits etc
-*	SRA	R0,4			APEDSK: preserve drive selection bits (HLD bit 0 always 0)
+*	MOVB	@CRURD,R0		APEDSK99: read drive selection bits etc
+*	SRA	R0,4			APEDSK99: preserve drive selection bits (HLD bit 0 always 0)
 *	AI	R12,6			back to bits 4-6
 *	CZC	R2,R0			echoed properly? HELP
 *	JEQ	H057			yes: go on	
@@ -556,14 +556,14 @@ H055	CLR	R0
 *K011	BYTE	>00			
 					
 *H057	LDCR	R2,3			select drive
-H057	SWPB	R0			APEDSK: drive # back in MSB
-	SLA	R0,1			APEDSK: preserve bit 7 (side select)
-	MOVB	R0,@CRUWRI		APEDSK: select drive
+H057	SWPB	R0			APEDSK99: drive # back in MSB
+	SLA	R0,1			APEDSK99: preserve bit 7 (side select)
+	MOVB	R0,@CRUWRI		APEDSK99: select drive
 *	AI	R12,-8			back to cru base
 *	MOV	R5,R5			test same drive flag
 *	JEQ	H058			same: return
 *	LI	R0,3000			different: wait while drive gets ready
-*H059	SRC	R5,4			APEDSK: we don't need to wait for no drive
+*H059	SRC	R5,4			APEDSK99: we don't need to wait for no drive
 *	SRC	R5,4			
 *	DEC	R0			
 *	JNE	H059			keep waiting
@@ -575,7 +575,7 @@ H056	BL	@ERROR1			exit with error #7
 SKTRK0	MOV	R11,R8			seek track 0
 	BL	@SNDCMD
 *	DATA	>F500			send restore command (h=1, V=0, r0r1=10)
-	DATA	>0A00			APEDSK: send restore command (h=1, V=0, r0r1=10)
+	DATA	>0A00			APEDSK99: send restore command (h=1, V=0, r0r1=10)
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	BL	@CKTRK0			APEDSK not relevant: test if track 0 reached, error it not
 	BL	@LASTRK			set VDP to read last track #
@@ -584,14 +584,14 @@ SKTRK0	MOV	R11,R8			seek track 0
 	B	*R8			
 					
 *CKTRK0	MOVB	@RSTAT,R0		check if track 0 reached
-*	INV	R0			APEDSK: none of that inverted databus rubbish
+*	INV	R0			APEDSK99: none of that inverted databus rubbish
 *	SLA	R0,6			test the track 0 bit
 *	JOC	H060			
 *	B	@ERROR3			exit with error code 6, reseting all drives
 *H060	B	*R11			
 
 *RSTDRV	AI	R12,8			reset all drives
-RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK: reset all drives including side
+RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK99: reset all drives including side
 *	LDCR	@K002,4			no drive selected
 *	AI	R12,-8			
 *	SBZ	1			motor strobe
@@ -605,7 +605,7 @@ H061	MOVB	R0,@-2(R15)		write four >00 (i.e. clear drive info)
 	DEC	R0			
 	JNE	H061			
 *	BL	@WTCPT2			test status, reset drives if not ready
-*	BL	@WTCPT1			APEDSK: no need to wait for command completion and error check
+*	BL	@WTCPT1			APEDSK99: no need to wait for command completion and error check
 	MOVB	@K002,@>0050(R9)	no error
 	B	@RTURN1			get return address from stack
 					
@@ -628,30 +628,30 @@ ERROR1	MOV	*R11,R0			exit with error
 	JNE	H064			no: exit
 	BL	@SNDCMD			yes: reset drives
 *K013	DATA	>2F00			send force interrupt, no ints
-K013	DATA	>0000			APEDSK: send Restore command
-*H065	MOVB	@RSTAT,R0		get status APEDSK: no need to test for "drive busy"
+K013	DATA	>0000			APEDSK99: send Restore command
+*H065	MOVB	@RSTAT,R0		get status APEDSK99: no need to test for "drive busy"
 *	SRC	R0,9			test busy flag
 *	JNC	H065			wait until done (inverted)
-*	JOC	H065			APEDSK: wait until done
+*	JOC	H065			APEDSK99: wait until done
 H064	B	@RTURN1			return to caller (address from stack)
 					
 SNDCMD	MOV	*R11+,R0		send command to FDC from data word
-*	MOVB	@RSTAT,R6		get status APEDSK: no need to test for "drive busy" 
+*	MOVB	@RSTAT,R6		get status APEDSK99: no need to test for "drive busy" 
 *	SLA	R6,1			test ready bit
-*	SBZ	1			strobe motor. APEDSK: we don't have to strobe anything
+*	SBZ	1			strobe motor. APEDSK99: we don't have to strobe anything
 *	SBO	1			
 *	JOC	H066			ready (inverted)
-*	JNC	H066			APEDSK: ready
-*	JMP	SNDCMD			APEDSK: not ready, test again
+*	JNC	H066			APEDSK99: ready
+*	JMP	SNDCMD			APEDSK99: not ready, test again
 *	LI	R6,30000		wait a long time
 *H067	SRC	R5,4			
 *	SRC	R5,4			
 *	DEC	R6			
 *	JNE	H067			
 H066	MOVB	R0,@WCOMND		send command
-*	SBO	3			signal head loaded (HLT pin) APEDSK: we don't have to load anything
-*	SRC	R5,8			kill time. APEDSK: we don't have to kill anything
-*	SRC	R5,8			APEDSK: we don't have to kill anything
+*	SBO	3			signal head loaded (HLT pin) APEDSK99: we don't have to load anything
+*	SRC	R5,8			kill time. APEDSK99: we don't have to kill anything
+*	SRC	R5,8			APEDSK99: we don't have to kill anything
 	B	*R11			
 					
 LASTRK	CLR	R0			get last track # for this drive
@@ -820,7 +820,7 @@ H076	INCT	R8			point to end-of-buffer word
 	BL	@VPDR2B			read 2 bytes from VDP address R8, into R0
 	MOV	R8,R2			save current R8
 	MOV	R0,R8			get end-of-buffer word
-*					APEDSK: we don't need to check for additional controllers
+*					APEDSK99: we don't need to check for additional controllers
 	MOVB	@-1026(R15),R1		get CRU of controller that reserved this mem				
 *	CB	R12,R1			same as ours?
 *	JNE	H076			no: use end-of-buffer to link to next buffer
@@ -1381,7 +1381,7 @@ H127	BLWP	@>005A(R9)		set VDP to write
 	DEC	R5			point to drive #
 H128	SETO	R2			flag for read
 *	MOVB	R5,R2			add wanted drive
-	MOVB	R6,R2			APEDSK: DEBUG!
+	MOVB	R6,R2			APEDSK99: DEBUG!
 	JEQ	H129			none
 	INC	R5			point at VIB buffer
 	BL	@CALSUB			call subroutine
@@ -2832,7 +2832,7 @@ FNDRV	MOV	*R11+,R10		find drive in file control blocks
 	AI	R8,6			point to drive # in file ctrl block
 	LI	R3,>0020		filename begin with space (illegal: flag for dir)
 *	MOVB	R5,R3			add drive #
-	MOVB	R6,R3			APEDSK: DEBUG!
+	MOVB	R6,R3			APEDSK99: DEBUG!
 H241	BL	@VPDR2B			read 2 bytes from VDP at R8 into R0
 	C	R3,R0			match with that control block?
 	JEQ	H242			yes
