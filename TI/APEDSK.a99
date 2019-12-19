@@ -1742,7 +1742,7 @@ H161	A	R1,R1			make it a word ptr
 OPCVEC	DATA	OPEN			open
 	DATA	CLOSE			close
 	DATA	READ			read
-	DATA	READ			write
+	DATA	WRITE			write
 	DATA	RWIND1			rewind
 	DATA	LOAD			load
 	DATA	SAVE			save
