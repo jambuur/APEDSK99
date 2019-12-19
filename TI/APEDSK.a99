@@ -882,11 +882,11 @@ H078	BLWP	@>005A(R9)		set VDP to write
 	CLR	R2			code for write
 	INC	R1			
 	BL	@CALSUB			call subroutine
-	DATA	WRISR1			write sector 1
+	DATA	WRSEC1			write sector 1
 	MOV	@>0058(R9),R5		ptr to VIB in VDP buffers
 	CLR	R4			sector 0
 	BL	@CALSUB			call subroutine
-	DATA	RWSEC0			write VIB to sector 0
+	DATA	RWSEC			write VIB to sector 0
 	MOV	R5,R3			copy filename from compare buffer to FDR
 	AI	R3,257			ptr to file compare buffer
 	LI	R2,10			10 chars per filename
@@ -997,7 +997,7 @@ H090	BL	@CALSUB			call subroutine
 	A	R1,R4			put sector in R4
 	SETO	R2			code for read
 H091	MOV	R7,R5			buffer ptr
-	B	@RWSEC0			read/write sector
+	B	@RWSEC			read/write sector
 					
 WROFSC	BLWP	@>005A(R9)		write sector to offset in file offset in R3
 	DATA	>8100			save R0 and R7
@@ -1157,7 +1157,7 @@ H107	BLWP	@>005A(R9)		save R8
 	BL	@RMFPTR			remove FDR ptr from sector 1
 	CLR	R2			code for write
 	BL	@CALSUB			call subroutine
-	DATA	WRISR1			write sector 1
+	DATA	WRSEC1			write sector 1
 	BL	@FDR2B1			get 2 bytes from VDP at >8356+offset in R0
 	DATA	-4			i.e. sector # of FDR
 	BL	@CALSUB			call subroutine
@@ -1256,7 +1256,7 @@ H116	AI	R6,>0100		next drive
 	SETO	R2			code for read
 	CLR	R4			sector 0
 	BL	@CALSUB			call subroutine
-	DATA	RDSEC1			read sector 0
+	DATA	RWSECA			read sector 0 FOUT
 	MOV	R7,R7			ok?
 	JNE	H118			no: try next drive
 	LI	R4,10			yes: diskname size
@@ -1377,7 +1377,7 @@ H127	BLWP	@>005A(R9)		set VDP to write
 	MOVB	R4,@-2(R15)		clr drive #
 	INC	R5			point back to VIB buffer
 	BL	@CALSUB			call subroutine
-	DATA	RWSEC2			write sector 0 to old drive (in R2)
+	DATA	RWSECB			write sector 0 to old drive (in R2)
 	DEC	R5			point to drive #
 H128	SETO	R2			flag for read
 *	MOVB	R5,R2			add wanted drive
@@ -1385,7 +1385,7 @@ H128	SETO	R2			flag for read
 	JEQ	H129			none
 	INC	R5			point at VIB buffer
 	BL	@CALSUB			call subroutine
-	DATA	RDSEC1			read sector (in R4) to buffer (in R5)
+	DATA	RWSECA			read sector (in R4) to buffer (in R5) FOUT
 	DEC	R5			point at drive #
 H129	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
@@ -1396,7 +1396,7 @@ H126	INC	R5			point back to FDR
 	B	@RTURN1			branch to address on stack
 					
 RDSEC1	SETO	R2			read sector 1
-WRISR1	LI	R4,1
+WRSEC1	LI	R4,1
 	LI	R5,>0100		into data buffer area of current ctrl block
 	JMP	RDFDR1			
 					
@@ -1406,9 +1406,9 @@ WRFDR	BL	@FDR2B1			read FDR
 RDFDR2	MOV	R0,R4			sector read/write
 	CLR	R5
 RDFDR1	A	@>0056(R9),R5		point to FDR or data buffer
-RWSEC0	CLR	R7			
-RWSEC1	MOVB	R6,R2			add drive # for r/w flag
-RWSEC2	BLWP	@>005A(R9)		save R0-R8
+RWSEC	CLR	R7			
+RWSECA	MOVB	R6,R2			add drive # for r/w flag
+RWSECB	BLWP	@>005A(R9)		save R0-R8
 	DATA	>FF80			
 	MOV	R4,@>004A(R9)		sector #
 	MOV	R2,@>004C(R9)		drive | r/w flag
@@ -2702,7 +2702,7 @@ H226	SETO	R2			code for read
 	JEQ	H227			0=disk parameters
 	LI	R4,1			sector #1
 	BL	@CALSUB			call subroutine
-	DATA	RWSEC0			read sector into buffer in R5
+	DATA	RWSEC			read sector into buffer in R5
 	MOV	R5,R8			buffer ptr
 	AI	R5,255			point to data buffer area in this ctrl block
 	DECT	R0			don't count record 0
@@ -2711,7 +2711,7 @@ H226	SETO	R2			code for read
 	MOV	R0,R4			sector where that FDR is to be found
 	JEQ	H228			no more
 	BL	@CALSUB			call subroutine
-	DATA	RWSEC0			read FDR sector into data buffer area
+	DATA	RWSEC			read FDR sector into data buffer area
 	BL	@FDR2B1			get 2 bytes from FDR into R0
 	DATA	270			# of sect/file
 	MOV	R0,R6			save it to output file size
@@ -2747,7 +2747,7 @@ H231	JMP	H232			output that
 					
 H227	AI	R5,255			disk info: point to data buffer area in ctrl block
 	BL	@CALSUB			call subroutine
-	DATA	RWSEC0			read sector 0
+	DATA	RWSEC			read sector 0
 	BL	@FDR2B1			get 2 bytes from FDR into R0
 	DATA	266			# of sectors on disk
 	MOV	R0,R6			duplicate it
@@ -3009,9 +3009,9 @@ H250	BL	@FDR2B1			get 2 bytes from FDR
 	BL	@CFNFDR			copy filename in compare buffer to FDR
 	CLR	R2			code for write
 	BL	@CALSUB			call subroutine
-	DATA	RWSEC0			write FDR (with new name in it)
+	DATA	RWSEC			write FDR (with new name in it)
 	BL	@CALSUB			call subroutine
-	DATA	WRISR1			write sector 1 (with new FDR ptr in it)
+	DATA	WRSEC1			write sector 1 (with new FDR ptr in it)
 	MOV	@>0056(R9),R1		FDR ptr
 	BLWP	@>005A(R9)		prepare VDP to write
 	DATA	>0023			address in R1
