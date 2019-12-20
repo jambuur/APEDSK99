@@ -88,9 +88,8 @@ DSR04	DATA	>0000			no more
 
 *=====================================
 * Power-up routine
-*=====================================					
-EPWRUP	MOV	R12,R7			Dhr. F.G. Kaal check: are we powering up CRU >1000 peripheral?
-	CI	R7,>1000		is console checking for 1st CRU perpheral?
+*=====================================						
+EPWRUP	CI	R12,>1000		Dhr. F.G. Kaal check: are we powering up 1st CRU (>1000) peripheral?
 	JNE	NOCRU			nope; return
 
 	MOV	R11,R7			yes; save return address
@@ -123,10 +122,10 @@ H001	CLR	@-2(R15)		clear these >828 bytes
 	CLR	@>0054(R9)		name length = 0 for power-up
 	BLWP	@>005A(R9)		retrieve R7 (saved by PRPRTN)
 	DATA	>0011			put it into R11
-	MOV	@K001,@>006C(R9)	???
+*	MOV	@K001,@>006C(R9)	???
 NOCRU	B	*R11			return
 					
-K001	DATA	>0404			
+*K001	DATA	>0404			
 					
 VDPSET	ORI	R0,>4000		set VDP for a write
 	SWPB	R0			
@@ -1671,7 +1670,7 @@ H152	LI	R0,8			free sectors in first byte
 	SLA	R4,0			don't erase before starting sector
 H154	JMP	H155			
 					
-	SRL	R9,3			what the heck is that??? 
+*	SRL	R9,3			what the heck is that??? 
 					
 H155	SWPB	R4			
 	JMP	H158			goto erase last byte
