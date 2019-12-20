@@ -418,7 +418,7 @@ void setup() {
   TIstop();
 
   //read DSR binary from SD and write into DSR RAM
-  InDSR = SD.open("/APEDSK.DSR", FILE_READ);
+  InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
   if (InDSR) {
     for (unsigned int ii = 0; ii < 0x2000; ii++) {
       DSRAM = InDSR.read();
