@@ -122,10 +122,10 @@ H001	CLR	@-2(R15)		clear these >828 bytes
 	CLR	@>0054(R9)		name length = 0 for power-up
 	BLWP	@>005A(R9)		retrieve R7 (saved by PRPRTN)
 	DATA	>0011			put it into R11
-*	MOV	@K001,@>006C(R9)	???
+	MOV	@K001,@>006C(R9)	???
 NOCRU	B	*R11			return
 					
-*K001	DATA	>0404			
+K001	DATA	>0404			
 					
 VDPSET	ORI	R0,>4000		set VDP for a write
 	SWPB	R0			
