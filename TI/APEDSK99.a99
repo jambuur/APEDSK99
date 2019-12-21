@@ -92,7 +92,6 @@ DSR04	DATA	>0000			no more
 EPWRUP	CI	R12,>1000		Dhr. F.G. Kaal check: are we powering up 1st CRU (>1000) peripheral?
 	JNE	NOCRU			nope; return
 
-	INCT	R11			stop scanning CRU space on return
 	MOV	R11,R7			yes; save return address
 	STWP	R9			get workspace (should be >83E0)
 	AI	R9,-224			point to top of scratch-pad mem (>8300)
