@@ -816,7 +816,7 @@ PRPRTN	MOV	R11,R10			save return address
 					
 	MOV	@>0070(R9),R8		highest free address in VDP mem
 H076	INCT	R8			point to end-of-buffer word
-	BL	@VPDR2B			read 2 bytes from VDP address R8, into R0
+	BL	@VDPR2B			read 2 bytes from VDP address R8, into R0
 	MOV	R8,R2			save current R8
 	MOV	R0,R8			get end-of-buffer word
 *					APEDSK99: we don't need to check for additional controllers
@@ -1142,7 +1142,7 @@ H106	INC	R1			FDR found, point to it
 	DATA	-4			i.e. get sector # of FRD in R0
 	MOV	R0,R3			save it for later
 	MOV	R5,R8			ptr to top of sector 1
-H108	BL	@VPDR2B			read 2 bytes from VDP at R8 into R0
+H108	BL	@VDPR2B			read 2 bytes from VDP at R8 into R0
 	INCT	R8			next FDR ptr in sector 1
 	C	R0,R3			is this the one we want?
 	JNE	H108			not yet
@@ -1227,7 +1227,7 @@ PABR2B	MOV	@>0054(R9),R8		get two bytes from PAB
 FDR2B1	MOV	@>0056(R9),R8		get two bytes from FDR
 FDR2B2	A	*R11+,R8		offset in data word
 					
-VPDR2B	BLWP	@>005A(R9)		get two byte from VDP at R8
+VDPR2B	BLWP	@>005A(R9)		get two byte from VDP at R8
 	DATA	>0102			set VDP to read at R8
 	MOVB	@-1026(R15),R0		get two bytes of data
 	SWPB	R0			
@@ -1490,7 +1490,7 @@ FFDRFN	MOV	@>0056(R9),R8		entry point if sector 1 already read
 	AI	R8,382			point to middle of sector 1
 	LI	R2,64			distance: start with 1/4 sector
 H139	SETO	R4			
-	BL	@VPDR2B			read 2 bytes in R0 from VDP address in R8
+	BL	@VDPR2B			read 2 bytes in R0 from VDP address in R8
 	MOV	R0,R0			
 	JEQ	H140			no file here: move up
 	BLWP	@>005A(R9)		save R2
@@ -1539,7 +1539,7 @@ H142	SRL	R2,2			divide distance by 2
 * 3 nibbles specify the total file offset in sectors, including this cluster.
 * The nibbles are arranged as EG SB OF, to be combined as BEG OFS
 DECDCI	MOV	R11,R10			decode cluster info
-	BL	@VPDR2B			read 2 bytes VDP at R8 in R0
+	BL	@VDPR2B			read 2 bytes VDP at R8 in R0
 	SWPB	R0			
 	MOVB	@-1026(R15),R2		get third byte from cluster list
 	MOV	R0,R1			
@@ -2706,7 +2706,7 @@ H226	SETO	R2			code for read
 	AI	R5,255			point to data buffer area in this ctrl block
 	DECT	R0			don't count record 0
 	A	R0,R8			point to desired file ptr
-	BL	@VPDR2B			get two byte from VDP at R8 into R0
+	BL	@VDPR2B			get two byte from VDP at R8 into R0
 	MOV	R0,R4			sector where that FDR is to be found
 	JEQ	H228			no more
 	BL	@CALSUB			call subroutine
@@ -2832,7 +2832,7 @@ FNDRV	MOV	*R11+,R10		find drive in file control blocks
 	LI	R3,>0020		filename begin with space (illegal: flag for dir)
 *	MOVB	R5,R3			add drive #
 	MOVB	R6,R3			APEDSK99: DEBUG!
-H241	BL	@VPDR2B			read 2 bytes from VDP at R8 into R0
+H241	BL	@VDPR2B			read 2 bytes from VDP at R8 into R0
 	C	R3,R0			match with that control block?
 	JEQ	H242			yes
 	ANDI	R0,>00FF		keep only first char of filename
@@ -3152,11 +3152,11 @@ ESUB08	MOV	R11,R7
 	BL	@PRPFDO			prepare disk operation
 	MOV	@>002C(R9),R8		ptr to next basic token
 	AI	R8,7			skip FILES
-	BL	@VPDR2B			get next two bytes in R0
+	BL	@VDPR2B			get next two bytes in R0
 	CI	R0,>C801		>C8=unquoted string, size=1 char
 	JNE	H263			return (with error) if different
 	INCT	R8			increment pointer
-	BL	@VPDR2B			get next two bytes
+	BL	@VDPR2B			get next two bytes
 	SWPB	R0			
 	AI	R0,>49D0		substact >B630: # of files >B6=closed parenthesis
 	CI	R0,>0009		only 9 files allowed in Basic !
@@ -3251,7 +3251,7 @@ H270	BLWP	@>005A(R9)		set VDP to read
 H269	MOV	R1,@>0070(R9)		new first free address
 *	MOV	R1,R8			
 *H271	INCT	R8			point to end of buffer word
-*	BL	@VPDR2B			read it in R0
+*	BL	@VDPR2B			read it in R0
 *	MOVB	@-1026(R15),R1		get CRU base byte
 *	CB	R12,R1			same as current controller?
 *	JEQ	H265			yes: return with no error
