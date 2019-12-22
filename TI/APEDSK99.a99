@@ -1716,7 +1716,8 @@ EDSR02	LI	R6,>0100		DSK1
 	JMP	H160			----
 					
 EDSR03	LI	R6,>0200		DSK2
-	JMP	H160			----
+*	JMP	H160			----
+	JMP	H999
 					
 EDSR04	LI	R6,>0300		DSK3
 					
@@ -3350,5 +3351,36 @@ SIDE01	DATA	>0100			floppy side select
 * Bytes >5FF0 to >5FFE map to the FDC emulation registers
 *
 *-----------------------------------------					
+	
+H999	MOV	R11,R7			save return address
+	BL	@PRPFDO			prepare file operations
+	MOV	@>0054(R9),R0		PAB ptr
+	BLWP	@>005A(R9)		set VDP to read
+	DATA	>0002			address in R0
+	MOVB	@-1026(R15),R1		get opcode
+	SRL	R1,8			
+	CI	R1,>0009		check range
+	JH	ERROR8			illegal opcode
+	CI	R2,>0001		filename lenght (including . )
+	JNE	H998			no filename: dir
+	AI	R1,10			only allow open, close and read
+	CI	R1,>000C			
+	JH	ERROR8			others are illegal
+H998	A	R1,R1			make it a word ptr
+	MOV	@OPCVEC(R1),R1		get vector
+*	B	*R1			branch to it
+	B	@DEBUG
+*
+DEBUG	LI	R4,>8300
+	LI	R5,>B000
+DLOOP1	CLR	*R5+
+	CI	R5,>B100
+	JNE	DLOOP1
+	LI	R5,>B000
+DLOOP2	MOV	*R4+,*R5+
+	CI	R4,>8400
+	JNE	DLOOP2
+	BLWP	@>0000
+*	
 	END				
 					
