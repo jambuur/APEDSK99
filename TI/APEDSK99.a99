@@ -1717,7 +1717,7 @@ EDSR02	LI	R6,>0100		DSK1
 					
 EDSR03	LI	R6,>0200		DSK2
 *	JMP	H160			----
-	JMP	H999
+	B	@H999
 					
 EDSR04	LI	R6,>0300		DSK3
 					
@@ -3360,16 +3360,17 @@ H999	MOV	R11,R7			save return address
 	MOVB	@-1026(R15),R1		get opcode
 	SRL	R1,8			
 	CI	R1,>0009		check range
-	JH	ERROR8			illegal opcode
+	JH	ERR999			illegal opcode
 	CI	R2,>0001		filename lenght (including . )
 	JNE	H998			no filename: dir
 	AI	R1,10			only allow open, close and read
 	CI	R1,>000C			
-	JH	ERROR8			others are illegal
+	JH	ERR999			others are illegal
 H998	A	R1,R1			make it a word ptr
 	MOV	@OPCVEC(R1),R1		get vector
 *	B	*R1			branch to it
 	B	@DEBUG
+ERR999	B	@ERROR8
 *
 DEBUG	LI	R4,>8300
 	LI	R5,>B000
