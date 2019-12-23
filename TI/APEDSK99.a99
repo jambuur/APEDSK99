@@ -3353,6 +3353,8 @@ SIDE01	DATA	>0100			floppy side select
 *
 	AORG	>5D00			easy to memorize debug branch address
 *
+SAVORT	DATA	>0000			previous R11
+*
 DEBUG	DATA	>0000			1st word of original code replaced by branch to debug code
 	DATA	>0000			2nd word ""
 *
@@ -3379,9 +3381,9 @@ DLOOP2	MOV	*R0+,*R1+
 *	
 * Thierry's dummy RTWP trick
 *
-QDEBUG	MOV 	@SAVWP,R13		
-	MOV	@SAVRT,R11		restore previous R11 for good measure
-	MOV	R11,R14
+QDEBUG	MOV 	@SAVWP,R13	
+	MOV	@SAVORT,@>0016(R13)	restore old-old R11
+	MOV	@SAVRT,R14		
 	MOV	@SAVST,R15
 	RTWP				
 *	
