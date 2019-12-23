@@ -3379,10 +3379,10 @@ DLOOP2	MOV	*R0+,*R1+
 *	
 * Thierry's dummy RTWP trick
 *
-QDEBUG	MOV 	SAVWP,R13		
-	MOV	SAVRT,R11		restore previous R11 for good measure
+QDEBUG	MOV 	@SAVWP,R13		
+	MOV	@SAVRT,R11		restore previous R11 for good measure
 	MOV	R11,R14
-	MOV	SAVST,R15
+	MOV	@SAVST,R15
 	RTWP				
 *	
 SAVRT	DATA	>0000
