@@ -3351,17 +3351,22 @@ SIDE01	DATA	>0100			floppy side select
 *
 *-----------------------------------------					
 *
-	AORG	>5D00
+	AORG	>5D00			easy to memorize debug branch address
 *
-DEBUG	MOV	R11,@SAVR11
-	STWP	R11
-	MOV	R11,@QDEBUG+2
+DEBUG	DATA	>0000			1st word of original code replaced by branch to debug code
+	DATA	>0000			2nd word ""
 *
-OLDCD1	DATA	>0000
-OLDCD2	DATA	>0000
+	MOV	R11,@SAVRT		save return address
+	STWP	R11			save current WP
+	MOV	R11,@SAVWP		""
+	STST	R11			save current ST
+	MOV	R11,@SAVST
 *
-	LWPI	>B200
+	LWPI	>B200			use our own WS
 *
+* first clear >B000->B0FF then copy >8300->83FF there 
+* so we can inspect that later
+*	
 	LI	R0,>8300
 	LI	R1,>B000
 DLOOP1	CLR	*R1+
@@ -3372,12 +3377,17 @@ DLOOP2	MOV	*R0+,*R1+
 	CI	R4,>8400
 	JL	DLOOP2
 *	
-QDEBUG	LWPI	>0000
+* Thierry's dummy RTWP trick
 *
-	MOV	@SAVR11,R11
-	B	*R11
+QDEBUG	MOV 	SAVWP,R13		
+	MOV	SAVRT,R11		restore previous R11 for good measure
+	MOV	R11,R14
+	MOV	SAVST,R15
+	RTWP				
 *	
-SAVR11	DATA	>0000
+SAVRT	DATA	>0000
+SAVWP	DATA	>0000
+SAVST	DATA	>0000
 *	
 	END				
 					
