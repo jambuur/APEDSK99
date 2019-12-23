@@ -1255,7 +1255,7 @@ H116	AI	R6,>0100		next drive
 	SETO	R2			code for read
 	CLR	R4			sector 0
 	BL	@CALSUB			call subroutine
-	DATA	RWSECA			read sector 0 FOUT
+	DATA	RWSECA			read sector 0
 	MOV	R7,R7			ok?
 	JNE	H118			no: try next drive
 	LI	R4,10			yes: diskname size
@@ -1384,7 +1384,7 @@ H128	SETO	R2			flag for read
 	JEQ	H129			none
 	INC	R5			point at VIB buffer
 	BL	@CALSUB			call subroutine
-	DATA	RWSECA			read sector (in R4) to buffer (in R5) FOUT
+	DATA	RWSECA			read sector (in R4) to buffer (in R5)
 	DEC	R5			point at drive #
 H129	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
@@ -1687,7 +1687,7 @@ H156	S	R0,R2			that many will be freed
 	LI	R4,>FF00		clear full byte
 	INC	R1			next byte
 	LI	R0,8			i.e. 8 sectors
-	C	R2,R0			how many more setors?
+	C	R2,R0			how many more sectors?
 	JLT	H157			less than 8
 	JMP	H156			8 or more: next byte
 					
