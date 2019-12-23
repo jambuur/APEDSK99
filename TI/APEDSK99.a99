@@ -3357,7 +3357,8 @@ SAVORT	DATA	>0000			previous R11
 *
 DEBUG	DATA	>0000			1st word of original code replaced by branch to debug code
 	DATA	>0000			2nd word ""
-	DATA	>0000
+	DATA	>0000			3rd word "'
+	DATA	>0000			4th word ""
 *
 	MOV	R11,@SAVRT		save return address
 	STWP	R11			save current WP
