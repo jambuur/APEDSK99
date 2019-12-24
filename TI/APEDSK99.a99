@@ -3359,29 +3359,23 @@ DEBUG	DATA	>0000			1st word of original code replaced by BLWP
 OLDWD2	DATA	>0000			2nd word ""
 *
 	STST	R9
-	MOV	R9,@DEBGWS+30
-	STWP	R9
-	MOV	R9,@DEBGWS+26
-	MOV	@SAVRT,@DEBGWS+28
+	MOV	R9,@DEBGWS+30		old Status in R15
+	STWP	R9				
+	MOV	R9,@DEBGWS+26		old Workspace Pointer in R13
+	MOV	@SAVRT,@DEBGWS+28	old Program Counter in R14
 *
 	LWPI	DEBGWS			use our own WS	
 *
-* first clear >B000->B0FF then copy >8300->83FF there 
-* so we can inspect that later
+* copy >8300->83FF TO >B000->B0FF for inspection later
 *	
 	LI	R0,>8300
+	MOV	R13,R1			restore old R9
+	AI	R1,>E0+18		""
+	MOV	R0,*R1			""
 	LI	R1,>B000
-DLOOP1	CLR	*R1+
-	CI	R1,>B100
-	JL	DLOOP1
-	LI	R1,>B000
-DLOOP2	MOV	*R0+,*R1+
+DLOOP1	MOV	*R0+,*R1+
 	CI	R0,>8400
-	JL	DLOOP2
-*
-	LI	R0,>8300
-	MOV	@DEBGWS+18,R1
-	MOV	R0,*R1
+	JL	DLOOP1
 *
 	RTWP
 *
