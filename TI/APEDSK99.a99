@@ -3352,28 +3352,37 @@ SIDE01	DATA	>0100			floppy side select
 *-----------------------------------------					
 *
 *
-	AORG	>5D00			easy to memorize 
+	AORG	>5D00			easy to memorize debug branch address
 *	
+SAVRT	DATA	>0000			return address after debug
+DEBUG	DATA	>0000			1st word of original code replaced by BLWP
+OLDWD2	DATA	>0000			2nd word ""
+*
 	STST	R9
-	MOV	R9,@OLDSTS		old Status
+	MOV	R9,@DEBGWS+30		old Status in R15
+	STWP	R9				
+	MOV	R9,@DEBGWS+26		old Workspace Pointer in R13
+	MOV	@SAVRT,@DEBGWS+28	old Program Counter in R14
 *
 	LWPI	DEBGWS			use our own WS	
 *
 * copy >8300->83FF TO >B000->B0FF for inspection later
 *	
 	LI	R0,>8300
-	LI	R1,OLDPAD
+	MOV	R13,R1			restore old R9
+	AI	R1,>E0+18		""
+	MOV	R0,*R1			""
+	AI	R1,>40			only interested in >8340 - >83FF
+	LI	R1,>B000
 DLOOP1	MOV	*R0+,*R1+
 	CI	R0,>8400
 	JL	DLOOP1
 *
-	BLWP	@>0000
+	RTWP
 *
-	AORG	>AFFE
+	EVEN
 *
-OLDSTS	BSS	2
-OLDPAD	BSS	256
-DEBGWS	BSS	32
+DEBGWS	BSS	32	
 *
-	END		
+	END				
 					
