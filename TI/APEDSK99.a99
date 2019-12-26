@@ -3372,12 +3372,15 @@ OLDWD2	DATA	>0000			2nd word ""
 	MOV	R13,R1			restore old R9
 	AI	R1,>E0+18		""
 	MOV	R0,*R1			""
+	AI	R1,>40			only interested in >8340 - >83FF
 	LI	R1,>B000
 DLOOP1	MOV	*R0+,*R1+
 	CI	R0,>8400
 	JL	DLOOP1
 *
 	RTWP
+*
+	EVEN
 *
 DEBGWS	BSS	32	
 *
