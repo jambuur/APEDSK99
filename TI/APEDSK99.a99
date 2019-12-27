@@ -190,7 +190,7 @@ H005	SWPB	R0
 	JEQ 	H013			APEDSK99: yes (don't need READ ID to check side)
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
-	DATA	>1E00			APEDSK99: seek h=1 V=1 r1r0=10
+	DATA	>1E00			APEDSK99: seek
 	JMP	H013			APEDSK
 *	BL	@WTCPT1			APEDSK not relevant: wait for command completion
 *	SLA	R0,13			test seek error bit
@@ -3351,37 +3351,27 @@ SIDE01	DATA	>0100			floppy side select
 *
 *-----------------------------------------					
 *
-*
 	AORG	>5D00			easy to memorize debug branch address
-*	
-SAVRT	DATA	>0000			return address after debug
-DEBUG	DATA	>0000			1st word of original code replaced by BLWP
+*			
+DEBUG	DATA	>0000			1st word of original code replaced by B
 OLDWD2	DATA	>0000			2nd word ""
-*
-	STST	R9
-	MOV	R9,@DEBGWS+30		old Status in R15
-	STWP	R9				
-	MOV	R9,@DEBGWS+26		old Workspace Pointer in R13
-	MOV	@SAVRT,@DEBGWS+28	old Program Counter in R14
-*
-	LWPI	DEBGWS			use our own WS	
+*	
+	LWPI	DEBRGS
 *
 * copy >8300->83FF TO >B000->B0FF for inspection later
-*	
-	LI	R0,>8300
-	MOV	R13,R1			restore old R9
-	AI	R1,>E0+18		""
-	MOV	R0,*R1			""
-	LI	R1,>B000
-DLOOP1	MOV	*R0+,*R1+
-	CI	R0,>8400
-	JL	DLOOP1
 *
-	RTWP
+	LI	R0,>8300	
+	LI	R1,>B000
+	LI	R2,256
+DLOOP1	MOV	*R0+,*R1+
+	DEC	R2
+	JNE	DLOOP1
+*
+	LWPI	>83E0
+	B	>0000			don't forget to change the B address ;-)
 *
 	EVEN
 *
-DEBGWS	BSS	32	
+DEBRGS	BSS	32
 *
-	END				
-					
+	END					
