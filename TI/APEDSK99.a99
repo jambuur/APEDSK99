@@ -3356,7 +3356,7 @@ SIDE01	DATA	>0100			floppy side select
 DEBUG	DATA	>0000			1st word of original code replaced by B
 OLDWD2	DATA	>0000			2nd word ""
 *	
-	LWPI	DEBRGS
+	LWPI	>C000
 *
 * copy >8300->83FF TO >B000->B0FF for inspection later
 *
@@ -3371,7 +3371,5 @@ DLOOP1	MOV	*R0+,*R1+
 	B	>0000			don't forget to change the B address ;-)
 *
 	EVEN
-*
-DEBRGS	BSS	32
 *
 	END					
