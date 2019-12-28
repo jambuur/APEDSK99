@@ -3367,7 +3367,7 @@ DLOOP1	MOV	*R0+,*R1+
 	DEC	R2
 	JNE	DLOOP1
 *
-	LI	R1,>D000
+	LI	R1,>B100
 	LI	R2,>1000
 	LI	R6,20
 	LI	R15,>8C02
@@ -3376,7 +3376,7 @@ DLOOP2	MOVB    @-1026(R15),*R1+        get # of last drive accessed
 	DEC	R6
 	JNE	DLOOP2
 *
-	LI	R1,>D022
+	LI	R1,>B120
 	LI	R2,>1100
 	LI	R6,20
 	BL      @VDPRD                  set VDP to read
