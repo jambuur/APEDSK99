@@ -691,12 +691,12 @@ K004	BYTE	>F0
 *	DATA	>FFFF			
 *	DATA	>FFFF			
 K012	DATA	>FFFF			
-	DATA	>FFFF			
-	DATA	>FFFF			
-	DATA	>FF00			
-	DATA	>0000			
-	DATA	>0000			
-	DATA	>00FB			
+*	DATA	>FFFF			
+*	DATA	>FFFF			
+*	DATA	>FF00			
+*	DATA	>0000			
+*	DATA	>0000			
+*	DATA	>00FB			
 *K010	BYTE	>F7			code for CRC
 *K009	BYTE	0,7,5,3,1,8,6,4		sector interlace pattern
 K005	BYTE	2			
