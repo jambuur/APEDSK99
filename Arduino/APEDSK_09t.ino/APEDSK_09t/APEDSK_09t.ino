@@ -103,7 +103,8 @@
 #define LED_REPEAT  1500
 
 //Status Register error signalling
-#define NOTREADY  0x80  //disk image not present / damaged / write protected
+#define NOTREADY  0x80
+#define PROTECTED 0x40
 #define NOERROR	  0x00
 
 //"Force Interrupt" command
@@ -322,7 +323,6 @@ byte lcmd                 = 0;      //last command
 boolean ncmd              = false;  //flag new command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
-byte Ssecidx              = 0;      // R/W sector counter
 byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
@@ -345,8 +345,7 @@ void noExec(void) {
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
   ccmd = FDINT;           // "" ""
   lcmd = ccmd;		        //reset new command prep
-  Sbtidx = 0; 	          //clear byte index counter
-  Ssecidx = 0;            //clear sector counter
+  Sbtidx = 0; 	          //clear index counter
   Ridx = 0;               //clear READ ID index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
@@ -358,7 +357,7 @@ unsigned long cDbtidx (void) {
   bi  = ( Rbyte(CRUWRI) & B00000001 ) * NRTRACKS;     //add side 0 tracks (0x28) if on side 1
   bi += Rbyte(WTRACK);                                //add current track #
   bi *= NRSECTS;                                      //convert to # of sectors
-  bi += Ssecidx;                                      //add current sector #
+  bi += Rbyte(WSECTR);                                //add current sector #
   bi *= NRBYSECT;                                     //convert to absolute DOAD byte index (max 184320 for DS/SD)
   return (bi);
 }
@@ -378,10 +377,10 @@ void RWsector( boolean rw ) {
       noExec();                                       //exit
     }
     else {
-      if ( Ssecidx < (NRSECTS - 1) ) {                //last sector (8)?
-        Ssecidx++;                                    //no; increase Sector #
-        Wbyte(WSECTR, Ssecidx);                       //sync Sector Registers
-        Wbyte(RSECTR, Ssecidx);                       //""
+      if ( DSRAM < (NRSECTS - 1) ) {                  //last sector (8)?
+        DSRAM++;                                      //no; increase Sector #
+        Wbyte(WSECTR, DSRAM);                         //sync Sector Registers
+        Wbyte(RSECTR, DSRAM);                         //""
         if ( rw ) {                                   //read first byte from next sector?
           Wbyte(RDATA, DSK[cDSK].read() );            //yes -> supply byte
         }
@@ -536,24 +535,24 @@ void loop() {
 
       else {  // read/write commands
 
-        if ( ncmd ) {					                                    //new command prep
-          cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;               //yes do some prep; determine selected disk
-          if ( aDSK[cDSK] ) {                                     //is selected disk available?
-            Wbyte(RSTAT, NOERROR);                                //reset "Not Ready" bit in Status Register
-            if ( ccmd == 0xE0 || ccmd == 0xF0 ) {                 // R/W whole track?
-              Wbyte(WSECTR, 0x00);                                //yes; start from sector 0
+        if ( ncmd ) {					                                  //new command prep
+          cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
+          if ( aDSK[cDSK] ) {                                   //is selected disk available?
+            Wbyte(RSTAT, NOERROR);                              //reset "Not Ready" bit in Status Register
+            if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               // R/W whole track?
+              Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
             }
-            Ssecidx = Rbyte(WSECTR);                              //store starting sector #
-            //DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
-            //DSK[cDSK].seek(0x10);                               //byte 0x10 in Volume Information Block stores Protected flag
-            //pDSK = ( DSK[cDSK].read() == 0x50 );                //disk is protected when byte 0x10 = 0x50 || "P"
-            Dbtidx = cDbtidx();                                   //calc absolute DOAD byte index
-            DSK[cDSK].seek(Dbtidx);                               //set to first absolute DOAD byte for R/W
+            DSRAM = Rbyte(WSECTR);                              //store starting sector #
+            DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
+            DSK[cDSK].seek(0x10);                               //byte 0x10 in Volume Information Block stores Protected flag
+            pDSK = ( DSK[cDSK].read() == 0x50 );                //disk is protected when byte 0x10 = 0x50 || "P"
+            Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
+            DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
           }
           else {
-            if ( cDSK != 0 ) {                                    //ignore DSK0; either DSK2 or DSK3 is not available
-              Wbyte(RSTAT, NOTREADY);                             //no; set "Not Ready" bit in Status Register
-              ccmd = FDINT;                                       //exit            }
+            if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
+              Wbyte(RSTAT, NOTREADY);                           //no; set "Not Ready" bit in Status Register
+              ccmd = FDINT;                                     //exit            }
             }
           }
         }
@@ -572,13 +571,13 @@ void loop() {
           case 0xA0:         				                            //write sector
 	        case 0xB0:                                            //write multiple sectors
           case 0xF0:                                            //write track
-            //if ( !pDSK ) {                                      //don't write on protected disks
+            if ( !pDSK ) {                                      //don't write on protected disks
               RWsector( false );
-            //}
-            //else {
-              //Wbyte(RSTAT, NOTREADY);                           //no; set "Not Ready" bit in Status Register
-              //ccmd = FDINT;                                     //exit    
-            //}
+            }
+            else {
+              Wbyte(RSTAT, NOTREADY);                           //no; set "Not Ready" bit in Status Register
+              ccmd = FDINT;                                     //exit    
+            }
             break;
 
           case 0xC0:  //read ID
