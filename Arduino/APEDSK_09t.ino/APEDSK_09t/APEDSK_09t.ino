@@ -104,7 +104,6 @@
 
 //Status Register error signalling
 #define NOTREADY  0x80
-#define PROTECTED 0x40
 #define NOERROR	  0x00
 
 //"Force Interrupt" command
@@ -381,13 +380,13 @@ void RWsector( boolean rw ) {
         DSRAM++;                                      //no; increase Sector #
         Wbyte(WSECTR, DSRAM);                         //sync Sector Registers
         Wbyte(RSECTR, DSRAM);                         //""
-        if ( rw ) {                                   //read first byte from next sector?
+        /*if ( rw ) {                                   //read first byte from next sector?
           Wbyte(RDATA, DSK[cDSK].read() );            //yes -> supply byte
         }
         else {
           DSK[cDSK].write( Rbyte(WDATA) );            //no -> write first sector byte to DOAD
-        }  
-        Sbtidx = 1;                                   //adjust sector byte counter
+        } */    
+        Sbtidx = 0;                                   //adjust sector byte counter
       }
       else {
         noExec();                                     //all sectors done; exit
@@ -545,7 +544,7 @@ void loop() {
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
             DSK[cDSK].seek(0x10);                               //byte 0x10 in Volume Information Block stores Protected flag
-            pDSK = ( DSK[cDSK].read() == 0x50 );                //disk is protected when byte 0x10 = 0x50 || "P"
+            pDSK = DSK[cDSK].read() != 0x20;                    //disk is protected when byte 0x10 <> " "
             //TODO: reflect protect in status register and handle protect bit in DSR
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
@@ -560,7 +559,7 @@ void loop() {
 
         switch (ccmd) {  //switch R/W commands
 
-          case FDINT:
+          case 0xD0:
             noExec();
             break;
 
@@ -574,10 +573,6 @@ void loop() {
           case 0xF0:                                      //write track
             if ( !pDSK ) {                                //don't write on protected disks
               RWsector( false );
-            }
-            else {
-              Wbyte(RSTAT, NOTREADY);                           //no; set "Not Ready" bit in Status Register
-              ccmd = FDINT;                                     //exit    
             }
             break;
 
