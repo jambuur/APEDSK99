@@ -312,7 +312,6 @@ File DSK[4];  //file pointers to DOAD's
 boolean aDSK[4] = {false, true, false, false};                                      //disk availability
 String  nDSK[4] = {"x", "/DISKS/001.DSK", "/DISKS/002.DSK", "/DISKS/003.DSK"};	    //DOAD file name
 byte    cDSK    = 0;                                                                //current selected DSK
-boolean pDSK    = true;                                                             //disk write protect flag
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
@@ -380,13 +379,13 @@ void RWsector( boolean rw ) {
         DSRAM++;                                      //no; increase Sector #
         Wbyte(WSECTR, DSRAM);                         //sync Sector Registers
         Wbyte(RSECTR, DSRAM);                         //""
-        /*if ( rw ) {                                   //read first byte from next sector?
+        if ( rw ) {                                   //read first byte from next sector?
           Wbyte(RDATA, DSK[cDSK].read() );            //yes -> supply byte
         }
         else {
           DSK[cDSK].write( Rbyte(WDATA) );            //no -> write first sector byte to DOAD
-        } */    
-        Sbtidx = 0;                                   //adjust sector byte counter
+        }     
+        Sbtidx = 1;                                   //adjust sector byte counter
       }
       else {
         noExec();                                     //all sectors done; exit
@@ -543,9 +542,6 @@ void loop() {
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
-            DSK[cDSK].seek(0x10);                               //byte 0x10 in Volume Information Block stores Protected flag
-            pDSK = DSK[cDSK].read() != 0x20;                    //disk is protected when byte 0x10 <> " "
-            //TODO: reflect protect in status register and handle protect bit in DSR
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
           }
@@ -571,9 +567,7 @@ void loop() {
           case 0xA0:         				                      //write sector
 	        case 0xB0:                                      //write multiple sectors
           case 0xF0:                                      //write track
-            if ( !pDSK ) {                                //don't write on protected disks
-              RWsector( false );
-            }
+            RWsector( false );
             break;
 
           case 0xC0:  //read ID
@@ -628,7 +622,11 @@ ISR(INT0_vect) {
 }
 
 /*
-    
+    //DSK[cDSK].seek(0x10);                       //byte 0x10 in Volume Information Block stores Protected flag
+          //pDSK = DSK[cDSK].read() != 0x20;            //disk is protected when byte 0x10 <> " "
+          //sStatus(Protect, pDSK);                     //reflect "Protect" status
+
+          sStatus(Head, true);  //yes; head loaded (probably not necessary)
 */
 
  
