@@ -546,6 +546,7 @@ void loop() {
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
             DSK[cDSK].seek(0x10);                               //byte 0x10 in Volume Information Block stores Protected flag
             pDSK = ( DSK[cDSK].read() == 0x50 );                //disk is protected when byte 0x10 = 0x50 || "P"
+            //TODO: reflect protect in status register and handle protect bit in DSR
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
           }
@@ -563,15 +564,15 @@ void loop() {
             noExec();
             break;
 
-          case 0x80:                                            //read sector
-	        case 0x90:                                            //read multiple sectors
-	        case 0xE0:                                            //read track		
+          case 0x80:                                      //read sector
+	        case 0x90:                                      //read multiple sectors
+	        case 0xE0:                                      //read track		
             RWsector( true );
             break;
-          case 0xA0:         				                            //write sector
-	        case 0xB0:                                            //write multiple sectors
-          case 0xF0:                                            //write track
-            if ( !pDSK ) {                                      //don't write on protected disks
+          case 0xA0:         				                      //write sector
+	        case 0xB0:                                      //write multiple sectors
+          case 0xF0:                                      //write track
+            if ( !pDSK ) {                                //don't write on protected disks
               RWsector( false );
             }
             else {
