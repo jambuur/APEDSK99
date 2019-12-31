@@ -104,6 +104,7 @@
 
 //Status Register error signalling
 #define NOTREADY  0x80
+#define PROTECTED 0x40
 #define NOERROR	  0x00
 
 //"Force Interrupt" command
@@ -312,6 +313,7 @@ File DSK[4];  //file pointers to DOAD's
 boolean aDSK[4] = {false, true, false, false};                                      //disk availability
 String  nDSK[4] = {"x", "/DISKS/001.DSK", "/DISKS/002.DSK", "/DISKS/003.DSK"};	    //DOAD file name
 byte    cDSK    = 0;                                                                //current selected DSK
+boolean pDSK    = true;                                                             //DOAD write protect aka the adhesive tab
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
@@ -321,6 +323,7 @@ byte lcmd                 = 0;      //last command
 boolean ncmd              = false;  //flag new command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
+byte Ssecidx              = 0;      // R/W sector counter
 byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
@@ -343,7 +346,8 @@ void noExec(void) {
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
   ccmd = FDINT;           // "" ""
   lcmd = ccmd;		        //reset new command prep
-  Sbtidx = 0; 	          //clear index counter
+  Sbtidx = 0; 	          //clear byte index counter
+  Ssecidx = 0;            //clear sector counter
   Ridx = 0;               //clear READ ID index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
@@ -375,10 +379,10 @@ void RWsector( boolean rw ) {
       noExec();                                       //exit
     }
     else {
-      if ( DSRAM < (NRSECTS - 1) ) {                  //last sector (8)?
-        DSRAM++;                                      //no; increase Sector #
-        Wbyte(WSECTR, DSRAM);                         //sync Sector Registers
-        Wbyte(RSECTR, DSRAM);                         //""
+      if ( Ssecidx < (NRSECTS - 1) ) {                //last sector (8)?
+        Ssecidx++;                                    //no; increase Sector #
+        Wbyte(WSECTR, Ssecidx);                       //sync Sector Registers
+        Wbyte(RSECTR, Ssecidx);                       //""
         if ( rw ) {                                   //read first byte from next sector?
           Wbyte(RDATA, DSK[cDSK].read() );            //yes -> supply byte
         }
@@ -542,12 +546,14 @@ void loop() {
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
+            DSK[cDSK].seek(0x10);                               //byte 0x10 in Volume Information Block stores Protected flag
+            pDSK = ( DSK[cDSK].read() == 0x50 );                //0x50 || "P" means disk is write protected
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
           }
           else {
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
-              Wbyte(RSTAT, NOTREADY);                           //no; set "Not Ready" bit in Status Register
+              Wbyte(RSTAT, NOTREADY);                           //set "Not Ready" bit in Status Register
               ccmd = FDINT;                                     //exit            }
             }
           }
@@ -567,7 +573,13 @@ void loop() {
           case 0xA0:         				                      //write sector
 	        case 0xB0:                                      //write multiple sectors
           case 0xF0:                                      //write track
-            RWsector( false );
+            if ( !pDSK ) {                                //is DOAD writ protected?
+              RWsector( false );                          //no; go ahead and write
+            }
+            else {
+              Wbyte(RSTAT, NOTREADY);                     //yes; set "Not Ready" bit in Status Register
+              ccmd = FDINT;                               //exit      
+            }
             break;
 
           case 0xC0:  //read ID
