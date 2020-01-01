@@ -573,11 +573,11 @@ void loop() {
           case 0xA0:         				                      //write sector
 	        case 0xB0:                                      //write multiple sectors
           case 0xF0:                                      //write track
-            if ( !pDSK ) {                                //is DOAD writ protected?
+            if ( !pDSK ) {                                //is DOAD write protected?
               RWsector( false );                          //no; go ahead and write
             }
             else {
-              Wbyte(RSTAT, NOTREADY);                     //yes; set "Not Ready" bit in Status Register
+              Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
               ccmd = FDINT;                               //exit      
             }
             break;
