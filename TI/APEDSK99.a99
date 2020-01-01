@@ -309,10 +309,10 @@ H024	MOVB	@-1026(R15),R0		get a (APEDSK99: next) byte from data buffer
 	DEC	R6			APEDSK99:
 	JNE	H024			next
 *	BL	@WTCPT2			SBZ 2, wait for command completion
-*	BL	@WTCPT1			APEDSK99: no need to wait for command completion
+	BL	@WTCPT1			APEDSK99: no need to wait for command completion
 *	SLA	R0,11			test status bits
-*	SLA	R0,2			APEDSK99: WP bit in Carry
-*	JOC	ERROR3			write protect: error 34
+	SLA	R0,2			APEDSK99: WP bit in Carry
+	JOC	ERROR3			write protect: error 34
 *	SLA	R0,2			
 *	JOC	H025			not found: try again, then error 31
 *	SLA	R0,2			
@@ -321,8 +321,8 @@ H024	MOVB	@-1026(R15),R0		get a (APEDSK99: next) byte from data buffer
 *	JMP	H015			and verify sector
 	JMP	H019			APEDSK99: no need to verify		
 					
-*ERROR3	BL	@ERROR1			error 34
-*	DATA	>3400			
+ERROR3	BL	@ERROR1			error 34
+	DATA	>3400			
 *H025	BL	@ERROR2			gracefull error 31
 *	DATA	>3100			
 *H026	BL	@ERROR2			gracefull error 33
@@ -483,12 +483,12 @@ H041	MOVB	@-1026(R15),R0		read one byte from buffer
 *	JGT	H041			next (pair of bytes) byte
 	JNE	H041			APEDSK99: next byte
 *	BL	@WTCPT2			SBZ 2, then wait for command completion
-*	BL	@WTCPT1			APEDSK99: no need to wait for command completion
+	BL	@WTCPT1			APEDSK99: check Not Ready / Write Protect
 *	SLA	R0,11			check write protect bit
-*	SLA	R0,2			APEDSK99: check write protect bit
+	SLA	R0,2			APEDSK99: check write protect bit
 *	JNC	H042			
-*	JNC	H043			APEDSK99:
-*	B	@ERROR3			error code >34 ??
+	JNC	H043			APEDSK99: not set, continue
+	B	@ERROR3			error code >34 ??
 *H042	SLA	R0,4			test lost data bit
 *	JNC	H043			ok: return
 *	DEC	R4			shall we try again?
@@ -3385,8 +3385,6 @@ DLOOP3	MOVB    @-1026(R15),*R1+        get # of last drive accessed
 	JNE	DLOOP3	
 *
 	LWPI	>83E0
-	B	>0000			don't forget to change the B address ;-)
-*
-	EVEN
+	B	@>AAAA			don't forget to change the B address ;-)
 *
 	END					
