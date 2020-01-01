@@ -171,7 +171,7 @@ H002	MOVB	R0,@WTRACK		place last track or >00 in track register
 	SOCB	@SIDE01,@CRUWRI		APEDSK99: side 1
 	LI	R7,>0100		side number = >01
 *	JMP	H005			
-	JMP	H006			APEDSK99:
+	JMP	H006			APEDSK99: skipped DIV above
 H004	CI	R1,>0001		is it sector 0 or 1?
 	JH	H006			no
 	BL	@SKTRK0			yes: seek track 0
@@ -191,15 +191,15 @@ H005	SWPB	R0
 	BL	@SNDCMD			send command
 *	DATA	>E100			seek h=1 V=1 r1r0=10
 	DATA	>1E00			APEDSK99: seek
-	JMP	H013			APEDSK
-*	BL	@WTCPT1			APEDSK not relevant: wait for command completion
+	JMP	H013			APEDSK99: don't need READ ID to check side
+*	BL	@WTCPT1			APEDSK99: wait for command completion not relevant
 *	SLA	R0,13			test seek error bit
 *	JOC	H008			try again, then error 11
 *H007	LI	R6,5			APEDSK99: H007 slightly re-arranged to sync proper ID byte read
 *	MOV 	R6,@RDINT		APEDSK99: interrupt Arduino for read operation
 *	BL	@SNDCMD			send command
 *	DATA	>3F00			read ID E=0
-*	DATA	>C000			APEDSK99: read ID E=0 
+*	DATA	>C000			APEDSK99: read ID
 *	SBO	2			enable hold
 *	MOVB	@RDATA,R0		skip track #
 *	DEC	@RDINT		
@@ -207,10 +207,10 @@ H005	SWPB	R0
 *	INV	R5			APEDSK99: none of this inverted databus rubbish
 *H009	MOVB	@RDATA,R0		skip next 4 bytes
 *	DEC	R6			
-*	DEC	@RDINT			APEDSK99:
+*	DEC	@RDINT			APEDSK99: interrupt Arduino for read operation
 *	JNE	H009			
 *	BL	@WTCPT2			SBZ 2, wait for command completion
-*	BL	@WTCPT1			APEDSK not relevant: no need to wait for command completion and error check
+*	BL	@WTCPT1			APEDSK99: wait for command completion / error check not relevant
 *	SLA	R0,13			test status bits
 *	JOC	H010			not found: try again, then error 21
 *	JLT	H011			crc error: try again, then error 22
@@ -238,10 +238,10 @@ H013	MOVB	R1,@WSECTR		load sector register
 	JEQ	H014			write
 	BL	@VDPWRI			read FD = write to VDP buffer
 H015	LI	R6,256			APEDSK99: slightly re-arranged H015 to sync reading sector bytes
-	MOV	R6,@RDINT		APEDSK99: 256 bytes / sector 
+	MOV	R6,@RDINT		APEDSK99: interrupt Arduino for read operation 
 	BL	@SNDCMD			send command
 *	DATA	>7700			read sector m=0 S=1 E=0 C=0
-	DATA	>8800			APEDSK99: read sector m=0 S=1 E=0 C=0
+	DATA	>8800			APEDSK99: read sector
 *	SETO	R5			
 *	SBO	2	
 *	MOVB	@>004D(R9),R0		read or write?
@@ -255,7 +255,7 @@ H015	LI	R6,256			APEDSK99: slightly re-arranged H015 to sync reading sector byte
 *	SB	@-1026(R15),R0			
 *	JNE	H018			mismatch
 *	DECT	R6			
-*	DEC	R6			APEDSK99:
+*	DEC	R6			APEDSK99: interrupt Arduino for read operation
 *	JNE	H017			next byte
 *	JMP	H019			done
 H016	MOVB	@RDATA,R0		get 1 byte from FDC
@@ -265,7 +265,7 @@ H016	MOVB	@RDATA,R0		get 1 byte from FDC
 *	INV	R0			APEDSK99: none of that inverted databus rubbish
 *	MOVB	R0,@-2(R15)			
 *	DECT	R6			
-	DEC	@RDINT			APEDSK99:
+	DEC	@RDINT			APEDSK99: interrupt Arduino for read operation
 	JNE	H016			next byte
 H019	CLR	R5			clear flag
 *H018	BL	@WTCPT2			SBZ 2, wait for command completion
