@@ -320,6 +320,7 @@ byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
 volatile boolean FD1771   = false;  //interrupt routine flag: new or continued FD1771 command
 byte ccmd                 = 0;      //current command
 byte lcmd                 = 0;      //last command
+byte Accmd                = 0;      //APEDSK99-specific commands
 boolean ncmd              = false;  //flag new command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
@@ -346,6 +347,7 @@ void noExec(void) {
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
   ccmd = FDINT;           // "" ""
   lcmd = ccmd;		        //reset new command prep
+  Accmd = 0;              //reset APEDSK99-specific commands
   Sbtidx = 0; 	          //clear byte index counter
   Ssecidx = 0;            //clear sector counter
   Ridx = 0;               //clear READ ID index counter
@@ -608,7 +610,36 @@ void loop() {
 
         } //end R/W switch
       } //end else R/W commands
-    } //end we needed to do something */
+    } //end we needed to do something
+    /* else {
+      //check for APEDSK99-specfic commands
+      Accmd = Rbyte(WCOMND + 1);
+      if ( Accmd != 0 ) {
+
+        switch (Accmd) {
+          case 10:                        //set disk 1 Write Protect aka adhesive tab
+          case 11:
+          case 20:
+          case 21:
+          case 30:
+          case 31:
+            cDSK = Accmd / 10;
+            if ( aDSK[cDSK] ) {
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);   //open DOAD file to change write protect status 
+              DSK[cDSK].seek(0x28);                                 //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
+              if ( Accmd & B00000001 ) {
+                DSK[cDSK].write(0x50);
+                pDSK[cDSK] = true;
+              }
+              else {
+                DSK[cDSK].write(0x20);
+                pDSK[cDSK] = false;            
+              }
+              DSK[cDSK].close();
+            }          
+          } //end switch accmd commands       
+        } //end check APEDSK99-specific commands
+      } //end else */ 
 
     FD1771 = false;   //clear interrupt flag
 
