@@ -312,8 +312,8 @@ File DSK[4];  //file pointers to DOAD's
 //(DSK1 should always be available, if not Error 4)
 boolean aDSK[4] = {false, true, false, false};                                      //disk availability
 String  nDSK[4] = {"x", "/DISKS/001.DSK", "/DISKS/002.DSK", "/DISKS/003.DSK"};	    //DOAD file name
+boolean pDSK[4] = {false, false, false, false};                                     //DOAD write protect status aka the adhesive tab
 byte    cDSK    = 0;                                                                //current selected DSK
-boolean pDSK    = true;                                                             //DOAD write protect aka the adhesive tab
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
@@ -424,7 +424,7 @@ void setup() {
   //read DSR binary from SD and write into DSR RAM
   InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
   if (InDSR) {
-    for (unsigned int ii = 0; ii < 0x2000; ii++) {
+    for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
       DSRAM = InDSR.read();
       Wbyte(ii, DSRAM);
     }
@@ -444,17 +444,17 @@ void setup() {
   if ( !SD.exists(nDSK[1]) ) {
     eflash(4);	//could not open DSK1 -> flash error 4
   }
-
-  //check if DSK2 is available and flag if it is
-  if ( SD.exists(nDSK[2]) ) {
-    aDSK[2] = true;
+  
+  for ( unsigned int ii = 1; ii < 4; ii++ ) {
+    if ( SD.exists(nDSK[ii]) {                       //does DOAD x exist?
+      aDSK[ii] = true;                                //yes; flag as such
+      DSK[ii] = SD.open(nDSK[ii], O_READ);            //open DOAD file to check write protect y/n
+      DSK[cDSK].seek(0x28);                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
+      pDSK[ii] = ( DSK[ii].read() == 0x50 );          //0x50 || "P" means disk is write protected
+      DSK[ii].close();                                //close current SD DOAD file
+    }
   }
-
-  //check if DSK3 is available and flag if it is
-  if ( SD.exists(nDSK[3]) ) {
-    aDSK[3] = true;
-  }
-
+  
   //"initialize FD1771":
   FDrstr();   //"Restore" command
   noExec();   //"no command" as default
@@ -546,8 +546,6 @@ void loop() {
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
-            DSK[cDSK].seek(0x28);                               //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
-            pDSK = ( DSK[cDSK].read() == 0x50 );                //0x50 || "P" means disk is write protected
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
           }
