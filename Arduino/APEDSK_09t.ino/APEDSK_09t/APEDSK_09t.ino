@@ -439,22 +439,21 @@ void setup() {
     //loading DSR unsuccessful -> flash error 3
     eflash(3);
   }
-
-  //check if DSK1 is available (it should)
-  if ( !SD.exists(nDSK[1]) ) {
-    eflash(4);	//could not open DSK1 -> flash error 4
-  }
   
-  for ( unsigned int ii = 1; ii < 4; ii++ ) {
-    if ( SD.exists(nDSK[ii]) {                       //does DOAD x exist?
+  for ( byte ii = 1; ii < 4; ii++ ) {
+    if ( SD.exists(nDSK[ii]) ) {                      //does DOAD x exist?
       aDSK[ii] = true;                                //yes; flag as such
       DSK[ii] = SD.open(nDSK[ii], O_READ);            //open DOAD file to check write protect y/n
-      DSK[cDSK].seek(0x28);                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
+      DSK[ii].seek(0x28);                             //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
       pDSK[ii] = ( DSK[ii].read() == 0x50 );          //0x50 || "P" means disk is write protected
       DSK[ii].close();                                //close current SD DOAD file
     }
   }
-  
+
+  if ( !aDSK[1] ) {                                   //check if DSK1 is available (it should)
+    eflash(4);                                        //could not open DSK1 -> flash error 4
+  }
+
   //"initialize FD1771":
   FDrstr();   //"Restore" command
   noExec();   //"no command" as default
@@ -571,7 +570,7 @@ void loop() {
           case 0xA0:         				                      //write sector
 	        case 0xB0:                                      //write multiple sectors
           case 0xF0:                                      //write track
-            if ( !pDSK ) {                                //is DOAD write protected?
+            if ( !pDSK[cDSK] ) {                          //is DOAD write protected?
               RWsector( false );                          //no; go ahead and write
             }
             else {
