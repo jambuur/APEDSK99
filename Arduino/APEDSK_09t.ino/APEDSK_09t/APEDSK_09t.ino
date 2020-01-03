@@ -546,7 +546,7 @@ void loop() {
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
-            DSK[cDSK].seek(0x10);                               //byte 0x10 in Volume Information Block stores Protected flag
+            DSK[cDSK].seek(0x28);                               //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
             pDSK = ( DSK[cDSK].read() == 0x50 );                //0x50 || "P" means disk is write protected
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
