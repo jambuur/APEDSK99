@@ -445,7 +445,7 @@ void setup() {
       aDSK[ii] = true;                                //yes; flag as such
       DSK[ii] = SD.open(nDSK[ii], O_READ);            //open DOAD file to check write protect y/n
       DSK[ii].seek(0x28);                             //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
-      pDSK[ii] = ( DSK[ii].read() == 0x50 );          //0x50 || "P" means disk is write protected
+      pDSK[ii] = ( DSK[ii].read() == 0x50 );          //0x50 || "P" means disk is write APEDSK99 protected
       DSK[ii].close();                                //close current SD DOAD file
     }
   }
@@ -629,13 +629,3 @@ ISR(INT0_vect) {
   FD1771 = true;
 
 }
-
-/*
-    //DSK[cDSK].seek(0x10);                       //byte 0x10 in Volume Information Block stores Protected flag
-          //pDSK = DSK[cDSK].read() != 0x20;            //disk is protected when byte 0x10 <> " "
-          //sStatus(Protect, pDSK);                     //reflect "Protect" status
-
-          sStatus(Head, true);  //yes; head loaded (probably not necessary)
-*/
-
- 
