@@ -82,7 +82,7 @@
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
 //APEDSK99-specific Command Register
-#define ACOMND   0x1FE8
+#define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
 #define RDINT   0x1FEA
 
@@ -617,7 +617,6 @@ void loop() {
     else {
       //check for APEDSK99-specfic commands
       Accmd = Rbyte(ACOMND);
-      Wbyte(0x1FE4, Accmd);
       if ( Accmd != 0x00 ) {
 
         switch (Accmd) {
@@ -633,13 +632,11 @@ void loop() {
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open DOAD file to change write protect status 
               DSK[cDSK].seek(0x28);                               //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
               if ( Accmd & B00000100 ) {                          //Protect bit set?
-                //DSK[cDSK].write(0x50);                            //yes; apply adhesive tab
-                Wbyte(0x1FE6, cDSK + 0x50);
+                DSK[cDSK].write(0x50);                            //yes; apply adhesive tab
                 pDSK[cDSK] = true;
               }
               else {
-                //DSK[cDSK].write(0x20);                            //no; remove adhesive tab
-                Wbyte(0x1FE6, cDSK + 0x20);
+                DSK[cDSK].write(0x20);                            //no; remove adhesive tab
                 pDSK[cDSK] = false;            
               }
             } 
