@@ -82,7 +82,7 @@
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
 //APEDSK99-specific Command Register
-#define ACMND   0x1FE8
+#define ACOMND   0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
 #define RDINT   0x1FEA
 
