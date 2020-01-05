@@ -3418,7 +3418,8 @@ RTC	MOV	R11,R7			save return-to-TI BASIC address
 WD1307	BL	@VDPR2B			get next two digits
 	AI	R0,>CFD0		get rid of ASCII bias (>30)
 	MOV	R0,*R5+			save two digits
-	DEC	R6			
+	INCT	R8			adjust VDP buffer pointer
+	DEC	R6			decrease 
 	JNE	WD1307			next pair
 *
 RTNRTC	CLR	@>0050(R9)		clear error flag
