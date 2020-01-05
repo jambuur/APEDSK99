@@ -85,17 +85,18 @@
 #define RDINT   0x1FEA
 
 //CRU emulation bytes + FD1771 registers
-#define CRURD   0x1FEC  //emulated 8 CRU input bits      (>5FEC in TI99/4a DSR memory block); not used but possible future use
+#define CRURD   0x1FEC  //emulated 8 CRU input bits           (>5FEC in TI99/4a DSR memory block); not used but possible future use
 //B00001111: DSK3 (6), DSK2 (4), DSK1 (2), side 0/1
-#define CRUWRI  0x1FEE  //emulated 8 CRU output bits     (>5FEE in TI99/4a DSR memory block)
-#define RSTAT   0x1FF0  //read FD1771 Status register    (>5FF0 in TI99/4a DSR memory block)
-#define RTRACK  0x1FF2  //read FD1771 Track register     (>5FF2 in TI99/4a DSR memory block)
-#define RSECTR  0x1FF4  //read FD1771 Sector register    (>55F4 in TI99/4a DSR memory block)
-#define RDATA   0x1FF6  //read FD1771 Data register      (>5FF6 in TI99/4a DSR memory block)
-#define WCOMND  0x1FF8  //write FD1771 Command register  (>5FF8 in TI99/4a DSR memory block)
-#define WTRACK  0x1FFA  //write FD1771 Track register    (>5FFA in TI99/4a DSR memory block)
-#define WSECTR  0x1FFC  //write FD1771 Sector register   (>5FFC in TI99/4a DSR memory block)
-#define WDATA   0x1FFE  //write FD1771 Data register     (>5FFE in TI99/4a DSR memory block)
+#define CRUWRI  0x1FEE  //emulated 8 CRU output bits          (>5FEE in TI99/4a DSR memory block)
+#define RSTAT   0x1FF0  //read FD1771 Status register         (>5FF0 in TI99/4a DSR memory block)
+#define RTRACK  0x1FF2  //read FD1771 Track register          (>5FF2 in TI99/4a DSR memory block)
+#define RSECTR  0x1FF4  //read FD1771 Sector register         (>55F4 in TI99/4a DSR memory block)
+#define RDATA   0x1FF6  //read FD1771 Data register           (>5FF6 in TI99/4a DSR memory block)
+#define WCOMND  0x1FF8  //write FD1771 Command register       (>5FF8 in TI99/4a DSR memory block)
+#define ACOMND  0x1FF9  //APEDSK99-specific Command Register  (>5FF9 in TI99/4a DSR memory block)
+#define WTRACK  0x1FFA  //write FD1771 Track register         (>5FFA in TI99/4a DSR memory block)
+#define WSECTR  0x1FFC  //write FD1771 Sector register        (>5FFC in TI99/4a DSR memory block)
+#define WDATA   0x1FFE  //write FD1771 Data register          (>5FFE in TI99/4a DSR memory block)
 
 //error blinking parameters: on, off, delay between sequence
 #define LED_ON      500
@@ -347,6 +348,7 @@ void noExec(void) {
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
   ccmd = FDINT;           // "" ""
   lcmd = ccmd;		        //reset new command prep
+  Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
   Accmd = 0;              //reset APEDSK99-specific commands
   Sbtidx = 0; 	          //clear byte index counter
   Ssecidx = 0;            //clear sector counter
@@ -611,34 +613,35 @@ void loop() {
         } //end R/W switch
       } //end else R/W commands
     } //end we needed to do something
-    /* else {
+    /*else {
       //check for APEDSK99-specfic commands
-      Accmd = Rbyte(WCOMND + 1);
-      if ( Accmd != 0 ) {
+      Accmd = Rbyte(ACOMND);
+      if ( Accmd != 0x00 ) {
 
         switch (Accmd) {
-          case 10:                        //set disk 1 Write Protect aka adhesive tab
-          case 11:
-          case 20:
-          case 21:
-          case 30:
-          case 31:
-            cDSK = Accmd / 10;
+          case  1:                                                //UNprotect DSK1
+          case  2:                                                //UNprotect DSK2
+          case  3:                                                //UNprotect DSK3      
+          case  5:                                                //Protect DSK1
+          case  6:                                                //Protect DSK2
+          case  7:                                                //Protect DSK3
+            cDSK = Accmd & B00000011;                             //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);   //open DOAD file to change write protect status 
-              DSK[cDSK].seek(0x28);                                 //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
-              if ( Accmd & B00000001 ) {
-                DSK[cDSK].write(0x50);
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open DOAD file to change write protect status 
+              DSK[cDSK].seek(0x28);                               //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
+              if ( Accmd & B00000100 ) {                          //Protect bit set?
+                DSK[cDSK].write(0x50);                            //yes; apply adhesive tab
                 pDSK[cDSK] = true;
               }
               else {
-                DSK[cDSK].write(0x20);
+                DSK[cDSK].write(0x20);                            //no; remove adhesive tab
                 pDSK[cDSK] = false;            
               }
-              DSK[cDSK].close();
-            }          
+            } 
+            break;         
           } //end switch accmd commands       
-        } //end check APEDSK99-specific commands
+          noExec();                                               //prevent multiple step/seek execution 
+        } //end check APEDSK99-specific commands                                 
       } //end else */ 
 
     FD1771 = false;   //clear interrupt flag

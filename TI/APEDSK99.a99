@@ -66,10 +66,12 @@ SUB09	DATA	SUB10
 	DATA	ESUB09
 	BYTE	>04
 	TEXT	'PDSK'			protect DOAD (apply adhesive tab)
+	EVEN
 SUB10	DATA	>0000			no more
 	DATA	ESUB10
 	BYTE	>04
 	TEXT	'UDSK'			un-protect DOAD (remove adhesive tab)
+	EVEN
 PWRUP	DATA	>0000			power-up chain (no more)
 	DATA	EPWRUP			address of power-up routine
 	DATA	>0000			no name
