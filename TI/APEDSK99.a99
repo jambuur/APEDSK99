@@ -12,6 +12,7 @@
 * github.com/jambuur/APEDSK99
 *====================================
 
+RTCDAT	EQU	>5FDA			RTC data: MMDDYYYYHHMMSS
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
@@ -67,10 +68,20 @@ SUB09	DATA	SUB10
 	BYTE	>04
 	TEXT	'PDSK'			protect DOAD (apply adhesive tab)
 	EVEN
-SUB10	DATA	>0000			no more
+SUB10	DATA	SUB11			
 	DATA	UDSK
 	BYTE	>04
 	TEXT	'UDSK'			un-protect DOAD (remove adhesive tab)
+	EVEN
+SUB11	DATA	SUB12
+	DATA	SRTC
+	BYTE	>04
+	TEXT	'SRTC'			set RTC date / time
+	EVEN
+SUB12	DATA	>0000			no more sub's
+	DATA	RRTC
+	BYTE	>06
+	TEXT	'RRTC'			read RTC date / time
 	EVEN
 
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3380,16 +3391,55 @@ UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 *
 	CLR	@>0050(R9)		clear error flag
 	MOV	@>002C(R9),R8		get ptr to Basic token
-	AI	R8,11			skip the whole statement
+	AI	R8,12			skip the whole statement
 	MOV	R8,@>002C(R9)		update ptr
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
 H9900	B	@RTURN1			return to caller (i.e. Basic)
 *			
+*-----------------------------------------------------------------
+* Subprogram SRTC/RRTC: set/read RTC date and time
+* ----------------------------------------------------------------
+SRTC	SETO	R4			set RTC flag
+	JMP	RTC
+RRTC	CLR	R4			read RTC flag
+RTC	MOV	R11,R7			save return-to-TI BASIC address
+	BL	@PRPFDO			prepare TI Controller DSR operations
+	MOV	R4,R4			read RTC?
+	JEQ	RTNRTC			yes, jmp to read
+	MOV	@>002C(R9),R8		set: ptr to next basic token
+	AI	R8,6			skip "SRTC("
+	BL	@VDPR2B			get next two bytes in R0
+	CI	R0,>C80E		>C8=unquoted string, size=14 char
+	JNE	H9900			return (with error) if different
+	INCT	R8			point to start of RTC digits
+*
+	LI	R5,RTCDAT		pointer to RTC data
+	LI	R6,7			7 words / 14 bytes
+WD1307	BL	@VDPR2B			get next two digits
+	AI	R0,>CFD0		get rid of ASCII bias (>30)
+	MOV	R0,*R5+			save two digits
+	DEC	R6			
+	JNE	WD1307			next pair
+*
+RTNRTC	CLR	@>0050(R9)		clear error flag
+	MOV	@>002C(R9),R8		get ptr to Basic token
+	AI	R8,23			skip the whole statement
+	MOV	R8,@>002C(R9)		update ptr
+	SZCB	@>0042(R9),@>0042(R9)	clear current token
+	JMP	H9900			return to caller (i.e. Basic)
+*
+*-----------------------------------------
+* APEDSK constants
+*-----------------------------------------
+DSDRVS	DATA	>0F00			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
+SIDE01	DATA	>0100			floppy side select
+*-----------------------------------------
+*
 *------------------------------------------------------------------------
 * DEBUG: >8300->83FF snapshot @>B000, PAB >1000 @>B100, PAB >1100 @>B120
 * -----------------------------------------------------------------------
 *
-	BSS	12			>5E00, easy to memorize debug branch address
+	AORG	>5ED0			>5ED0, easy to memorize debug branch address
 *
 DEBUG	DATA	>0000			1st word of original code replaced by B
 OLDWD2	DATA	>0000			2nd word ""
@@ -3426,12 +3476,6 @@ DLOOP3	MOVB    @-1026(R15),*R1+        get # of last drive accessed
 	B	@>AAAA			don't forget to change the B address ;-)
 *
 *-----------------------------------------
-* APEDSK constants
-*-----------------------------------------
-DSDRVS	DATA	>0F00			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
-SIDE01	DATA	>0100			floppy side select
-*-----------------------------------------
-*
 * The remaining bytes (>5xxx to >5FE9) all contain >00
 * Word >5FEA maps to the read counter (to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers
