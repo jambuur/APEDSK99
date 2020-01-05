@@ -613,7 +613,7 @@ void loop() {
         } //end R/W switch
       } //end else R/W commands
     } //end we needed to do something
-    /*else {
+    else {
       //check for APEDSK99-specfic commands
       Accmd = Rbyte(ACOMND);
       if ( Accmd != 0x00 ) {
@@ -642,7 +642,7 @@ void loop() {
           } //end switch accmd commands       
           noExec();                                               //prevent multiple step/seek execution 
         } //end check APEDSK99-specific commands                                 
-      } //end else */ 
+      } //end else 
 
     FD1771 = false;   //clear interrupt flag
 

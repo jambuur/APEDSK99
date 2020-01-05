@@ -3395,40 +3395,5 @@ H9900	B	@RTURN1			return to caller (i.e. Basic)
 *
 *-----------------------------------------					
 *
-	AORG	>5D00			easy to memorize debug branch address
-*			
-DEBUG	DATA	>0000			1st word of original code replaced by B
-OLDWD2	DATA	>0000			2nd word ""
-*	
-	LWPI	>C000
-*
-* copy >8300->83FF TO >B000->B0FF for inspection later
-*
-	LI	R0,>8300	
-	LI	R1,>B000
-	LI	R2,256
-DLOOP1	MOV	*R0+,*R1+
-	DEC	R2
-	JNE	DLOOP1
-*
-	LI	R1,>B100
-	LI	R2,>1000
-	LI	R6,20
-	LI	R15,>8C02
-	BL      @VDPRD                  set VDP to read
-DLOOP2	MOVB    @-1026(R15),*R1+        get # of last drive accessed
-	DEC	R6
-	JNE	DLOOP2
-*
-	LI	R1,>B120
-	LI	R2,>1100
-	LI	R6,20
-	BL      @VDPRD                  set VDP to read
-DLOOP3	MOVB    @-1026(R15),*R1+        get # of last drive accessed
-	DEC	R6
-	JNE	DLOOP3	
-*
-	LWPI	>83E0
-	B	@>AAAA			don't forget to change the B address ;-)
 *
 	END					
