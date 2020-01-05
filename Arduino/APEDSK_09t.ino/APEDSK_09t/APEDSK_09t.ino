@@ -617,6 +617,7 @@ void loop() {
     else {
       //check for APEDSK99-specfic commands
       Accmd = Rbyte(ACOMND);
+      Wbyte(0x1FE4, Accmd);
       if ( Accmd != 0x00 ) {
 
         switch (Accmd) {
@@ -628,14 +629,17 @@ void loop() {
           case  7:                                                //Protect DSK3
             cDSK = Accmd & B00000011;                             //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
+              
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open DOAD file to change write protect status 
               DSK[cDSK].seek(0x28);                               //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
               if ( Accmd & B00000100 ) {                          //Protect bit set?
-                DSK[cDSK].write(0x50);                            //yes; apply adhesive tab
+                //DSK[cDSK].write(0x50);                            //yes; apply adhesive tab
+                Wbyte(0x1FE6, cDSK + 0x50);
                 pDSK[cDSK] = true;
               }
               else {
-                DSK[cDSK].write(0x20);                            //no; remove adhesive tab
+                //DSK[cDSK].write(0x20);                            //no; remove adhesive tab
+                Wbyte(0x1FE6, cDSK + 0x20);
                 pDSK[cDSK] = false;            
               }
             } 
