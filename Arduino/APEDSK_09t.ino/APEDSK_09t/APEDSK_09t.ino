@@ -93,7 +93,7 @@
 #define RSECTR  0x1FF4  //read FD1771 Sector register         (>55F4 in TI99/4a DSR memory block)
 #define RDATA   0x1FF6  //read FD1771 Data register           (>5FF6 in TI99/4a DSR memory block)
 #define WCOMND  0x1FF8  //write FD1771 Command register       (>5FF8 in TI99/4a DSR memory block)
-#define ACOMND  0x1FF9  //APEDSK99-specific Command Register  (>5FF9 in TI99/4a DSR memory block)
+//#define ACOMND  0x1FF9  //APEDSK99-specific Command Register  (>5FF9 in TI99/4a DSR memory block)
 #define WTRACK  0x1FFA  //write FD1771 Track register         (>5FFA in TI99/4a DSR memory block)
 #define WSECTR  0x1FFC  //write FD1771 Sector register        (>5FFC in TI99/4a DSR memory block)
 #define WDATA   0x1FFE  //write FD1771 Data register          (>5FFE in TI99/4a DSR memory block)
@@ -321,7 +321,7 @@ byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
 volatile boolean FD1771   = false;  //interrupt routine flag: new or continued FD1771 command
 byte ccmd                 = 0;      //current command
 byte lcmd                 = 0;      //last command
-byte Accmd                = 0;      //APEDSK99-specific commands
+//byte Accmd                = 0;      //APEDSK99-specific commands
 boolean ncmd              = false;  //flag new command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
@@ -348,8 +348,8 @@ void noExec(void) {
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
   ccmd = FDINT;           // "" ""
   lcmd = ccmd;		        //reset new command prep
-  Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
-  Accmd = 0;              //reset APEDSK99-specific commands
+//  Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
+//  Accmd = 0;              //reset APEDSK99-specific commands
   Sbtidx = 0; 	          //clear byte index counter
   Ssecidx = 0;            //clear sector counter
   Ridx = 0;               //clear READ ID index counter
@@ -613,7 +613,7 @@ void loop() {
         } //end R/W switch
       } //end else R/W commands
     } //end we needed to do something
-    else {
+    /*else {
       //check for APEDSK99-specfic commands
       Accmd = Rbyte(ACOMND);
       if ( Accmd != 0x00 ) {
@@ -642,7 +642,7 @@ void loop() {
           } //end switch accmd commands       
           noExec();                                               //prevent multiple step/seek execution 
         } //end check APEDSK99-specific commands                                 
-      } //end else 
+      } //end else */
 
     FD1771 = false;   //clear interrupt flag
 
