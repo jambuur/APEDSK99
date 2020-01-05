@@ -20,6 +20,7 @@ RTRACK	EQU	>5FF2			read FD1771 Track register
 RSECTR	EQU	>5FF4			read FD1771 Sector register
 RDATA	EQU	>5FF6			read FD1771 Data register
 WCOMND	EQU	>5FF8			write FD1771 Command register
+ACOMND	EQU	>5FF9			APEDSK99-specific Command register
 WTRACK	EQU	>5FFA			write FD1771 Track register
 WSECTR	EQU	>5FFC			write FD1771 Sector register
 WDATA	EQU	>5FFE			write FD1771 Data register
@@ -57,13 +58,25 @@ SUB06	DATA	SUB07
 SUB07	DATA	SUB08			
 	DATA	ESUB07			
 	DATA	>0116			subprogram >16 (number of files)
-SUB08	DATA	>0000			no more
+SUB08	DATA	SUB09			
 	DATA	ESUB08			
 	BYTE	>05			
 	TEXT	'FILES'			same as >16, called from Basic
+SUB09	DATA	SUB10
+	DATA	PDSK
+	BYTE	>04
+	TEXT	'PDSK'			protect DOAD (apply adhesive tab)
+	EVEN
+SUB10	DATA	>0000			no more
+	DATA	UDSK
+	BYTE	>04
+	TEXT	'UDSK'			un-protect DOAD (remove adhesive tab)
+	EVEN
+
 PWRUP	DATA	>0000			power-up chain (no more)
 	DATA	EPWRUP			address of power-up routine
-	DATA	>0000			no name				
+	DATA	>0000			no name
+					
 DSR01	DATA	DSR02			DSR chain
 	DATA	EDSR01			address of DSR
 	BYTE	>03			name size
@@ -3338,6 +3351,79 @@ H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 	DEC	R2			# of bytes in R2, was in data word
 	JNE	H276			next byte
 	B	*R11	
+*-----------------------------------------------------------------
+* Subprogram PDSK/UDSK: set/reset APEDSK99 Protect (0x50) @VIB >28
+* ----------------------------------------------------------------
+PDSK	SETO	R4			set Protect flag
+	JMP	ADHTAB
+UDSK	CLR	R4			set Unprotect flag
+ADHTAB	MOV	R11,R7			save return-to-TI BASIC address
+	BL	@PRPFDO			prepare TI Controller DSR operations
+	MOV	@>002C(R9),R8		ptr to next basic token
+	AI	R8,6			skip "PDSK(" / "UDSK("
+	BL	@VDPR2B			get next two bytes in R0
+	CI	R0,>C801		>C8=unquoted string, size=1 char
+	JNE	H9900			return (with error) if different
+	INCT	R8			increment pointer
+	BL	@VDPR2B			get next two bytes
+	SWPB	R0			
+	AI	R0,>49D0		substact >B630: # of files >B6=closed parenthesis
+	JEQ	H9900			DSK0 not valid, return with error
+	CI	R0,>0003		only 3 DSK's allowed
+	JH	H9900			return with error if more
+	SWPB	R0			drive # back in MSB
+*
+	MOV	R4,R4			Unprotect?
+	JEQ	UPRTCT			yes
+	AI	R0,>0400		set Protect flag
+UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
+*
+	CLR	@>0050(R9)		clear error flag
+	MOV	@>002C(R9),R8		get ptr to Basic token
+	AI	R8,11			skip the whole statement
+	MOV	R8,@>002C(R9)		update ptr
+	SZCB	@>0042(R9),@>0042(R9)	clear current token
+H9900	B	@RTURN1			return to caller (i.e. Basic)
+*			
+*------------------------------------------------------------------------
+* DEBUG: >8300->83FF snapshot @>B000, PAB >1000 @>B100, PAB >1100 @>B120
+* -----------------------------------------------------------------------
+		AORG	>5E00			easy to memorize debug branch address
+*
+DEBUG	DATA	>0000			1st word of original code replaced by B
+OLDWD2	DATA	>0000			2nd word ""
+*	
+	LWPI	>C000
+*
+* copy >8300->83FF TO >B000->B0FF for inspection later
+*
+	LI	R0,>8300	
+	LI	R1,>B000
+	LI	R2,256
+DLOOP1	MOV	*R0+,*R1+
+	DEC	R2
+	JNE	DLOOP1
+*
+	LI	R1,>B100
+	LI	R2,>1000
+	LI	R6,20
+	LI	R15,>8C02
+	BL      @VDPRD                  set VDP to read
+DLOOP2	MOVB    @-1026(R15),*R1+        get # of last drive accessed
+	DEC	R6
+	JNE	DLOOP2
+*
+	LI	R1,>B120
+	LI	R2,>1100
+	LI	R6,20
+	BL      @VDPRD                  set VDP to read
+DLOOP3	MOVB    @-1026(R15),*R1+        get # of last drive accessed
+	DEC	R6
+	JNE	DLOOP3	
+*
+	LWPI	>83E0
+	B	@>AAAA			don't forget to change the B address ;-)
+*
 *-----------------------------------------
 * APEDSK constants
 *-----------------------------------------
@@ -3352,5 +3438,4 @@ SIDE01	DATA	>0100			floppy side select
 *
 *-----------------------------------------					
 *
-*
-	END					
+	END
