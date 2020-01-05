@@ -3388,7 +3388,8 @@ H9900	B	@RTURN1			return to caller (i.e. Basic)
 *------------------------------------------------------------------------
 * DEBUG: >8300->83FF snapshot @>B000, PAB >1000 @>B100, PAB >1100 @>B120
 * -----------------------------------------------------------------------
-		AORG	>5E00			easy to memorize debug branch address
+*
+	BSS	12			>5E00, easy to memorize debug branch address
 *
 DEBUG	DATA	>0000			1st word of original code replaced by B
 OLDWD2	DATA	>0000			2nd word ""
