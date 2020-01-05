@@ -61,24 +61,9 @@ SUB08	DATA	>0000			no more
 	DATA	ESUB08			
 	BYTE	>05			
 	TEXT	'FILES'			same as >16, called from Basic
-<<<<<<< HEAD
-SUB09	DATA	SUB10
-	DATA	ESUB09
-	BYTE	>04
-	TEXT	'PDSK'			protect DOAD (apply adhesive tab)
-	EVEN
-SUB10	DATA	>0000			no more
-	DATA	ESUB10
-	BYTE	>04
-	TEXT	'UDSK'			un-protect DOAD (remove adhesive tab)
-	EVEN
-=======
-					
->>>>>>> parent of 798b09e... Update APEDSK99.a99
 PWRUP	DATA	>0000			power-up chain (no more)
 	DATA	EPWRUP			address of power-up routine
-	DATA	>0000			no name
-					
+	DATA	>0000			no name				
 DSR01	DATA	DSR02			DSR chain
 	DATA	EDSR01			address of DSR
 	BYTE	>03			name size
