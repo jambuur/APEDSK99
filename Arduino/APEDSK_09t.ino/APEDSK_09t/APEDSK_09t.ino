@@ -81,6 +81,8 @@
 #define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
+//APEDSK99-specific Command Register
+#define ACMND   0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
 #define RDINT   0x1FEA
 
@@ -93,7 +95,6 @@
 #define RSECTR  0x1FF4  //read FD1771 Sector register         (>55F4 in TI99/4a DSR memory block)
 #define RDATA   0x1FF6  //read FD1771 Data register           (>5FF6 in TI99/4a DSR memory block)
 #define WCOMND  0x1FF8  //write FD1771 Command register       (>5FF8 in TI99/4a DSR memory block)
-//#define ACOMND  0x1FF9  //APEDSK99-specific Command Register  (>5FF9 in TI99/4a DSR memory block)
 #define WTRACK  0x1FFA  //write FD1771 Track register         (>5FFA in TI99/4a DSR memory block)
 #define WSECTR  0x1FFC  //write FD1771 Sector register        (>5FFC in TI99/4a DSR memory block)
 #define WDATA   0x1FFE  //write FD1771 Data register          (>5FFE in TI99/4a DSR memory block)
@@ -319,10 +320,10 @@ byte    cDSK    = 0;                                                            
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
 volatile boolean FD1771   = false;  //interrupt routine flag: new or continued FD1771 command
-byte ccmd                 = 0;      //current command
+byte Fccmd                = 0;      //current command
 byte lcmd                 = 0;      //last command
-//byte Accmd                = 0;      //APEDSK99-specific commands
 boolean ncmd              = false;  //flag new command
+byte Accmd                = 0;      //APEDSK99-specific commands
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
 byte Ssecidx              = 0;      // R/W sector counter
@@ -346,10 +347,10 @@ void FDrstr(void) {
 void noExec(void) {
   DSK[cDSK].close();      //close current SD DOAD file
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
-  ccmd = FDINT;           // "" ""
-  lcmd = ccmd;		        //reset new command prep
-//  Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
-//  Accmd = 0;              //reset APEDSK99-specific commands
+  Fccmd = FDINT;          // "" ""
+  lcmd = Fccmd;		        //reset new command prep
+  Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
+  Accmd = 0;              //reset APEDSK99-specific commands
   Sbtidx = 0; 	          //clear byte index counter
   Ssecidx = 0;            //clear sector counter
   Ridx = 0;               //clear READ ID index counter
@@ -379,7 +380,7 @@ void RWsector( boolean rw ) {
     Sbtidx++;					                                //increase sector byte counter
   }
   else {
-    if (ccmd == 0x80 || ccmd == 0xA0) {               //done with R/W single sector
+    if (Fccmd == 0x80 || Fccmd == 0xA0) {               //done with R/W single sector
       noExec();                                       //exit
     }
     else {
@@ -481,22 +482,22 @@ void loop() {
     noInterrupts();
 
     //read Command Register, stripping the unnecessary floppy bits but keeping command nybble
-    ccmd = Rbyte(WCOMND) & B11110000;
+    Fccmd = Rbyte(WCOMND) & B11110000;
 
     //the FD1771 "Force Interrupt" command is used to stop further command execution
-    if ( ccmd != FDINT ) { //do we need to do anything?
+    if ( Fccmd != FDINT ) { //do we need to do anything?
       
-      ncmd = (ccmd != lcmd);                                //new or continue previous command?
+      ncmd = (Fccmd != lcmd);                                //new or continue previous command?
       if (ncmd) {                                           //new command?
-        lcmd = ccmd;                                        //yes; remember new command for next compare
+        lcmd = Fccmd;                                        //yes; remember new command for next compare
       }
 
-      if ( ccmd < 0x80 ) {                                  //step/seek commands?
+      if ( Fccmd < 0x80 ) {                                  //step/seek commands?
 
         cTrack = Rbyte(WTRACK);                             //read current Track #
         nTrack = Rbyte(WDATA);                              //read new Track # (Seek)
 
-        switch(ccmd) {
+        switch(Fccmd) {
 
           case 0x00:					//Restore
              cTrack = 0;                                    //reset cTrack so Track Registers will be cleared after switch{}
@@ -511,10 +512,10 @@ void loop() {
           case 0x20:                                        //Step
           case 0x30:                                        //Step+T
             if ( cDir == LOW ) {
-              ccmd = 0x70;				                          //execute Step-Out+T
+              Fccmd = 0x70;				                          //execute Step-Out+T
             }
             else {
-              ccmd = 0x50;				                          //execute Step-In+T
+              Fccmd = 0x50;				                          //execute Step-In+T
 	          }
 
           case 0x40:                                        //Step-In
@@ -532,11 +533,11 @@ void loop() {
               cDir = LOW;                                   //set stepping direction towards track 0
             }
             break;
-        } //end switch ccmd
+        } //end switch Fccmd
         Wbyte(WTRACK, cTrack);				                      //update Track Register
 	      Wbyte(RTRACK, cTrack);                              //sync Track Registers
         noExec();                                           //prevent multiple step/seek execution                                        
-      } // end ccmd < 0x80
+      } // end Fccmd < 0x80
 
       else {  // read/write commands
 
@@ -544,7 +545,7 @@ void loop() {
           cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
           if ( aDSK[cDSK] ) {                                   //is selected disk available?
             Wbyte(RSTAT, NOERROR);                              //reset "Not Ready" bit in Status Register
-            if ( ccmd == 0xE0 || ccmd == 0xF0 ) {               // R/W whole track?
+            if ( Fccmd == 0xE0 || Fccmd == 0xF0 ) {               // R/W whole track?
               Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
@@ -555,12 +556,12 @@ void loop() {
           else {
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
               Wbyte(RSTAT, NOTREADY);                           //set "Not Ready" bit in Status Register
-              ccmd = FDINT;                                     //exit            }
+              Fccmd = FDINT;                                     //exit            }
             }
           }
         }
 
-        switch (ccmd) {  //switch R/W commands
+        switch (Fccmd) {  //switch R/W commands
 
           case 0xD0:
             noExec();
@@ -579,7 +580,7 @@ void loop() {
             }
             else {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
-              ccmd = FDINT;                               //exit      
+              Fccmd = FDINT;                               //exit      
             }
             break;
 
@@ -613,7 +614,7 @@ void loop() {
         } //end R/W switch
       } //end else R/W commands
     } //end we needed to do something
-    /*else {
+    else {
       //check for APEDSK99-specfic commands
       Accmd = Rbyte(ACOMND);
       if ( Accmd != 0x00 ) {

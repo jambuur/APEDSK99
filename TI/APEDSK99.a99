@@ -12,6 +12,7 @@
 * github.com/jambuur/APEDSK99
 *====================================
 
+ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
 CRUWRI	EQU	>5FEE			emulated 8 CRU output bits
@@ -20,7 +21,6 @@ RTRACK	EQU	>5FF2			read FD1771 Track register
 RSECTR	EQU	>5FF4			read FD1771 Sector register
 RDATA	EQU	>5FF6			read FD1771 Data register
 WCOMND	EQU	>5FF8			write FD1771 Command register
-ACOMND	EQU	>5FF9			APEDSK99-specific Command register
 WTRACK	EQU	>5FFA			write FD1771 Track register
 WSECTR	EQU	>5FFC			write FD1771 Sector register
 WDATA	EQU	>5FFE			write FD1771 Data register
