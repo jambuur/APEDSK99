@@ -86,6 +86,8 @@ RTC_DS1307 rtc;
 #define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
+//RTC Data: DDMMYYYYHHMMSS (digit == byte)
+#define RTCDAT  0x1FDA
 //APEDSK99-specific Command Register
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
@@ -648,8 +650,32 @@ void loop() {
             break;         
 
           case 8:
+            unsigned int  YEAR    = Rbyte(RTCDAT+4)*1000 + Rbyte(RTCDAT+5)*100 + Rbyte(RTCDAT+6)*10 + Rbyte(RTCDAT+7);
+            byte          MONTH   = Rbyte(RTCDAT+2)*10   + Rbyte(RTCDAT+3);
+            byte          DAY     = Rbyte(RTCDAT)*10     + Rbyte(RTCDAT+1);
+            byte          HOUR    = Rbyte(RTCDAT+8)*10   + Rbyte(RTCDAT+9);
+            byte          MINUTE  = Rbyte(RTCDAT+10)*10  + Rbyte(RTCDAT+11);
+            byte          SECOND  = Rbyte(RTCDAT+12)*10  + Rbyte(RTCDAT+13);
             //rtc.adjust(DateTime(YEAR, MONTH, DAY, HOUR , MINUTE, SECOND));
             break;
+          case 9:
+            DateTime now = rtc.now();
+            YEAR    = now.year();
+            MONTH   = now.month();
+            DAY     = now.day();
+            HOUR    = now.hour();
+            MINUTE  = now.minute();
+            SECOND  = now.second();
+            Wbyte(RTCDAT+4, YEAR/1000); Wbyte(RTCDAT+5, YEAR/100); Wbyte(RTCDAT+6, YEAR/10); Wbyte(RTCDAT+7,
+            
+            
+            
+            break;
+            /* dis_cbus();                                           //disable Arduino control bus so we don't screw up DSR RAM
+            if ( rtc.begin()) {
+              if ( rtc.isrunning() ) {
+              }
+            } */           
           
           } //end switch accmd commands       
           noExec();                                               //prevent multiple step/seek execution 
