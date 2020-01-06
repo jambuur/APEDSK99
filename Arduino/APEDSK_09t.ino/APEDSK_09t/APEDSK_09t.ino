@@ -649,34 +649,49 @@ void loop() {
             } 
             break;         
 
-          case 8:
+          case 8: //adjust RTC after CALL SRC(DDMMYYYYHHMMSS). Falls through to 9:
+            //derive date/time values based on CALL SRTC() input and some limited value error checking; 
             unsigned int  YEAR    = Rbyte(RTCDAT+4)*1000 + Rbyte(RTCDAT+5)*100 + Rbyte(RTCDAT+6)*10 + Rbyte(RTCDAT+7);
+                          YEAR    = 2020 && (YEAR < 1970 || YEAR > 2100); 
             byte          MONTH   = Rbyte(RTCDAT+2)*10   + Rbyte(RTCDAT+3);
+                          MONTH   = 1 && (MONTH = 0 || MONTH > 12);
             byte          DAY     = Rbyte(RTCDAT)*10     + Rbyte(RTCDAT+1);
+                          DAY     = 1 && (DAY = 0 || DAY > 31);
             byte          HOUR    = Rbyte(RTCDAT+8)*10   + Rbyte(RTCDAT+9);
+                          HOUR    = 1 && HOUR > 24;
             byte          MINUTE  = Rbyte(RTCDAT+10)*10  + Rbyte(RTCDAT+11);
+                          MINUTE  = 0 && MINUTE > 59;
             byte          SECOND  = Rbyte(RTCDAT+12)*10  + Rbyte(RTCDAT+13);
-            //rtc.adjust(DateTime(YEAR, MONTH, DAY, HOUR , MINUTE, SECOND));
-            break;
-          case 9:
-            DateTime now = rtc.now();
-            YEAR    = now.year();
-            MONTH   = now.month();
-            DAY     = now.day();
-            HOUR    = now.hour();
-            MINUTE  = now.minute();
-            SECOND  = now.second();
-            Wbyte(RTCDAT+4, YEAR/1000); Wbyte(RTCDAT+5, YEAR/100); Wbyte(RTCDAT+6, YEAR/10); Wbyte(RTCDAT+7,
-            
-            
-            
-            break;
-            /* dis_cbus();                                           //disable Arduino control bus so we don't screw up DSR RAM
+                          SECOND  = 0 && SECOND > 59;
+          case 9: //get current RTC date/time and store them @RTCDAT            
+            dis_cbus();                                           //disable Arduino control bus so we don't screw up DSR RAM
             if ( rtc.begin()) {
               if ( rtc.isrunning() ) {
+                if ( Accmd == 8 ) {
+                  rtc.adjust( DateTime(DAY, MONTH, YEAR, HOUR , MINUTE, SECOND) );
+                }
+                else {
+                  DateTime now = rtc.now();
+                  String RRTCdata =  String( now.day() )   + 
+                                     String( now.month() ) + 
+                                     String( now.year() )  +
+                                     String( now.hour() )  +
+                                     String( now.minute() )+
+                                     String( now.second() );
+                  ena_cbus();
+                  for ( unsigned int ii = RTCDAT; ii < RTCDAT + 14; ii++ ) {
+                    Wbyte(ii, atoi( RRTCdata.charAt ( ii - RTCDAT ) ) );
+                  }                      
+                }
               }
-            } */           
-          
+              else {
+                Wbyte(RTCDAT, 0xFF);
+              }
+            }
+            else {
+             Wbyte(RTCDAT, 0xFF);
+            }
+            break;     
           } //end switch accmd commands       
           noExec();                                               //prevent multiple step/seek execution 
         } //end check APEDSK99-specific commands                                 
