@@ -56,6 +56,11 @@
 //SPI card select pin
 #define SPI_CS 10
 
+//DS1307 RTC functions
+#include <Wire.h> 
+#include "RTClib.h" 
+RTC_DS1307 rtc; 
+
 //74HC595 shift-out definitions
 #define DS	  17	//PC3
 #define LATCH	18	//PC4
@@ -620,9 +625,9 @@ void loop() {
       if ( Accmd != 0x00 ) {
 
         switch (Accmd) {
-          case  1:                                                //UNprotect DSK1
-          case  2:                                                //UNprotect DSK2
-          case  3:                                                //UNprotect DSK3      
+          case  1:                                                //Unprotect DSK1
+          case  2:                                                //Unprotect DSK2
+          case  3:                                                //Unprotect DSK3      
           case  5:                                                //Protect DSK1
           case  6:                                                //Protect DSK2
           case  7:                                                //Protect DSK3
@@ -641,6 +646,11 @@ void loop() {
               }
             } 
             break;         
+
+          case 8:
+            //rtc.adjust(DateTime(YEAR, MONTH, DAY, HOUR , MINUTE, SECOND));
+            break;
+          
           } //end switch accmd commands       
           noExec();                                               //prevent multiple step/seek execution 
         } //end check APEDSK99-specific commands                                 
