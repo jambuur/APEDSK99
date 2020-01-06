@@ -80,7 +80,7 @@ SUB11	DATA	SUB12
 	EVEN
 SUB12	DATA	>0000			no more sub's
 	DATA	RRTC
-	BYTE	>06
+	BYTE	>04
 	TEXT	'RRTC'			read RTC date / time
 	EVEN
 
