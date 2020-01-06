@@ -30,6 +30,20 @@
   I'm not responsible for any bad effect or damages caused by this software
 */
 
+//----------------------------------------------------------------------------------------------- Libraries
+//SPI and SD card functions
+#include <SPI.h>
+#include <SD.h>
+
+//SPI card select pin
+#define SPI_CS 10
+
+//DS1307 RTC functions
+#include <Wire.h> 
+#include "RTClib.h" 
+RTC_DS1307 rtc; 
+
+//----------------------------------------------------------------------------------------------- Definitions
 //faster digitalRead / digitalWrite definitions
 #define portOfPin(P)\
   (((P)>=0&&(P)<8)?&PORTD:(((P)>7&&(P)<14)?&PORTB:&PORTC))
@@ -48,18 +62,6 @@
 #define isHigh(P)((*(pinOfPin(P))& pinMask(P))>0)
 #define isLow(P)((*(pinOfPin(P))& pinMask(P))==0)
 #define digitalState(P)((uint8_t)isHigh(P))
-
-//SPI and SD card functions
-#include <SPI.h>
-#include <SD.h>
-
-//SPI card select pin
-#define SPI_CS 10
-
-//DS1307 RTC functions
-#include <Wire.h> 
-#include "RTClib.h" 
-RTC_DS1307 rtc; 
 
 //74HC595 shift-out definitions
 #define DS	  17	//PC3
@@ -123,6 +125,8 @@ RTC_DS1307 rtc;
 #define NRTRACKS   40		//# of tracks/side
 #define NRSECTS	    9	  //# sectors/track
 #define NRBYSECT  256		//# bytes/sector
+
+//----------------------------------------------------------------------------------------------- Hardware functions
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -291,6 +295,7 @@ void eflash(byte error)
   //... enable Arduino CE* for flashing the error code
   pinAsOutput(CE);
 
+//----------------------------------------------------------------------------------------------- Hardware Error handling
   //error routine: stuck in code flashing loop until reset
   while (true) {
 
@@ -311,6 +316,7 @@ void eflash(byte error)
   }
 }
 
+//----------------------------------------------------------------------------------------------- FD1771 emu: variables and functions
 //DSR binary input file pointer
 File InDSR;
 
@@ -409,7 +415,7 @@ void RWsector( boolean rw ) {
     }
   }
 }						                                          //yes; done all 256 bytes in the sector
-
+//----------------------------------------------------------------------------------------------- Setup
 void setup() {
 
   //see if the SD card is present and can be initialized
@@ -433,6 +439,7 @@ void setup() {
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
 
+  //--------------------------------------------------------------------------------------------- DSR initialisation
   //read DSR binary from SD and write into DSR RAM
   InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
   if (InDSR) {
@@ -465,7 +472,8 @@ void setup() {
   if ( !aDSK[1] ) {                                   //check if DSK1 is available (it should)
     eflash(4);                                        //could not open DSK1 -> flash error 4
   }
-
+  
+  //--------------------------------------------------------------------------------------------- Let's go
   //"initialize FD1771":
   FDrstr();   //"Restore" command
   noExec();   //"no command" as default
@@ -480,6 +488,7 @@ void setup() {
 
 } //end of setup()
 
+//------------------------------------------------------------------------------------------------ Loop
 void loop() {
 
   //check if flag has set by interrupt routine
@@ -498,7 +507,7 @@ void loop() {
       if (ncmd) {                                           //new command?
         lcmd = Fccmd;                                        //yes; remember new command for next compare
       }
-
+      //----------------------------------------------------------------------------------------- FD1771 Seek / Step
       if ( Fccmd < 0x80 ) {                                  //step/seek commands?
 
         cTrack = Rbyte(WTRACK);                             //read current Track #
@@ -547,7 +556,8 @@ void loop() {
       } // end Fccmd < 0x80
 
       else {  // read/write commands
-
+        
+        //----------------------------------------------------------------------------------------- FD1771 R/W commands: prep
         if ( ncmd ) {					                                  //new command prep
           cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
           if ( aDSK[cDSK] ) {                                   //is selected disk available?
@@ -567,7 +577,8 @@ void loop() {
             }
           }
         }
-
+        
+        //----------------------------------------------------------------------------------------- FD1771 R/W commands
         switch (Fccmd) {  //switch R/W commands
 
           case 0xD0:
@@ -622,10 +633,13 @@ void loop() {
       } //end else R/W commands
     } //end we needed to do something
     else {
+
+      //------------------------------------------------------------------------------------------- APEDSK99-specifc commands
       //check for APEDSK99-specfic commands
       Accmd = Rbyte(ACOMND);
       if ( Accmd != 0x00 ) {
 
+        //----------------------------------------------------------------------------------------- TI BASIC PDSK() and UDSK()
         switch (Accmd) {
           case  1:                                                //Unprotect DSK1
           case  2:                                                //Unprotect DSK2
@@ -649,6 +663,7 @@ void loop() {
             } 
             break;         
 
+          //----------------------------------------------------------------------------------------- TI BASIC SRTC() and RRTC()
           case 8: //adjust RTC after CALL SRC(DDMMYYYYHHMMSS). Falls through to 9:
             //derive date/time values based on CALL SRTC() input and some limited value error checking; 
             unsigned int  YEAR    = Rbyte(RTCDAT+4)*1000 + Rbyte(RTCDAT+5)*100 + Rbyte(RTCDAT+6)*10 + Rbyte(RTCDAT+7);
@@ -697,6 +712,7 @@ void loop() {
         } //end check APEDSK99-specific commands                                 
       } //end else */
 
+    //----------------------------------------------------------------------------------------------- End of command processing, wait for next interrupt (TI write to DSR space)
     FD1771 = false;   //clear interrupt flag
 
     interrupts();     //enable interrupts for the next round
@@ -707,6 +723,7 @@ void loop() {
 
 } //end loop()
 
+//---------------------------------------------------------------------------------------------------- Interrupt routine; puts TI on hold and sets flag
 //Interrupt Service Routine (INT0 on pin 2)
 ISR(INT0_vect) {
 
@@ -714,5 +731,4 @@ ISR(INT0_vect) {
 
   //set interrupt flag
   FD1771 = true;
-
 }
