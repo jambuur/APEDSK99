@@ -3405,7 +3405,7 @@ RRTC	CLR	R4			read RTC flag
 RTC	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
 	MOV	R4,R4			read RTC?
-	JEQ	RTNRTC			yes, jmp to read
+	JEQ	RDRTC			yes, jmp to read
 	MOV	@>002C(R9),R8		set: ptr to next basic token
 	AI	R8,6			skip "SRTC("
 	BL	@VDPR2B			get next two bytes in R0
@@ -3421,6 +3421,12 @@ WD1307	BL	@VDPR2B			get next two digits
 	INCT	R8			adjust VDP buffer pointer
 	DEC	R6			decrease 
 	JNE	WD1307			next pair
+	LI	R6,>0800		
+	MOVB	R6,@ACOMND		SRTC command to Arduino
+	JMP	RTNRTC			return to TI BASIC
+*
+RDRTC	LI	R6,>0900	
+	MOVB	R6,@ACOMND		RRTC command to Arduino	
 *
 RTNRTC	CLR	@>0050(R9)		clear error flag
 	MOV	@>002C(R9),R8		get ptr to Basic token
