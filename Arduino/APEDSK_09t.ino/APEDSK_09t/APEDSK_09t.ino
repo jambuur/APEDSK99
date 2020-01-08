@@ -132,7 +132,7 @@ RTC_DS1307 rtc;
 //doesn't use timers so safe to use in a noInterrupt zone
 inline void NOP() __attribute__((always_inline));
 void NOP() {
-  delayMicroseconds(7);
+  delayMicroseconds(3);
 }
 
 //switch databus to INPUT state for reading from RAM
@@ -170,6 +170,7 @@ byte dbus_read()
   return ( ((PIND & B00000010) >> 1) +  //read PD1 (D0)
            ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
            ((PINB & B00000011) << 6) );  //read PB1, PBO (D7, D6)
+  NOP();
 }
 
 //place a byte on the databus
@@ -179,6 +180,7 @@ void dbus_write(byte data)
   PORTD |= ((data << 1) & B00000010); //write PD1 (D0)
   PORTD |= ((data << 2) & B11111000); //write PD7-PD3 (D5-D1)
   PORTB |= ((data >> 6) & B00000011); //write PB1, PBO (D7, D6)
+  NOP();
 }
 
 //shift out the given address to the 74HC595 registers
