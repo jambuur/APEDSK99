@@ -11,8 +11,7 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
-
-RTCDAT	EQU	>5FDA			RTC data: MMDDYYYYHHMMSS
+DTCDSK	EQU	>5FDC			CDSK data: DSK number (1-3) and disk name (10 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
@@ -73,15 +72,10 @@ SUB10	DATA	SUB11
 	BYTE	>04
 	TEXT	'UDSK'			un-protect DOAD (remove adhesive tab)
 	EVEN
-SUB11	DATA	SUB12
-	DATA	SRTC
+SUB11	DATA	>0000
+	DATA	CDSK
 	BYTE	>04
-	TEXT	'SRTC'			set RTC date / time
-	EVEN
-SUB12	DATA	>0000			no more sub's
-	DATA	RRTC
-	BYTE	>04
-	TEXT	'RRTC'			read RTC date / time
+	TEXT	'CDSK'			set RTC date / time
 	EVEN
 
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3389,31 +3383,31 @@ ADHTAB	MOV	R11,R7			save return-to-TI BASIC address
 	AI	R0,>0400		set Protect flag
 UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 *
-	CLR	@>0050(R9)		clear error flag
-	MOV	@>002C(R9),R8		get ptr to Basic token
-	AI	R8,12			skip the whole statement
-	MOV	R8,@>002C(R9)		update ptr
+	LI 	R8,12			current call length		
+RTNBAS	CLR	@>0050(R9)		clear error flag
+	A	R8, @>002C(R9)		add call length to token pointer		
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
 H9900	B	@RTURN1			return to caller (i.e. Basic)
 *			
 *-----------------------------------------------------------------
 * Subprogram SRTC/RRTC: set/read RTC date and time
 * ----------------------------------------------------------------
-SRTC	SETO	R4			set RTC flag
-	JMP	RTC
-RRTC	CLR	R4			read RTC flag
-RTC	MOV	R11,R7			save return-to-TI BASIC address
+CDSK	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
-	MOV	R4,R4			read RTC?
-	JEQ	RDRTC			yes, jmp to read
-	MOV	@>002C(R9),R8		set: ptr to next basic token
-	AI	R8,6			skip "SRTC("
+	MOV	@>002C(R9),R8		ptr to next basic token
+	AI	R8,6			skip "CDSK("
 	BL	@VDPR2B			get next two bytes in R0
-	CI	R0,>C80E		>C8=unquoted string, size=14 char
+	CI	R0,>C801		>C8=unquoted string, size=1 char
 	JNE	H9900			return (with error) if different
-	INCT	R8			point to start of RTC digits
 *
-	LI	R5,RTCDAT		pointer to RTC data
+	INCT	R8			increment pointer
+	BL	@VDPR2B			get next two bytes: x (1-3) and ","
+	MOV	R0,@DTCDSK
+*
+	LI 	R8,23
+	JMP	RTNBAS
+*
+	LI	R5,DTCDSK		pointer to RTC data
 	LI	R6,7			7 words / 14 bytes
 WD1307	BL	@VDPR2B			get next two digits
 	AI	R0,>CFD0		get rid of ASCII bias (>30)
