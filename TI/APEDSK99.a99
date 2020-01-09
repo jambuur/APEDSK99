@@ -3374,9 +3374,10 @@ PUCPRP	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@VDPR2B			get next two bytes
 	SWPB	R0			
 *
-	AI	R0,>4CD0		add 2's complement to >B330 or >B630: MSB= >B3/"," or >B6/")", LSB= # of files, 
-	JHE	H9901			>B3
-	AI	R0,768			>B6, adjust R0	
+	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3/"," or >B6/")", LSB= # of files, 
+	JLT	H9902			>B3
+	JMP	H9901			>B6
+H9902	AI	R0,768			>B3, adjust R0 to positive range
 *
 H9901	JEQ	H9900			DSK0 not valid, return with error
 	CI	R0,>0003		only 3 DSK's allowed
@@ -3416,7 +3417,7 @@ NWDOAD	BL	@VDPR2B			get next two digits
 	JEQ	H9900			yes, return (with error)
 	MOV	R0,*R5+			save two digits
 	INCT	R8			adjust VDP buffer pointer
-	DEC	R6			decrease 
+	DEC	R6			decrease word counter
 	JNE	NWDOAD			next pair
 *
 	LI	R6,>0900		
