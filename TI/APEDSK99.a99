@@ -3360,74 +3360,70 @@ H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 * Subprogram PDSK/UDSK: set/reset APEDSK99 Protect (0x50) @VIB >28
 * ----------------------------------------------------------------
 PDSK	SETO	R4			set Protect flag
-	JMP	ADHTAB
+	JMP	PUCPRP
 UDSK	CLR	R4			set Unprotect flag
-ADHTAB	MOV	R11,R7			save return-to-TI BASIC address
+PUCPRP	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
 	MOV	@>002C(R9),R8		ptr to next basic token
 	AI	R8,6			skip "PDSK(" / "UDSK("
 	BL	@VDPR2B			get next two bytes in R0
 	CI	R0,>C801		>C8=unquoted string, size=1 char
 	JNE	H9900			return (with error) if different
+*
 	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two bytes
 	SWPB	R0			
-	AI	R0,>49D0		substact >B630: # of files >B6=closed parenthesis
-	JEQ	H9900			DSK0 not valid, return with error
+*
+	AI	R0,>4CD0		add 2's complement to >B330 or >B630: MSB= >B3/"," or >B6/")", LSB= # of files, 
+	JHE	H9901			>B3
+	AI	R0,768			>B6, adjust R0	
+*
+H9901	JEQ	H9900			DSK0 not valid, return with error
 	CI	R0,>0003		only 3 DSK's allowed
 	JH	H9900			return with error if more
 	SWPB	R0			drive # back in MSB
 *
+	CI	R4,>5656		CDSK?
+	JEQ	CDSK2			yes, continue after generic prep
 	MOV	R4,R4			Unprotect?
 	JEQ	UPRTCT			yes
 	AI	R0,>0400		set Protect flag
 UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 *
-	LI 	R8,12			current call length		
+	LI 	R8,12			current CALL length		
 RTNBAS	CLR	@>0050(R9)		clear error flag
 	A	R8, @>002C(R9)		add call length to token pointer		
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
 H9900	B	@RTURN1			return to caller (i.e. Basic)
 *			
 *-----------------------------------------------------------------
-* Subprogram SRTC/RRTC: set/read RTC date and time
+* Subprogram CDSK: link DOAD to DSKx
 * ----------------------------------------------------------------
-CDSK	MOV	R11,R7			save return-to-TI BASIC address
-	BL	@PRPFDO			prepare TI Controller DSR operations
-	MOV	@>002C(R9),R8		ptr to next basic token
-	AI	R8,6			skip "CDSK("
+CDSK	LI	R4,>5656		change DSK flag
+	JMP	PUCPRP		
+*
+CDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two bytes in R0
-	CI	R0,>C801		>C8=unquoted string, size=1 char
+	CI	R0,>C808		>C8=unquoted string, size=8 characters
 	JNE	H9900			return (with error) if different
 *
 	INCT	R8			increment pointer
-	BL	@VDPR2B			get next two bytes: x (1-3) and ","
-	MOV	R0,@DTCDSK
-*
-	LI 	R8,23
-	JMP	RTNBAS
-*
-	LI	R5,DTCDSK		pointer to RTC data
-	LI	R6,7			7 words / 14 bytes
-WD1307	BL	@VDPR2B			get next two digits
-	AI	R0,>CFD0		get rid of ASCII bias (>30)
+	LI	R5,DTCDSK		pointer to DOAD name
+	LI	R6,4			4 words / 8 characters
+NWDOAD	BL	@VDPR2B			get next two digits
+	AI	R0,>D0D0		get rid of ASCII bias (>30)
+	COC	R0,>8080		lower than ASCII 48 / "0"?
+	JEQ	H9900			yes, return (with error)
 	MOV	R0,*R5+			save two digits
 	INCT	R8			adjust VDP buffer pointer
 	DEC	R6			decrease 
-	JNE	WD1307			next pair
-	LI	R6,>0800		
-	MOVB	R6,@ACOMND		SRTC command to Arduino
-	JMP	RTNRTC			return to TI BASIC
+	JNE	NWDOAD			next pair
 *
-RDRTC	LI	R6,>0900	
-	MOVB	R6,@ACOMND		RRTC command to Arduino	
+	LI	R6,>0900		
+	MOVB	R6,@ACOMND		CDSK command to Arduino
 *
-RTNRTC	CLR	@>0050(R9)		clear error flag
-	MOV	@>002C(R9),R8		get ptr to Basic token
-	AI	R8,23			skip the whole statement
-	MOV	R8,@>002C(R9)		update ptr
-	SZCB	@>0042(R9),@>0042(R9)	clear current token
-	JMP	H9900			return to caller (i.e. Basic)
+	LI	R8,23			current CALL length
+	JMP	RTNBAS			
 *
 *-----------------------------------------
 * APEDSK constants
