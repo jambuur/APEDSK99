@@ -3412,7 +3412,7 @@ CDSK2	INCT	R8			increment pointer
 	LI	R6,4			4 words / 8 characters
 NWDOAD	BL	@VDPR2B			get next two digits
 	AI	R0,>D0D0		get rid of ASCII bias (>30)
-	COC	R0,>8080		lower than ASCII 48 / "0"?
+	COC	@ABIAS, R0		lower than ASCII 48 / "0"?
 	JEQ	H9900			yes, return (with error)
 	MOV	R0,*R5+			save two digits
 	INCT	R8			adjust VDP buffer pointer
@@ -3430,6 +3430,7 @@ NWDOAD	BL	@VDPR2B			get next two digits
 *-----------------------------------------
 DSDRVS	DATA	>0F00			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
 SIDE01	DATA	>0100			floppy side select
+ABIAS	DATA	>8080			ASCII bias check
 *-----------------------------------------
 *
 *------------------------------------------------------------------------
