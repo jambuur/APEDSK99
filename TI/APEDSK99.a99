@@ -3410,6 +3410,7 @@ CDSK2	MOV	R0,@DTCDSK		save DSKx
 	BL	@VDPR2B			get next two digits
 	CI	R0,>C708		quoted string, 8 characters?
 	JNE	H9900			no, return with error set
+	INCT	R8			increment pointer
 *
 	LI	R5,DTCDSK+2		pointer to DOAD name
 	LI	R6,4			4 words / 8 characters
