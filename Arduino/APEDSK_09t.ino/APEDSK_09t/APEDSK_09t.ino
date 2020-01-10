@@ -38,11 +38,6 @@
 //SPI card select pin
 #define SPI_CS 10
 
-//DS1307 RTC functions
-#include <Wire.h> 
-#include "RTClib.h" 
-RTC_DS1307 rtc; 
-
 //----------------------------------------------------------------------------------------------- Definitions
 //faster digitalRead / digitalWrite definitions
 #define portOfPin(P)\
@@ -88,8 +83,8 @@ RTC_DS1307 rtc;
 #define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
-//RTC Data: DDMMYYYYHHMMSS (digit == byte)
-#define RTCDAT  0x1FDA
+//CDSK DOAD file name (DSKx 1-3 (2 bytes) + 8 bytes/characters)
+#define DTCDSK  0x1FDE
 //APEDSK99-specific Command Register
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
@@ -319,9 +314,6 @@ void eflash(byte error)
 }
 
 //----------------------------------------------------------------------------------------------- FD1771 emu: variables and functions
-//DSR binary input file pointer
-File InDSR;
-
 //DSKx file pointers
 File DSK[4];  //file pointers to DOAD's
 
@@ -443,7 +435,7 @@ void setup() {
 
   //--------------------------------------------------------------------------------------------- DSR initialisation
   //read DSR binary from SD and write into DSR RAM
-  InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
+  File InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
   if (InDSR) {
     for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
       DSRAM = InDSR.read();
@@ -663,11 +655,30 @@ void loop() {
                 pDSK[cDSK] = false;            
               }
             } 
-            break;                   
-          } //end switch accmd commands       
-          noExec();                                               //prevent multiple step/seek execution 
-        } //end check APEDSK99-specific commands                                 
-      } //end else */
+            break;  
+
+          case 9:        
+            String DOAD = "";
+            for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {
+              DOAD += char( Rbyte(ii) );
+            }          
+            DOAD.trim();
+            DOAD = "/DISKS/ORG/" + DOAD + ".DSK";
+            if ( SD.exists(DOAD) ) {
+              cDSK = Rbyte(DTCDSK);
+              nDSK[cDSK] = DOAD;
+              aDSK[cDSK] = true;
+            }
+            else {
+              Wbyte(DTCDSK, 0xFF);
+            }
+           
+            break;
+            
+        } //end switch accmd commands       
+        noExec();                                               //prevent multiple step/seek execution 
+      } //end check APEDSK99-specific commands                                 
+    } //end else */
 
     //----------------------------------------------------------------------------------------------- End of command processing, wait for next interrupt (TI write to DSR space)
     FD1771 = false;   //clear interrupt flag
