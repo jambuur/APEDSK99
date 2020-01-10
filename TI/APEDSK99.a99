@@ -3391,9 +3391,9 @@ H9901	JEQ	H9900			DSK0 not valid, return with error
 	AI	R0,>0400		set Protect flag
 UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 *
+	CLR	@>0050(R9)		clear error flag
 	LI 	R8,12			current CALL length		
-RTNBAS	CLR	@>0050(R9)		clear error flag
-	A	R8, @>002C(R9)		add call length to token pointer		
+RTNBAS	A	R8, @>002C(R9)		add call length to token pointer		
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
 H9900	B	@RTURN1			return to caller (i.e. Basic)
 *			
@@ -3421,6 +3421,7 @@ NWDOAD	BL	@VDPR2B			get next two digits
 	LI	R6,>0900		
 	MOVB	R6,@ACOMND		CDSK command to Arduino
 *
+	MOVB	@DTCDSK,@>0050(R9)	store exit code as error flag (0x00 is no error)
 	LI	R8,23			current CALL length
 	JMP	RTNBAS			
 *
