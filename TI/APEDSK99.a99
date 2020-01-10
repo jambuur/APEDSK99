@@ -3405,7 +3405,12 @@ CDSK	LI	R4,>5656		change DSK flag
 	JMP	PUCPRP		
 *
 CDSK2	MOV	R0,@DTCDSK		save DSKx	
+	
 	INCT	R8			increment pointer
+	BL	@VDPR2B			get next two digits
+	CI	R0,>C708		quoted string, 8 characters?
+	JNE	H9900			no, return with error set
+*
 	LI	R5,DTCDSK+2		pointer to DOAD name
 	LI	R6,4			4 words / 8 characters
 NWDOAD	BL	@VDPR2B			get next two digits
@@ -3414,10 +3419,10 @@ NWDOAD	BL	@VDPR2B			get next two digits
 	DEC	R6			decrease word counter
 	JNE	NWDOAD			next pair
 *
-	BL	@VDPR2B			get next two digits
-	SRL	R0,8			move ")" into LSB
-	CI	R0,>00B6		is it a ")"?
-	JNE	H9900			no, return with error set
+	BL      @VDPR2B                 get next two bytes
+	SRL     R0,8                    move ")" into LSB
+	CI      R0,>00B6                is it a ")"?
+	JNE     H9900                   no, return with error set
 *
 	LI	R6,>0900		
 	MOVB	R6,@ACOMND		CDSK command to Arduino
