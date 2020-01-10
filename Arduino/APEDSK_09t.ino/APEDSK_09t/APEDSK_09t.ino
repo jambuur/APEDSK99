@@ -320,7 +320,7 @@ File DSK[4];  //file pointers to DOAD's
 //flags for "drives" (aka DOAD files) available
 //(DSK1 should always be available, if not Error 4)
 boolean aDSK[4] = {false, false, false, false};                                     //disk availability
-String  nDSK[4] = {"x", "/DISKS/001.DSK", "/DISKS/002.DSK", "/DISKS/003.DSK"};	    //DOAD file name
+String  nDSK[4] = {"x", "/DISKS/DSK1.DSK", "/DISKS/DSK2.DSK", "/DISKS/DSK3.DSK"};	  //DOAD file name
 boolean pDSK[4] = {false, false, false, false};                                     //DOAD write protect status aka the adhesive tab
 byte    cDSK    = 0;                                                                //current selected DSK
 
@@ -657,22 +657,21 @@ void loop() {
             } 
             break;  
 
-          case 9:        
+          case 9:                                                             //change DOAD assigment
             String DOAD = "";
-            for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {
+            for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {   //merge CALL CDSK characters into string
               DOAD += char( Rbyte(ii) );
             }          
-            DOAD.trim();
-            DOAD = "/DISKS/ORG/" + DOAD + ".DSK";
-            if ( SD.exists(DOAD) ) {
-              cDSK = Rbyte(DTCDSK);
+            DOAD.trim();                                                      //remove leading / trailing spaces
+            DOAD = "/DISKS/" + DOAD + ".DSK";                                 //construct full DOAD path
+            if ( SD.exists(DOAD) ) {                                          //exists?
+              cDSK = Rbyte(DTCDSK);                                           //yes; assign to requested DSKx
               nDSK[cDSK] = DOAD;
               aDSK[cDSK] = true;
             }
             else {
-              Wbyte(DTCDSK, 0xFF);
+              Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
             }
-           
             break;
             
         } //end switch accmd commands       
