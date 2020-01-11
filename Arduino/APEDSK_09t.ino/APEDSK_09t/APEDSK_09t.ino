@@ -127,7 +127,7 @@
 //doesn't use timers so safe to use in a noInterrupt zone
 inline void NOP() __attribute__((always_inline));
 void NOP() {
-  delayMicroseconds(3);
+  delayMicroseconds(8);
 }
 
 //switch databus to INPUT state for reading from RAM
@@ -161,20 +161,18 @@ void ena_cbus() {
 //read a byte from the databus
 byte dbus_read()
 {
-  NOP();				                        //long live the Logic Analyzer
-  return ( ((PIND & B00000010) >> 1) +  //read PD1 (D0)
-           ((PIND & B11111000) >> 2) +   //read PD7-PD3 (D5-D1)
-           ((PINB & B00000011) << 6) );  //read PB1, PBO (D7, D6)
-  NOP();
+  NOP();				                          //long live the Logic Analyzer
+  return ( ((PIND & B00000010) >> 1) +    //read PD1 (D0)
+           ((PIND & B11111000) >> 2) +    //read PD7-PD3 (D5-D1)
+           ((PINB & B00000011) << 6) );   //read PB1, PBO (D7, D6)
 }
 
 //place a byte on the databus
 void dbus_write(byte data)
-{
-  NOP();                              //long live the Logic Analyzer
-  PORTD |= ((data << 1) & B00000010); //write PD1 (D0)
-  PORTD |= ((data << 2) & B11111000); //write PD7-PD3 (D5-D1)
-  PORTB |= ((data >> 6) & B00000011); //write PB1, PBO (D7, D6)
+{                                //long live the Logic Analyzer
+  PORTD |= ((data << 1) & B00000010);     //write PD1 (D0)
+  PORTD |= ((data << 2) & B11111000);     //write PD7-PD3 (D5-D1)
+  PORTB |= ((data >> 6) & B00000011);     //write PB1, PBO (D7, D6)
   NOP();
 }
 
