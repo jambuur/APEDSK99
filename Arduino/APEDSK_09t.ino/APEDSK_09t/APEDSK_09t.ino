@@ -127,7 +127,7 @@
 //doesn't use timers so safe to use in a noInterrupt zone
 inline void NOP() __attribute__((always_inline));
 void NOP() {
-  delayMicroseconds(8);
+  delayMicroseconds(3);
 }
 
 //switch databus to INPUT state for reading from RAM
@@ -169,11 +169,10 @@ byte dbus_read()
 
 //place a byte on the databus
 void dbus_write(byte data)
-{                                //long live the Logic Analyzer
+{
   PORTD |= ((data << 1) & B00000010);     //write PD1 (D0)
   PORTD |= ((data << 2) & B11111000);     //write PD7-PD3 (D5-D1)
   PORTB |= ((data >> 6) & B00000011);     //write PB1, PBO (D7, D6)
-  NOP();
 }
 
 //shift out the given address to the 74HC595 registers
@@ -262,7 +261,6 @@ void Wbyte(unsigned int address, byte data)
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
-  NOP();                   //long live the Logic Analyzer
   pinAsOutput(TI_READY);   //switch from HighZ to output
   digitalHigh(TI_BUFFERS); //disables 74LS541's
   ena_cbus();              //Arduino in RAM control
@@ -271,7 +269,6 @@ void TIstop() {
 //enable TI I/O, disable Arduino shift registers and control bus
 void TIgo()
 {
-  NOP();                    //long live the Logic Analyzer
   dis_cbus();               //cease Arduino RAM control
   digitalLow(TI_BUFFERS);   //enable 74LS541's
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
@@ -393,13 +390,7 @@ void RWsector( boolean rw ) {
         Ssecidx++;                                    //no; increase Sector #
         Wbyte(WSECTR, Ssecidx);                       //sync Sector Registers
         Wbyte(RSECTR, Ssecidx);                       //""
-        if ( rw ) {                                   //read first byte from next sector?
-          Wbyte(RDATA, DSK[cDSK].read() );            //yes -> supply byte
-        }
-        else {
-          DSK[cDSK].write( Rbyte(WDATA) );            //no -> write first sector byte to DOAD
-        }     
-        Sbtidx = 1;                                   //adjust sector byte counter
+        Sbtidx = 0;                                   //adjust sector byte counter
       }
       else {
         noExec();                                     //all sectors done; exit
@@ -409,13 +400,13 @@ void RWsector( boolean rw ) {
 }						                                          //yes; done all 256 bytes in the sector
 //----------------------------------------------------------------------------------------------- Setup
 void setup() {
-
+/*
   //see if the SD card is present and can be initialized
   if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
     eflash(1);
   }
-  
+  */
   //74HC595 shift register control
   pinAsOutput(DS);
   pinAsOutput(LATCH);
@@ -433,6 +424,8 @@ void setup() {
 
   //--------------------------------------------------------------------------------------------- DSR initialisation
   //read DSR binary from SD and write into DSR RAM
+  
+  /*
   File InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
   if (InDSR) {
     for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
@@ -450,7 +443,7 @@ void setup() {
     //loading DSR unsuccessful -> flash error 3
     eflash(3);
   }
-  
+  */
   for ( byte ii = 1; ii < 4; ii++ ) {
     if ( SD.exists(nDSK[ii]) ) {                      //does DOAD x exist?
       aDSK[ii] = true;                                //yes; flag as such
@@ -460,11 +453,11 @@ void setup() {
       DSK[ii].close();                                //close current SD DOAD file
     }
   }
-
+/*
   if ( !aDSK[1] ) {                                   //check if DSK1 is available (it should)
     eflash(4);                                        //could not open DSK1 -> flash error 4
   }
-  
+  */
   //--------------------------------------------------------------------------------------------- Let's go
   //"initialize FD1771":
   FDrstr();   //"Restore" command
@@ -472,17 +465,39 @@ void setup() {
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
-  EICRA = 1 << ISC00;  //sense any change on the INT0 pin
-  EIMSK = 1 << INT0;   //enable INT0 interrupt
+  //EICRA = 1 << ISC00;  //sense any change on the INT0 pin
+  //EIMSK = 1 << INT0;   //enable INT0 interrupt
 
   //TI: take it away
-  TIgo();
+  //TIgo();
 
 } //end of setup()
 
 //------------------------------------------------------------------------------------------------ Loop
 void loop() {
 
+  byte wRAM1 = 0xAA;
+  byte wRAM2 = 0x56;
+  byte rRAM = 0x00;
+  boolean eRAM = false;
+
+  for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
+      Wbyte(ii, wRAM1);
+      rRAM = Rbyte(ii);
+      if ( rRAM != wRAM1 ) {
+        eflash(1);
+      }
+  }
+
+  for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
+      Wbyte(ii, wRAM2);
+      rRAM = Rbyte(ii);
+      if ( rRAM != wRAM2 ) {
+        eflash(1);
+      }
+  }
+  
+/*
   //check if flag has set by interrupt routine
   if (FD1771) {
 
@@ -679,7 +694,7 @@ void loop() {
         } //end switch accmd commands       
         noExec();                                               //prevent multiple step/seek execution 
       } //end check APEDSK99-specific commands                                 
-    } //end else */
+    } //end else 
 
     //----------------------------------------------------------------------------------------------- End of command processing, wait for next interrupt (TI write to DSR space)
     FD1771 = false;   //clear interrupt flag
@@ -689,6 +704,8 @@ void loop() {
     TIgo();
 
   } //end FD1771 flag check
+
+*/
 
 } //end loop()
 
