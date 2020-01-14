@@ -400,13 +400,13 @@ void RWsector( boolean rw ) {
 }						                                          //yes; done all 256 bytes in the sector
 //----------------------------------------------------------------------------------------------- Setup
 void setup() {
-/*
+
   //see if the SD card is present and can be initialized
   if (!SD.begin(SPI_CS)) {
     //nope -> flash LED error 1
     eflash(1);
   }
-  */
+  
   //74HC595 shift register control
   pinAsOutput(DS);
   pinAsOutput(LATCH);
@@ -443,7 +443,7 @@ void setup() {
     //loading DSR unsuccessful -> flash error 3
     eflash(3);
   }
-  */
+  
   for ( byte ii = 1; ii < 4; ii++ ) {
     if ( SD.exists(nDSK[ii]) ) {                      //does DOAD x exist?
       aDSK[ii] = true;                                //yes; flag as such
@@ -453,7 +453,7 @@ void setup() {
       DSK[ii].close();                                //close current SD DOAD file
     }
   }
-/*
+
   if ( !aDSK[1] ) {                                   //check if DSK1 is available (it should)
     eflash(4);                                        //could not open DSK1 -> flash error 4
   }
@@ -465,39 +465,18 @@ void setup() {
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
-  //EICRA = 1 << ISC00;  //sense any change on the INT0 pin
-  //EIMSK = 1 << INT0;   //enable INT0 interrupt
+  EICRA = 1 << ISC00;  //sense any change on the INT0 pin
+  EIMSK = 1 << INT0;   //enable INT0 interrupt
 
   //TI: take it away
-  //TIgo();
+  TIgo();
 
 } //end of setup()
 
 //------------------------------------------------------------------------------------------------ Loop
 void loop() {
 
-  byte wRAM1 = 0xAA;
-  byte wRAM2 = 0x56;
-  byte rRAM = 0x00;
-  boolean eRAM = false;
-
-  for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
-      Wbyte(ii, wRAM1);
-      rRAM = Rbyte(ii);
-      if ( rRAM != wRAM1 ) {
-        eflash(1);
-      }
-  }
-
-  for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
-      Wbyte(ii, wRAM2);
-      rRAM = Rbyte(ii);
-      if ( rRAM != wRAM2 ) {
-        eflash(1);
-      }
-  }
-  
-/*
+ 
   //check if flag has set by interrupt routine
   if (FD1771) {
 
@@ -705,7 +684,7 @@ void loop() {
 
   } //end FD1771 flag check
 
-*/
+
 
 } //end loop()
 
