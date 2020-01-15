@@ -59,14 +59,17 @@
 #define digitalState(P)((uint8_t)isHigh(P))
 
 //74HC595 shift-out definitions
-#define DS	  17	//PC3
+//#define DS	  17	//PC3
+#define DS    19  //PC5
 #define LATCH	18	//PC4
-#define CLOCK	19	//PC5
+//#define CLOCK	19	//PC5
+#define CLOCK  17  //PC3
 
 //IO lines for RAM databus
 #define D0 1	//PD1
 //skip 2 as we need it for interrupts
-#define D1 3	//PD3
+//#define D1 3	//PD3
+#define D1 0  //PD0
 #define D2 4	//PD4
 #define D3 5	//PD5
 #define D4 6	//PD6
@@ -80,7 +83,8 @@
 
 //IO lines for TI99/4a control
 #define TI_BUFFERS 	  15  //PC1; 74LS541 buffers enable/disable
-#define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
+//#define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
+#define TI_READY      3    //PD3; TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
 //CDSK DOAD file name (DSKx 1-3 (2 bytes) + 8 bytes/characters)
