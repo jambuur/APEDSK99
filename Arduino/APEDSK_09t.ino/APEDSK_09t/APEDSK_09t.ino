@@ -65,18 +65,6 @@
 //#define CLOCK	19	//PC5
 #define CLOCK  17  //PC3
 
-//IO lines for RAM databus
-#define D0 1	//PD1
-//skip 2 as we need it for interrupts
-//#define D1 3	//PD3
-#define D1 0  //PD0
-#define D2 4	//PD4
-#define D3 5	//PD5
-#define D4 6	//PD6
-#define D5 7	//PD7
-#define D6 8	//PD8
-#define D7 9	//PD9
-
 //IO lines for Arduino RAM control
 #define CE  14  //PC0  LED flashes for both Arduino CE* and TI MBE*
 #define WE  16	//PC2
@@ -134,17 +122,20 @@ void NOP() {
   delayMicroseconds(2);
 }
 
+//databus:
+//D0,0,PD0 / D1,1,PD1 / D2,4,PD4 / D3,5,PD5 / D4,6,PD6 / D5,7,PD7 / D6,8,PD8 / D7,9,PD9
+
 //switch databus to INPUT state for reading from RAM
 void dbus_in() {
-  DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
-  PORTD &= B00000101;  //initialise input pins
+  DDRD  &= B00001100;  //set PD7-PD3 and PD1 to input (D5-D2, D1-D0)
+  PORTD &= B00001100;  //initialise input pins
   DDRB  &= B11111100;  //set PB1, PB0 to input (D7, D6)
   PORTB &= B11111100;  //initialise input pins
 }
 
 //switch databus to OUTPUT state for writing to RAM
 void dbus_out() {
-  DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
+  DDRD  |= B11110011;  //set PD7-PD4 and PD1, PD0 to output (D5-D2,D1-D0)
   DDRB  |= B00000011;  //set PB1, PB0 to output (D7, D6)
 }
 
@@ -166,16 +157,16 @@ void ena_cbus() {
 byte dbus_read()
 {
   NOP();				                          //long live the Logic Analyzer
-  return ( ((PIND & B00000010) >> 1) +    //read PD1 (D0)
-           ((PIND & B11111000) >> 2) +    //read PD7-PD3 (D5-D1)
+  return ( ((PIND & B00000011)     ) +    //read PD0, PD1 (D1-D0)
+           ((PIND & B11110000) >> 2) +    //read PD7-PD4 (D5-D2)
            ((PINB & B00000011) << 6) );   //read PB1, PBO (D7, D6)
 }
 
 //place a byte on the databus
 void dbus_write(byte data)
 {
-  PORTD |= ((data << 1) & B00000010);     //write PD1 (D0)
-  PORTD |= ((data << 2) & B11111000);     //write PD7-PD3 (D5-D1)
+  PORTD |= ((data     ) & B00000011);     //write PD0, PD1 (D0, D1)
+  PORTD |= ((data << 2) & B11110000);     //write PD7-PD3 (D5-D1)
   PORTB |= ((data >> 6) & B00000011);     //write PB1, PBO (D7, D6)
 }
 
