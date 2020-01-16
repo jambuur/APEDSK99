@@ -77,7 +77,7 @@
 
 //CDSK DOAD file name (DSKx 1-3 (2 bytes) + 8 bytes/characters)
 #define DTCDSK  0x1FDE
-//APEDSK99-specific Command Register
+//APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
 #define RDINT   0x1FEA
@@ -100,7 +100,7 @@
 #define LED_OFF     250
 #define LED_REPEAT  1500
 
-//Status Register error signalling
+//Status Register bits
 #define NOTREADY  0x80
 #define PROTECTED 0x40
 #define NOERROR	  0x00
@@ -182,31 +182,31 @@ void set_abus(unsigned int address)
   //for every address bit (13 bits to address 8Kbytes) set:
   //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  9) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D12
+  PORTC |= ( (address >>  9) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A12
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  8) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D11
+  PORTC |= ( (address >>  8) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A11
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  7) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D10
+  PORTC |= ( (address >>  7) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A10
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  6) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D9
+  PORTC |= ( (address >>  6) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A9
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  5) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D8
+  PORTC |= ( (address >>  5) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A8
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  4) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D7
+  PORTC |= ( (address >>  4) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A7
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D6
+  PORTC |= ( (address >>  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A6
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D5
+  PORTC |= ( (address >>  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A5
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D4
+  PORTC |= ( (address >>  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A4
   digitalLow(CLOCK);
-  PORTC |= ( (address      ) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D3
+  PORTC |= ( (address      ) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A3
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D2
+  PORTC |= ( (address <<  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A2
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D1
+  PORTC |= ( (address <<  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A1
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //D0
+  PORTC |= ( (address <<  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A0
 
   //stop shifting
   digitalLow(CLOCK);
@@ -317,10 +317,10 @@ byte    cDSK    = 0;                                                            
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
 volatile boolean FD1771   = false;  //interrupt routine flag: new or continued FD1771 command
-byte Fccmd                = 0;      //current command
-byte lcmd                 = 0;      //last command
-boolean ncmd              = false;  //flag new command
-byte Accmd                = 0;      //APEDSK99-specific commands
+byte Fccmd                = 0;      //current FD1771 command
+byte lcmd                 = 0;      //last FD1771 command
+boolean ncmd              = false;  //flag new FD1771 command
+byte Accmd                = 0;      //APEDSK99-specific commands (TI BASIC CALL support)
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
 byte Ssecidx              = 0;      // R/W sector counter
