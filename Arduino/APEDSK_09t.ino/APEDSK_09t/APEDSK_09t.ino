@@ -119,7 +119,7 @@
 //doesn't use timers so safe to use in a noInterrupt zone
 inline void NOP() __attribute__((always_inline));
 void NOP() {
-  delayMicroseconds(2);
+  delayMicroseconds(3);
 }
 
 //databus:
@@ -289,12 +289,12 @@ void eflash(byte error)
     for (byte flash = 0; flash < error; flash++)
     {
       //set RAM CE* LOW, turns on LED
-      digitalLow(CE);
+      digitalLow(0);
       //LED is on for a bit
       delay(LED_ON);
 
       //turn it off
-      digitalHigh(CE);
+      digitalHigh(0);
       //LED is off for a bit
       delay(LED_OFF);
     }
@@ -420,7 +420,6 @@ void setup() {
   //--------------------------------------------------------------------------------------------- DSR initialisation
   //read DSR binary from SD and write into DSR RAM
   
-  /*
   File InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
   if (InDSR) {
     for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
@@ -434,7 +433,7 @@ void setup() {
     eflash(2);
   }
   //check for valid DSR mark (>AA) at first DSR RAM byte
-  if (  Rbyte(0x0000) != 0xAA ) {
+  if (  Rbyte(0x0000) != 0xAb ) {
     //loading DSR unsuccessful -> flash error 3
     eflash(3);
   }
@@ -452,7 +451,7 @@ void setup() {
   if ( !aDSK[1] ) {                                   //check if DSK1 is available (it should)
     eflash(4);                                        //could not open DSK1 -> flash error 4
   }
-  */
+  
   //--------------------------------------------------------------------------------------------- Let's go
   //"initialize FD1771":
   FDrstr();   //"Restore" command
