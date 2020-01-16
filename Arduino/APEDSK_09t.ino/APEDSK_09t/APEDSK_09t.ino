@@ -127,16 +127,16 @@ void NOP() {
 
 //switch databus to INPUT state for reading from RAM
 void dbus_in() {
-  DDRD  &= B00001100;  //set PD7-PD3 and PD1 to input (D5-D2, D1-D0)
+  DDRD  &= B00001100;  //set PD7-PD4 and PD1-PD0 to input (D5-D2, D1-D0)
   PORTD &= B00001100;  //initialise input pins
-  DDRB  &= B11111100;  //set PB1, PB0 to input (D7, D6)
+  DDRB  &= B11111100;  //set PB1-PB0 to input (D7-D6)
   PORTB &= B11111100;  //initialise input pins
 }
 
 //switch databus to OUTPUT state for writing to RAM
 void dbus_out() {
-  DDRD  |= B11110011;  //set PD7-PD4 and PD1, PD0 to output (D5-D2,D1-D0)
-  DDRB  |= B00000011;  //set PB1, PB0 to output (D7, D6)
+  DDRD  |= B11110011;  //set PD7-PD4 and PD1-PD0 to output (D5-D2, D1-D0)
+  DDRB  |= B00000011;  //set PB1-PB0 to output (D7-D6)
 }
 
 //disable Arduino control bus; CE* and WE* both HighZ
@@ -157,17 +157,17 @@ void ena_cbus() {
 byte dbus_read()
 {
   NOP();				                          //long live the Logic Analyzer
-  return ( ((PIND & B00000011)     ) +    //read PD0, PD1 (D1-D0)
+  return ( ((PIND & B00000011)     ) +    //read PD1-PD0 (D1-D0)
            ((PIND & B11110000) >> 2) +    //read PD7-PD4 (D5-D2)
-           ((PINB & B00000011) << 6) );   //read PB1, PBO (D7, D6)
+           ((PINB & B00000011) << 6) );   //read PB1-PBO (D7-D6)
 }
 
 //place a byte on the databus
 void dbus_write(byte data)
 {
-  PORTD |= ((data     ) & B00000011);     //write PD0, PD1 (D0, D1)
-  PORTD |= ((data << 2) & B11110000);     //write PD7-PD3 (D5-D1)
-  PORTB |= ((data >> 6) & B00000011);     //write PB1, PBO (D7, D6)
+  PORTD |= ((data     ) & B00000011);     //write PD1-PD0 (D1-D0)
+  PORTD |= ((data << 2) & B11110000);     //write PD7-PD4 (D5-D2)
+  PORTB |= ((data >> 6) & B00000011);     //write PB1-PBO (D7-D6)
 }
 
 //shift out the given address to the 74HC595 registers
