@@ -433,7 +433,7 @@ void setup() {
     eflash(2);
   }
   //check for valid DSR mark (>AA) at first DSR RAM byte
-  if (  Rbyte(0x0000) != 0xAb ) {
+  if (  Rbyte(0x0000) != 0xAA ) {
     //loading DSR unsuccessful -> flash error 3
     eflash(3);
   }
@@ -447,11 +447,7 @@ void setup() {
       DSK[ii].close();                                //close current SD DOAD file
     }
   }
-
-  if ( !aDSK[1] ) {                                   //check if DSK1 is available (it should)
-    eflash(4);                                        //could not open DSK1 -> flash error 4
-  }
-  
+ 
   //--------------------------------------------------------------------------------------------- Let's go
   //"initialize FD1771":
   FDrstr();   //"Restore" command
