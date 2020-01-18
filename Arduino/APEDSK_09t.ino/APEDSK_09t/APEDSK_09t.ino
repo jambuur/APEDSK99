@@ -59,11 +59,9 @@
 #define digitalState(P)((uint8_t)isHigh(P))
 
 //74HC595 shift-out definitions
-//#define DS	  17	//PC3
-#define DS    19  //PC5
-#define LATCH	18	//PC4
-//#define CLOCK	19	//PC5
-#define CLOCK  17  //PC3
+#define DS      17  //PC5
+#define LATCH	  18	//PC4
+#define CLOCK   19  //PC3
 
 //IO lines for Arduino RAM control
 #define CE  14  //PC0  LED flashes for both Arduino CE* and TI MBE*
@@ -71,8 +69,7 @@
 
 //IO lines for TI99/4a control
 #define TI_BUFFERS 	  15  //PC1; 74LS541 buffers enable/disable
-//#define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
-#define TI_READY      3    //PD3; TI READY line + enable/disable 74HC595 shift registers
+#define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
 //CDSK DOAD file name (DSKx 1-3 (2 bytes) + 8 bytes/characters)
@@ -127,15 +124,15 @@ void NOP() {
 
 //switch databus to INPUT state for reading from RAM
 void dbus_in() {
-  DDRD  &= B00001100;  //set PD7-PD4 and PD1-PD0 to input (D5-D2, D1-D0)
-  PORTD &= B00001100;  //initialise input pins
+  DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
+  PORTD &= B00000101;  //initialise input pins
   DDRB  &= B11111100;  //set PB1-PB0 to input (D7-D6)
   PORTB &= B11111100;  //initialise input pins
 }
 
 //switch databus to OUTPUT state for writing to RAM
 void dbus_out() {
-  DDRD  |= B11110011;  //set PD7-PD4 and PD1-PD0 to output (D5-D2, D1-D0)
+  DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
   DDRB  |= B00000011;  //set PB1-PB0 to output (D7-D6)
 }
 
@@ -157,16 +154,16 @@ void ena_cbus() {
 byte dbus_read()
 {
   NOP();				                          //long live the Logic Analyzer
-  return ( ((PIND & B00000011)     ) +    //read PD1-PD0 (D1-D0)
-           ((PIND & B11110000) >> 2) +    //read PD7-PD4 (D5-D2)
+  return ( ((PIND & B00000010) >> 1) +    //read PD1 (D0)
+           ((PIND & B11111000) >> 2) +    //read PD7-PD3 (D5-D1)
            ((PINB & B00000011) << 6) );   //read PB1-PBO (D7-D6)
 }
 
 //place a byte on the databus
 void dbus_write(byte data)
 {
-  PORTD |= ((data     ) & B00000011);     //write PD1-PD0 (D1-D0)
-  PORTD |= ((data << 2) & B11110000);     //write PD7-PD4 (D5-D2)
+  PORTD |= ((data << 1) & B00000010);     //write PD1 (D0)
+  PORTD |= ((data << 2) & B11111000);     //write PD7-PD3 (D5-D1)
   PORTB |= ((data >> 6) & B00000011);     //write PB1-PBO (D7-D6)
 }
 
@@ -256,8 +253,10 @@ void Wbyte(unsigned int address, byte data)
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
+  NOP();
   pinAsOutput(TI_READY);   //switch from HighZ to output
   digitalHigh(TI_BUFFERS); //disables 74LS541's
+  NOP();
   ena_cbus();              //Arduino in RAM control
 }
 
@@ -289,12 +288,12 @@ void eflash(byte error)
     for (byte flash = 0; flash < error; flash++)
     {
       //set RAM CE* LOW, turns on LED
-      digitalLow(0);
+      digitalLow(CE);
       //LED is on for a bit
       delay(LED_ON);
 
       //turn it off
-      digitalHigh(0);
+      digitalHigh(CE);
       //LED is off for a bit
       delay(LED_OFF);
     }
