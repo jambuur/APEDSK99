@@ -253,6 +253,7 @@ void Wbyte(unsigned int address, byte data)
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
+  NOP();
   pinAsOutput(TI_READY);   //switch from HighZ to output
   digitalHigh(TI_BUFFERS); //disables 74LS541's
   ena_cbus();              //Arduino in RAM control
@@ -382,7 +383,13 @@ void RWsector( boolean rw ) {
         Ssecidx++;                                    //no; increase Sector #
         Wbyte(WSECTR, Ssecidx);                       //sync Sector Registers
         Wbyte(RSECTR, Ssecidx);                       //""
-        Sbtidx = 0;                                   //adjust sector byte counter
+        if ( rw ) {                                   //do we need to read a sector?
+          Wbyte(RDATA, DSK[cDSK].read() );            //yes -> supply next byte
+        }
+        else {
+          DSK[cDSK].write( Rbyte(WDATA) );            //no -> next byte to DOAD
+        }
+        Sbtidx = 1;                                   //adjust sector byte counter
       }
       else {
         noExec();                                     //all sectors done; exit
