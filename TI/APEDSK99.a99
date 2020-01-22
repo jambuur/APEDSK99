@@ -248,8 +248,8 @@ H003	BL	@ERROR1			error 7
 *H012	BL	@ERROR2			gracefull error 23
 *	DATA	>2300			
 					
-H013	MOVB	R1,@WSECTR		load sector register
-	MOV	@>004E(R9),R2		data buffer address
+*H013	MOVB	R1,@WSECTR		load sector register APEDSK: already done above
+H013	MOV	@>004E(R9),R2		data buffer address
 	MOVB	@>004D(R9),R0		read or write ?
 	JEQ	H014			write
 	BL	@VDPWRI			read FD = write to VDP buffer
