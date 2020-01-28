@@ -255,8 +255,8 @@ inline void TIstop() __attribute__((always_inline));
 void TIstop() {
   NOP();
   digitalHigh(TI_BUFFERS); //disables 74LS541's
-  pinAsOutput(TI_READY);   //switch from HighZ to output
-  ena_cbus();              //Arduino in RAM control
+  pinAsOutput(TI_READY);   //switch from HighZ to output (default LOW)
+  ena_cbus();              //Arduino in control of RAM
 }
 
 //enable TI I/O, disable Arduino shift registers and control bus
