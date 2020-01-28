@@ -254,8 +254,8 @@ void Wbyte(unsigned int address, byte data)
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
   NOP();
-  pinAsOutput(TI_READY);   //switch from HighZ to output
   digitalHigh(TI_BUFFERS); //disables 74LS541's
+  pinAsOutput(TI_READY);   //switch from HighZ to output
   ena_cbus();              //Arduino in RAM control
 }
 
