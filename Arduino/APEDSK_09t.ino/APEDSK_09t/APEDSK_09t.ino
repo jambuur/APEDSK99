@@ -120,7 +120,7 @@ void NOP() {
 }
 
 //databus:
-//D0,0,PD0 / D1,1,PD1 / D2,4,PD4 / D3,5,PD5 / D4,6,PD6 / D5,7,PD7 / D6,8,PD8 / D7,9,PD9
+//D0,1,PD1 / D1,3,PD3 / D2,4,PD4 / D3,5,PD5 / D4,6,PD6 / D5,7,PD7 / D6,8,PD8 / D7,9,PD9
 
 //switch databus to INPUT state for reading from RAM
 void dbus_in() {
