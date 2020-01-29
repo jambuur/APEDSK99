@@ -331,11 +331,12 @@ boolean cDir              = HIGH;   //current step direction, step in(wards) tow
 void FDrstr(void) {
   Wbyte(RSTAT,  0);       //clear Status Register
   Wbyte(RTRACK, 0);       //clear Read Track register
-  Wbyte(RSECTR, 0);	      //clear Read Sector register
+  Wbyte(RSECTR, 0x01);	      //default value in Read Sector register
   Wbyte(RDATA,  0);		    //clear Read Data register
   Wbyte(WTRACK, 0);       //clear Write Track register
-  Wbyte(WSECTR, 0);	      //clear Write Sector register
+  Wbyte(WSECTR, 0x01);	      //default value in Write Sector register
   Wbyte(WDATA,  0);       //clear Write Data register
+  Wbyte(RSTAT, NOERROR);	//clear Status register
 }
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
