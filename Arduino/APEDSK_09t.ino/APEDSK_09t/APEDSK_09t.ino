@@ -253,7 +253,7 @@ void Wbyte(unsigned int address, byte data)
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
-  NOP();
+  //NOP();
   digitalHigh(TI_BUFFERS); //disables 74LS541's
   pinAsOutput(TI_READY);   //switch from HighZ to output (default LOW)
   ena_cbus();              //Arduino in control of RAM
@@ -331,10 +331,10 @@ boolean cDir              = HIGH;   //current step direction, step in(wards) tow
 void FDrstr(void) {
   Wbyte(RSTAT,  0);       //clear Status Register
   Wbyte(RTRACK, 0);       //clear Read Track register
-  Wbyte(RSECTR, 0x01);	      //default value in Read Sector register
+  Wbyte(RSECTR, 0x01);	  //default value in Read Sector register
   Wbyte(RDATA,  0);		    //clear Read Data register
   Wbyte(WTRACK, 0);       //clear Write Track register
-  Wbyte(WSECTR, 0x01);	      //default value in Write Sector register
+  Wbyte(WSECTR, 0x01);	  //default value in Write Sector register
   Wbyte(WDATA,  0);       //clear Write Data register
   Wbyte(RSTAT, NOERROR);	//clear Status register
 }
@@ -389,7 +389,7 @@ void RWsector( boolean rw ) {
         }
         else {
           DSK[cDSK].write( Rbyte(WDATA) );            //no -> next byte to DOAD
-        }
+        } 
         Sbtidx = 1;                                   //adjust sector byte counter
       }
       else {
