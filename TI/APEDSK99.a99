@@ -3239,10 +3239,10 @@ H267	INC	R2			increment source ptr
 	JNE	H267			not yet
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0003			address in R0
-	MOVB	R5,@-2(R15)		new # of files
+	MOVB	R6,@-2(R15)		new # of files
 	CLR	R6			
 	S	R0,R2			
-H268	MOVB	R5,@-2(R15)		clear byte
+H268	MOVB	R6,@-2(R15)		clear byte
 	DEC	R2			
 	JNE	H268			
 	JMP	H269			
@@ -3365,7 +3365,7 @@ UDSK	CLR	R4			set Unprotect flag
 PUCPRP	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
 	MOV	@>002C(R9),R8		ptr to next basic token
-	AI	R8,6			skip "PDSK(" / "UDSK("
+	AI	R8,6			skip "PDSK(" / "UDSK(" / "CDSK("
 	BL	@VDPR2B			get next two bytes in R0
 	CI	R0,>C801		>C8=unquoted string, size=1 char
 	JNE	H9900			return (with error) if different
@@ -3374,7 +3374,7 @@ PUCPRP	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@VDPR2B			get next two bytes
 	SWPB	R0			
 *
-	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3/"," or >B6/")", LSB= # of files, 
+	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3 / "," or >B6 / ")", LSB= # of files, 
 	JLT	H9902			>B3
 	JMP	H9901			>B6
 H9902	AI	R0,768			>B3, adjust R0 to positive range
@@ -3391,7 +3391,6 @@ H9901	JEQ	H9900			DSK0 not valid, return with error
 	AI	R0,>0400		set Protect flag
 UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 *
-	
 	LI 	R8,12			current CALL length
 RTNBAS	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
