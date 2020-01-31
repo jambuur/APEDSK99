@@ -1,7 +1,7 @@
 # APEDSK99
 ### *Arduino DSKx emulator shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. It is used together with a SD card shield for storing Disk-On-A-Disk (DOAD) floppy images. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable.  
+APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. It is used together with a SD card shield for storing Disk-On-A-Disk (DOAD) floppy images. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/APEDSK-AU-GH.jpg)
 
@@ -12,6 +12,8 @@ The shield interface to the TI is the familiar design (although without CRU), wi
 The DSR is a modified TI Disk Controller ROM version with the bulk of the changes made to the various low level routines. CRU is emulated through 2 memory mapped addresses, simplifying shield design. By optimising the DSR for reliable SD card access instead of wonky floppies there is a about 1KB DSR space left for future enhancements.
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. Due to the limited number of GPIO pins available, the Arduino RAM interface is a serial-to-parallel scheme through 74HC595 shift registers. 
+
+A LED (yellow or orange of course) indicates if APEDSK99 is being accessed.
 
 ### *How does it work?*
 
@@ -27,9 +29,9 @@ When the TI issues a disk controller command by writing to one of the FD1771 reg
 
 Putting the APEDSK99 shield together is straightforward and no problem to anybody with basic electronic skills. The 74LS541's and the slimline RAM are probably not stock items at your local electronics store but can be easily obtained online.
 
-The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/).
+The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)).
 
-The only thing that needs a little bit of attention is mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/140888520037?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649). The bottom row of pins need to be bent 90 degrees downwards and the top row slightly bent upwards (no more than 45 degrees). Rough up the connector housing at the bottom and the PCB area it will sit on. Clean these surfaces with isopropyl etc and apply some superglue to either one of them. Line up the bottom connector pins with the holes in the PCB (the row closest to the edge) and press the connector firmly to the PCB, making sure all pins stick through to the soldering side. After clamping it for a bit you can solder the bottom row pins. To connect the pins at the top row to the PCB use a suitable length of standard header.
+The only thing that needs a little bit of attention is mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/140888520037?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649). The bottom row of pins need to be bent 90 degrees downwards and the top row slightly bent upwards (no more than 45 degrees). Rough up the connector housing at the bottom and the PCB area it will sit on. Clean these surfaces with isopropyl and apply some superglue to either one of them. Line up the bottom connector pins with the holes in the PCB (the row closest to the edge) and press the connector firmly to the PCB, making sure all pins stick through to the soldering side. After clamping it for a bit the bottom row pinscan now be soldered. The top row pins are connected to the PCB with a suitable length of standard header.
 
 ### *DOAD's*
 
@@ -51,9 +53,9 @@ When a CALL is unsuccesful it generates an "* INCORRECT STATEMENT" error.
 
 ### *Uploading Sketches*
 
-You definitely should switch the TI off before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you need a second Arduino to restore it. Yes I have been there ... several times.  
+You definitely should switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you need a second Arduino to restore it. Yes I have been there ... several times.  
 
-Alternatively you could connect Analog 1 to +5V before uploading with a jumper wire; this disables the TI buffer IC's so you can leave it powered on.
+Alternatively you could connect Analog 1 to +5V with a jumper wire before uploading ; this disables the sideport buffer IC's so you can leave the TI powered on.
 
 ### *Ignition sequence*
 
