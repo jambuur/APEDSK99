@@ -33,6 +33,8 @@ The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](h
 
 The only thing that needs a little bit of attention is mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/140888520037?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649). The bottom row of pins need to be bent 90 degrees downwards and the top row slightly bent upwards (no more than 45 degrees). Rough up the connector housing at the bottom and the PCB area it will sit on. Clean these surfaces with isopropyl and apply some superglue to either one of them. Line up the bottom connector pins with the holes in the PCB (the row closest to the edge) and press the connector firmly to the PCB, making sure all pins stick through to the soldering side. After clamping it for say 10mins the bottom row pins can now be soldered. The top row pins are connected to the PCB with a suitable length of standard header.
 
+The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from just hanging from the sideport. I leave any ideas of housing the stack to your imaginition but I will post my solution once finished.
+
 ### *DOAD's*
 
 The SD card can be filled with as many DOAD's as you see fit :-). DOAD filenames must follow the familiair MS-DOS 8.3 format and have a  ".dsk" extension. At powerup / reset the Arduino looks for optional "DSK1.dsk" / "DSK2.dsk" / "DSK3.dsk" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
