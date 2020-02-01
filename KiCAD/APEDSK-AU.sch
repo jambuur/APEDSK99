@@ -422,9 +422,9 @@ Text Label 7350 3650 2    50   ~ 0
 AD_D3
 Text Label 7350 3550 2    50   ~ 0
 AD_D2
-Text Label 7350 3450 2    50   ~ 0
-AD_D1
 Text Label 7350 3250 2    50   ~ 0
+AD_D1
+Text Label 7350 3150 2    50   ~ 0
 AD_D0
 Text Label 8150 3550 0    50   ~ 0
 ~TIBUF
@@ -470,11 +470,11 @@ F 3 "~" H 3900 950 50  0001 C CNN
 $EndComp
 Text Label 8150 3450 0    50   ~ 0
 ~AD_WE
-Text Label 8150 3350 0    50   ~ 0
+Text Label 8150 3150 0    50   ~ 0
 DS
 Text Label 8150 3250 0    50   ~ 0
 LATCH
-Text Label 8150 3150 0    50   ~ 0
+Text Label 8150 3350 0    50   ~ 0
 CLOCK
 $Comp
 L power:+5V #PWR0110
@@ -588,20 +588,20 @@ Wire Wire Line
 Wire Wire Line
 	3450 6050 4000 6050
 Text Label 7350 3350 2    50   ~ 0
-TI_INT
+~TI_INT
 Wire Wire Line
 	4850 4200 5300 4200
 Text Label 1950 4550 2    50   ~ 0
 ~TIBUF
 Text Label 2000 6950 2    50   ~ 0
 ~TIBUF
-Text Label 7350 3150 2    50   ~ 0
+Text Label 7350 3450 2    50   ~ 0
 ~AR_BUF
 $Comp
-L Device:R_Small_US R2
+L Device:R_Small_US R1
 U 1 1 5D2D3984
 P 8700 3350
-F 0 "R2" H 8768 3396 50  0000 L CNN
+F 0 "R1" H 8768 3396 50  0000 L CNN
 F 1 "5.1K" H 8768 3305 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 8700 3350 50  0001 C CNN
 F 3 "~" H 8700 3350 50  0001 C CNN
@@ -609,10 +609,10 @@ F 3 "~" H 8700 3350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:R_Small_US R3
+L Device:R_Small_US R2
 U 1 1 5D2D398A
 P 9000 3450
-F 0 "R3" H 9068 3496 50  0000 L CNN
+F 0 "R2" H 9068 3496 50  0000 L CNN
 F 1 "5.1K" H 9068 3405 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9000 3450 50  0001 C CNN
 F 3 "~" H 9000 3450 50  0001 C CNN
@@ -620,10 +620,10 @@ F 3 "~" H 9000 3450 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:R_Small_US R4
+L Device:R_Small_US R3
 U 1 1 5D2D3990
 P 9300 3450
-F 0 "R4" H 9368 3496 50  0000 L CNN
+F 0 "R3" H 9368 3496 50  0000 L CNN
 F 1 "5.1K" H 9368 3405 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9300 3450 50  0001 C CNN
 F 3 "~" H 9300 3450 50  0001 C CNN
@@ -644,10 +644,10 @@ F 3 "~" V 9650 3550 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L Device:R_Small_US R5
+L Device:R_Small_US R4
 U 1 1 5D2D399D
 P 9650 3350
-F 0 "R5" H 9718 3396 50  0000 L CNN
+F 0 "R4" H 9718 3396 50  0000 L CNN
 F 1 "68R" H 9718 3305 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 9650 3350 50  0001 C CNN
 F 3 "~" H 9650 3350 50  0001 C CNN
@@ -686,18 +686,7 @@ F 3 "" H 9150 3250 50  0001 C CNN
 	1    9150 3250
 	-1   0    0    -1  
 $EndComp
-$Comp
-L Device:R_Small_US R1
-U 1 1 5D2D39BF
-P 6800 3150
-F 0 "R1" V 6595 3150 50  0000 C CNN
-F 1 "1K" V 6686 3150 50  0000 C CNN
-F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal" H 6800 3150 50  0001 C CNN
-F 3 "~" H 6800 3150 50  0001 C CNN
-	1    6800 3150
-	0    1    1    0   
-$EndComp
-Text Label 6700 3150 2    50   ~ 0
+Text Label 6600 3450 2    50   ~ 0
 READY
 NoConn ~ 4800 6950
 NoConn ~ 4800 6750
@@ -1001,10 +990,6 @@ NoConn ~ 8150 4250
 NoConn ~ 8150 4350
 NoConn ~ 8150 4450
 NoConn ~ 8150 3850
-Wire Wire Line
-	6800 6250 6800 3350
-Wire Wire Line
-	6800 3350 7350 3350
 $Comp
 L power:GND #PWR0122
 U 1 1 5D430C04
@@ -1117,5 +1102,30 @@ CE_245
 Text Label 4600 2250 0    50   ~ 0
 CE_245
 Wire Wire Line
-	6900 3150 7350 3150
+	6900 3450 7350 3450
+$Comp
+L Device:D_Schottky_Small D2
+U 1 1 5E37422E
+P 6800 3450
+F 0 "D2" H 6800 3655 50  0000 C CNN
+F 1 "1N5711" H 6800 3564 50  0000 C CNN
+F 2 "Diode_THT:D_A-405_P5.08mm_Vertical_AnodeUp" V 6800 3450 50  0001 C CNN
+F 3 "~" V 6800 3450 50  0001 C CNN
+	1    6800 3450
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	6600 3450 6700 3450
+Wire Wire Line
+	7350 3350 7050 3350
+Wire Wire Line
+	7050 3350 7050 3050
+Wire Wire Line
+	7050 3050 6100 3050
+Wire Wire Line
+	6100 3050 6100 5250
+Wire Wire Line
+	6100 5250 6800 5250
+Wire Wire Line
+	6800 5250 6800 6250
 $EndSCHEMATC
