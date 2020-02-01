@@ -1,715 +1,729 @@
-159096643224820
-Diode_THT
-Diode_Bridge_15.1x15.1x6.3mm_P10.9mm
-Single phase bridge rectifier case 15.1x15.1mm, pitch 10.9mm, see https://diotec.com/tl_files/diotec/files/pdf/datasheets/pb1000.pdf
-Diode Bridge PB10xxS
+162216185249194
+Resistor_THT
+R_Array_SIP4
+4-pin Resistor SIP pack
+R
 0
 4
 4
-Diode_THT
-Diode_Bridge_15.2x15.2x6.3mm_P10.9mm
-Single phase bridge rectifier case 15.2x15.2mm, pitch 10.9mm, see https://diotec.com/tl_files/diotec/files/pdf/datasheets/kbpc600.pdf
-Diode Bridge KBPC6xx
+Resistor_THT
+R_Array_SIP5
+5-pin Resistor SIP pack
+R
+0
+5
+5
+Resistor_THT
+R_Array_SIP6
+6-pin Resistor SIP pack
+R
+0
+6
+6
+Resistor_THT
+R_Array_SIP7
+7-pin Resistor SIP pack
+R
+0
+7
+7
+Resistor_THT
+R_Array_SIP8
+8-pin Resistor SIP pack
+R
+0
+8
+8
+Resistor_THT
+R_Array_SIP9
+9-pin Resistor SIP pack
+R
+0
+9
+9
+Resistor_THT
+R_Array_SIP10
+10-pin Resistor SIP pack
+R
+0
+10
+10
+Resistor_THT
+R_Array_SIP11
+11-pin Resistor SIP pack
+R
+0
+11
+11
+Resistor_THT
+R_Array_SIP12
+12-pin Resistor SIP pack
+R
+0
+12
+12
+Resistor_THT
+R_Array_SIP13
+13-pin Resistor SIP pack
+R
+0
+13
+13
+Resistor_THT
+R_Array_SIP14
+14-pin Resistor SIP pack
+R
+0
+14
+14
+Resistor_THT
+R_Axial_DIN0204_L3.6mm_D1.6mm_P1.90mm_Vertical
+Resistor, Axial_DIN0204 series, Axial, Vertical, pin pitch=1.9mm, 0.167W, length*diameter=3.6*1.6mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0204 series Axial Vertical pin pitch 1.9mm 0.167W length 3.6mm diameter 1.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0204_L3.6mm_D1.6mm_P2.54mm_Vertical
+Resistor, Axial_DIN0204 series, Axial, Vertical, pin pitch=2.54mm, 0.167W, length*diameter=3.6*1.6mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0204 series Axial Vertical pin pitch 2.54mm 0.167W length 3.6mm diameter 1.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal
+Resistor, Axial_DIN0204 series, Axial, Horizontal, pin pitch=5.08mm, 0.167W, length*diameter=3.6*1.6mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0204 series Axial Horizontal pin pitch 5.08mm 0.167W length 3.6mm diameter 1.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Vertical
+Resistor, Axial_DIN0204 series, Axial, Vertical, pin pitch=5.08mm, 0.167W, length*diameter=3.6*1.6mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0204 series Axial Vertical pin pitch 5.08mm 0.167W length 3.6mm diameter 1.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0204_L3.6mm_D1.6mm_P7.62mm_Horizontal
+Resistor, Axial_DIN0204 series, Axial, Horizontal, pin pitch=7.62mm, 0.167W, length*diameter=3.6*1.6mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0204 series Axial Horizontal pin pitch 7.62mm 0.167W length 3.6mm diameter 1.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical
+Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=2.54mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0207 series Axial Vertical pin pitch 2.54mm 0.25W = 1/4W length 6.3mm diameter 2.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0207_L6.3mm_D2.5mm_P5.08mm_Vertical
+Resistor, Axial_DIN0207 series, Axial, Vertical, pin pitch=5.08mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0207 series Axial Vertical pin pitch 5.08mm 0.25W = 1/4W length 6.3mm diameter 2.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal
+Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal
+Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=10.16mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0207 series Axial Horizontal pin pitch 10.16mm 0.25W = 1/4W length 6.3mm diameter 2.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0207_L6.3mm_D2.5mm_P15.24mm_Horizontal
+Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=15.24mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0207 series Axial Horizontal pin pitch 15.24mm 0.25W = 1/4W length 6.3mm diameter 2.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0309_L9.0mm_D3.2mm_P2.54mm_Vertical
+Resistor, Axial_DIN0309 series, Axial, Vertical, pin pitch=2.54mm, 0.5W = 1/2W, length*diameter=9*3.2mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0309 series Axial Vertical pin pitch 2.54mm 0.5W = 1/2W length 9mm diameter 3.2mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0309_L9.0mm_D3.2mm_P5.08mm_Vertical
+Resistor, Axial_DIN0309 series, Axial, Vertical, pin pitch=5.08mm, 0.5W = 1/2W, length*diameter=9*3.2mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0309 series Axial Vertical pin pitch 5.08mm 0.5W = 1/2W length 9mm diameter 3.2mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0309_L9.0mm_D3.2mm_P12.70mm_Horizontal
+Resistor, Axial_DIN0309 series, Axial, Horizontal, pin pitch=12.7mm, 0.5W = 1/2W, length*diameter=9*3.2mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0309 series Axial Horizontal pin pitch 12.7mm 0.5W = 1/2W length 9mm diameter 3.2mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0309_L9.0mm_D3.2mm_P15.24mm_Horizontal
+Resistor, Axial_DIN0309 series, Axial, Horizontal, pin pitch=15.24mm, 0.5W = 1/2W, length*diameter=9*3.2mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0309 series Axial Horizontal pin pitch 15.24mm 0.5W = 1/2W length 9mm diameter 3.2mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0309_L9.0mm_D3.2mm_P20.32mm_Horizontal
+Resistor, Axial_DIN0309 series, Axial, Horizontal, pin pitch=20.32mm, 0.5W = 1/2W, length*diameter=9*3.2mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0309 series Axial Horizontal pin pitch 20.32mm 0.5W = 1/2W length 9mm diameter 3.2mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0309_L9.0mm_D3.2mm_P25.40mm_Horizontal
+Resistor, Axial_DIN0309 series, Axial, Horizontal, pin pitch=25.4mm, 0.5W = 1/2W, length*diameter=9*3.2mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0309 series Axial Horizontal pin pitch 25.4mm 0.5W = 1/2W length 9mm diameter 3.2mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0411_L9.9mm_D3.6mm_P5.08mm_Vertical
+Resistor, Axial_DIN0411 series, Axial, Vertical, pin pitch=5.08mm, 1W, length*diameter=9.9*3.6mm^2
+Resistor Axial_DIN0411 series Axial Vertical pin pitch 5.08mm 1W length 9.9mm diameter 3.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0411_L9.9mm_D3.6mm_P7.62mm_Vertical
+Resistor, Axial_DIN0411 series, Axial, Vertical, pin pitch=7.62mm, 1W, length*diameter=9.9*3.6mm^2
+Resistor Axial_DIN0411 series Axial Vertical pin pitch 7.62mm 1W length 9.9mm diameter 3.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0411_L9.9mm_D3.6mm_P12.70mm_Horizontal
+Resistor, Axial_DIN0411 series, Axial, Horizontal, pin pitch=12.7mm, 1W, length*diameter=9.9*3.6mm^2
+Resistor Axial_DIN0411 series Axial Horizontal pin pitch 12.7mm 1W length 9.9mm diameter 3.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0411_L9.9mm_D3.6mm_P15.24mm_Horizontal
+Resistor, Axial_DIN0411 series, Axial, Horizontal, pin pitch=15.24mm, 1W, length*diameter=9.9*3.6mm^2
+Resistor Axial_DIN0411 series Axial Horizontal pin pitch 15.24mm 1W length 9.9mm diameter 3.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0411_L9.9mm_D3.6mm_P20.32mm_Horizontal
+Resistor, Axial_DIN0411 series, Axial, Horizontal, pin pitch=20.32mm, 1W, length*diameter=9.9*3.6mm^2
+Resistor Axial_DIN0411 series Axial Horizontal pin pitch 20.32mm 1W length 9.9mm diameter 3.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0411_L9.9mm_D3.6mm_P25.40mm_Horizontal
+Resistor, Axial_DIN0411 series, Axial, Horizontal, pin pitch=25.4mm, 1W, length*diameter=9.9*3.6mm^2
+Resistor Axial_DIN0411 series Axial Horizontal pin pitch 25.4mm 1W length 9.9mm diameter 3.6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0414_L11.9mm_D4.5mm_P5.08mm_Vertical
+Resistor, Axial_DIN0414 series, Axial, Vertical, pin pitch=5.08mm, 2W, length*diameter=11.9*4.5mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0414 series Axial Vertical pin pitch 5.08mm 2W length 11.9mm diameter 4.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0414_L11.9mm_D4.5mm_P7.62mm_Vertical
+Resistor, Axial_DIN0414 series, Axial, Vertical, pin pitch=7.62mm, 2W, length*diameter=11.9*4.5mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0414 series Axial Vertical pin pitch 7.62mm 2W length 11.9mm diameter 4.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0414_L11.9mm_D4.5mm_P15.24mm_Horizontal
+Resistor, Axial_DIN0414 series, Axial, Horizontal, pin pitch=15.24mm, 2W, length*diameter=11.9*4.5mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0414 series Axial Horizontal pin pitch 15.24mm 2W length 11.9mm diameter 4.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0414_L11.9mm_D4.5mm_P20.32mm_Horizontal
+Resistor, Axial_DIN0414 series, Axial, Horizontal, pin pitch=20.32mm, 2W, length*diameter=11.9*4.5mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0414 series Axial Horizontal pin pitch 20.32mm 2W length 11.9mm diameter 4.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0414_L11.9mm_D4.5mm_P25.40mm_Horizontal
+Resistor, Axial_DIN0414 series, Axial, Horizontal, pin pitch=25.4mm, 2W, length*diameter=11.9*4.5mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0414 series Axial Horizontal pin pitch 25.4mm 2W length 11.9mm diameter 4.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0516_L15.5mm_D5.0mm_P5.08mm_Vertical
+Resistor, Axial_DIN0516 series, Axial, Vertical, pin pitch=5.08mm, 2W, length*diameter=15.5*5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0516 series Axial Vertical pin pitch 5.08mm 2W length 15.5mm diameter 5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0516_L15.5mm_D5.0mm_P7.62mm_Vertical
+Resistor, Axial_DIN0516 series, Axial, Vertical, pin pitch=7.62mm, 2W, length*diameter=15.5*5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0516 series Axial Vertical pin pitch 7.62mm 2W length 15.5mm diameter 5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0516_L15.5mm_D5.0mm_P20.32mm_Horizontal
+Resistor, Axial_DIN0516 series, Axial, Horizontal, pin pitch=20.32mm, 2W, length*diameter=15.5*5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0516 series Axial Horizontal pin pitch 20.32mm 2W length 15.5mm diameter 5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0516_L15.5mm_D5.0mm_P25.40mm_Horizontal
+Resistor, Axial_DIN0516 series, Axial, Horizontal, pin pitch=25.4mm, 2W, length*diameter=15.5*5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0516 series Axial Horizontal pin pitch 25.4mm 2W length 15.5mm diameter 5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0516_L15.5mm_D5.0mm_P30.48mm_Horizontal
+Resistor, Axial_DIN0516 series, Axial, Horizontal, pin pitch=30.48mm, 2W, length*diameter=15.5*5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf
+Resistor Axial_DIN0516 series Axial Horizontal pin pitch 30.48mm 2W length 15.5mm diameter 5mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0614_L14.3mm_D5.7mm_P5.08mm_Vertical
+Resistor, Axial_DIN0614 series, Axial, Vertical, pin pitch=5.08mm, 1.5W, length*diameter=14.3*5.7mm^2
+Resistor Axial_DIN0614 series Axial Vertical pin pitch 5.08mm 1.5W length 14.3mm diameter 5.7mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0614_L14.3mm_D5.7mm_P7.62mm_Vertical
+Resistor, Axial_DIN0614 series, Axial, Vertical, pin pitch=7.62mm, 1.5W, length*diameter=14.3*5.7mm^2
+Resistor Axial_DIN0614 series Axial Vertical pin pitch 7.62mm 1.5W length 14.3mm diameter 5.7mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0614_L14.3mm_D5.7mm_P15.24mm_Horizontal
+Resistor, Axial_DIN0614 series, Axial, Horizontal, pin pitch=15.24mm, 1.5W, length*diameter=14.3*5.7mm^2
+Resistor Axial_DIN0614 series Axial Horizontal pin pitch 15.24mm 1.5W length 14.3mm diameter 5.7mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0614_L14.3mm_D5.7mm_P20.32mm_Horizontal
+Resistor, Axial_DIN0614 series, Axial, Horizontal, pin pitch=20.32mm, 1.5W, length*diameter=14.3*5.7mm^2
+Resistor Axial_DIN0614 series Axial Horizontal pin pitch 20.32mm 1.5W length 14.3mm diameter 5.7mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0614_L14.3mm_D5.7mm_P25.40mm_Horizontal
+Resistor, Axial_DIN0614 series, Axial, Horizontal, pin pitch=25.4mm, 1.5W, length*diameter=14.3*5.7mm^2
+Resistor Axial_DIN0614 series Axial Horizontal pin pitch 25.4mm 1.5W length 14.3mm diameter 5.7mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0617_L17.0mm_D6.0mm_P5.08mm_Vertical
+Resistor, Axial_DIN0617 series, Axial, Vertical, pin pitch=5.08mm, 2W, length*diameter=17*6mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0617 series Axial Vertical pin pitch 5.08mm 2W length 17mm diameter 6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0617_L17.0mm_D6.0mm_P7.62mm_Vertical
+Resistor, Axial_DIN0617 series, Axial, Vertical, pin pitch=7.62mm, 2W, length*diameter=17*6mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0617 series Axial Vertical pin pitch 7.62mm 2W length 17mm diameter 6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0617_L17.0mm_D6.0mm_P20.32mm_Horizontal
+Resistor, Axial_DIN0617 series, Axial, Horizontal, pin pitch=20.32mm, 2W, length*diameter=17*6mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0617 series Axial Horizontal pin pitch 20.32mm 2W length 17mm diameter 6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0617_L17.0mm_D6.0mm_P25.40mm_Horizontal
+Resistor, Axial_DIN0617 series, Axial, Horizontal, pin pitch=25.4mm, 2W, length*diameter=17*6mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0617 series Axial Horizontal pin pitch 25.4mm 2W length 17mm diameter 6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0617_L17.0mm_D6.0mm_P30.48mm_Horizontal
+Resistor, Axial_DIN0617 series, Axial, Horizontal, pin pitch=30.48mm, 2W, length*diameter=17*6mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0617 series Axial Horizontal pin pitch 30.48mm 2W length 17mm diameter 6mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0918_L18.0mm_D9.0mm_P7.62mm_Vertical
+Resistor, Axial_DIN0918 series, Axial, Vertical, pin pitch=7.62mm, 4W, length*diameter=18*9mm^2
+Resistor Axial_DIN0918 series Axial Vertical pin pitch 7.62mm 4W length 18mm diameter 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0918_L18.0mm_D9.0mm_P22.86mm_Horizontal
+Resistor, Axial_DIN0918 series, Axial, Horizontal, pin pitch=22.86mm, 4W, length*diameter=18*9mm^2
+Resistor Axial_DIN0918 series Axial Horizontal pin pitch 22.86mm 4W length 18mm diameter 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0918_L18.0mm_D9.0mm_P25.40mm_Horizontal
+Resistor, Axial_DIN0918 series, Axial, Horizontal, pin pitch=25.4mm, 4W, length*diameter=18*9mm^2
+Resistor Axial_DIN0918 series Axial Horizontal pin pitch 25.4mm 4W length 18mm diameter 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0918_L18.0mm_D9.0mm_P30.48mm_Horizontal
+Resistor, Axial_DIN0918 series, Axial, Horizontal, pin pitch=30.48mm, 4W, length*diameter=18*9mm^2
+Resistor Axial_DIN0918 series Axial Horizontal pin pitch 30.48mm 4W length 18mm diameter 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0922_L20.0mm_D9.0mm_P7.62mm_Vertical
+Resistor, Axial_DIN0922 series, Axial, Vertical, pin pitch=7.62mm, 5W, length*diameter=20*9mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0922 series Axial Vertical pin pitch 7.62mm 5W length 20mm diameter 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0922_L20.0mm_D9.0mm_P25.40mm_Horizontal
+Resistor, Axial_DIN0922 series, Axial, Horizontal, pin pitch=25.4mm, 5W, length*diameter=20*9mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0922 series Axial Horizontal pin pitch 25.4mm 5W length 20mm diameter 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_DIN0922_L20.0mm_D9.0mm_P30.48mm_Horizontal
+Resistor, Axial_DIN0922 series, Axial, Horizontal, pin pitch=30.48mm, 5W, length*diameter=20*9mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf
+Resistor Axial_DIN0922 series Axial Horizontal pin pitch 30.48mm 5W length 20mm diameter 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L20.0mm_W6.4mm_P5.08mm_Vertical
+Resistor, Axial_Power series, Axial, Vertical, pin pitch=5.08mm, 4W, length*width*height=20*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Axial Vertical pin pitch 5.08mm 4W length 20mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L20.0mm_W6.4mm_P7.62mm_Vertical
+Resistor, Axial_Power series, Axial, Vertical, pin pitch=7.62mm, 4W, length*width*height=20*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Axial Vertical pin pitch 7.62mm 4W length 20mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L20.0mm_W6.4mm_P22.40mm
+Resistor, Axial_Power series, Box, pin pitch=22.4mm, 4W, length*width*height=20*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 22.4mm 4W length 20mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L20.0mm_W6.4mm_P25.40mm
+Resistor, Axial_Power series, Box, pin pitch=25.4mm, 4W, length*width*height=20*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 25.4mm 4W length 20mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L20.0mm_W6.4mm_P30.48mm
+Resistor, Axial_Power series, Box, pin pitch=30.48mm, 4W, length*width*height=20*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 30.48mm 4W length 20mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L25.0mm_W6.4mm_P27.94mm
+Resistor, Axial_Power series, Box, pin pitch=27.94mm, 5W, length*width*height=25*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 27.94mm 5W length 25mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L25.0mm_W6.4mm_P30.48mm
+Resistor, Axial_Power series, Box, pin pitch=30.48mm, 5W, length*width*height=25*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 30.48mm 5W length 25mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L25.0mm_W9.0mm_P7.62mm_Vertical
+Resistor, Axial_Power series, Axial, Vertical, pin pitch=7.62mm, 7W, length*width*height=25*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Axial Vertical pin pitch 7.62mm 7W length 25mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L25.0mm_W9.0mm_P10.16mm_Vertical
+Resistor, Axial_Power series, Axial, Vertical, pin pitch=10.16mm, 7W, length*width*height=25*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Axial Vertical pin pitch 10.16mm 7W length 25mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L25.0mm_W9.0mm_P27.94mm
+Resistor, Axial_Power series, Box, pin pitch=27.94mm, 7W, length*width*height=25*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 27.94mm 7W length 25mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L25.0mm_W9.0mm_P30.48mm
+Resistor, Axial_Power series, Box, pin pitch=30.48mm, 7W, length*width*height=25*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 30.48mm 7W length 25mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L38.0mm_W6.4mm_P40.64mm
+Resistor, Axial_Power series, Box, pin pitch=40.64mm, 7W, length*width*height=38*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 40.64mm 7W length 38mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L38.0mm_W6.4mm_P45.72mm
+Resistor, Axial_Power series, Box, pin pitch=45.72mm, 7W, length*width*height=38*6.4*6.4mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 45.72mm 7W length 38mm width 6.4mm height 6.4mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L38.0mm_W9.0mm_P40.64mm
+Resistor, Axial_Power series, Box, pin pitch=40.64mm, 9W, length*width*height=38*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 40.64mm 9W length 38mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L38.0mm_W9.0mm_P45.72mm
+Resistor, Axial_Power series, Box, pin pitch=45.72mm, 9W, length*width*height=38*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 45.72mm 9W length 38mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L48.0mm_W12.5mm_P7.62mm_Vertical
+Resistor, Axial_Power series, Axial, Vertical, pin pitch=7.62mm, 15W, length*width*height=48*12.5*12.5mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Axial Vertical pin pitch 7.62mm 15W length 48mm width 12.5mm height 12.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L48.0mm_W12.5mm_P10.16mm_Vertical
+Resistor, Axial_Power series, Axial, Vertical, pin pitch=10.16mm, 15W, length*width*height=48*12.5*12.5mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Axial Vertical pin pitch 10.16mm 15W length 48mm width 12.5mm height 12.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L48.0mm_W12.5mm_P55.88mm
+Resistor, Axial_Power series, Box, pin pitch=55.88mm, 15W, length*width*height=48*12.5*12.5mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 55.88mm 15W length 48mm width 12.5mm height 12.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L48.0mm_W12.5mm_P60.96mm
+Resistor, Axial_Power series, Box, pin pitch=60.96mm, 15W, length*width*height=48*12.5*12.5mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 60.96mm 15W length 48mm width 12.5mm height 12.5mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L50.0mm_W9.0mm_P55.88mm
+Resistor, Axial_Power series, Box, pin pitch=55.88mm, 11W, length*width*height=50*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 55.88mm 11W length 50mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L50.0mm_W9.0mm_P60.96mm
+Resistor, Axial_Power series, Box, pin pitch=60.96mm, 11W, length*width*height=50*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 60.96mm 11W length 50mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L60.0mm_W14.0mm_P10.16mm_Vertical
+Resistor, Axial_Power series, Axial, Vertical, pin pitch=10.16mm, 25W, length*width*height=60*14*14mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Axial Vertical pin pitch 10.16mm 25W length 60mm width 14mm height 14mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L60.0mm_W14.0mm_P66.04mm
+Resistor, Axial_Power series, Box, pin pitch=66.04mm, 25W, length*width*height=60*14*14mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 66.04mm 25W length 60mm width 14mm height 14mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L60.0mm_W14.0mm_P71.12mm
+Resistor, Axial_Power series, Box, pin pitch=71.12mm, 25W, length*width*height=60*14*14mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 71.12mm 25W length 60mm width 14mm height 14mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L75.0mm_W9.0mm_P81.28mm
+Resistor, Axial_Power series, Box, pin pitch=81.28mm, 17W, length*width*height=75*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 81.28mm 17W length 75mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Power_L75.0mm_W9.0mm_P86.36mm
+Resistor, Axial_Power series, Box, pin pitch=86.36mm, 17W, length*width*height=75*9*9mm^3, http://cdn-reichelt.de/documents/datenblatt/B400/5WAXIAL_9WAXIAL_11WAXIAL_17WAXIAL%23YAG.pdf
+Resistor Axial_Power series Box pin pitch 86.36mm 17W length 75mm width 9mm height 9mm
+0
+2
+2
+Resistor_THT
+R_Axial_Shunt_L22.2mm_W8.0mm_PS14.30mm_P25.40mm
+Resistor, Axial_Shunt series, Box, pin pitch=25.4mm, 3W, length*width*height=22.2*8*8mm^3, shunt pin pitch = 14.30mm, http://www.vishay.com/docs/30217/cpsl.pdf
+Resistor Axial_Shunt series Box pin pitch 25.4mm 3W length 22.2mm width 8mm height 8mm shunt pin pitch 14.30mm
 0
 4
 4
-Diode_THT
-Diode_Bridge_15.7x15.7x6.3mm_P10.8mm
-Single phase bridge rectifier case 15.7x15.7
-Diode Bridge
+Resistor_THT
+R_Axial_Shunt_L22.2mm_W9.5mm_PS14.30mm_P25.40mm
+Resistor, Axial_Shunt series, Box, pin pitch=25.4mm, 5W, length*width*height=22.2*9.5*9.5mm^3, shunt pin pitch = 14.30mm, http://www.vishay.com/docs/30217/cpsl.pdf
+Resistor Axial_Shunt series Box pin pitch 25.4mm 5W length 22.2mm width 9.5mm height 9.5mm shunt pin pitch 14.30mm
 0
 4
 4
-Diode_THT
-Diode_Bridge_16.7x16.7x6.3mm_P10.8mm
-Single phase bridge rectifier case 16.7x16.7
-Diode Bridge
+Resistor_THT
+R_Axial_Shunt_L35.3mm_W9.5mm_PS25.40mm_P38.10mm
+Resistor, Axial_Shunt series, Box, pin pitch=38.1mm, 7W, length*width*height=35.3*9.5*9.5mm^3, shunt pin pitch = 25.40mm, http://www.vishay.com/docs/30217/cpsl.pdf
+Resistor Axial_Shunt series Box pin pitch 38.1mm 7W length 35.3mm width 9.5mm height 9.5mm shunt pin pitch 25.40mm
 0
 4
 4
-Diode_THT
-Diode_Bridge_19.0x3.5x10.0mm_P5.0mm
-Vishay GBU rectifier package, 5.08mm pitch, see http://www.vishay.com/docs/88606/g3sba20.pdf
-Vishay GBU rectifier diode bridge
+Resistor_THT
+R_Axial_Shunt_L47.6mm_W9.5mm_PS34.93mm_P50.80mm
+Resistor, Axial_Shunt series, Box, pin pitch=50.8mm, 10W, length*width*height=47.6*9.5*9.5mm^3, shunt pin pitch = 34.93mm, http://www.vishay.com/docs/30217/cpsl.pdf
+Resistor Axial_Shunt series Box pin pitch 50.8mm 10W length 47.6mm width 9.5mm height 9.5mm shunt pin pitch 34.93mm
 0
 4
 4
-Diode_THT
-Diode_Bridge_19.0x19.0x6.8mm_P12.7mm
-Single phase bridge rectifier case 19x19mm, pitch 12.7mm, see https://diotec.com/tl_files/diotec/files/pdf/datasheets/pb1000.pdf
-Diode Bridge PB10xx
+Resistor_THT
+R_Axial_Shunt_L47.6mm_W12.7mm_PS34.93mm_P50.80mm
+Resistor, Axial_Shunt series, Box, pin pitch=50.8mm, 15W, length*width*height=47.6*12.7*12.7mm^3, shunt pin pitch = 34.93mm, http://www.vishay.com/docs/30217/cpsl.pdf
+Resistor Axial_Shunt series Box pin pitch 50.8mm 15W length 47.6mm width 12.7mm height 12.7mm shunt pin pitch 34.93mm
 0
 4
 4
-Diode_THT
-Diode_Bridge_28.6x28.6x7.3mm_P18.0mm_P11.6mm
-Single phase bridge rectifier case 28.6x28.6mm, pitch 18.0mm & 11.6mm, see https://diotec.com/tl_files/diotec/files/pdf/datasheets/kbpc1500fw.pdf
-Diode Bridge KBPCxxxxWP
+Resistor_THT
+R_Bare_Metal_Element_L12.4mm_W4.8mm_P11.40mm
+Resistor, Bare_Metal_Element series, Bare Metal Strip/Wire, Horizontal, pin pitch=11.4mm, 1W, length*width=12.4*4.8mm^2, https://www.bourns.com/pdfs/PWR4412-2S.pdf
+Resistor Bare_Metal_Element series Bare Metal Strip Wire Horizontal pin pitch 11.4mm 1W length 12.4mm width 4.8mm 
 0
-4
-4
-Diode_THT
-Diode_Bridge_32.0x5.6x17.0mm_P10.0mm_P7.5mm
-Diotec 32x5.6x17mm rectifier package, 7.5mm/10mm pitch, see https://diotec.com/tl_files/diotec/files/pdf/datasheets/b40c3700.pdf
-Diotec rectifier diode bridge
-0
-4
-4
-Diode_THT
-Diode_Bridge_DIP-4_W5.08mm_P2.54mm
-4-lead dip package for diode bridges, row spacing 5.08mm, pin-spacing 2.54mm, see http://www.vishay.com/docs/88898/b2m.pdf
-DIL DIP PDIP 5.08mm 2.54
-0
-4
-4
-Diode_THT
-Diode_Bridge_DIP-4_W7.62mm_P5.08mm
-4-lead dip package for diode bridges, row spacing 7.62 mm (300 mils), see http://cdn-reichelt.de/documents/datenblatt/A400/HDBL101G_20SERIES-TSC.pdf
-DIL DIP PDIP 5.08mm 7.62mm 300mil
-0
-4
-4
-Diode_THT
-Diode_Bridge_Round_D8.9mm
-4-lead round diode bridge package, diameter 8.9mm, pin pitch 5.08mm, see http://cdn-reichelt.de/documents/datenblatt/A400/W005M-W10M_SEP.PDF
-diode bridge 8.9mm 8.85mm WOB pitch 5.08mm
-0
-4
-4
-Diode_THT
-Diode_Bridge_Round_D9.0mm
-4-lead round diode bridge package, diameter 9.0mm, pin pitch 5.0mm, see https://diotec.com/tl_files/diotec/files/pdf/datasheets/b40r.pdf
-diode bridge 9.0mm 8.85mm WOB pitch 5.0mm
-0
-4
-4
-Diode_THT
-Diode_Bridge_Round_D9.8mm
-4-lead round diode bridge package, diameter 9.8mm, pin pitch 5.08mm, see http://www.vishay.com/docs/88769/woo5g.pdf
-diode bridge 9.8mm WOG pitch 5.08mm
-0
-4
-4
-Diode_THT
-Diode_Bridge_Vishay_GBL
-Vishay GBL rectifier package, 5.08mm pitch, see http://www.vishay.com/docs/88609/gbl005.pdf
-Vishay GBL rectifier diode bridge
-0
-4
-4
-Diode_THT
-Diode_Bridge_Vishay_GBU
-Vishay GBU rectifier package, 5.08mm pitch, see http://www.vishay.com/docs/88606/g3sba20.pdf
-Vishay GBU rectifier diode bridge
-0
-4
-4
-Diode_THT
-Diode_Bridge_Vishay_KBL
-Vishay KBL rectifier package, 5.08mm pitch, see http://www.vishay.com/docs/88655/kbl005.pdf
-Vishay KBL rectifier diode bridge
-0
-4
-4
-Diode_THT
-Diode_Bridge_Vishay_KBPC1
-Single phase bridge rectifier case KBPC1, see http://www.vishay.com/docs/93585/vs-kbpc1series.pdf
-Diode Bridge
-0
-4
-4
-Diode_THT
-Diode_Bridge_Vishay_KBPC6
-Single phase bridge rectifier case KBPC6, see http://www.vishay.com/docs/93585/vs-kbpc1series.pdf
-Diode Bridge
-0
-4
-4
-Diode_THT
-Diode_Bridge_Vishay_KBU
-Vishay KBU rectifier package, 5.08mm pitch, see http://www.vishay.com/docs/88656/kbu4.pdf
-Vishay KBU rectifier diode bridge
-0
-4
-4
-Diode_THT
-D_5KPW_P7.62mm_Vertical_AnodeUp
-Diode, 5KPW series, Axial, Vertical, pin pitch=7.62mm, , length*diameter=9*8mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5KPW series Axial Vertical pin pitch 7.62mm  length 9mm diameter 8mm
-0
-2
-2
-Diode_THT
-D_5KPW_P7.62mm_Vertical_KathodeUp
-Diode, 5KPW series, Axial, Vertical, pin pitch=7.62mm, , length*diameter=9*8mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5KPW series Axial Vertical pin pitch 7.62mm  length 9mm diameter 8mm
-0
-2
-2
-Diode_THT
-D_5KPW_P12.70mm_Horizontal
-Diode, 5KPW series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=9*8mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5KPW series Axial Horizontal pin pitch 12.7mm  length 9mm diameter 8mm
-0
-2
-2
-Diode_THT
-D_5KP_P7.62mm_Vertical_AnodeUp
-Diode, 5KP series, Axial, Vertical, pin pitch=7.62mm, , length*diameter=7.62*9.53mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5KP series Axial Vertical pin pitch 7.62mm  length 7.62mm diameter 9.53mm
-0
-2
-2
-Diode_THT
-D_5KP_P7.62mm_Vertical_KathodeUp
-Diode, 5KP series, Axial, Vertical, pin pitch=7.62mm, , length*diameter=7.62*9.53mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5KP series Axial Vertical pin pitch 7.62mm  length 7.62mm diameter 9.53mm
-0
-2
-2
-Diode_THT
-D_5KP_P10.16mm_Horizontal
-Diode, 5KP series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=7.62*9.53mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5KP series Axial Horizontal pin pitch 10.16mm  length 7.62mm diameter 9.53mm
-0
-2
-2
-Diode_THT
-D_5KP_P12.70mm_Horizontal
-Diode, 5KP series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=7.62*9.53mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5KP series Axial Horizontal pin pitch 12.7mm  length 7.62mm diameter 9.53mm
-0
-2
-2
-Diode_THT
-D_5W_P5.08mm_Vertical_AnodeUp
-Diode, 5W series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=8.9*3.7mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5W series Axial Vertical pin pitch 5.08mm  length 8.9mm diameter 3.7mm
-0
-2
-2
-Diode_THT
-D_5W_P5.08mm_Vertical_KathodeUp
-Diode, 5W series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=8.9*3.7mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5W series Axial Vertical pin pitch 5.08mm  length 8.9mm diameter 3.7mm
-0
-2
-2
-Diode_THT
-D_5W_P10.16mm_Horizontal
-Diode, 5W series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=8.9*3.7mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5W series Axial Horizontal pin pitch 10.16mm  length 8.9mm diameter 3.7mm
-0
-2
-2
-Diode_THT
-D_5W_P12.70mm_Horizontal
-Diode, 5W series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=8.9*3.7mm^2, , http://www.diodes.com/_files/packages/8686949.gif
-Diode 5W series Axial Horizontal pin pitch 12.7mm  length 8.9mm diameter 3.7mm
-0
-2
-2
-Diode_THT
-D_A-405_P2.54mm_Vertical_AnodeUp
-Diode, A-405 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/A-405.pdf
-Diode A-405 series Axial Vertical pin pitch 2.54mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_A-405_P2.54mm_Vertical_KathodeUp
-Diode, A-405 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/A-405.pdf
-Diode A-405 series Axial Vertical pin pitch 2.54mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_A-405_P5.08mm_Vertical_AnodeUp
-Diode, A-405 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/A-405.pdf
-Diode A-405 series Axial Vertical pin pitch 5.08mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_A-405_P5.08mm_Vertical_KathodeUp
-Diode, A-405 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/A-405.pdf
-Diode A-405 series Axial Vertical pin pitch 5.08mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_A-405_P7.62mm_Horizontal
-Diode, A-405 series, Axial, Horizontal, pin pitch=7.62mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/A-405.pdf
-Diode A-405 series Axial Horizontal pin pitch 7.62mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_A-405_P10.16mm_Horizontal
-Diode, A-405 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/A-405.pdf
-Diode A-405 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_A-405_P12.70mm_Horizontal
-Diode, A-405 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/A-405.pdf
-Diode A-405 series Axial Horizontal pin pitch 12.7mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-15_P2.54mm_Vertical_AnodeUp
-Diode, DO-15 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Vertical pin pitch 2.54mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-15_P2.54mm_Vertical_KathodeUp
-Diode, DO-15 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Vertical pin pitch 2.54mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-15_P3.81mm_Vertical_AnodeUp
-Diode, DO-15 series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Vertical pin pitch 3.81mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-15_P3.81mm_Vertical_KathodeUp
-Diode, DO-15 series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Vertical pin pitch 3.81mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-15_P5.08mm_Vertical_AnodeUp
-Diode, DO-15 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Vertical pin pitch 5.08mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-15_P5.08mm_Vertical_KathodeUp
-Diode, DO-15 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Vertical pin pitch 5.08mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-15_P10.16mm_Horizontal
-Diode, DO-15 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Horizontal pin pitch 10.16mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-15_P12.70mm_Horizontal
-Diode, DO-15 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Horizontal pin pitch 12.7mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-15_P15.24mm_Horizontal
-Diode, DO-15 series, Axial, Horizontal, pin pitch=15.24mm, , length*diameter=7.6*3.6mm^2, , http://www.diodes.com/_files/packages/DO-15.pdf
-Diode DO-15 series Axial Horizontal pin pitch 15.24mm  length 7.6mm diameter 3.6mm
-0
-2
-2
-Diode_THT
-D_DO-27_P5.08mm_Vertical_AnodeUp
-Diode, DO-27 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=9.52*5.33mm^2, , http://www.slottechforum.com/slotinfo/Techstuff/CD2%20Diodes%20and%20Transistors/Cases/Diode%20DO-27.jpg
-Diode DO-27 series Axial Vertical pin pitch 5.08mm  length 9.52mm diameter 5.33mm
-0
-2
-2
-Diode_THT
-D_DO-27_P5.08mm_Vertical_KathodeUp
-Diode, DO-27 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=9.52*5.33mm^2, , http://www.slottechforum.com/slotinfo/Techstuff/CD2%20Diodes%20and%20Transistors/Cases/Diode%20DO-27.jpg
-Diode DO-27 series Axial Vertical pin pitch 5.08mm  length 9.52mm diameter 5.33mm
-0
-2
-2
-Diode_THT
-D_DO-27_P12.70mm_Horizontal
-Diode, DO-27 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=9.52*5.33mm^2, , http://www.slottechforum.com/slotinfo/Techstuff/CD2%20Diodes%20and%20Transistors/Cases/Diode%20DO-27.jpg
-Diode DO-27 series Axial Horizontal pin pitch 12.7mm  length 9.52mm diameter 5.33mm
-0
-2
-2
-Diode_THT
-D_DO-27_P15.24mm_Horizontal
-Diode, DO-27 series, Axial, Horizontal, pin pitch=15.24mm, , length*diameter=9.52*5.33mm^2, , http://www.slottechforum.com/slotinfo/Techstuff/CD2%20Diodes%20and%20Transistors/Cases/Diode%20DO-27.jpg
-Diode DO-27 series Axial Horizontal pin pitch 15.24mm  length 9.52mm diameter 5.33mm
-0
-2
-2
-Diode_THT
-D_DO-34_SOD68_P2.54mm_Vertical_AnodeUp
-Diode, DO-34_SOD68 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=3.04*1.6mm^2, , https://www.nxp.com/docs/en/data-sheet/KTY83_SER.pdf
-Diode DO-34_SOD68 series Axial Vertical pin pitch 2.54mm  length 3.04mm diameter 1.6mm
-0
-2
-2
-Diode_THT
-D_DO-34_SOD68_P2.54mm_Vertical_KathodeUp
-Diode, DO-34_SOD68 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=3.04*1.6mm^2, , https://www.nxp.com/docs/en/data-sheet/KTY83_SER.pdf
-Diode DO-34_SOD68 series Axial Vertical pin pitch 2.54mm  length 3.04mm diameter 1.6mm
-0
-2
-2
-Diode_THT
-D_DO-34_SOD68_P5.08mm_Vertical_AnodeUp
-Diode, DO-34_SOD68 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=3.04*1.6mm^2, , https://www.nxp.com/docs/en/data-sheet/KTY83_SER.pdf
-Diode DO-34_SOD68 series Axial Vertical pin pitch 5.08mm  length 3.04mm diameter 1.6mm
-0
-2
-2
-Diode_THT
-D_DO-34_SOD68_P5.08mm_Vertical_KathodeUp
-Diode, DO-34_SOD68 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=3.04*1.6mm^2, , https://www.nxp.com/docs/en/data-sheet/KTY83_SER.pdf
-Diode DO-34_SOD68 series Axial Vertical pin pitch 5.08mm  length 3.04mm diameter 1.6mm
-0
-2
-2
-Diode_THT
-D_DO-34_SOD68_P7.62mm_Horizontal
-Diode, DO-34_SOD68 series, Axial, Horizontal, pin pitch=7.62mm, , length*diameter=3.04*1.6mm^2, , https://www.nxp.com/docs/en/data-sheet/KTY83_SER.pdf
-Diode DO-34_SOD68 series Axial Horizontal pin pitch 7.62mm  length 3.04mm diameter 1.6mm
-0
-2
-2
-Diode_THT
-D_DO-34_SOD68_P10.16mm_Horizontal
-Diode, DO-34_SOD68 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=3.04*1.6mm^2, , https://www.nxp.com/docs/en/data-sheet/KTY83_SER.pdf
-Diode DO-34_SOD68 series Axial Horizontal pin pitch 10.16mm  length 3.04mm diameter 1.6mm
-0
-2
-2
-Diode_THT
-D_DO-34_SOD68_P12.70mm_Horizontal
-Diode, DO-34_SOD68 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=3.04*1.6mm^2, , https://www.nxp.com/docs/en/data-sheet/KTY83_SER.pdf
-Diode DO-34_SOD68 series Axial Horizontal pin pitch 12.7mm  length 3.04mm diameter 1.6mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P2.54mm_Vertical_AnodeUp
-Diode, DO-35_SOD27 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Vertical pin pitch 2.54mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P2.54mm_Vertical_KathodeUp
-Diode, DO-35_SOD27 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Vertical pin pitch 2.54mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P3.81mm_Vertical_AnodeUp
-Diode, DO-35_SOD27 series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Vertical pin pitch 3.81mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P3.81mm_Vertical_KathodeUp
-Diode, DO-35_SOD27 series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Vertical pin pitch 3.81mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P5.08mm_Vertical_AnodeUp
-Diode, DO-35_SOD27 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Vertical pin pitch 5.08mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P5.08mm_Vertical_KathodeUp
-Diode, DO-35_SOD27 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Vertical pin pitch 5.08mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P7.62mm_Horizontal
-Diode, DO-35_SOD27 series, Axial, Horizontal, pin pitch=7.62mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Horizontal pin pitch 7.62mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P10.16mm_Horizontal
-Diode, DO-35_SOD27 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Horizontal pin pitch 10.16mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-35_SOD27_P12.70mm_Horizontal
-Diode, DO-35_SOD27 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=4*2mm^2, , http://www.diodes.com/_files/packages/DO-35.pdf
-Diode DO-35_SOD27 series Axial Horizontal pin pitch 12.7mm  length 4mm diameter 2mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P2.54mm_Vertical_AnodeUp
-Diode, DO-41_SOD81 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf
-Diode DO-41_SOD81 series Axial Vertical pin pitch 2.54mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P2.54mm_Vertical_KathodeUp
-Diode, DO-41_SOD81 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf
-Diode DO-41_SOD81 series Axial Vertical pin pitch 2.54mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P3.81mm_Vertical_AnodeUp
-Diode, DO-41_SOD81 series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=5.2*2.7mm^2, , https://www.diodes.com/assets/Package-Files/DO-41-Plastic.pdf
-Diode DO-41_SOD81 series Axial Vertical pin pitch 3.81mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P3.81mm_Vertical_KathodeUp
-Diode, DO-41_SOD81 series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=5.2*2.7mm^2, , https://www.diodes.com/assets/Package-Files/DO-41-Plastic.pdf
-Diode DO-41_SOD81 series Axial Vertical pin pitch 3.81mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P5.08mm_Vertical_AnodeUp
-Diode, DO-41_SOD81 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf
-Diode DO-41_SOD81 series Axial Vertical pin pitch 5.08mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P5.08mm_Vertical_KathodeUp
-Diode, DO-41_SOD81 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf
-Diode DO-41_SOD81 series Axial Vertical pin pitch 5.08mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P7.62mm_Horizontal
-Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=7.62mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf
-Diode DO-41_SOD81 series Axial Horizontal pin pitch 7.62mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P10.16mm_Horizontal
-Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf
-Diode DO-41_SOD81 series Axial Horizontal pin pitch 10.16mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-41_SOD81_P12.70mm_Horizontal
-Diode, DO-41_SOD81 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=5.2*2.7mm^2, , http://www.diodes.com/_files/packages/DO-41%20(Plastic).pdf
-Diode DO-41_SOD81 series Axial Horizontal pin pitch 12.7mm  length 5.2mm diameter 2.7mm
-0
-2
-2
-Diode_THT
-D_DO-201AD_P3.81mm_Vertical_AnodeUp
-Diode, DO-201AD series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=9.5*5.2mm^2, , http://www.diodes.com/_files/packages/DO-201AD.pdf
-Diode DO-201AD series Axial Vertical pin pitch 3.81mm  length 9.5mm diameter 5.2mm
-0
-2
-2
-Diode_THT
-D_DO-201AD_P3.81mm_Vertical_KathodeUp
-Diode, DO-201AD series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=9.5*5.2mm^2, , http://www.diodes.com/_files/packages/DO-201AD.pdf
-Diode DO-201AD series Axial Vertical pin pitch 3.81mm  length 9.5mm diameter 5.2mm
-0
-2
-2
-Diode_THT
-D_DO-201AD_P5.08mm_Vertical_AnodeUp
-Diode, DO-201AD series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=9.5*5.2mm^2, , http://www.diodes.com/_files/packages/DO-201AD.pdf
-Diode DO-201AD series Axial Vertical pin pitch 5.08mm  length 9.5mm diameter 5.2mm
-0
-2
-2
-Diode_THT
-D_DO-201AD_P5.08mm_Vertical_KathodeUp
-Diode, DO-201AD series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=9.5*5.2mm^2, , http://www.diodes.com/_files/packages/DO-201AD.pdf
-Diode DO-201AD series Axial Vertical pin pitch 5.08mm  length 9.5mm diameter 5.2mm
-0
-2
-2
-Diode_THT
-D_DO-201AD_P12.70mm_Horizontal
-Diode, DO-201AD series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=9.5*5.2mm^2, , http://www.diodes.com/_files/packages/DO-201AD.pdf
-Diode DO-201AD series Axial Horizontal pin pitch 12.7mm  length 9.5mm diameter 5.2mm
-0
-2
-2
-Diode_THT
-D_DO-201AD_P15.24mm_Horizontal
-Diode, DO-201AD series, Axial, Horizontal, pin pitch=15.24mm, , length*diameter=9.5*5.2mm^2, , http://www.diodes.com/_files/packages/DO-201AD.pdf
-Diode DO-201AD series Axial Horizontal pin pitch 15.24mm  length 9.5mm diameter 5.2mm
-0
-2
-2
-Diode_THT
-D_DO-201AE_P3.81mm_Vertical_AnodeUp
-Diode, DO-201AE series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=9*5.3mm^2, , http://www.farnell.com/datasheets/529758.pdf
-Diode DO-201AE series Axial Vertical pin pitch 3.81mm  length 9mm diameter 5.3mm
-0
-2
-2
-Diode_THT
-D_DO-201AE_P3.81mm_Vertical_KathodeUp
-Diode, DO-201AE series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=9*5.3mm^2, , http://www.farnell.com/datasheets/529758.pdf
-Diode DO-201AE series Axial Vertical pin pitch 3.81mm  length 9mm diameter 5.3mm
-0
-2
-2
-Diode_THT
-D_DO-201AE_P5.08mm_Vertical_AnodeUp
-Diode, DO-201AE series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=9*5.3mm^2, , http://www.farnell.com/datasheets/529758.pdf
-Diode DO-201AE series Axial Vertical pin pitch 5.08mm  length 9mm diameter 5.3mm
-0
-2
-2
-Diode_THT
-D_DO-201AE_P5.08mm_Vertical_KathodeUp
-Diode, DO-201AE series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=9*5.3mm^2, , http://www.farnell.com/datasheets/529758.pdf
-Diode DO-201AE series Axial Vertical pin pitch 5.08mm  length 9mm diameter 5.3mm
-0
-2
-2
-Diode_THT
-D_DO-201AE_P12.70mm_Horizontal
-Diode, DO-201AE series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=9*5.3mm^2, , http://www.farnell.com/datasheets/529758.pdf
-Diode DO-201AE series Axial Horizontal pin pitch 12.7mm  length 9mm diameter 5.3mm
-0
-2
-2
-Diode_THT
-D_DO-201AE_P15.24mm_Horizontal
-Diode, DO-201AE series, Axial, Horizontal, pin pitch=15.24mm, , length*diameter=9*5.3mm^2, , http://www.farnell.com/datasheets/529758.pdf
-Diode DO-201AE series Axial Horizontal pin pitch 15.24mm  length 9mm diameter 5.3mm
-0
-2
-2
-Diode_THT
-D_DO-201_P3.81mm_Vertical_AnodeUp
-Diode, DO-201 series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=9.53*5.21mm^2, , http://www.diodes.com/_files/packages/DO-201.pdf
-Diode DO-201 series Axial Vertical pin pitch 3.81mm  length 9.53mm diameter 5.21mm
-0
-2
-2
-Diode_THT
-D_DO-201_P3.81mm_Vertical_KathodeUp
-Diode, DO-201 series, Axial, Vertical, pin pitch=3.81mm, , length*diameter=9.53*5.21mm^2, , http://www.diodes.com/_files/packages/DO-201.pdf
-Diode DO-201 series Axial Vertical pin pitch 3.81mm  length 9.53mm diameter 5.21mm
-0
-2
-2
-Diode_THT
-D_DO-201_P5.08mm_Vertical_AnodeUp
-Diode, DO-201 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=9.53*5.21mm^2, , http://www.diodes.com/_files/packages/DO-201.pdf
-Diode DO-201 series Axial Vertical pin pitch 5.08mm  length 9.53mm diameter 5.21mm
-0
 2
 2
-Diode_THT
-D_DO-201_P5.08mm_Vertical_KathodeUp
-Diode, DO-201 series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=9.53*5.21mm^2, , http://www.diodes.com/_files/packages/DO-201.pdf
-Diode DO-201 series Axial Vertical pin pitch 5.08mm  length 9.53mm diameter 5.21mm
+Resistor_THT
+R_Bare_Metal_Element_L16.3mm_W4.8mm_P15.30mm
+Resistor, Bare_Metal_Element series, Bare Metal Strip/Wire, Horizontal, pin pitch=15.3mm, 3W, length*width=16.3*4.8mm^2, https://www.bourns.com/pdfs/PWR4412-2S.pdf
+Resistor Bare_Metal_Element series Bare Metal Strip Wire Horizontal pin pitch 15.3mm 3W length 16.3mm width 4.8mm 
 0
 2
 2
-Diode_THT
-D_DO-201_P12.70mm_Horizontal
-Diode, DO-201 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=9.53*5.21mm^2, , http://www.diodes.com/_files/packages/DO-201.pdf
-Diode DO-201 series Axial Horizontal pin pitch 12.7mm  length 9.53mm diameter 5.21mm
+Resistor_THT
+R_Bare_Metal_Element_L21.3mm_W4.8mm_P20.30mm
+Resistor, Bare_Metal_Element series, Bare Metal Strip/Wire, Horizontal, pin pitch=20.3mm, 5W, length*width=21.3*4.8mm^2, https://www.bourns.com/pdfs/PWR4412-2S.pdf
+Resistor Bare_Metal_Element series Bare Metal Strip Wire Horizontal pin pitch 20.3mm 5W length 21.3mm width 4.8mm 
 0
 2
 2
-Diode_THT
-D_DO-201_P15.24mm_Horizontal
-Diode, DO-201 series, Axial, Horizontal, pin pitch=15.24mm, , length*diameter=9.53*5.21mm^2, , http://www.diodes.com/_files/packages/DO-201.pdf
-Diode DO-201 series Axial Horizontal pin pitch 15.24mm  length 9.53mm diameter 5.21mm
+Resistor_THT
+R_Box_L8.4mm_W2.5mm_P5.08mm
+Resistor, Box series, Radial, pin pitch=5.08mm, 0.5W = 1/2W, length*width=8.38*2.54mm^2, http://www.vishay.com/docs/60051/cns020.pdf
+Resistor Box series Radial pin pitch 5.08mm 0.5W = 1/2W length 8.38mm width 2.54mm
 0
 2
 2
-Diode_THT
-D_P600_R-6_P7.62mm_Vertical_AnodeUp
-Diode, P600_R-6 series, Axial, Vertical, pin pitch=7.62mm, , length*diameter=9.1*9.1mm^2, , http://www.vishay.com/docs/88692/p600a.pdf, http://www.diodes.com/_files/packages/R-6.pdf
-Diode P600_R-6 series Axial Vertical pin pitch 7.62mm  length 9.1mm diameter 9.1mm
+Resistor_THT
+R_Box_L13.0mm_W4.0mm_P9.00mm
+Resistor, Box series, Radial, pin pitch=9.00mm, 2W, length*width=13.0*4.0mm^2, http://www.produktinfo.conrad.com/datenblaetter/425000-449999/443860-da-01-de-METALLBAND_WIDERSTAND_0_1_OHM_5W_5Pr.pdf
+Resistor Box series Radial pin pitch 9.00mm 2W length 13.0mm width 4.0mm
 0
 2
 2
-Diode_THT
-D_P600_R-6_P7.62mm_Vertical_KathodeUp
-Diode, P600_R-6 series, Axial, Vertical, pin pitch=7.62mm, , length*diameter=9.1*9.1mm^2, , http://www.vishay.com/docs/88692/p600a.pdf, http://www.diodes.com/_files/packages/R-6.pdf
-Diode P600_R-6 series Axial Vertical pin pitch 7.62mm  length 9.1mm diameter 9.1mm
+Resistor_THT
+R_Box_L14.0mm_W5.0mm_P9.00mm
+Resistor, Box series, Radial, pin pitch=9.00mm, 5W, length*width=14.0*5.0mm^2, http://www.produktinfo.conrad.com/datenblaetter/425000-449999/443860-da-01-de-METALLBAND_WIDERSTAND_0_1_OHM_5W_5Pr.pdf
+Resistor Box series Radial pin pitch 9.00mm 5W length 14.0mm width 5.0mm
 0
 2
 2
-Diode_THT
-D_P600_R-6_P12.70mm_Horizontal
-Diode, P600_R-6 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=9.1*9.1mm^2, , http://www.vishay.com/docs/88692/p600a.pdf, http://www.diodes.com/_files/packages/R-6.pdf
-Diode P600_R-6 series Axial Horizontal pin pitch 12.7mm  length 9.1mm diameter 9.1mm
+Resistor_THT
+R_Box_L26.0mm_W5.0mm_P20.00mm
+Resistor, Box series, Radial, pin pitch=20.00mm, 10W, length*width=26.0*5.0mm^2, http://www.produktinfo.conrad.com/datenblaetter/425000-449999/443860-da-01-de-METALLBAND_WIDERSTAND_0_1_OHM_5W_5Pr.pdf
+Resistor Box series Radial pin pitch 20.00mm 10W length 26.0mm width 5.0mm
 0
 2
 2
-Diode_THT
-D_P600_R-6_P20.00mm_Horizontal
-Diode, P600_R-6 series, Axial, Horizontal, pin pitch=20mm, , length*diameter=9.1*9.1mm^2, , http://www.vishay.com/docs/88692/p600a.pdf, http://www.diodes.com/_files/packages/R-6.pdf
-Diode P600_R-6 series Axial Horizontal pin pitch 20mm  length 9.1mm diameter 9.1mm
+Resistor_THT
+R_Radial_Power_L7.0mm_W8.0mm_Px2.40mm_Py2.30mm
+Resistor, Radial_Power series, Radial, pin pitch=2.40*2.30mm^2, 7W, length*width=7*8mm^2, http://www.vitrohm.com/content/files/vitrohm_series_kv_-_201601.pdf
+Resistor Radial_Power series Radial pin pitch 2.40*2.30mm^2 7W length 7mm width 8mm
 0
 2
 2
-Diode_THT
-D_T-1_P2.54mm_Vertical_AnodeUp
-Diode, T-1 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=3.2*2.6mm^2, , http://www.diodes.com/_files/packages/T-1.pdf
-Diode T-1 series Axial Vertical pin pitch 2.54mm  length 3.2mm diameter 2.6mm
+Resistor_THT
+R_Radial_Power_L9.0mm_W10.0mm_Px2.70mm_Py2.30mm
+Resistor, Radial_Power series, Radial, pin pitch=2.70*2.30mm^2, 17W, length*width=9*10mm^2, http://www.vitrohm.com/content/files/vitrohm_series_kv_-_201601.pdf
+Resistor Radial_Power series Radial pin pitch 2.70*2.30mm^2 17W length 9mm width 10mm
 0
 2
 2
-Diode_THT
-D_T-1_P2.54mm_Vertical_KathodeUp
-Diode, T-1 series, Axial, Vertical, pin pitch=2.54mm, , length*diameter=3.2*2.6mm^2, , http://www.diodes.com/_files/packages/T-1.pdf
-Diode T-1 series Axial Vertical pin pitch 2.54mm  length 3.2mm diameter 2.6mm
+Resistor_THT
+R_Radial_Power_L11.0mm_W7.0mm_P5.00mm
+Resistor, Radial_Power series, Radial, pin pitch=5.00mm, 2W, length*width=11.0*7.0mm^2, http://www.vishay.com/docs/30218/cpcx.pdf
+Resistor Radial_Power series Radial pin pitch 5.00mm 2W length 11.0mm width 7.0mm
 0
 2
 2
-Diode_THT
-D_T-1_P5.08mm_Horizontal
-Diode, T-1 series, Axial, Horizontal, pin pitch=5.08mm, , length*diameter=3.2*2.6mm^2, , http://www.diodes.com/_files/packages/T-1.pdf
-Diode T-1 series Axial Horizontal pin pitch 5.08mm  length 3.2mm diameter 2.6mm
+Resistor_THT
+R_Radial_Power_L12.0mm_W8.0mm_P5.00mm
+Resistor, Radial_Power series, Radial, pin pitch=5.00mm, 3W, length*width=12.0*8.0mm^2, http://www.vishay.com/docs/30218/cpcx.pdf
+Resistor Radial_Power series Radial pin pitch 5.00mm 3W length 12.0mm width 8.0mm
 0
 2
 2
-Diode_THT
-D_T-1_P10.16mm_Horizontal
-Diode, T-1 series, Axial, Horizontal, pin pitch=10.16mm, , length*diameter=3.2*2.6mm^2, , http://www.diodes.com/_files/packages/T-1.pdf
-Diode T-1 series Axial Horizontal pin pitch 10.16mm  length 3.2mm diameter 2.6mm
+Resistor_THT
+R_Radial_Power_L13.0mm_W9.0mm_P5.00mm
+Resistor, Radial_Power series, Radial, pin pitch=5.00mm, 7W, length*width=13.0*9.0mm^2, http://www.vishay.com/docs/30218/cpcx.pdf
+Resistor Radial_Power series Radial pin pitch 5.00mm 7W length 13.0mm width 9.0mm
 0
 2
 2
-Diode_THT
-D_T-1_P12.70mm_Horizontal
-Diode, T-1 series, Axial, Horizontal, pin pitch=12.7mm, , length*diameter=3.2*2.6mm^2, , http://www.diodes.com/_files/packages/T-1.pdf
-Diode T-1 series Axial Horizontal pin pitch 12.7mm  length 3.2mm diameter 2.6mm
+Resistor_THT
+R_Radial_Power_L16.1mm_W9.0mm_P7.37mm
+Resistor, Radial_Power series, Radial, pin pitch=7.37mm, 10W, length*width=16.1*9mm^2, http://www.vishay.com/docs/30218/cpcx.pdf
+Resistor Radial_Power series Radial pin pitch 7.37mm 10W length 16.1mm width 9mm
 0
 2
 2
