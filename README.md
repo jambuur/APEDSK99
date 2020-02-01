@@ -7,13 +7,13 @@ APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4
 
 APEDSK99 is based on good old through-hole technology. I don't know about you but I don't get any pleasure from SMD soldering.
 
-The shield interface to the TI is the familiar design (although without CRU), with 74LS241's (well, 74LS541's; easier PCB layout) for address/control lines and a 74LS245 for the databus. An 8Kx8 RAM stores the DSR code, uploaded from SD by the Arduino at powerup or reset.  
+The shield interface to the TI is the familiar design, with 74LS241's (74LS541's actually; easier PCB layout) for address/control lines and a 74LS245 for the databus. An 8Kx8 RAM stores the DSR code, uploaded from SD by the Arduino at powerup or reset.  
 
 The DSR is a modified TI Disk Controller ROM version with the bulk of the changes made to the various low level routines. CRU is emulated through 2 memory mapped addresses, simplifying shield design. By optimising the DSR for reliable SD card access instead of wonky floppies there is a about 1KB DSR space left for future enhancements.
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. Due to the limited number of GPIO pins available, the Arduino RAM interface is a serial-to-parallel scheme through 74HC595 shift registers. 
 
-A LED (yellow or orange of course) indicates if APEDSK99 is being accessed.
+A LED (yellow or orange of course) indicates APEDSK99 access.
 
 ### *How does it work?*
 
