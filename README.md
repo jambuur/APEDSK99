@@ -55,7 +55,7 @@ When a CALL is unsuccesful it generates an "* INCORRECT STATEMENT" error.
 
 ### *Uploading Sketches*
 
-You definitely should switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you need a second Arduino to restore it. Yes I have been there ... several times.  
+You definitely should switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you'll need a second Arduino to restore it. Yes I have been there ... several times.  
 
 Alternatively you could connect Analog 1 to +5V with a jumper wire before uploading ; this disables the sideport buffer IC's so you can leave the TI powered on.
 
