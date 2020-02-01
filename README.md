@@ -7,9 +7,9 @@ APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4
 
 APEDSK99 is based on good old through-hole technology. I don't know about you but I don't get any pleasure from SMD soldering.
 
-The TI shield interface is the familiar design, with 74LS241's (74LS541's actually; easier PCB layout) for address/control lines and a 74LS245 for the databus. An 8Kx8 RAM stores the DSR code, uploaded from SD by the Arduino at powerup or reset.  
+The TI shield interface is the familiar design, with 74LS241's (74LS541's actually; easier PCB layout) for address/control lines and a 74LS245 for the databus. An 8Kx8 RAM stores the DSR code. 
 
-The DSR is a modified TI Disk Controller ROM version with the bulk of the changes made to the various low level routines. CRU is emulated through 2 memory mapped addresses, simplifying shield design. By optimising the DSR for reliable SD card access instead of wonky floppies there is a about 1KB DSR space left for future enhancements.
+The DSR is a modified TI Disk Controller ROM version with the bulk of the changes made to the various low level routines. CRU is emulated through 2 memory mapped addresses, simplifying shield design. The DSR, an 8KB binary file (APEDSK99.DSR) in the root of the SD , is loaded into RAM by the Arduino at powerup or reset. By optimising the DSR for reliable SD card access instead of wonky floppies there is a about 1KB DSR space left for future enhancements. 
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. Due to the limited number of GPIO pins available, the Arduino RAM interface is a serial-to-parallel scheme through 74HC595 shift registers. 
 
@@ -33,11 +33,11 @@ The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](h
 
 The only thing that needs a little bit of attention is mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/140888520037?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649). The bottom row of pins need to be bent 90 degrees downwards and the top row slightly bent upwards (no more than 45 degrees). Rough up the connector housing at the bottom and the PCB area it will sit on. Clean these surfaces with isopropyl and apply some superglue to either one of them. Line up the bottom connector pins with the holes in the PCB (the row closest to the edge) and press the connector firmly to the PCB, making sure all pins stick through to the soldering side. After clamping it for say 10mins the bottom row pins can now be soldered. The top row pins are connected to the PCB with a suitable length of standard header.
 
-The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from just hanging from the sideport. I leave any ideas of housing the stack to your imaginition but I will post my solution once finished.
+The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from just hanging from the sideport. I leave any ideas of housing the stack to your imaginition but I will post details of my solution once finished.
 
 ### *DOAD's*
 
-The SD card can be filled with as many DOAD's as you see fit :-). DOAD filenames must follow the familiair MS-DOS 8.3 format and have a  ".dsk" extension. At powerup / reset the Arduino looks for optional "DSK1.dsk" / "DSK2.dsk" / "DSK3.dsk" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
+The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".dsk" extension. At powerup / reset the Arduino looks for optional "DSK1.dsk" / "DSK2.dsk" / "DSK3.dsk" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
 
 Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but quite fast) floppy. Formatting a SS "floppy" takes about 15 seconds. Fun fact: single sided DOAD's automagically become double sided by formatting them accordingly. 
 
