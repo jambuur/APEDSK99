@@ -3437,26 +3437,25 @@ NWDOAD	BL	@VDPR2B			get next two digits
 *-----------------------------------------------------------------
 * Subprogram SDSK: show DOAD mapping
 * ----------------------------------------------------------------
-SDSK	CDSK	LI	R4,>5757	Show DSK flag
+SDSK	LI	R4,>5757		Show DSK flag
 	JMP	PUCPRP		
 *
-SDSK2	LI	R6,>0A00
+SDSK2	MOV	R0,@DTCDSK		save DSKx
+	LI	R6,>0A00
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
 	LI	R2,757			screen starting position
 	BL	@VDPWRI			set VDP address
 *
-	LI	R5,DTCDSK+2		pointer to DOAD name
-
-
-	MOVB    R0,@-2(R15)             save it to VDP
-
-
+	LI	R5,DTCDSK		pointer to drive # and DOAD name
+	LI	R6,10
+H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
+	DEC	R6
+	JNE	H9903
 *	
 	LI	R8,12			current CALL length
 	JMP	RTNBAS			all is well, return without error
-
-
+*
 *-----------------------------------------
 * APEDSK constants
 *-----------------------------------------
