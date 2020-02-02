@@ -53,7 +53,7 @@ CALL CDSK([1-3]),"8 character DOAD name"): This subprogram maps DSK[1-3] to a DO
 
 CALL SDSK([1-3]): This subprogram displays the current DOAD mapping for the drive number provided. It does this by directly writing to VDP screen memory so no useful return value in a variable (yet) I'm afraid.
 
-Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error so check syntax, DOAD name etc.
+Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error so check syntax, DOAD name/length etc.
 
 One thing to keep in mind with Extended Basic is that DSR CALL's don't work from a running program, only from the "command prompt". TI BASIC is not that picky.
 
@@ -65,7 +65,7 @@ I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://en
 
 You definitely should switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you'll need a second Arduino to restore it. Yes I have been there ... several times.  
 
-Alternatively you could connect Analog 1 to +5V with a jumper wire before uploading ; this disables the sideport buffer IC's so you can leave the TI powered on. 
+Alternatively you could connect _Analog 1_ to _+5V_ with a jumper wire before uploading ; this disables the sideport buffer IC's so you can leave the TI powered on. 
 
 ### *Ignition sequence*
 
