@@ -9,7 +9,7 @@ APEDSK99 is based on good old through-hole technology. I don't know about you bu
 
 The TI shield interface is the familiar design, with 74LS241's (74LS541's actually; easier PCB layout) for address/control lines and a 74LS245 for the databus. An 8Kx8 RAM stores the DSR code. 
 
-The DSR is a modified TI Disk Controller ROM version with the bulk of the changes made to the various low level routines. CRU is emulated through 2 memory mapped addresses, simplifying shield design. The DSR, an 8KB binary file (APEDSK99.DSR) in the root of the SD , is loaded into RAM by the Arduino at powerup or reset. By optimising the DSR for reliable SD card access instead of wonky floppies there is a about 1KB DSR space left for future enhancements. 
+The DSR is a modified TI Disk Controller ROM version; most changes are made to the various low level routines. CRU is emulated through 2 memory mapped addresses, simplifying shield design. The DSR, an 8KB binary file (APEDSK99.DSR) in the root of the SD , is loaded into RAM by the Arduino at powerup or reset. By optimising the DSR for reliable SD card access instead of wonky floppies there is a about 1KB DSR space left for future enhancements. 
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. Due to the limited number of GPIO pins available, the Arduino RAM interface is a serial-to-parallel scheme through 74HC595 shift registers. 
 
@@ -37,7 +37,7 @@ The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I
 
 ### *DOAD's*
 
-The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".DSK" extension. At powerup / reset the Arduino looks for optional "_DRIVE01.DSK" / "_DRIVE02.DSK" / "_DRIVE03.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
+The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".DSK" extension. At powerup or reset the Arduino looks for optional "_DRIVE01.DSK" / "_DRIVE02.DSK" / "_DRIVE03.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
 
 Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but quite fast) floppy. Formatting a single-sided "floppy" takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. 
 
@@ -47,11 +47,11 @@ The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
 - CALL PDSK( [1-3] ): This subprogram applies a virtual "adhesive tab" (remember those?) by setting a flag in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Keep in mind that this is separate to the familiar _Protected_ flag as used by disk managers.
 
-- CALL UDSK( [1-3] ): This subprogram removes the virtual "adhesive tab"
+- CALL UDSK( [1-3] ): This subprogram removes the "tab"
 
-- CALL CDSK( [1-3] ),"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with the appropriate amount of spaces if shorter.
+- CALL CDSK( [1-3] ,"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if shorter.
 
-- CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the drive number provided. It does this by directly writing to VDP screen memory so no useful return value in a variable (yet) I'm afraid.
+- CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the particular drive. It does this by directly writing to VDP screen memory so no useful return value in a variable (yet) I'm afraid.
 
 Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error so check syntax, DOAD name/length etc.
 
