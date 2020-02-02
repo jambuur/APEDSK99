@@ -9,7 +9,7 @@ APEDSK99 is based on good old through-hole technology. I don't know about you bu
 
 The TI shield interface is the familiar design, with 74LS241's (74LS541's actually; easier PCB layout) for address/control lines and a 74LS245 for the databus. An 8Kx8 RAM stores the DSR code. 
 
-The DSR is a modified TI Disk Controller ROM version; most changes are made to the various low level routines. CRU is emulated through 2 memory mapped addresses, simplifying shield design. The DSR, an 8KB binary file (APEDSK99.DSR) in the root of the SD , is loaded into RAM by the Arduino at powerup or reset. By optimising the DSR for reliable SD card access instead of wonky floppies there is a about 1KB DSR space left for future enhancements. 
+The DSR is a modified TI Disk Controller ROM version; most changes are made to the various low level routines. CRU is emulated through 2 memory mapped addresses, simplifying shield design. The DSR, an 8KB binary file (APEDSK99.DSR) in the root of the SD, is loaded into RAM by the Arduino at powerup or reset. By optimising the DSR for reliable SD card access instead of wonky floppies there is a about 3/4 KB DSR space left for future enhancements. 
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. Due to the limited number of GPIO pins available, the Arduino RAM interface is a serial-to-parallel scheme through 74HC595 shift registers. 
 
@@ -19,7 +19,7 @@ A LED (yellow or orange of course) indicates APEDSK99 access.
 
 When the TI issues a disk controller command by writing to one of the FD1771 registers, the Arduino receives an interrupt through a 74LS138 3->8 decoder.  The Arduino then:
 
-1. disables the TI interface buffers
+1. disables the sideport interface buffers
 2. halts the TI by making READY low; this also enables the shift registers
 3. enables the Arduino RAM control bus
 4. executes the command including updating the relevant FD1771 and CRU registers
