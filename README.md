@@ -49,9 +49,9 @@ CALL PDSK([1-3]): This subprogram applies a virtual "adhesive tab" (remember tho
 
 CALL UDSK([1-3]): This subprogram removes the virtual "adhesive tab"
 
-CALL CDSK([1-3],"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with the appropriate amount of spaces if shorter.
+CALL CDSK([1-3]),"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with the appropriate amount of spaces if shorter.
 
-CALL SDSK([
+CALL SDSK([1-3]): This subprogram displays the current DOAD mapping for the drive number provided. It does this by directly writing to VDP screen memory so no useful return value in a variable (yet) I'm afraid.
 
 When a CALL is unsuccesful it generates an "* INCORRECT STATEMENT" error.
 
