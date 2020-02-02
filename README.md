@@ -13,7 +13,7 @@ The DSR is a modified TI Disk Controller ROM version; most changes are made to t
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. Due to the limited number of GPIO pins available, the Arduino RAM interface is a serial-to-parallel scheme through 74HC595 shift registers. 
 
-A LED (yellow or orange of course) indicates APEDSK99 access.
+A LED (yellow or orange of course) serves as a visual indication of APEDSK99 access.
 
 ### *How does it work?*
 
