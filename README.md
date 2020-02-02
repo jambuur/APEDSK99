@@ -45,7 +45,7 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
-CALL PDSK([1-3]): This subprogram applies a virtual "adhesive tab" (remember those?) by setting a flag in the Volume Information Block. This flag prevents APEDSK99 writing to the DOAD. Keep in mind that this is separate to the familiar Protected flag as used by disk managers.
+CALL PDSK([1-3]): This subprogram applies a virtual "adhesive tab" (remember those?) by setting a flag in the Volume Information Block. This flag prevents APEDSK99 writing to the DOAD. Keep in mind that this is separate to the familiar _Protected_ flag as used by disk managers.
 
 CALL UDSK([1-3]): This subprogram removes the virtual "adhesive tab"
 
@@ -53,9 +53,13 @@ CALL CDSK([1-3]),"8 character DOAD name"): This subprogram maps DSK[1-3] to a DO
 
 CALL SDSK([1-3]): This subprogram displays the current DOAD mapping for the drive number provided. It does this by directly writing to VDP screen memory so no useful return value in a variable (yet) I'm afraid.
 
-When a CALL is unsuccesful it generates an "* INCORRECT STATEMENT" error.
+Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error so check syntax, DOAD name etc.
 
 One thing to keep in mind with Extended Basic is that DSR CALL's don't work from a running program, only from the "command prompt". TI BASIC is not that picky.
+
+### *Updating the DSR*
+
+I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/). As the binary output file is less than 8KB I use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
 
 ### *Uploading Sketches*
 
