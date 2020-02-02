@@ -45,13 +45,13 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
-- CALL PDSK([1-3]): This subprogram applies a virtual "adhesive tab" (remember those?) by setting a flag in the Volume Information Block. This flag prevents APEDSK99 writing to the DOAD. Keep in mind that this is separate to the familiar _Protected_ flag as used by disk managers.
+- CALL PDSK( [1-3] ): This subprogram applies a virtual "adhesive tab" (remember those?) by setting a flag in the Volume Information Block. This flag prevents APEDSK99 writing to the DOAD. Keep in mind that this is separate to the familiar _Protected_ flag as used by disk managers.
 
-- CALL UDSK([1-3]): This subprogram removes the virtual "adhesive tab"
+- CALL UDSK( [1-3] ): This subprogram removes the virtual "adhesive tab"
 
-- CALL CDSK([1-3]),"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with the appropriate amount of spaces if shorter.
+- CALL CDSK( [1-3] ),"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with the appropriate amount of spaces if shorter.
 
-- CALL SDSK([1-3]): This subprogram displays the current DOAD mapping for the drive number provided. It does this by directly writing to VDP screen memory so no useful return value in a variable (yet) I'm afraid.
+- CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the drive number provided. It does this by directly writing to VDP screen memory so no useful return value in a variable (yet) I'm afraid.
 
 Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error so check syntax, DOAD name/length etc.
 
