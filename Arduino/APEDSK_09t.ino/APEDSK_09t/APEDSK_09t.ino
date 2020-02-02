@@ -308,7 +308,7 @@ File DSK[4];  //file pointers to DOAD's
 //flags for "drives" (aka DOAD files) available
 //(DSK1 should always be available, if not Error 4)
 boolean aDSK[4] = {false, false, false, false};                                     //disk availability
-String  nDSK[4] = {"x", "/DISKS/DSK1.DSK", "/DISKS/DSK2.DSK", "/DISKS/DSK3.DSK"};	  //DOAD file name
+String  nDSK[4] = {"x", "/DISKS/_DRIVE01.DSK", "/DISKS/_DRIVE02.DSK", "/DISKS/_DRIVE03.DSK"};	  //DOAD file name
 boolean pDSK[4] = {false, false, false, false};                                     //DOAD write protect status aka the adhesive tab
 byte    cDSK    = 0;                                                                //current selected DSK
 
@@ -667,7 +667,11 @@ void loop() {
 
           case 10:
             String DOAD = "";
-            
+            cDSK = Rbyte(DTCDSK);
+	    DOAD += char( cDSK );
+	    DOAD += "=";
+	    if ( aDSK[cDSK] ) {
+	      Wbyt
 
             
             
