@@ -3,7 +3,7 @@
 
 APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. It is used together with a SD card shield for storing Disk-On-A-Disk (DOAD) floppy images. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
-![KiCAD 3D view](img/APEDSK-AU-GH.jpg)
+![KiCAD 3D view](img/APEDSK99.jpg)
 
 APEDSK99 is based on good old through-hole technology. I don't know about you but I don't get any pleasure from SMD soldering.
 
