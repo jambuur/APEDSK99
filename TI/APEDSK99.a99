@@ -3386,6 +3386,8 @@ H9901	JEQ	H9900			DSK0 not valid, return with error
 *
 	CI	R4,>5656		CDSK?
 	JEQ	CDSK2			yes, continue after generic prep
+	CI	R4,>5757		SDSK?
+	JEQ	SDSK2			yes, continue after generic prep
 	MOV	R4,R4			Unprotect?
 	JEQ	UPRTCT			yes
 	AI	R0,>0400		set Protect flag
@@ -3400,7 +3402,7 @@ H9900	B	@RTURN1			return to caller (i.e. Basic)
 *-----------------------------------------------------------------
 * Subprogram CDSK: link DOAD to DSKx
 * ----------------------------------------------------------------
-CDSK	LI	R4,>5656		change DSK flag
+CDSK	LI	R4,>5656		Change DSK flag
 	JMP	PUCPRP		
 *
 CDSK2	MOV	R0,@DTCDSK		save DSKx	
@@ -3431,7 +3433,30 @@ NWDOAD	BL	@VDPR2B			get next two digits
 	JEQ	H9900			>FF, DOAD doesn't exist; return with error
 	LI	R8,23			current CALL length
 	JMP	RTNBAS			all is well, return without error
+*			
+*-----------------------------------------------------------------
+* Subprogram SDSK: show DOAD mapping
+* ----------------------------------------------------------------
+SDSK	CDSK	LI	R4,>5757	Show DSK flag
+	JMP	PUCPRP		
 *
+SDSK2	LI	R6,>0A00
+	MOVB	R6,@ACOMND		SDSK command to Arduino
+*
+	LI	R2,757			screen starting position
+	BL	@VDPWRI			set VDP address
+*
+	LI	R5,DTCDSK+2		pointer to DOAD name
+
+
+	MOVB    R0,@-2(R15)             save it to VDP
+
+
+*	
+	LI	R8,12			current CALL length
+	JMP	RTNBAS			all is well, return without error
+
+
 *-----------------------------------------
 * APEDSK constants
 *-----------------------------------------

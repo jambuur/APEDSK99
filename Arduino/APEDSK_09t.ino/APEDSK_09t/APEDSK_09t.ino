@@ -664,6 +664,12 @@ void loop() {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
             }
             break;
+
+          case 10:
+            String DOAD = "";
+            
+
+            
             
         } //end switch accmd commands       
         noExec();                                               //prevent multiple step/seek execution 
