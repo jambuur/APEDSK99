@@ -37,13 +37,13 @@ The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I
 
 ### *DOAD's*
 
-The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".dsk" extension. At powerup / reset the Arduino looks for optional "_DRIVE01.DSK" / "_DRIVE02.DSK" / "_DRIVE03.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
+The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".DSK" extension. At powerup / reset the Arduino looks for optional "_DRIVE01.DSK" / "_DRIVE02.DSK" / "_DRIVE03.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
 
-Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but quite fast) floppy. Formatting a single-sided "floppy" takes about 15 seconds. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. 
+Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but quite fast) floppy. Formatting a single-sided "floppy" takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. 
 
 ### *BASIC support*
 
-The DSR contains 3 additional TI BASIC CALL's to manage DOAD's:
+The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
 CALL PDSK([1-3]): This subprogram applies a virtual "adhesive tab" (remember those?) by setting a flag in the Volume Information Block. This flag prevents APEDSK99 writing to the DOAD. Keep in mind that this is separate to the familiar Protected flag as used by disk managers.
 
@@ -51,7 +51,11 @@ CALL UDSK([1-3]): This subprogram removes the virtual "adhesive tab"
 
 CALL CDSK([1-3],"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with the appropriate amount of spaces if shorter.
 
+CALL SDSK([
+
 When a CALL is unsuccesful it generates an "* INCORRECT STATEMENT" error.
+
+One thing to keep in mind with Extended Basic is that DSR CALL's don't work from a running program, only from the "command prompt". TI BASIC is not that picky.
 
 ### *Uploading Sketches*
 
