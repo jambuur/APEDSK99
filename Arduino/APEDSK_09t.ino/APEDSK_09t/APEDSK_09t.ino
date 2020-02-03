@@ -645,6 +645,7 @@ void loop() {
             break;  
 
           case 9:                                                             //change DOAD assigment
+              Wbyte(0x5FC0, Accmd);
             String DOAD = "";
             for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {   //merge CALL CDSK characters into string
               DOAD += char( Rbyte(ii) );
