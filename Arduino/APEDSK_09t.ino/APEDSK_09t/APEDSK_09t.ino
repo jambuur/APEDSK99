@@ -667,13 +667,19 @@ void loop() {
 
           case 10:
             String DOAD = "";
-            cDSK = Rbyte(DTCDSK);
-	    DOAD += char( cDSK );
-	    DOAD += "=";
-	    if ( aDSK[cDSK] ) {
-	      Wbyt
-
-            
+	    cDSK = Rbyte(DTCDSK);
+	    if aDSK[cDSK} {
+	      DOAD = nDSK(cDSK);
+	    }
+		else {
+	      DOAD = "/DISKS/<no map>";
+		}
+	    Wbyte(DTCDSK,     char(cDSK) );
+            Wbyte(DTCDSK + 1, char('=') );
+	    for (unsigned int ii = 2; ii <= 10; ii++) {
+		Wbyte(DTCDSK + ii, char( DOAD.charAt(ii+6) ) );
+	    }
+ 	    break;         
             
         } //end switch accmd commands       
         noExec();                                               //prevent multiple step/seek execution 
