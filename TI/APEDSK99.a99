@@ -72,10 +72,15 @@ SUB10	DATA	SUB11
 	BYTE	>04
 	TEXT	'UDSK'			un-protect DOAD (remove adhesive tab)
 	EVEN
-SUB11	DATA	>0000
+SUB11	DATA	SUB12
 	DATA	CDSK
 	BYTE	>04
 	TEXT	'CDSK'			set RTC date / time
+	EVEN
+SUB12	DATA	>0000
+	DATA	SDSK
+	BYTE	>04
+	TEXT	'SDSK'
 	EVEN
 
 PWRUP	DATA	>0000			power-up chain (no more)
