@@ -665,7 +665,7 @@ void loop() {
             }
             break;
 
-          case 10:
+          case 16:
             DOAD = "";
 	          cDSK = Rbyte(DTCDSK);
 	          if ( aDSK[cDSK] ) {
@@ -674,7 +674,7 @@ void loop() {
 		        else {
 	            DOAD = "/DISKS/<no map>";
 		        }
-	          Wbyte(DTCDSK,     cDSK );
+	          Wbyte(DTCDSK,     0xAB); //char(cDSK) );
             Wbyte(DTCDSK + 1, 0xAB); //'=' );
 	          for (unsigned int ii = 2; ii <= 10; ii++) {
 		          Wbyte(DTCDSK + ii, 0xFF); //DOAD.charAt(ii+6) );
