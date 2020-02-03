@@ -674,10 +674,10 @@ void loop() {
 		        else {
 	            DOAD = "/DISKS/<no map>";
 		        }
-	          Wbyte(DTCDSK,     char(cDSK) );
-            Wbyte(DTCDSK + 1, char('=') );
+	          Wbyte(DTCDSK,     cDSK );
+            Wbyte(DTCDSK + 1, 0xAB); //'=' );
 	          for (unsigned int ii = 2; ii <= 10; ii++) {
-		          Wbyte(DTCDSK + ii, char( DOAD.charAt(ii+6) ) );
+		          Wbyte(DTCDSK + ii, 0xFF); //DOAD.charAt(ii+6) );
 	          }
  	          break;       
          
