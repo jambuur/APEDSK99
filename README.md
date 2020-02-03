@@ -29,9 +29,9 @@ When the TI issues a disk controller command by writing to one of the FD1771 reg
 
 Putting the APEDSK99 shield together is straightforward and no problem to anybody with basic electronic skills. The 74LS541's and the slimline RAM are probably not stock items at your local electronics store but can be easily obtained online.
 
-The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)).
+The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)). 
 
-The only thing that needs a little bit of attention is mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/140888520037?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649). The bottom row of pins need to be bent 90 degrees downwards and the top row slightly bent upwards (no more than 45 degrees). Rough up the bottom side of the connector housing and the PCB area it will sit on (between edge and white line). Clean the 2 surfaces with isopropyl and apply dots of superglue across the length of 1 roughed up area. Line up the bottom connector pins with the PCB holes 1-43 and press the connector firmly on the PCB, making sure all connector pins stick through to the soldering side. After clamping it for a while the bottom row pins can now be soldered. The top row pins are soldered to the PCB via a suitable length of standard header.
+The only thing that needs a little bit of attention is mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/140888520037?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649). The bottom row of pins need to be bent 90 degrees downwards and the top row slightly bent upwards (no more than 45 degrees). Rough up the bottom side of the connector housing and the PCB area it will sit on (between PCB edge and white line). Clean the 2 surfaces with isopropyl and apply dots of superglue across the length of 1 roughed up area. Line up the bottom connector pins with the row of PCB holes marked 1-43 and press the connector firmly on the PCB, aking sure all connector pins stick through to the soldering side. After clamping it for a while the bottom row pins can now be soldered. The top row pins are soldered to the PCB via a suitable length of standard header.
 
 The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. I leave any ideas of housing the stack to your imaginition but I will post details of my solution once finished.
 
@@ -39,7 +39,7 @@ The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I
 
 The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".DSK" extension. At powerup or reset the Arduino looks for optional "_DRIVE01.DSK" / "_DRIVE02.DSK" / "_DRIVE03.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
 
-Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but quite fast) floppy. Formatting a single-sided "floppy" takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. 
+Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but quite fast and quiet) floppy. Single-sided formatting takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. Reverse is also true but the DOAD will still take DD / 180KB of space on the SD (not that it matters with plenty of GB's to spare).
 
 ### *BASIC support*
 
@@ -55,11 +55,11 @@ The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
 Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error so check syntax, DOAD name/length etc.
 
-One thing to keep in mind with Extended Basic is that DSR CALL's don't work from a running program, only from the "command prompt". TI BASIC is not that picky.
+One thing to keep in mind with _TI EXTENDED BASIC_ is that DSR CALL's don't work from a running program, only from the "command prompt". _TI BASIC_ is not that picky.
 
 ### *Updating the DSR*
 
-I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/). As the binary output file is less than 8KB I use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
+I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/). As the binary output file will be less than 8KB I use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
 
 ### *Uploading Sketches*
 
@@ -77,7 +77,7 @@ If a particular program or module behaves nicely by accessing disks solely throu
 
 ### *Future*
 
-After I came up with the name APEDSK99 I brainwaved that DSK emulation is just a first application. The shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. Instead of trying to squeeze say a tiny SLIP stack into the TI, it's just a matter of adjusting the existing DSR and Bob's your uncle. 
+After I came up with the name APEDSK99 I brainwaved that DSK emulation is just a first application. The shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. Instead of trying to squeeze say a tiny SLIP stack into the TI, it's a matter of using the DSR's generic code segements as existing DSR and Bob's your uncle. 
 
 Speaking of DSR's, initially I considered using a bigger RAM size for larger and/or concurrent DSR's. But after optimising  Arduino RAM R/W access I had DSR loading times reduced to ~450ms so switching DSR's based on CALL's would be entirely feasible. I will go with that approach for now.  
 
