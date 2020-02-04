@@ -3449,17 +3449,17 @@ SDSK2	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,>0A00
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
-	LI	R2,757			screen starting position
+	LIMI 	0			VDP interrupts off so to not mess up TI BASIC screen
+	LI	R2,725			screen starting position
 	BL	@VDPWRI			set VDP address
 *
 	LI	R5,DTCDSK		pointer to drive # and DOAD name
 	LI	R6,10
-H9903	LIMI 	0
-	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
+H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
 	DEC	R6
 	JNE	H9903
 *	
-	LIMI	2
+	LIMI	2			VDP interrupts back on
 	LI	R8,12			current CALL length
 	JMP	RTNBAS			all is well, return without error
 *

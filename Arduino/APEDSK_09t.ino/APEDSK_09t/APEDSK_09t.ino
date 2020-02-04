@@ -674,8 +674,8 @@ void loop() {
 		        else {
 	            DOAD = "/DISKS/<NO MAP>";
 		        }
-	          Wbyte(DTCDSK,     cDSK + 96);
-            Wbyte(DTCDSK + 1, '='  + 96);
+	          Wbyte(DTCDSK,     cDSK+144);
+            Wbyte(DTCDSK + 1, '='+ 96);
 	          for (unsigned int ii = 2; ii <= 10; ii++) {
 		          Wbyte(DTCDSK + ii, (DOAD.charAt(ii+5)) + 96);
 	          }
