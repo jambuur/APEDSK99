@@ -77,7 +77,7 @@ Alternatively you could connect _Analog 1_ to _+5V_ with a jumper wire before up
 
 ### *Ignition sequence*
 
-Switch the TI on first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (faint glow from the LED) and then soft-reset the TI. This sequence prevents the TI corrupting the DSR RAM at powerup.
+Switch the TI on first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (faint glow from the LED) and then soft-reset the TI. This sequence prevents spurious sideport signals corrupting the DSR RAM at powerup.
 
 ### *BUG's*
 
