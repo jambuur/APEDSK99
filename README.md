@@ -59,7 +59,7 @@ The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
 - CALL CDSK( [1-3] ,"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if shorter.
 
-- CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the particular drive. It does this by directly writing to VDP screen memory so no useful return value in a variable (yet) I'm afraid.
+- CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the relevant drive. The output is directly written into the VDP screen memory so no useful return value in a variable (yet) I'm afraid.
 
 Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error so check syntax, DOAD name/length etc.
 
