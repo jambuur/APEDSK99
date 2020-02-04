@@ -3454,10 +3454,12 @@ SDSK2	MOV	R0,@DTCDSK		save DSKx
 *
 	LI	R5,DTCDSK		pointer to drive # and DOAD name
 	LI	R6,10
-H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
+H9903	LIMI 	0
+	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
 	DEC	R6
 	JNE	H9903
 *	
+	LIMI	2
 	LI	R8,12			current CALL length
 	JMP	RTNBAS			all is well, return without error
 *

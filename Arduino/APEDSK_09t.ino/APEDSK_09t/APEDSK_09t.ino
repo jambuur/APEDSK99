@@ -326,6 +326,7 @@ byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
+String DOAD               = "";
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -621,7 +622,7 @@ void loop() {
       if ( Accmd != 0x00 ) {
 
         //----------------------------------------------------------------------------------------- TI BASIC PDSK() and UDSK()
-        switch ( (int)Accmd ) {
+        switch ( Accmd ) {
           case  1:                                                //Unprotect DSK1
           case  2:                                                //Unprotect DSK2
           case  3:                                                //Unprotect DSK3      
@@ -645,7 +646,6 @@ void loop() {
             break;  
 
           case 9:                                                             //change DOAD assigment
-            String DOAD = "";
             for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {   //merge CALL CDSK characters into string
               DOAD += char( Rbyte(ii) );
             }          
@@ -665,19 +665,19 @@ void loop() {
             }
             break;
 
-          case 16:
+          case 10:
             DOAD = "";
 	          cDSK = Rbyte(DTCDSK);
 	          if ( aDSK[cDSK] ) {
 	            DOAD = nDSK[cDSK];
 	          }
 		        else {
-	            DOAD = "/DISKS/<no map>";
+	            DOAD = "/DISKS/<NO MAP>";
 		        }
-	          Wbyte(DTCDSK,     0xAB); //char(cDSK) );
-            Wbyte(DTCDSK + 1, 0xAB); //'=' );
+	          Wbyte(DTCDSK,     cDSK + 96);
+            Wbyte(DTCDSK + 1, '='  + 96);
 	          for (unsigned int ii = 2; ii <= 10; ii++) {
-		          Wbyte(DTCDSK + ii, 0xFF); //DOAD.charAt(ii+6) );
+		          Wbyte(DTCDSK + ii, (DOAD.charAt(ii+5)) + 96);
 	          }
  	          break;       
          
