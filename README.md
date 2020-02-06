@@ -59,25 +59,28 @@ The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
 - CALL CDSK( [1-3] ,"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if shorter.
 
-- CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the relevant drive. The output is directly written into VDP screen memory so no useful return value in a variable (yet) I'm afraid.
+- CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the relevant drive. 
 
-Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error so check syntax, DOAD name/length etc.
+Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error("SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
 One thing to keep in mind with _TI EXTENDED BASIC_ is that DSR CALL's don't work from a running program, only from the "command prompt". _TI BASIC_ is not that picky.
 
 ### *Updating the DSR*
 
-I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/). As the binary output file will be less than 8KB I use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
+I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/) and then use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
 
 ### *Uploading Sketches*
 
-You definitely should switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you'll need a second Arduino to restore it. Yes I have been there ... several times.  
+You should switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you'll need a second Arduino to restore it. Yes I have been there ... several times.  
 
-Alternatively you could connect _Analog 1_ to _+5V_ with a jumper wire before uploading ; this disables the sideport buffer IC's so you can leave the TI powered on. 
+Alternatively you could connect _Analog 1_ to _+5V_ with a jumper wire before uploading; this disables the APEDSK99 sideport buffer IC's so you can leave the TI powered on. In fact, if you intend to put APEDSK999 in some sort of case, plan a switch for this. It's not only handy for uploading sketches but also for temporarily circumventing TI EXTENDED BASIC's LOAD feature or preventing unintentional DSR RAM
+writes (see **Ignition Sequence** below)
 
 ### *Ignition sequence*
 
-Switch the TI on first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (faint glow from the LED) and then soft-reset the TI. This sequence prevents spurious sideport signals corrupting the DSR RAM at powerup.
+The APEDSK99 DSR is in RAM and is permanently enabled within the TI's address space. An unintentional write from the TI can potentially corrupt the DSR code. This could happen for instance when you switch the TI on (spurious signals on the sideport) or insert a cartridge.
+
+So switch the TI on first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (faint glow from the LED) and then soft-reset the TI with <FCTN><QUIT>.
 
 ### *BUG's*
 
