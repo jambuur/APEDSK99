@@ -3459,6 +3459,11 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 	DEC	R6
 	JNE	H9903
 *	
+	LI	R2,735			remove occasional screen artifact in TI BASIC
+	BL	@VDPWRI			screen position just after DOAD name
+	LI	R5,>2000		overwrite possible artifact with <space>
+	MOVB	R5,@-2(R15)		write to VDP
+*
 	LIMI	2			VDP interrupts back on
 	LI	R8,12			current CALL length
 	JMP	RTNBAS			all is well, return without error
@@ -3469,53 +3474,14 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 DSDRVS	DATA	>0F00			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
 SIDE01	DATA	>0100			floppy side select
 *-----------------------------------------
-*
-*------------------------------------------------------------------------
-* DEBUG: >8300->83FF snapshot @>B000, PAB >1000 @>B100, PAB >1100 @>B120
-* -----------------------------------------------------------------------
-*
-	AORG	>5ED0			>5ED0, easy to memorize debug branch address
-*
-DEBUG	DATA	>0000			1st word of original code replaced by B
-OLDWD2	DATA	>0000			2nd word ""
-*	
-	LWPI	>C000
-*
-* copy >8300->83FF TO >B000->B0FF for inspection later
-*
-	LI	R0,>8300	
-	LI	R1,>B000
-	LI	R2,256
-DLOOP1	MOV	*R0+,*R1+
-	DEC	R2
-	JNE	DLOOP1
-*
-	LI	R1,>B100
-	LI	R2,>1000
-	LI	R6,20
-	LI	R15,>8C02
-	BL      @VDPRD                  set VDP to read
-DLOOP2	MOVB    @-1026(R15),*R1+        get # of last drive accessed
-	DEC	R6
-	JNE	DLOOP2
-*
-	LI	R1,>B120
-	LI	R2,>1100
-	LI	R6,20
-	BL      @VDPRD                  set VDP to read
-DLOOP3	MOVB    @-1026(R15),*R1+        get # of last drive accessed
-	DEC	R6
-	JNE	DLOOP3	
-*
-	LWPI	>83E0
-	B	@>AAAA			don't forget to change the B address ;-)
-*
+
 *-----------------------------------------
-* The remaining bytes (>5xxx to >5FE9) all contain >00
-* Word >5FEA maps to the read counter (to generate interrupts when reading data) 
+* The remaining bytes (~>5DAE to >5FDD) all contain >00
+* >5FDE - >5FE7 is drive # and DOAD name storage for BASIC CALL's
+* >5FE8	is the Arduino Command Register (BASIC CALL support)
+* Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers
 * Bytes >5FF0 to >5FFE map to the FDC emulation registers
-*
 *-----------------------------------------					
 *
 	END
