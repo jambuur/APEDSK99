@@ -675,10 +675,17 @@ void loop() {
 	            DOAD = "/DISKS/<NO MAP>";
 		        }
 	          Wbyte(DTCDSK, cDSK+144);
-            Wbyte(DTCDSK + 1, '='+ 96);
+            Wbyte(DTCDSK + 1, '=' + 96);
+	          boolean DOSextension = false;
 	          for (unsigned int ii = 2; ii <= 10; ii++) {
-		          Wbyte(DTCDSK + ii, (DOAD.charAt(ii+5)) + 96);
-	          }
+		          if ( DOSextension = false ) {
+		            Wbyte(DTCDSK + ii, DOAD.charAt(ii+5) + 96);
+		          }
+              else {
+                Wbyte(DTCDSK + ii, " " + 96);
+              }
+              DOSextension = (DOAD.charAt(ii+5) + 96 = 142);
+            }
  	          break;       
          
         } //end switch accmd commands       
