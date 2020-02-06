@@ -326,7 +326,8 @@ byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
-String DOAD               = "";
+String DOAD               = "";	    //TI BASIC CALL support (DOAD name for CDSK and SDSK)
+boolean DOSextention	  = false     //SDSK "." detection
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -354,6 +355,7 @@ void noExec(void) {
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD file name
+  DOSextention = false;      //reset SDSK "." check	
 }
 
 //calculate and return absolute DOAD byte index for R/W commands
@@ -667,26 +669,29 @@ void loop() {
             break;
 
           case 10:
-	          cDSK = Rbyte(DTCDSK);
-	          if ( aDSK[cDSK] ) {
-	            DOAD = nDSK[cDSK];
-	          }
-		        else {
-	            DOAD = "/DISKS/<NO MAP>";
-		        }
-	          Wbyte(DTCDSK, cDSK+144);
-            Wbyte(DTCDSK + 1, '=' + 96);
-	          boolean DOSextension = false;
-	          for (unsigned int ii = 2; ii <= 10; ii++) {
-		          if ( DOSextension = false ) {
-		            Wbyte(DTCDSK + ii, DOAD.charAt(ii+5) + 96);
-		          }
-              else {
-                Wbyte(DTCDSK + ii, " " + 96);
-              }
-              DOSextension = (DOAD.charAt(ii+5) + 96 = 142);
-            }
- 	          break;       
+	  	cDSK = Rbyte(DTCDSK);
+		if ( aDSK[cDSK] ) {
+		  DOAD = nDSK[cDSK];
+		}
+		else {
+		  DOAD = "/DISKS/<NO MAP>";
+		}
+
+		Wbyte(DTCDSK    , cDSK+144);					//drive # in ASCII + TI BASIC bias
+		Wbyte(DTCDSK + 1, '=' + 96);					//"=" in ASCII + TI BASIC bias
+
+		for (unsigned int ii = 2; ii <= 10; ii++) {			//save DOAD name in ASCII + TI BASIC bias
+		  if ( (char CheckDot = DOAD.charAt(ii+5) + 96) == 142 ) {
+		    DOSextension = true;
+		  }
+		  if ( DOSextension == false ) {
+		    Wbyte(DTCDSK + ii, CheckDot);
+		  }
+		  else {
+		    Wbyte(DTCDSK + ii, " " + 96);
+		  }
+		}
+ 	        break;       
          
         } //end switch accmd commands       
         noExec();                                               //prevent multiple step/seek execution 
