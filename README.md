@@ -83,11 +83,11 @@ So switch the TI on first, apply power to APEDSK99, wait a second for APEDSK99 t
 
 ### *BUG's*
 
-If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky direct disk access and weird copy protection schemes will surely fail. 
+If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky direct disk access and weird copy protection schemes will likely fail. 
 
 ### *Future*
 
-After I came up with the name APEDSK99 I brainwaved that DSK emulation is just a first application. The shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. Instead of trying to squeeze a tiny SLIP stack into the TI's meager memory, a revised DSR and the APEDSK99 Arduino sketch as a base will achieve this quite easily.
+After (of course) I came up with the name APEDSK99 I brainwaved that DSK emulation is just a first application. The shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. Instead of trying to squeeze a tiny SLIP stack into the TI's meager memory, a revised DSR and the APEDSK99 Arduino sketch as a base will achieve this quite easily.
 
 Speaking of DSR's, initially I considered using a bigger RAM size for larger and/or concurrent DSR's. But after optimising  Arduino RAM R/W access I had DSR loading times reduced to ~450ms so switching DSR's based on CALL's would be entirely feasible. I will go with that approach for now.  
 
