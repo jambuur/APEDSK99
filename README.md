@@ -61,7 +61,7 @@ The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
 - CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the relevant drive. 
 
-Any unsuccessful CALL returns a generic "* INCORRECT STATEMENT" error("SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
+Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error ("SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
 One thing to keep in mind with _TI EXTENDED BASIC_ is that DSR CALL's don't work from a running program, only from the "command prompt". _TI BASIC_ is not that picky.
 
