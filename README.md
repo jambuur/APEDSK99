@@ -79,7 +79,7 @@ Alternatively you could connect _Analog 1_ to _+5V_ with a jumper wire before up
 
 The APEDSK99 DSR is in RAM and is permanently enabled within the TI's address space. An unintentional write from the TI can potentially corrupt the DSR code. This could happen for instance when you switch the TI on (spurious signals on the sideport) or insert a cartridge.
 
-So switch the TI on first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (faint glow from the LED) and then soft-reset the TI with <FCTN><QUIT>.
+So switch the TI on first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (faint glow from the LED) and then soft-reset the TI with FCTN-QUIT.
 
 ### *BUG's*
 
