@@ -87,9 +87,9 @@ If a particular program or module behaves nicely by accessing disks solely throu
 
 ### *Future*
 
-After (of course) I came up with the name APEDSK99 I brainwaved that DSK emulation is just a first application. The shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. Instead of trying to squeeze a tiny SLIP stack into the TI's meager memory, a revised DSR and the APEDSK99 Arduino sketch as a base will achieve this quite easily.
+After (of course) I came up with the name APEDSK99 I brainwaved that DSK emulation is just a first application. The shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. Instead of trying to squeeze a tiny SLIP stack into the TI's meager memory, a revised DSR and the base routines in the APEDSK99 Arduino sketch will achieve this quite easily.
 
-Speaking of DSR's, initially I considered using a bigger RAM size for larger and/or concurrent DSR's. But after optimising  Arduino RAM R/W access I had DSR loading times reduced to ~450ms so switching DSR's based on CALL's would be entirely feasible. I will go with that approach for now.  
+initially I considered using a bigger RAM size for larger and/or concurrent DSR's. But after optimising  Arduino RAM R/W access I had DSR loading times reduced to ~450ms so switching DSR's based on CALL's would be entirely feasible. I will go with that approach for now. 
 
 ### *Acknowledgements*
 
@@ -99,6 +99,6 @@ Another great source of information has been Monthy Schmidt's excellent book "Te
 
 The Arduino's serial-to-parallel RAM addressing scheme is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER) by Mario Keller.
 
-Last but not least I virtually stumbled across my old friend Frederik "Fred" Kaal who I hadn't seen for 30 years after moving to the other side of the globe. Long live the Web and places such as AtariAge. Fred was a TI wizzard back then and still very much is. His expert input has been invaluable.
+Last but not least I virtually stumbled across my old friend Frederik "Fred" Kaal who I hadn't seen for 30 years after moving to the other side of the globe. Long live the Web and places such as AtariAge. Fred was a TI wizzard back then and still very much [is](ti99-geek.nl). His expert input has been a great help.
 
 
