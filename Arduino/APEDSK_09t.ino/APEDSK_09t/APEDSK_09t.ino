@@ -353,6 +353,7 @@ void noExec(void) {
   Ridx = 0;               //clear READ ID index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
+  DOAD = "";              //clear DOAD file name
 }
 
 //calculate and return absolute DOAD byte index for R/W commands
@@ -586,7 +587,7 @@ void loop() {
 
           case 0xC0:  //read ID
 
-            Ridx++;                                       //index to READ ID values
+            Ridx++;                                       //index to READ ID values (for some reason 0 doesn't work!?)
 
             switch (Ridx) {
               case 1:
@@ -666,7 +667,6 @@ void loop() {
             break;
 
           case 10:
-            DOAD = "";
 	          cDSK = Rbyte(DTCDSK);
 	          if ( aDSK[cDSK] ) {
 	            DOAD = nDSK[cDSK];
@@ -674,7 +674,7 @@ void loop() {
 		        else {
 	            DOAD = "/DISKS/<NO MAP>";
 		        }
-	          Wbyte(DTCDSK,     cDSK+144);
+	          Wbyte(DTCDSK, cDSK+144);
             Wbyte(DTCDSK + 1, '='+ 96);
 	          for (unsigned int ii = 2; ii <= 10; ii++) {
 		          Wbyte(DTCDSK + ii, (DOAD.charAt(ii+5)) + 96);
