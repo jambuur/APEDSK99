@@ -13,7 +13,7 @@ The DSR is based on the TI Disk Controller ROM, adapted to interface with a reli
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. As GPIO pins are in rather short supply, Arduino RAM addressing is serial-to-parallel through 74HC595 shift registers. 
 
-A LED (yellow or orange of course) serves as a visual indication of APEDSK99 access.
+A LED (yellow or orange of course) shows both APEDSK99 access and error codes.
 
 ### *How does it work?*
 
@@ -50,7 +50,7 @@ The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames 
 
 Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but quite fast and quiet) floppy. Single-sided formatting takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. Reverse is also true but the DOAD will still take DD / 180KB of space on the SD (not that it matters with plenty of GB's to spare).
 
-### *BASIC support*
+### *TI BASIC support*
 
 The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
@@ -82,7 +82,15 @@ The APEDSK99 DSR is in RAM and is permanently enabled within the TI's address sp
 
 So switch the TI on first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (faint glow from the LED) and then soft-reset the TI with FCTN-QUIT.
 
-### *BUG's*
+### *Error codes*
+
+The LED flashes in the following intricate patterns to indicate various error conditions:
+
+flash                   : SPI / SD Card fault/not ready
+flash-flash             : can't read DSR binary image (/APEDSK.DSR)
+flash-flash-flash       : no valid DSR header (>AA) at DSR RAM >4000
+
+### *Bug's*
 
 If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky direct disk access and weird copy protection schemes will likely fail. 
 
