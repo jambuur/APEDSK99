@@ -669,26 +669,26 @@ void loop() {
             break;
 
           case 10:
-	  	cDSK = Rbyte(DTCDSK);
+	  	cDSK = Rbyte(DTCDSK);						//is the requested disk mapped to a DOAD?
 		if ( aDSK[cDSK] ) {
-		  DOAD = nDSK[cDSK];
+		  DOAD = nDSK[cDSK];						//yes; get current DOAD name
 		}
 		else {
-		  DOAD = "/DISKS/<NO MAP>";
+		  DOAD = "/DISKS/<NO MAP>";					//no; indicate as such to user
 		}
 
 		Wbyte(DTCDSK    , cDSK+144);					//drive # in ASCII + TI BASIC bias
 		Wbyte(DTCDSK + 1, '=' + 96);					//"=" in ASCII + TI BASIC bias
 
 		for (unsigned int ii = 2; ii <= 10; ii++) {			//save DOAD name in ASCII + TI BASIC bias
-		  if ( (char CheckDot = DOAD.charAt(ii+5) + 96) == 142 ) {
-		    DOSextension = true;
+		  if ( (char CheckDot = DOAD.charAt(ii+5) + 96) == 142 ) {	//for DOAD name < 8 chars we need to pad with " "'s
+		    DOSextension = true;					//"." detected so flag for padding
 		  }
-		  if ( DOSextension == false ) {
+		  if ( DOSextension == false ) {				//DOAD char
 		    Wbyte(DTCDSK + ii, CheckDot);
 		  }
 		  else {
-		    Wbyte(DTCDSK + ii, " " + 96);
+		    Wbyte(DTCDSK + ii, " " + 96);				//" "
 		  }
 		}
  	        break;       
