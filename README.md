@@ -5,7 +5,7 @@ APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4
 
 ![KiCAD 3D view](img/APEDSK99.jpg)
 
-APEDSK99 is based on good old through-hole technology. I don't know about you but I don't get any pleasure from SMD soldering.
+Like the TI, APEDSK99 is based on good old through-hole technology. I don't know about you but I don't get any pleasure from SMD soldering.
 
 The TI shield interface is the familiar design, with 74LS241 buffers (actually they are 74LS541's, easier PCB layout) for address/control lines and a bi-directional 74LS245 buffer for the databus. An 8Kx8 RAM stores the DSR code. 
 
