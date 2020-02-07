@@ -328,7 +328,7 @@ byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
 String DOAD               = "";	    //TI BASIC CALL support (DOAD name for CDSK and SDSK)
-boolean DOSextention	  = false     //SDSK "." detection
+boolean DOSextention	    = false;  //SDSK "." detection
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -627,34 +627,38 @@ void loop() {
 
         //----------------------------------------------------------------------------------------- TI BASIC PDSK() and UDSK()
         switch ( Accmd ) {
-          case  1:                                                //Unprotect DSK1
-          case  2:                                                //Unprotect DSK2
-          case  3:                                                //Unprotect DSK3      
-          case  5:                                                //Protect DSK1
-          case  6:                                                //Protect DSK2
-          case  7:                                                //Protect DSK3
-            cDSK = Accmd & B00000011;                             //strip U/P flag, keep DSKx
+
+          case  1:                                                            //UDSK(1):  Unprotect DSK1
+          case  2:                                                            //UDSK(2):  Unprotect DSK2
+          case  3:                                                            //UDSK(3):  Unprotect DSK3      
+          case  5:                                                            //PDSK(1):  Protect DSK1
+          case  6:                                                            //PDSK(2):  Protect DSK2
+          case  7:                                                            //PDSK(3):  Protect DSK3
+
+            cDSK = Accmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
               
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open DOAD file to change write protect status 
-              DSK[cDSK].seek(0x28);                               //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
-              if ( Accmd & B00000100 ) {                          //Protect bit set?
-                DSK[cDSK].write(0x50);                            //yes; apply adhesive tab
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);              //open DOAD file to change write protect status 
+              DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
+              if ( Accmd & B00000100 ) {                                      //Protect bit set?
+                DSK[cDSK].write(0x50);                                        //yes; apply adhesive tab
                 pDSK[cDSK] = true;
               }
               else {
-                DSK[cDSK].write(0x20);                            //no; remove adhesive tab
+                DSK[cDSK].write(0x20);                                        //no; remove adhesive tab
                 pDSK[cDSK] = false;            
               }
             } 
             break;  
 
-          case 9:                                                             //change DOAD assigment
+          case 9:                                                             //CDSK(): Change DOAD assigment
+ 
             for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {   //merge CALL CDSK characters into string
               DOAD += char( Rbyte(ii) );
             }          
             DOAD.trim();                                                      //remove leading / trailing spaces
             DOAD = "/DISKS/" + DOAD + ".DSK";                                 //construct full DOAD path
+            
             if ( SD.exists(DOAD) ) {                                          //exists?
               cDSK = Rbyte(DTCDSK);                                           //yes; assign to requested DSKx
               nDSK[cDSK] = DOAD;
@@ -669,33 +673,33 @@ void loop() {
             }
             break;
 
-          case 10:
-	  	cDSK = Rbyte(DTCDSK);						//is the requested disk mapped to a DOAD?
-		if ( aDSK[cDSK] ) {
-		  DOAD = nDSK[cDSK];						//yes; get current DOAD name
-		}
-		else {
-		  DOAD = "/DISKS/<NO MAP>";					//no; indicate as such to user
-		}
+          case 10:                                                            //SDSK(): Show DOAD assignment
+	  	      cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
+		        if ( aDSK[cDSK] ) {
+		          DOAD = nDSK[cDSK];						                                  //yes; get current DOAD name
+		        }
+		        else {
+		          DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
+		        }
 
-		Wbyte(DTCDSK    , cDSK+144);					//drive # in ASCII + TI BASIC bias
-		Wbyte(DTCDSK + 1, '=' + 96);					//"=" in ASCII + TI BASIC bias
-
-		for (unsigned int ii = 2; ii <= 10; ii++) {			//save DOAD name in ASCII + TI BASIC bias
-		  if ( (char CheckDot = DOAD.charAt(ii+5) + 96) == 142 ) {	//for DOAD name < 8 chars we need to pad with " "'s
-		    DOSextension = true;					//"." detected so flag for padding
-		  }
-		  if ( DOSextension == false ) {				//DOAD char
-		    Wbyte(DTCDSK + ii, CheckDot);
-		  }
-		  else {
-		    Wbyte(DTCDSK + ii, " " + 96);				//" "
-		  }
-		}
- 	        break;       
+		        Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
+		        Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
+		        
+		        unsigned int ii = 2;                                              
+		        while ( ii <= 10 ) {                                              //prepare the 8 character DOAD name
+              char cDot = DOAD.charAt(ii+5) + 96;                             //read character and add TI BASIC bias
+              if ( cDot == char(142) ) {                                      //is it "."?
+                ii = 11;                                                      //yes; don't print, end loop
+              }                                                   
+              else {
+                Wbyte(DTCDSK + ii, cDot);                                     //no; prepare next character
+		            ii++;
+              }
+		        }
+ 	          break;       
          
         } //end switch accmd commands       
-        noExec();                                               //prevent multiple step/seek execution 
+        noExec();                                                             //prevent multiple step/seek execution 
       } //end check APEDSK99-specific commands                                 
     } //end else 
 
