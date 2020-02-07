@@ -24,7 +24,7 @@
   $Date: Aug 2019 $
   $Revision: 0.12l $
 
-  This software is freeware and can be modified, re-used or thrown away without any restrictions.
+resetFunc();  This software is freeware and can be modified, re-used or thrown away without any restrictions.
 
   Use this code at your own risk.
   I'm not responsible for any bad effect or damages caused by this software
@@ -57,6 +57,8 @@
 #define isHigh(P)((*(pinOfPin(P))& pinMask(P))>0)
 #define isLow(P)((*(pinOfPin(P))& pinMask(P))==0)
 #define digitalState(P)((uint8_t)isHigh(P))
+
+void(* resetFunc) (void) = 0;	//declare reset function at address 0: call with resetFunc();
 
 //74HC595 shift-out definitions
 #define DS      17  //PC5
