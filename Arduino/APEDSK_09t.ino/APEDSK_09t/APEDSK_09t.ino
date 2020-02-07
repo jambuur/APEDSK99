@@ -269,9 +269,8 @@ void TIgo()
 
 //flash error code:
 //  flash                   : SPI / SD Card fault/not ready
-//  flash-flash             : can't read DSR binary image (/APEDSK.DSR)
+//  flash-flash             : can't read DSR binary image (/APEDSK99.DSR)
 //  flash-flash-flash       : no valid DSR header (>AA) at DSR RAM >0000
-//  flash-flash-flash-flash : can't read default DSK1 image (/001.DSK)
 void eflash(byte error)
 {
   //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
