@@ -22,7 +22,7 @@ When the TI issues a disk controller command by writing to one of the FD1771 reg
 1. disables the sideport interface buffers
 2. halts the TI by making READY low; this also enables the shift registers
 3. enables the Arduino RAM control bus
-4. executes the command including updating the relevant FD1771 and CRU registers
+4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
 ### *Construction*
