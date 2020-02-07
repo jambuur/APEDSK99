@@ -58,8 +58,6 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 #define isLow(P)((*(pinOfPin(P))& pinMask(P))==0)
 #define digitalState(P)((uint8_t)isHigh(P))
 
-void(* resetFunc) (void) = 0;	//declare reset function at address 0: call with resetFunc();
-
 //74HC595 shift-out definitions
 #define DS      17  //PC5
 #define LATCH	  18	//PC4
@@ -255,7 +253,6 @@ void Wbyte(unsigned int address, byte data)
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
-  //NOP();
   digitalHigh(TI_BUFFERS); //disables 74LS541's
   pinAsOutput(TI_READY);   //switch from HighZ to output (default LOW)
   ena_cbus();              //Arduino in control of RAM
@@ -674,6 +671,7 @@ void loop() {
             break;
 
           case 10:                                                            //SDSK(): Show DOAD assignment
+          
 	  	      cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
 		        if ( aDSK[cDSK] ) {
 		          DOAD = nDSK[cDSK];						                                  //yes; get current DOAD name
@@ -697,7 +695,7 @@ void loop() {
               }
 		        }
  	          break;       
-         
+
         } //end switch accmd commands       
         noExec();                                                             //prevent multiple step/seek execution 
       } //end check APEDSK99-specific commands                                 
