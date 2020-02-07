@@ -86,9 +86,9 @@ So switch thon e TI first, apply power to APEDSK99, wait a second for APEDSK99 t
 
 The LED flashes in the following intricate patterns to indicate various error conditions:
 
-flash                   : SPI / SD Card fault/not ready
-flash-flash             : can't read DSR binary image (/APEDSK.DSR)
-flash-flash-flash       : no valid DSR header (>AA) at DSR RAM >4000
+1. flash                   : SPI / SD Card fault/not ready
+2. flash-flash             : can't read DSR binary image (/APEDSK.DSR)
+3. flash-flash-flash       : no valid DSR header (>AA) at DSR RAM >4000
 
 ### *Bug's*
 
