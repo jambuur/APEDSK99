@@ -41,7 +41,8 @@ After clamping it for a while the bottom row pins can now be soldered.
 
 - The top row pins are soldered to the PCB via a suitable length of standard header.
 
-The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. I leave any ideas of a suitable housing for the the stack to your imaginition as I haven't put anything together yet. However, I will keep you posted on a couple of ideas I have.
+The Arduino shield stack (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy 
+case.
 
 ### *DOAD's*
 
