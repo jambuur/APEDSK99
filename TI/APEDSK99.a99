@@ -77,10 +77,15 @@ SUB11	DATA	SUB12
 	BYTE	>04
 	TEXT	'CDSK'			set RTC date / time
 	EVEN
-SUB12	DATA	>0000
+SUB12	DATA	SUB13
 	DATA	SDSK
 	BYTE	>04
 	TEXT	'SDSK'
+	EVEN
+SUB13	DATA	>0000
+	DATA	FDSK
+	BYTE	>04
+	TEXT	'FDSK'
 	EVEN
 
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3393,16 +3398,16 @@ H9901	JEQ	H9900			DSK0 not valid, return with error
 	JEQ	CDSK2			yes, continue after generic prep
 	CI	R4,>5757		SDSK?
 	JEQ	SDSK2			yes, continue after generic prep
+	CI	R4,>5858
+	JEQ	FDSK
+*
 	MOV	R4,R4			Unprotect?
 	JEQ	UPRTCT			yes
 	AI	R0,>0400		set Protect flag
 UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 *
 	LI 	R8,12			current CALL length
-RTNBAS	CLR	@>0050(R9)		clear error flag		
-	A	R8, @>002C(R9)		add call length to token pointer		
-	SZCB	@>0042(R9),@>0042(R9)	clear current token
-H9900	B	@RTURN1			return to caller (i.e. Basic)
+	JMP	RTNBAS
 *			
 *-----------------------------------------------------------------
 * Subprogram CDSK: link DOAD to DSKx
@@ -3439,6 +3444,15 @@ NWDOAD	BL	@VDPR2B			get next two digits
 	LI	R8,23			current CALL length
 	JMP	RTNBAS			all is well, return without error
 *			
+*----------------------------------------------------------------------------
+* Return to TI BASIC common to PDSK/UDSK/CDSK/SDSK/FDSK (keep JMP's in range)
+*----------------------------------------------------------------------------
+RTNBAS	CLR	@>0050(R9)		clear error flag		
+	A	R8, @>002C(R9)		add call length to token pointer		
+	SZCB	@>0042(R9),@>0042(R9)	clear current token
+H9900	B	@RTURN1			return to caller (i.e. Basic)
+*----------------------------------------------------------------------------
+*
 *-----------------------------------------------------------------
 * Subprogram SDSK: show DOAD mapping
 * ----------------------------------------------------------------
@@ -3454,17 +3468,50 @@ SDSK2	MOV	R0,@DTCDSK		save DSKx
 	BL	@VDPWRI			set VDP address
 *
 	LI	R5,DTCDSK		pointer to drive # and DOAD name
-	LI	R6,10
+	LI	R6,10			max 10 characters
 H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
 	DEC	R6
 	JNE	H9903
 *	
 	LI	R2,735			remove occasional screen artifact in TI BASIC
 	BL	@VDPWRI			screen position just after DOAD name
-	LI	R5,>2000		overwrite possible artifact with <space>
+	LI	R5,>2000 + >8000	overwrite possible artifact with <space> (+ TI BASIC bias)
 	MOVB	R5,@-2(R15)		write to VDP
 *
 	LIMI	2			VDP interrupts back on
+	LI	R8,12			current CALL length
+	JMP	RTNBAS			all is well, return without error
+*
+*-----------------------------------------------------------------
+* Subprogram FDSK: show Files
+* ----------------------------------------------------------------
+FDSK	LI	R4,>5858		Files DSK flag
+	B	@PUCPRP
+*
+FDSK2	MOV	R0,@DTCDSK		save DSKx
+*
+	LIMI	0			VDP interrupts off so to not mess up TI BASIC screen
+	CLR	R0			starting screen position = 0
+	BLWP	@VDPWRI			set VDP address
+*
+FDSKL1	LI	R6,>0B00
+	MOVB	R6,@ACOMND		FDSK command to Arduino
+*
+	CB	@K012,@DTCDSK		last FDR?
+	JEQ	QFDSK			yes; quit
+*
+	LI	R5,DTCDSK+2		pointer to DOAD name
+	LI	R6,10			max 10 characters
+H9904	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
+	DEC	R6
+	JNE	H9904
+*
+	LI	R5,>2D00 + >6000	write separation character ("-")
+	BLWP	@VDPWRI
+*
+	JMP	FDSKL1
+*
+QFDSK	LIMI	2			VDP interrupts back on
 	LI	R8,12			current CALL length
 	JMP	RTNBAS			all is well, return without error
 *
