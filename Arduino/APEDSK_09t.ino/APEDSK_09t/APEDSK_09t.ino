@@ -696,6 +696,42 @@ void loop() {
 		        }
  	          break;       
 
+          case 11:                                                            //FDSK(): Files on DOAD
+
+          cDSK = Rbyte(DTCDSK);                                               //is the requested disk mapped to a DOAD?
+          if ( aDSK[cDSK] ) {
+            unsigned int pDRLNK  = 256;                                       //first FDR word of sector 1 (Directory Link)
+            DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                          //open DOAD file
+            DSK[cDSK].seek(pDRLNK);                                            
+            while ( pFDR != 0 ) {
+              unsigned int pFDR = (DSK[cDSK].read() * 256) + DSK[cDSK].read();  //make it a word (16 bits sector #)
+            if
+            DSK[cDSK].seek(pFDR);                                             //
+
+
+
+            else 
+              Wbyte(DTCDSK, 0xFF);                                            //no; we're done
+            }
+            break;
+              
+              
+              
+              
+              
+              
+              
+              DOAD = nDSK[cDSK];                                              //yes; get current DOAD name
+            }
+            else {
+              DOAD = "/DISKS/<NO MAP>";                                       //no; indicate as such
+            }
+           
+        
+        
+        
+        
+        
         } //end switch accmd commands       
         noExec();                                                             //prevent multiple step/seek execution 
       } //end check APEDSK99-specific commands                                 
