@@ -3372,36 +3372,9 @@ H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 PDSK	SETO	R4			set Protect flag
 	JMP	PUCPRP
 UDSK	CLR	R4			set Unprotect flag
-PUCPRP	MOV	R11,R7			save return-to-TI BASIC address
-	BL	@PRPFDO			prepare TI Controller DSR operations
-	MOV	@>002C(R9),R8		ptr to next basic token
-	AI	R8,6			skip "PDSK(" / "UDSK(" / "CDSK("
-	BL	@VDPR2B			get next two bytes in R0
-	CI	R0,>C801		>C8=unquoted string, size=1 char
-	JNE	H9900			return (with error) if different
+	JMP	PUCPRP			generic prep
 *
-	INCT	R8			increment pointer
-	BL	@VDPR2B			get next two bytes
-	SWPB	R0			
-*
-	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3 / "," or >B6 / ")", LSB= # of files, 
-	JLT	H9902			>B3
-	JMP	H9901			>B6
-H9902	AI	R0,768			>B3, adjust R0 to positive range
-*
-H9901	JEQ	H9900			DSK0 not valid, return with error
-	CI	R0,>0003		only 3 DSK's allowed
-	JH	H9900			return with error if more
-	SWPB	R0			drive # back in MSB
-*
-	CI	R4,>5656		CDSK?
-	JEQ	CDSK2			yes, continue after generic prep
-	CI	R4,>5757		SDSK?
-	JEQ	SDSK2			yes, continue after generic prep
-	CI	R4,>5858
-	JEQ	FDSK
-*
-	MOV	R4,R4			Unprotect?
+PUDSK2	MOV	R4,R4			Unprotect?
 	JEQ	UPRTCT			yes
 	AI	R0,>0400		set Protect flag
 UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
@@ -3445,13 +3418,43 @@ NWDOAD	BL	@VDPR2B			get next two digits
 	JMP	RTNBAS			all is well, return without error
 *			
 *----------------------------------------------------------------------------
-* Return to TI BASIC common to PDSK/UDSK/CDSK/SDSK/FDSK (keep JMP's in range)
+* Generic prep and return to TI BASIC for PDSK/UDSK/CDSK/SDSK/FDSK (keep JMP's in range)
 *----------------------------------------------------------------------------
+PUCPRP	MOV	R11,R7			save return-to-TI BASIC address
+	BL	@PRPFDO			prepare TI Controller DSR operations
+	MOV	@>002C(R9),R8		ptr to next basic token
+	AI	R8,6			skip "PDSK(" / "UDSK(" / "CDSK("
+	BL	@VDPR2B			get next two bytes in R0
+	CI	R0,>C801		>C8=unquoted string, size=1 char
+	JNE	H9900			return (with error) if different
+*
+	INCT	R8			increment pointer
+	BL	@VDPR2B			get next two bytes
+	SWPB	R0			
+*
+	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3 / "," or >B6 / ")", LSB= # of files, 
+	JLT	H9902			>B3
+	JMP	H9901			>B6
+H9902	AI	R0,768			>B3, adjust R0 to positive range
+*
+H9901	JEQ	H9900			DSK0 not valid, return with error
+	CI	R0,>0003		only 3 DSK's allowed
+	JH	H9900			return with error if more
+	SWPB	R0			drive # back in MSB
+*
+	CI	R4,>5656		CDSK?
+	JEQ	CDSK2			yes, continue after generic prep
+	CI	R4,>5757		SDSK?
+	JEQ	SDSK2			yes, continue after generic prep
+	CI	R4,>5858
+	JEQ	FDSK
+*
+	JMP	PUDSK2			PDSK() / UDSK()
+*
 RTNBAS	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
 H9900	B	@RTURN1			return to caller (i.e. Basic)
-*----------------------------------------------------------------------------
 *
 *-----------------------------------------------------------------
 * Subprogram SDSK: show DOAD mapping
@@ -3486,7 +3489,7 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 * Subprogram FDSK: show Files
 * ----------------------------------------------------------------
 FDSK	LI	R4,>5858		Files DSK flag
-	B	@PUCPRP
+	JMP	PUCPRP
 *
 FDSK2	MOV	R0,@DTCDSK		save DSKx
 *
