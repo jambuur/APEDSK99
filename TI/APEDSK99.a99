@@ -3526,7 +3526,7 @@ SIDE01	DATA	>0100			floppy side select
 *-----------------------------------------
 
 *-----------------------------------------
-* The remaining bytes (~>5DAE to >5FDD) all contain >00
+* The remaining bytes (~>5E0C to >5FDD) all contain >00
 * >5FDE - >5FE7 is drive # and DOAD name storage for BASIC CALL's
 * >5FE8	is the Arduino Command Register (BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
