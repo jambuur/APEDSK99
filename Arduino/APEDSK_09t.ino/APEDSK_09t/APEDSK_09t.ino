@@ -325,7 +325,6 @@ byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
 String DOAD               = "";	    //TI BASIC CALL support (DOAD name for CDSK and SDSK)
-boolean DOSextention	    = false;  //SDSK "." detection
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -353,7 +352,6 @@ void noExec(void) {
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD file name
-  DOSextention = false;      //reset SDSK "." check	
 }
 
 //calculate and return absolute DOAD byte index for R/W commands
@@ -669,7 +667,27 @@ void loop() {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
             }
             break;
+          
+          case 11:                                                            //FDSK(): Files on DOAD
 
+            /*cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
+            boolean mFDR = false;
+            if ( aDSK[cDSK] && mFDR == false ) {
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open DOAD file                                       
+              Dbtidx = 256; 
+              DSK[cDSK].seek(Dbtidx);
+              Sbtidx = (DSK[cDSK].read() * 256) + DSK[cDSK].read();         //make it a word (16 bits sector #)
+              DSK[cDSK].seek(Sbtidx * 256);
+              for ( unsigned int ii = 0; ii < 8; ii++ ) {
+                Wbyte( (DTCDSK + 2)+ ii, DSK[cDSK].read() + 96);
+              }     
+              mFDR = true;
+            }
+            else {
+              Wbyte(DTCDSK, 0xFF);
+            }     */
+            break;
+          
           case 10:                                                            //SDSK(): Show DOAD assignment
           
 	  	      cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
@@ -683,7 +701,7 @@ void loop() {
 		        Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
 		        Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
 		        
-		        unsigned int ii = 2;                                              
+		        unsigned int ii = 2;                                              //FYI: after such declarations the next case won't be executed!!!
 		        while ( ii <= 10 ) {                                              //prepare the 8 character DOAD name
               char cDot = DOAD.charAt(ii+5) + 96;                             //read character and add TI BASIC bias
               if ( cDot == char(142) ) {                                      //is it "."?
@@ -696,31 +714,7 @@ void loop() {
 		        }
  	          break;       
 
-          case 11:                                                              //FDSK(): Files on DOAD
-
-          cDSK = Rbyte(DTCDSK);                                                 //is the requested disk mapped to a DOAD?
-          if ( aDSK[cDSK] ) {
-            unsigned int pDRLNK  = 256;                                         //first FDR word of sector 1 (Directory Link)
-            boolean moreFDR =  true;                                            //flag for more FDR's to come 
-            DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                            //open DOAD file                                       
-            while ( moreFDR == true ) {
-              DSK[cDSK].seek(pDRLNK);     
-              unsigned int pFDR = (DSK[cDSK].read() * 256) + DSK[cDSK].read();  //make it a word (16 bits sector #)
-              if ( pFDR != 0 ) {
-                DSK[cDSK].seek(pDRLNK * 256);
-                for (unsigned int ii = 2; ii < 12; ii++) {
-                  Wbyte( DTCDSK + ii, DSK[cDSK].read()+96 );
-                }
-                pDRLNK += 2
-              }
-              else {
-                moreFDR = false;
-                Wbyte(DTCDSK, 0xFF); 
-              }
-            }
-          }
-                 
-          break;
+         
         
         } //end switch accmd commands       
         noExec();                                                             //prevent multiple step/seek execution 
