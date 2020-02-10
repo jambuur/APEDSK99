@@ -324,7 +324,8 @@ byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
-String DOAD               = "";	    //TI BASIC CALL support (DOAD name for CDSK and SDSK)
+String DOAD               = "";	    //TI BASIC CALL support (used by CDSK, SDSK and FDSK)
+char cDot		="";	//"." detection in MSDOS 8.3 format
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -351,7 +352,7 @@ void noExec(void) {
   Ridx = 0;               //clear READ ID index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
-  DOAD = "";              //clear DOAD file name
+ 
 }
 
 //calculate and return absolute DOAD byte index for R/W commands
@@ -647,7 +648,7 @@ void loop() {
             break;  
 
           case 9:                                                             //CDSK(): Change DOAD assigment
- 
+ 	    DOAD = "";
             for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {   //merge CALL CDSK characters into string
               DOAD += char( Rbyte(ii) );
             }          
@@ -665,10 +666,34 @@ void loop() {
             }
             else {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
-            }
-            break;
+	    }    
+	break;        
           
-          case 11:                                                            //FDSK(): Files on DOAD
+          case 10:                                                            //SDSK(): Show DOAD assignment       
+	  	      cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
+		        if ( aDSK[cDSK] ) {
+		          DOAD = nDSK[cDSK];						                                  //yes; get current DOAD name
+		        }
+		        else {
+		          DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
+		        }
+
+		        Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
+		        Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
+		        
+		        unsigned int ii = 2;                                              //FYI: after such declarations the next case won't be executed!!!
+		        while ( ii <= 10 ) {                                              //prepare the 8 character DOAD name
+              cDot = DOAD.charAt(ii+5) + 96;                             //read character and add TI BASIC bias
+              if ( cDot == char(142) ) {                                      //is it "."?
+                ii = 11;                                                      //yes; don't print, end loop
+              }                                                   
+              else {
+                Wbyte(DTCDSK + ii, cDot);                                     //no; prepare next character
+		            ii++;
+              }
+		        }
+ 	          break;       
+	case 11:                                                            //FDSK(): Files on DOAD
 
             /*cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
             boolean mFDR = false;
@@ -687,37 +712,9 @@ void loop() {
               Wbyte(DTCDSK, 0xFF);
             }     */
             break;
-          
-          case 10:                                                            //SDSK(): Show DOAD assignment
-          
-	  	      cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
-		        if ( aDSK[cDSK] ) {
-		          DOAD = nDSK[cDSK];						                                  //yes; get current DOAD name
-		        }
-		        else {
-		          DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
-		        }
-
-		        Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
-		        Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
-		        
-		        unsigned int ii = 2;                                              //FYI: after such declarations the next case won't be executed!!!
-		        while ( ii <= 10 ) {                                              //prepare the 8 character DOAD name
-              char cDot = DOAD.charAt(ii+5) + 96;                             //read character and add TI BASIC bias
-              if ( cDot == char(142) ) {                                      //is it "."?
-                ii = 11;                                                      //yes; don't print, end loop
-              }                                                   
-              else {
-                Wbyte(DTCDSK + ii, cDot);                                     //no; prepare next character
-		            ii++;
-              }
-		        }
- 	          break;       
-
          
         
-        } //end switch accmd commands       
-        noExec();                                                             //prevent multiple step/seek execution 
+        } //end switch accmd commands                                                                    
       } //end check APEDSK99-specific commands                                 
     } //end else 
 
