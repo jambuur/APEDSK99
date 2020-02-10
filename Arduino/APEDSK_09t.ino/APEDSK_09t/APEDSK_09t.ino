@@ -647,7 +647,7 @@ void loop() {
             break;  
 
           case 9:                                                             //CDSK(): Change DOAD assigment
- 	    DOAD = "";
+ 	          DOAD = "";
             for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {   //merge CALL CDSK characters into string
               DOAD += char( Rbyte(ii) );
             }          
@@ -665,53 +665,59 @@ void loop() {
             }
             else {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
-	    }    
-	break;        
+	          }    
+	          break;        
           
           case 10:                                                            //SDSK(): Show DOAD assignment       
-		cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
-	        if ( aDSK[cDSK] ) {
-		  DOAD = nDSK[cDSK];						                                  //yes; get current DOAD name
-		}
-		else {
-		  DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
-		}
+	
+		        cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
+	          if ( aDSK[cDSK] ) {
+		         DOAD = nDSK[cDSK];						                                    //yes; get current DOAD name
+		        }
+		        else {
+		          DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
+		        }
 
-		Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
-		Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
-		cDot = "";
-		for ( unsigned int ii = 2; ii <= 10; ii++) {
-		  cDot = DOAD.charAt(ii+5) + 96;                             //read character and add TI BASIC bias  	  
-		   if ( cDot == char(142) ) {                                      //is it "."?
-               	     ii = 11;                                                      //yes; don't print, end loop
-                   }                                                   
-                   else {
-                     Wbyte(DTCDSK + ii, cDot);                                     //no; prepare next character     
-                   }	   
+        		Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
+        		Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
+        		cDot = "";
+        		for ( unsigned int ii = 2; ii < 11; ii++) {
+		          cDot = DOAD.charAt(ii+5) + 96;                                  //read character and add TI BASIC bias  	  
+		          if ( cDot != char(142) ) {                                      //is it "."?
+                Wbyte(DTCDSK + ii, cDot);                                     //no; prepare next character
+              }                                                   
+              else {
+                ii = 11;                                                      //yes; don't print, end loop          
+              }	   
+        		}
  	          break;       
 \
-	case 11:                                                            //FDSK(): Files on DOAD
+	        case 11:                                                            //FDSK(): Files on DOAD
 
-            /*cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
-            boolean mFDR = false;
-            if ( aDSK[cDSK] && mFDR == false ) {
+            cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
+            if ( aDSK[cDSK] ) {
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open DOAD file                                       
               Dbtidx = 256; 
-              DSK[cDSK].seek(Dbtidx);
-              Sbtidx = (DSK[cDSK].read() * 256) + DSK[cDSK].read();         //make it a word (16 bits sector #)
-              DSK[cDSK].seek(Sbtidx * 256);
-              for ( unsigned int ii = 0; ii < 8; ii++ ) {
-                Wbyte( (DTCDSK + 2)+ ii, DSK[cDSK].read() + 96);
-              }     
-              mFDR = true;
+              while ( Dbtidx != 0 ) {
+                DSK[cDSK].seek(Dbtidx);
+                Sbtidx = (DSK[cDSK].read() * 256) + DSK[cDSK].read();         //make it a word (16 bits sector #)
+                if ( Sbtidx != 0 ){
+                  DSK[cDSK].seek(Sbtidx * 256);
+                  for ( unsigned int ii = 2; ii < 11; ii++ ) {
+                    Wbyte( DTCDSK + ii, DSK[cDSK].read() + 96);
+                  }     
+                  Dbtidx += 2;
+                }
+                else {
+                  Dbtidx = 0;  
+                }
+              }
             }
-            else {
-              Wbyte(DTCDSK, 0xFF);
-            }     */
+            Wbyte(DTCDSK, 0xFF);
             break;
-         
         
         } //end switch accmd commands                                                                    
+        noExec();                                                           //prevent multiple Arduino command execution
       } //end check APEDSK99-specific commands                                 
     } //end else 
 
