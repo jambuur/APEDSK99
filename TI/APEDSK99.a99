@@ -3476,8 +3476,8 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 	DEC	R6
 	JNE	H9903
 *	
-*	LI	R2,735			remove occasional screen artifact in TI BASIC
-*	BL	@VDPWRI			screen position just after DOAD name
+	LI	R2,735			remove occasional screen artifact in TI BASIC
+	BL	@VDPWRI			screen position just after DOAD name
 	LI	R5,>2000 + >6000	overwrite possible artifact with <space> (+ TI BASIC bias)
 	MOVB	R5,@-2(R15)		write to VDP
 *
