@@ -73,7 +73,7 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
 //CDSK DOAD file name (DSKx 1-3 (2 bytes) + 8 bytes/characters)
-#define DTCDSK  0x1FDE
+#define DTCDSK  0x1FD8
 //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
