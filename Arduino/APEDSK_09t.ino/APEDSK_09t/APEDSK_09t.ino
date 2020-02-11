@@ -282,7 +282,7 @@ void eflash(byte error)
 //-APEDSK99 specific-------------------------------------------------------------------------- FD1771 emu: variables and functions
 
 //DOAD file name handling (DSKx 1-3 (2 bytes) + 8 bytes/characters)
-#define DTCDSK  0x1FD8
+#define DTCDSK  0x1FD6
 //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
@@ -318,6 +318,8 @@ byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
 boolean FNcmd             = false;  //flag new FD1771 command
 byte ACcmd                = 0;      //APEDSK99 current command (TI BASIC CALL support)
+byte ALcmd                = 0;      //last APEDSK99 command
+boolean ANcmd             = false;  //flag new APEDSK command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
 byte Ssecidx              = 0;      // R/W sector counter
@@ -345,9 +347,10 @@ void noExec(void) {
   DSK[cDSK].close();      //close current SD DOAD file
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
   FCcmd = FDINT;          // "" ""
-  FLcmd = FCcmd;		      //reset new command prep
+  FLcmd = FCcmd;		      //reset new FD1771 command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
   ACcmd = 0;              //reset APEDSK99-specific commands
+  ALcmd = ACcmd;          //reset new APEDSK99 command prep
   Sbtidx = 0; 	          //clear byte index counter
   Ssecidx = 0;            //clear sector counter
   Ridx = 0;               //clear READ ID index counter
@@ -623,6 +626,11 @@ void loop() {
       ACcmd = Rbyte(ACOMND);
       if ( ACcmd != 0x00 ) {
 
+        ANcmd = (ACcmd != ALcmd);                                             //new or continue previous command?
+          if (ANcmd) {                                                        //new command?
+            ALcmd = ACcmd;                                                    //yes; remember new command for next compare
+        }
+
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
 
@@ -696,33 +704,37 @@ void loop() {
         		}
  	          noExec();
  	          break;       
-\
+
 	        case 11:                                                            //FDSK(): Files on DOAD
 
-            /*cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
-            if ( aDSK[cDSK] ) {
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open DOAD file                                       
-              Dbtidx = 256; 
-              while ( Dbtidx != 0 ) {
-                DSK[cDSK].seek(Dbtidx);
-                Sbtidx = (DSK[cDSK].read() * 256) + DSK[cDSK].read();         //make it a word (16 bits sector #)
-                if ( Sbtidx != 0 ){
-                  DSK[cDSK].seek(Sbtidx * 256);
-                  for ( unsigned int ii = 2; ii < 11; ii++ ) {
-                    Wbyte( DTCDSK + ii, DSK[cDSK].read() + 96);
-                  }     
-                  Dbtidx += 2;
-                }
-                else {
-                  Dbtidx = 0;  
-                }
+            if (ANcmd ) {
+              cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
+              if ( aDSK[cDSK] ) {
+                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open DOAD file                                       
+                Dbtidx = 256; 
+              }
+              else {
+                Wbyte(DTCDSK, 0xFF);
+                noExec();
               }
             }
-            Wbyte(DTCDSK, 0xFF); */
+            
+            DSK[cDSK].seek(Dbtidx);
+            Sbtidx = (DSK[cDSK].read() * 256) + DSK[cDSK].read();         //make it a word (16 bits sector #)
+            if ( Sbtidx != 0 ){
+              DSK[cDSK].seek(Sbtidx * 256);
+              for ( unsigned int ii = 2; ii < 11; ii++ ) {
+                Wbyte( DTCDSK + ii, DSK[cDSK].read() + 96);
+              }     
+              Dbtidx += 2;
+            }
+            else {
+              Wbyte(DTCDSK, 0xFF); 
+              noExec();                                                   //prevent multiple Arduino command execution
+            }
             break;
         
-        } //end switch accmd commands                                                                    
-        //noExec();                                                           //prevent multiple Arduino command execution
+        } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 
 
