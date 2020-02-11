@@ -96,7 +96,7 @@ If a particular program or module behaves nicely by accessing disks solely throu
 
 ### *Future*
 
-After (of course) I came up with the name APEDSK99 I brainwaved that DSK emulation is just a first application. The shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. Instead of trying to squeeze a tiny SLIP stack into the TI's meager memory, a revised DSR and the base routines in the APEDSK99 Arduino sketch will achieve this quite easily.
+After (of course) I came up with the name APEDSK99 I brainwaved that DSK emulation is just a first application. The shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. Instead of trying to squeeze a tiny SLIP stack into the TI's meager memory, a revised DSR and the generic routines in the APEDSK99 Arduino sketch will achieve this quite easily.
 
 Initially I considered using a bigger RAM size for larger and/or concurrent DSR's. But after optimising  Arduino RAM R/W access I had DSR loading times reduced to ~450ms so switching DSR's based on CALL's would be entirely feasible. I will go with that approach for now. 
 
