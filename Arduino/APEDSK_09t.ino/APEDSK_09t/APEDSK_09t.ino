@@ -38,7 +38,7 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 //SPI card select pin
 #define SPI_CS 10
 
-//----------------------------------------------------------------------------------------------- Definitions
+//-DSR generic--------------------------------------------------------------------------------- Definitions
 //faster digitalRead / digitalWrite definitions
 #define portOfPin(P)\
   (((P)>=0&&(P)<8)?&PORTD:(((P)>7&&(P)<14)?&PORTB:&PORTC))
@@ -72,26 +72,6 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 #define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
 #define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 
-//CDSK DOAD file name (DSKx 1-3 (2 bytes) + 8 bytes/characters)
-#define DTCDSK  0x1FD8
-//APEDSK99-specific Command Register (TI BASIC CALL support)
-#define ACOMND  0x1FE8
-//R6 counter value to detect read access in sector, ReadID and track commands
-#define RDINT   0x1FEA
-
-//CRU emulation bytes + FD1771 registers
-#define CRURD   0x1FEC  //emulated 8 CRU input bits           (>5FEC in TI99/4a DSR memory block); not used but possible future use
-//B00001111: DSK3 (6), DSK2 (4), DSK1 (2), side 0/1
-#define CRUWRI  0x1FEE  //emulated 8 CRU output bits          (>5FEE in TI99/4a DSR memory block)
-#define RSTAT   0x1FF0  //read FD1771 Status register         (>5FF0 in TI99/4a DSR memory block)
-#define RTRACK  0x1FF2  //read FD1771 Track register          (>5FF2 in TI99/4a DSR memory block)
-#define RSECTR  0x1FF4  //read FD1771 Sector register         (>55F4 in TI99/4a DSR memory block)
-#define RDATA   0x1FF6  //read FD1771 Data register           (>5FF6 in TI99/4a DSR memory block)
-#define WCOMND  0x1FF8  //write FD1771 Command register       (>5FF8 in TI99/4a DSR memory block)
-#define WTRACK  0x1FFA  //write FD1771 Track register         (>5FFA in TI99/4a DSR memory block)
-#define WSECTR  0x1FFC  //write FD1771 Sector register        (>5FFC in TI99/4a DSR memory block)
-#define WDATA   0x1FFE  //write FD1771 Data register          (>5FFE in TI99/4a DSR memory block)
-
 //error blinking parameters: on, off, delay between sequence
 #define LED_ON      500
 #define LED_OFF     250
@@ -110,7 +90,7 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 #define NRSECTS	    9	  //# sectors/track
 #define NRBYSECT  256		//# bytes/sector
 
-//----------------------------------------------------------------------------------------------- Hardware functions
+//-DSR generic---------------------------------------------------------------------------------- Hardware functions
 
 //short delay function to let bus/signals settle
 //doesn't use timers so safe to use in a noInterrupt zone
@@ -278,7 +258,7 @@ void eflash(byte error)
   //... enable Arduino CE* for flashing the error code
   pinAsOutput(CE);
 
-//----------------------------------------------------------------------------------------------- Hardware Error handling
+//-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
   //error routine: stuck in code flashing loop until reset
   while (true) {
 
@@ -299,7 +279,28 @@ void eflash(byte error)
   }
 }
 
-//----------------------------------------------------------------------------------------------- FD1771 emu: variables and functions
+//-APEDSK99 specific-------------------------------------------------------------------------- FD1771 emu: variables and functions
+
+//DOAD file name handling (DSKx 1-3 (2 bytes) + 8 bytes/characters)
+#define DTCDSK  0x1FD8
+//APEDSK99-specific Command Register (TI BASIC CALL support)
+#define ACOMND  0x1FE8
+//R6 counter value to detect read access in sector, ReadID and track commands
+#define RDINT   0x1FEA
+
+//CRU emulation bytes + FD1771 registers
+#define CRURD   0x1FEC  //emulated 8 CRU input bits           (>5FEC in TI99/4a DSR memory block); not used but possible future use
+//B00001111: DSK3 (6), DSK2 (4), DSK1 (2), side 0/1
+#define CRUWRI  0x1FEE  //emulated 8 CRU output bits          (>5FEE in TI99/4a DSR memory block)
+#define RSTAT   0x1FF0  //read FD1771 Status register         (>5FF0 in TI99/4a DSR memory block)
+#define RTRACK  0x1FF2  //read FD1771 Track register          (>5FF2 in TI99/4a DSR memory block)
+#define RSECTR  0x1FF4  //read FD1771 Sector register         (>55F4 in TI99/4a DSR memory block)
+#define RDATA   0x1FF6  //read FD1771 Data register           (>5FF6 in TI99/4a DSR memory block)
+#define WCOMND  0x1FF8  //write FD1771 Command register       (>5FF8 in TI99/4a DSR memory block)
+#define WTRACK  0x1FFA  //write FD1771 Track register         (>5FFA in TI99/4a DSR memory block)
+#define WSECTR  0x1FFC  //write FD1771 Sector register        (>5FFC in TI99/4a DSR memory block)
+#define WDATA   0x1FFE  //write FD1771 Data register          (>5FFE in TI99/4a DSR memory block)
+
 //DSKx file pointers
 File DSK[4];  //file pointers to DOAD's
 
