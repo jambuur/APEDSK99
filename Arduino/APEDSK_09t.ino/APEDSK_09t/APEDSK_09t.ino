@@ -30,7 +30,7 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
   I'm not responsible for any bad effect or damages caused by this software
 */
 
-//----------------------------------------------------------------------------------------------- Libraries
+//-DSR generic---------------------------------------------------------------------------------- Libraries
 //SPI and SD card functions
 #include <SPI.h>
 #include <SD.h>
