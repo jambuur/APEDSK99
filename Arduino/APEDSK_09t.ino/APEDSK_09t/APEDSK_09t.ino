@@ -306,10 +306,10 @@ File DSK[4];  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available
 //(DSK1 should always be available, if not Error 4)
-boolean aDSK[4] = {false, false, false, false};                                     //disk availability
+boolean aDSK[4] = {false, false, false, false};                                                 //disk availability
 String  nDSK[4] = {"x", "/DISKS/_DRIVE01.DSK", "/DISKS/_DRIVE02.DSK", "/DISKS/_DRIVE03.DSK"};	  //DOAD file name
-boolean pDSK[4] = {false, false, false, false};                                     //DOAD write protect status aka the adhesive tab
-byte    cDSK    = 0;                                                                //current selected DSK
+boolean pDSK[4] = {false, false, false, false};                                                 //DOAD write protect status aka the adhesive tab
+byte    cDSK    = 0;                                                                            //current selected DSK
 
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
@@ -326,7 +326,7 @@ byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
 String DOAD               = "";	    //TI BASIC CALL support (used by CDSK, SDSK and FDSK)
-char cDot		="";	//"." detection in MSDOS 8.3 format
+char cDot		              = "";	    //"." detection in MSDOS 8.3 format
 
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
@@ -553,9 +553,9 @@ void loop() {
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
           }
           else {
-            if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK2 or DSK3 is not available
+            if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK1, DSK2 or DSK3 is not available
               Wbyte(RSTAT, NOTREADY);                           //set "Not Ready" bit in Status Register
-              Fccmd = FDINT;                                     //exit            }
+              Fccmd = FDINT;                                    //exit 
             }
           }
         }
@@ -621,7 +621,7 @@ void loop() {
       Accmd = Rbyte(ACOMND);
       if ( Accmd != 0x00 ) {
 
-        //----------------------------------------------------------------------------------------- TI BASIC PDSK() and UDSK()
+        //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( Accmd ) {
 
           case  1:                                                            //UDSK(1):  Unprotect DSK1
@@ -630,7 +630,6 @@ void loop() {
           case  5:                                                            //PDSK(1):  Protect DSK1
           case  6:                                                            //PDSK(2):  Protect DSK2
           case  7:                                                            //PDSK(3):  Protect DSK3
-
             cDSK = Accmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
               
