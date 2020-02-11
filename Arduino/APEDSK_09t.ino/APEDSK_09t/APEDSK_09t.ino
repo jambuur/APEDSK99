@@ -584,7 +584,7 @@ void loop() {
             }
             break;
 
-          case 0xC0:  //read ID
+          /* case 0xC0:  //read ID
 
             Ridx++;                                       //index to READ ID values (for some reason 0 doesn't work!?)
 
@@ -609,7 +609,7 @@ void loop() {
                 noExec();                                 //and we're done with READ ID
                 break;
             }
-            break;
+            break; */
 
         } //end R/W switch
       } //end else R/W commands
@@ -695,7 +695,7 @@ void loop() {
 \
 	        case 11:                                                            //FDSK(): Files on DOAD
 
-            cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
+            /*cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
             if ( aDSK[cDSK] ) {
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open DOAD file                                       
               Dbtidx = 256; 
@@ -714,7 +714,7 @@ void loop() {
                 }
               }
             }
-            Wbyte(DTCDSK, 0xFF);
+            Wbyte(DTCDSK, 0xFF); */
             break;
         
         } //end switch accmd commands                                                                    
