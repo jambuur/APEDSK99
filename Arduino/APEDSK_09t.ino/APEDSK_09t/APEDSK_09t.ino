@@ -318,8 +318,6 @@ byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
 boolean FNcmd             = false;  //flag new FD1771 command
 byte ACcmd                = 0;      //APEDSK99 current command (TI BASIC CALL support)
-byte ALcmd                = 0;      //APEDSK99 last command
-boolean ANcmd             = false;  //flag new APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
 byte Ssecidx              = 0;      // R/W sector counter
@@ -347,7 +345,7 @@ void noExec(void) {
   DSK[cDSK].close();      //close current SD DOAD file
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
   FCcmd = FDINT;          // "" ""
-  FLcmd = FCcmd;		        //reset new command prep
+  FLcmd = FCcmd;		      //reset new command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
   ACcmd = 0;              //reset APEDSK99-specific commands
   Sbtidx = 0; 	          //clear byte index counter
@@ -355,6 +353,8 @@ void noExec(void) {
   Ridx = 0;               //clear READ ID index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
+  DOAD = "";              //clear DOAD name
+  cDot = "";              //clear "." DOS extension detection
 }
 
 //calculate and return absolute DOAD byte index for R/W commands
@@ -451,7 +451,7 @@ void setup() {
       aDSK[ii] = true;                                //yes; flag as such
       DSK[ii] = SD.open(nDSK[ii], O_READ);            //open DOAD file to check write protect y/n
       DSK[ii].seek(0x28);                             //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
-      pDSK[ii] = ( DSK[ii].read() == 0x50 );          //0x50 || "P" means disk is write APEDSK99 protected
+      pDSK[ii] = ( DSK[ii].read() == 0x50 );          //0x50 || "P" means disk is APEDSK99 "adhesive tab" write protected 
       DSK[ii].close();                                //close current SD DOAD file
     }
   }
@@ -582,7 +582,7 @@ void loop() {
             }
             else {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
-              FCcmd = FDINT;                               //exit      
+              FCcmd = FDINT;                              //exit      
             }
             break;
 
@@ -646,11 +646,11 @@ void loop() {
                 pDSK[cDSK] = false;            
               }
             } 
+            noExec();
             break;  
 
           case 9:                                                             //CDSK(): Change DOAD assigment
-
- 	          DOAD = "";
+ 	          //DOAD = "";
             for ( byte ii = 2; ii < 10; ii++ ) {                              //merge CALL CDSK characters into string
               DOAD += char( Rbyte(DTCDSK + ii) );
             }          
@@ -669,6 +669,7 @@ void loop() {
             else {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
 	          }    
+	          noExec();
 	          break;        
           
           case 10:                                                            //SDSK(): Show DOAD assignment       
@@ -683,7 +684,7 @@ void loop() {
 
         		Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
         		Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
-        		cDot = "";
+        		//cDot = "";
         		for ( byte ii = 2; ii < 10; ii++ ) {
 		          cDot = DOAD.charAt(ii+5) + 96;                                  //read character and add TI BASIC bias  	  
 		          if ( cDot != char(142) ) {                                      //is it "."?
@@ -693,6 +694,7 @@ void loop() {
                 ii = 11;                                                      //yes; don't print, end loop          
               }	   
         		}
+ 	          noExec();
  	          break;       
 \
 	        case 11:                                                            //FDSK(): Files on DOAD
@@ -720,7 +722,7 @@ void loop() {
             break;
         
         } //end switch accmd commands                                                                    
-        ACcmd = 0; //noExec();                                                           //prevent multiple Arduino command execution
+        //noExec();                                                           //prevent multiple Arduino command execution
       } //end check APEDSK99-specific commands                                 
     } //end else 
 
