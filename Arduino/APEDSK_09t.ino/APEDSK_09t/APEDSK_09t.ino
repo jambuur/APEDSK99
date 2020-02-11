@@ -314,10 +314,12 @@ byte    cDSK    = 0;                                                            
 //various storage and flags for command interpretation and handling
 byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
 volatile boolean FD1771   = false;  //interrupt routine flag: new or continued FD1771 command
-byte Fccmd                = 0;      //current FD1771 command
-byte lcmd                 = 0;      //last FD1771 command
-boolean ncmd              = false;  //flag new FD1771 command
-byte Accmd                = 0;      //APEDSK99-specific commands (TI BASIC CALL support)
+byte FCcmd                = 0;      //current FD1771 command
+byte FLcmd                = 0;      //last FD1771 command
+boolean FNcmd             = false;  //flag new FD1771 command
+byte ACcmd                = 0;      //APEDSK99 current command (TI BASIC CALL support)
+byte ALcmd                = 0;      //APEDSK99 last command
+boolean ANcmd             = false;  //flag new APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
 byte Ssecidx              = 0;      // R/W sector counter
@@ -344,10 +346,10 @@ void FDrstr(void) {
 void noExec(void) {
   DSK[cDSK].close();      //close current SD DOAD file
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
-  Fccmd = FDINT;          // "" ""
-  lcmd = Fccmd;		        //reset new command prep
+  FCcmd = FDINT;          // "" ""
+  FLcmd = FCcmd;		        //reset new command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
-  Accmd = 0;              //reset APEDSK99-specific commands
+  ACcmd = 0;              //reset APEDSK99-specific commands
   Sbtidx = 0; 	          //clear byte index counter
   Ssecidx = 0;            //clear sector counter
   Ridx = 0;               //clear READ ID index counter
@@ -377,7 +379,7 @@ void RWsector( boolean rw ) {
     Sbtidx++;					                                //increase sector byte counter
   }
   else {
-    if (Fccmd == 0x80 || Fccmd == 0xA0) {               //done with R/W single sector
+    if (FCcmd == 0x80 || FCcmd == 0xA0) {               //done with R/W single sector
       noExec();                                       //exit
     }
     else {
@@ -480,22 +482,22 @@ void loop() {
     noInterrupts();
 
     //read Command Register, stripping the unnecessary floppy bits but keeping command nybble
-    Fccmd = Rbyte(WCOMND) & B11110000;
+    FCcmd = Rbyte(WCOMND) & B11110000;
 
     //the FD1771 "Force Interrupt" command is used to stop further command execution
-    if ( Fccmd != FDINT ) { //do we need to do anything?
+    if ( FCcmd != FDINT ) { //do we need to do anything?
       
-      ncmd = (Fccmd != lcmd);                                //new or continue previous command?
-      if (ncmd) {                                           //new command?
-        lcmd = Fccmd;                                        //yes; remember new command for next compare
+      FNcmd = (FCcmd != FLcmd);                              //new or continue previous command?
+      if (FNcmd) {                                           //new command?
+        FLcmd = FCcmd;                                        //yes; remember new command for next compare
       }
       //----------------------------------------------------------------------------------------- FD1771 Seek / Step
-      if ( Fccmd < 0x80 ) {                                  //step/seek commands?
+      if ( FCcmd < 0x80 ) {                                  //step/seek commands?
 
         cTrack = Rbyte(WTRACK);                             //read current Track #
         nTrack = Rbyte(WDATA);                              //read new Track # (Seek)
 
-        switch(Fccmd) {
+        switch(FCcmd) {
 
           case 0x00:					//Restore
              cTrack = 0;                                    //reset cTrack so Track Registers will be cleared after switch{}
@@ -510,10 +512,10 @@ void loop() {
           case 0x20:                                        //Step
           case 0x30:                                        //Step+T
             if ( cDir == LOW ) {
-              Fccmd = 0x70;				                          //execute Step-Out+T
+              FCcmd = 0x70;				                          //execute Step-Out+T
             }
             else {
-              Fccmd = 0x50;				                          //execute Step-In+T
+              FCcmd = 0x50;				                          //execute Step-In+T
 	          }
 
           case 0x40:                                        //Step-In
@@ -531,20 +533,20 @@ void loop() {
               cDir = LOW;                                   //set stepping direction towards track 0
             }
             break;
-        } //end switch Fccmd
+        } //end switch FCcmd
         Wbyte(WTRACK, cTrack);				                      //update Track Register
 	      Wbyte(RTRACK, cTrack);                              //sync Track Registers
         noExec();                                           //prevent multiple step/seek execution                                        
-      } // end Fccmd < 0x80
+      } // end FCcmd < 0x80
 
       else {  // read/write commands
         
         //----------------------------------------------------------------------------------------- FD1771 R/W commands: prep
-        if ( ncmd ) {					                                  //new command prep
+        if ( FNcmd ) {					                                  //new command prep
           cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
           if ( aDSK[cDSK] ) {                                   //is selected disk available?
             Wbyte(RSTAT, NOERROR);                              //reset "Not Ready" bit in Status Register
-            if ( Fccmd == 0xE0 || Fccmd == 0xF0 ) {               // R/W whole track?
+            if ( FCcmd == 0xE0 || FCcmd == 0xF0 ) {               // R/W whole track?
               Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
@@ -555,13 +557,13 @@ void loop() {
           else {
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK1, DSK2 or DSK3 is not available
               Wbyte(RSTAT, NOTREADY);                           //set "Not Ready" bit in Status Register
-              Fccmd = FDINT;                                    //exit 
+              FCcmd = FDINT;                                    //exit 
             }
           }
         }
         
         //----------------------------------------------------------------------------------------- FD1771 R/W commands
-        switch (Fccmd) {  //switch R/W commands
+        switch (FCcmd) {  //switch R/W commands
 
           case 0xD0:
             noExec();
@@ -580,7 +582,7 @@ void loop() {
             }
             else {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
-              Fccmd = FDINT;                               //exit      
+              FCcmd = FDINT;                               //exit      
             }
             break;
 
@@ -618,11 +620,11 @@ void loop() {
 
       //------------------------------------------------------------------------------------------- APEDSK99-specifc commands
       //check for APEDSK99-specfic commands
-      Accmd = Rbyte(ACOMND);
-      if ( Accmd != 0x00 ) {
+      ACcmd = Rbyte(ACOMND);
+      if ( ACcmd != 0x00 ) {
 
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
-        switch ( Accmd ) {
+        switch ( ACcmd ) {
 
           case  1:                                                            //UDSK(1):  Unprotect DSK1
           case  2:                                                            //UDSK(2):  Unprotect DSK2
@@ -630,12 +632,12 @@ void loop() {
           case  5:                                                            //PDSK(1):  Protect DSK1
           case  6:                                                            //PDSK(2):  Protect DSK2
           case  7:                                                            //PDSK(3):  Protect DSK3
-            cDSK = Accmd & B00000011;                                         //strip U/P flag, keep DSKx
+            cDSK = ACcmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
               
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);              //open DOAD file to change write protect status 
               DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
-              if ( Accmd & B00000100 ) {                                      //Protect bit set?
+              if ( ACcmd & B00000100 ) {                                      //Protect bit set?
                 DSK[cDSK].write(0x50);                                        //yes; apply adhesive tab
                 pDSK[cDSK] = true;
               }
@@ -655,7 +657,7 @@ void loop() {
             DOAD.trim();                                                      //remove leading / trailing spaces
             DOAD = "/DISKS/" + DOAD + ".DSK";                                 //construct full DOAD path
             
-            if ( SD.exists( "/DISKS" + DOAD + ".DSK" ) ) {                    //exists?
+            if ( SD.exists( DOAD ) ) {                                        //exists?
               cDSK = Rbyte(DTCDSK);                                           //yes; assign to requested DSKx
               nDSK[cDSK] = DOAD;
               aDSK[cDSK] = true;
@@ -718,7 +720,7 @@ void loop() {
             break;
         
         } //end switch accmd commands                                                                    
-        noExec();                                                           //prevent multiple Arduino command execution
+        ACcmd = 0; //noExec();                                                           //prevent multiple Arduino command execution
       } //end check APEDSK99-specific commands                                 
     } //end else 
 
