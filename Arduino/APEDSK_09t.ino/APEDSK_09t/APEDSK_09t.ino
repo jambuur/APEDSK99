@@ -647,14 +647,15 @@ void loop() {
             break;  
 
           case 9:                                                             //CDSK(): Change DOAD assigment
+
  	          DOAD = "";
-            for ( unsigned int ii = DTCDSK + 2; ii <= DTCDSK + 10; ii++ ) {   //merge CALL CDSK characters into string
-              DOAD += char( Rbyte(ii) );
+            for ( byte ii = 2; ii < 10; ii++ ) {                              //merge CALL CDSK characters into string
+              DOAD += char( Rbyte(DTCDSK + ii) );
             }          
             DOAD.trim();                                                      //remove leading / trailing spaces
             DOAD = "/DISKS/" + DOAD + ".DSK";                                 //construct full DOAD path
             
-            if ( SD.exists(DOAD) ) {                                          //exists?
+            if ( SD.exists( "/DISKS" + DOAD + ".DSK" ) ) {                    //exists?
               cDSK = Rbyte(DTCDSK);                                           //yes; assign to requested DSKx
               nDSK[cDSK] = DOAD;
               aDSK[cDSK] = true;
@@ -681,7 +682,7 @@ void loop() {
         		Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
         		Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
         		cDot = "";
-        		for ( unsigned int ii = 2; ii < 11; ii++) {
+        		for ( byte ii = 2; ii < 10; ii++ ) {
 		          cDot = DOAD.charAt(ii+5) + 96;                                  //read character and add TI BASIC bias  	  
 		          if ( cDot != char(142) ) {                                      //is it "."?
                 Wbyte(DTCDSK + ii, cDot);                                     //no; prepare next character
