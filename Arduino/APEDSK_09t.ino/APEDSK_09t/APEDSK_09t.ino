@@ -507,14 +507,14 @@ void loop() {
 	          cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
             FDrstr();
           }  
-            break;
+          break;
 
           case 0x10:					                              //Seek
           {
             cTrack = nTrack;                                //prepare to update Track Register
 	          cDir = (nTrack > cTrack);                       //set direction: HIGH=track # increase, LOW=track # decrease
           } 
-            break;
+          break;
             
           case 0x20:                                        //Step
           case 0x30:                                        //Step+T
@@ -534,7 +534,7 @@ void loop() {
               cDir = HIGH;                                  //set stepping direction towards last track 
             }
           }
-            break;
+          break;
 
           case 0x60:                                        //Step-Out
           case 0x70:                                        //Step-Out+T
@@ -543,8 +543,8 @@ void loop() {
               cTrack--;                                     //decrease Track #
               cDir = LOW;                                   //set stepping direction towards track 0
             }
-          ]
-            break;
+          }
+          break;
             
         } //end switch FCcmd
         Wbyte(WTRACK, cTrack);				                      //update Track Register
@@ -582,7 +582,7 @@ void loop() {
           {
             noExec();
           }
-            break;
+          break;
 
           case 0x80:                                      //read sector
 	        case 0x90:                                      //read multiple sectors
@@ -590,7 +590,8 @@ void loop() {
           {
             RWsector( true );
           }
-            break;
+          break;
+
           case 0xA0:         				                      //write sector
 	        case 0xB0:                                      //write multiple sectors
           case 0xF0:                                      //write track
@@ -603,32 +604,44 @@ void loop() {
               FCcmd = FDINT;                              //exit      
             }
           }
-            break;
+          break;
 
-          /* case 0xC0:  //read ID
-              
+          /*case 0xC0:  //read ID
+          {    
             Ridx++;                                       //index to READ ID values (for some reason 0 doesn't work!?)
 
             switch (Ridx) {
               case 1:
+              {
                 Wbyte(RDATA, Rbyte(RTRACK) );		          //track #
-                break;
+              } 
+              break;
               case 2:
+              {
                 Wbyte(RDATA, Rbyte(CRUWRI) & B00000001);  //side #
-                break;
+              } 
+              break;
               case 3:
+              {
                 Wbyte(RDATA, Rbyte(RSECTR) );		          //sector #
-                break;
+              } 
+              break;
               case 4:
+              {
                 Wbyte(RDATA, 0x01); 		                  //sector size (256 bytes)
-                break;
+              } 
+              break;
               case 5:
+              {
                 Wbyte(RDATA, 0x0C);	                      //CC bogus byte #1
-                break;
+              |
+              break;
               case 6:
+              {
                 Wbyte(RDATA, 0x0D);                       //CC bogus byte #2
                 noExec();                                 //and we're done with READ ID
-                break;
+              }
+              break;
             }
             break; */
 
@@ -673,9 +686,10 @@ void loop() {
             } 
             noExec();
           }
-            break;  
+          break;  
 
           case 9:                                                             //CDSK(): Change DOAD assigment
+ 	        {
  	          //DOAD = "";
             for ( byte ii = 2; ii < 10; ii++ ) {                              //merge CALL CDSK characters into string
               DOAD += char( Rbyte(DTCDSK + ii) );
@@ -696,9 +710,11 @@ void loop() {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
 	          }    
 	          noExec();
-	          break;        
+ 	        } 
+	        break;        
 
           case 11:                                                            //FDSK(): Files on DOAD
+          {
             if (ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
               if ( aDSK[cDSK] ) {
@@ -724,9 +740,11 @@ void loop() {
               Wbyte(DTCDSK, 0xFF); 
               noExec();                                                   //prevent multiple Arduino command execution
             }
-            break;
+          } 
+          break;
             
           case 10:                                                            //SDSK(): Show DOAD assignment       
+		      {
 		        cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
 	          if ( aDSK[cDSK] ) {
 		         DOAD = nDSK[cDSK];						                                    //yes; get current DOAD name
@@ -748,7 +766,8 @@ void loop() {
               }	   
         		}
  	          noExec();
- 	          break;       
+		      } 
+ 	        break;       
 
 	        
         
