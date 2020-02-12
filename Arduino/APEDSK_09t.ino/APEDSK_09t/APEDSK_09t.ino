@@ -490,44 +490,50 @@ void loop() {
     //the FD1771 "Force Interrupt" command is used to stop further command execution
     if ( FCcmd != FDINT ) { //do we need to do anything?
       
-      FNcmd = (FCcmd != FLcmd);                              //new or continue previous command?
-      if (FNcmd) {                                           //new command?
-        FLcmd = FCcmd;                                        //yes; remember new command for next compare
+      FNcmd = (FCcmd != FLcmd);                             //new or continue previous command?
+      if (FNcmd) {                                          //new command?
+        FLcmd = FCcmd;                                      //yes; remember new command for next compare
       }
       //----------------------------------------------------------------------------------------- FD1771 Seek / Step
-      if ( FCcmd < 0x80 ) {                                  //step/seek commands?
+      if ( FCcmd < 0x80 ) {                                 //step/seek commands?
 
         cTrack = Rbyte(WTRACK);                             //read current Track #
         nTrack = Rbyte(WDATA);                              //read new Track # (Seek)
 
         switch(FCcmd) {
+          {
+          case 0x00:					                              //Restore            
+          { 
+	          cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
+            FDrstr();
+          }  
+            break;
 
-          case 0x00:					//Restore
-             
-			cTrack = 0;                                    //reset cTrack so Track Registers will be cleared after switch{}
-             FDrstr();
-             break;
-
-          case 0x10:					//Seek
+          case 0x10:					                              //Seek
+          {
             cTrack = nTrack;                                //prepare to update Track Register
 	          cDir = (nTrack > cTrack);                       //set direction: HIGH=track # increase, LOW=track # decrease
+          } 
             break;
             
           case 0x20:                                        //Step
           case 0x30:                                        //Step+T
+          {
             if ( cDir == LOW ) {
               FCcmd = 0x70;				                          //execute Step-Out+T
             }
             else {
               FCcmd = 0x50;				                          //execute Step-In+T
 	          }
-
+          }
           case 0x40:                                        //Step-In
           case 0x50:                                        //Step-In+T
+          }
             if ( cTrack < NRTRACKS ) {			                //any tracks left to step to?
               cTrack++;                                     //yes; increase Track #
               cDir = HIGH;                                  //set stepping direction towards last track 
             }
+          }
             break;
 
           case 0x60:                                        //Step-Out
