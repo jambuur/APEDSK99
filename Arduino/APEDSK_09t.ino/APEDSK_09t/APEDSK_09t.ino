@@ -501,7 +501,7 @@ void loop() {
         nTrack = Rbyte(WDATA);                              //read new Track # (Seek)
 
         switch(FCcmd) {
-          {
+         
           case 0x00:					                              //Restore            
           { 
 	          cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
@@ -528,7 +528,7 @@ void loop() {
           }
           case 0x40:                                        //Step-In
           case 0x50:                                        //Step-In+T
-          }
+          {
             if ( cTrack < NRTRACKS ) {			                //any tracks left to step to?
               cTrack++;                                     //yes; increase Track #
               cDir = HIGH;                                  //set stepping direction towards last track 
@@ -538,11 +538,14 @@ void loop() {
 
           case 0x60:                                        //Step-Out
           case 0x70:                                        //Step-Out+T
+          {
             if ( cTrack > 0 ) {				                      //any tracks left to step to?
               cTrack--;                                     //decrease Track #
               cDir = LOW;                                   //set stepping direction towards track 0
             }
+          ]
             break;
+            
         } //end switch FCcmd
         Wbyte(WTRACK, cTrack);				                      //update Track Register
 	      Wbyte(RTRACK, cTrack);                              //sync Track Registers
@@ -576,17 +579,22 @@ void loop() {
         switch (FCcmd) {  //switch R/W commands
 
           case 0xD0:
+          {
             noExec();
+          }
             break;
 
           case 0x80:                                      //read sector
 	        case 0x90:                                      //read multiple sectors
 	        case 0xE0:                                      //read track		
+          {
             RWsector( true );
+          }
             break;
           case 0xA0:         				                      //write sector
 	        case 0xB0:                                      //write multiple sectors
           case 0xF0:                                      //write track
+          {
             if ( !pDSK[cDSK] ) {                          //is DOAD write protected?
               RWsector( false );                          //no; go ahead and write
             }
@@ -594,10 +602,11 @@ void loop() {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
               FCcmd = FDINT;                              //exit      
             }
+          }
             break;
 
           /* case 0xC0:  //read ID
-
+              
             Ridx++;                                       //index to READ ID values (for some reason 0 doesn't work!?)
 
             switch (Ridx) {
@@ -647,6 +656,7 @@ void loop() {
           case  5:                                                            //PDSK(1):  Protect DSK1
           case  6:                                                            //PDSK(2):  Protect DSK2
           case  7:                                                            //PDSK(3):  Protect DSK3
+          {
             cDSK = ACcmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
               
@@ -662,6 +672,7 @@ void loop() {
               }
             } 
             noExec();
+          }
             break;  
 
           case 9:                                                             //CDSK(): Change DOAD assigment
