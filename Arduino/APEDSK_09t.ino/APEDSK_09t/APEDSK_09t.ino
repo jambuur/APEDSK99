@@ -712,36 +712,6 @@ void loop() {
 	          noExec();
  	        } 
 	        break;        
-
-          case 11:                                                            //FDSK(): Files on DOAD
-          {
-            if (ANcmd ) {
-              cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
-              if ( aDSK[cDSK] ) {
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open DOAD file                                       
-                Dbtidx = 256; 
-              }
-              else {
-                Wbyte(DTCDSK, 0xFF);
-                noExec();
-              }
-            }
-            
-            DSK[cDSK].seek(Dbtidx);
-            Sbtidx = (DSK[cDSK].read() * 256) + DSK[cDSK].read();         //make it a word (16 bits sector #)
-            if ( Sbtidx != 0 ){
-              DSK[cDSK].seek(Sbtidx * 256);
-              for ( byte ii = 2; ii < 11; ii++ ) {
-                Wbyte( DTCDSK + ii, DSK[cDSK].read() + 96);
-              }     
-              Dbtidx += 2;
-            }
-            else {
-              Wbyte(DTCDSK, 0xFF); 
-              noExec();                                                   //prevent multiple Arduino command execution
-            }
-          } 
-          break;
             
           case 10:                                                            //SDSK(): Show DOAD assignment       
 		      {
@@ -769,6 +739,35 @@ void loop() {
 		      } 
  	        break;       
 
+          case 11:                                                            //FDSK(): Files on DOAD
+          {
+            if (ANcmd ) {
+              cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
+              if ( aDSK[cDSK] ) {
+                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //open DOAD file                                       
+                Dbtidx = 256; 
+              }
+              else {
+                Wbyte(DTCDSK, 0xFF);
+                noExec();
+              }
+            }
+            
+            DSK[cDSK].seek(Dbtidx);
+            Sbtidx = (DSK[cDSK].read() * 256) + DSK[cDSK].read();             //make it a word (16 bits sector #)
+            if ( Sbtidx != 0 ) {
+              DSK[cDSK].seek(Sbtidx * 256);
+              for ( byte ii = 2; ii < 11; ii++ ) {
+                Wbyte( DTCDSK + ii, DSK[cDSK].read() + 96);
+              }     
+              Dbtidx += 2;
+            }
+            else {
+              Wbyte(DTCDSK, 0xFF); 
+              noExec();                                                       //prevent multiple Arduino command execution
+            }
+          } 
+          break;
 	        
         
         } //end switch accmd commands   
