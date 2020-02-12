@@ -503,7 +503,8 @@ void loop() {
         switch(FCcmd) {
 
           case 0x00:					//Restore
-             cTrack = 0;                                    //reset cTrack so Track Registers will be cleared after switch{}
+             
+			cTrack = 0;                                    //reset cTrack so Track Registers will be cleared after switch{}
              FDrstr();
              break;
 
