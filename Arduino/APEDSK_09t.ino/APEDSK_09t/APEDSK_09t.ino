@@ -290,7 +290,7 @@ void eflash(byte error)
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC  //emulated 8 CRU input bits           (>5FEC in TI99/4a DSR memory block); not used but possible future use
-//B00001111: DSK3 (6), DSK2 (4), DSK1 (2), side 0/1
+//B00001111: DSK3 (0x06), DSK2 (0x04), DSK1 (0x02), side 0/1
 #define CRUWRI  0x1FEE  //emulated 8 CRU output bits          (>5FEE in TI99/4a DSR memory block)
 #define RSTAT   0x1FF0  //read FD1771 Status register         (>5FF0 in TI99/4a DSR memory block)
 #define RTRACK  0x1FF2  //read FD1771 Track register          (>5FF2 in TI99/4a DSR memory block)
@@ -305,9 +305,8 @@ void eflash(byte error)
 File DSK[4];  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available
-//(DSK1 should always be available, if not Error 4)
 boolean aDSK[4] = {false, false, false, false};                                                 //disk availability
-String  nDSK[4] = {"x", "/DISKS/_DRIVE01.DSK", "/DISKS/_DRIVE02.DSK", "/DISKS/_DRIVE03.DSK"};	  //DOAD file name
+String  nDSK[4] = {"x", "/DISKS/_DRIVE01.DSK", "/DISKS/_DRIVE02.DSK", "/DISKS/_DRIVE03.DSK"};	  //DOAD file names; startup defaults
 boolean pDSK[4] = {false, false, false, false};                                                 //DOAD write protect status aka the adhesive tab
 byte    cDSK    = 0;                                                                            //current selected DSK
 
@@ -320,10 +319,10 @@ boolean FNcmd             = false;  //flag new FD1771 command
 byte ACcmd                = 0;      //APEDSK99 current command (TI BASIC CALL support)
 byte ALcmd                = 0;      //last APEDSK99 command
 boolean ANcmd             = false;  //flag new APEDSK command
-unsigned long Dbtidx      = 0;      //absolute DOAD byte index
-unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
+unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
+unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
-byte Ridx                 = 0;      //READ ID counter
+//byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
