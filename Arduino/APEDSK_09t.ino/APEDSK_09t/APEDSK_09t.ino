@@ -687,9 +687,8 @@ void loop() {
           }
           break;  
 
-          case 9:                                                             //CDSK(): Change DOAD assigment
+          case 9:                                                             //CDSK(): Change DOAD mapping
  	        {
- 	          //DOAD = "";
             for ( byte ii = 2; ii < 10; ii++ ) {                              //merge CALL CDSK characters into string
               DOAD += char( Rbyte(DTCDSK + ii) );
             }          
@@ -712,7 +711,7 @@ void loop() {
  	        } 
 	        break;        
             
-          case 10:                                                            //SDSK(): Show DOAD assignment       
+          case 10:                                                            //SDSK(): Show DOAD mapping       
 		      {
 		        cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
 	          if ( aDSK[cDSK] ) {
@@ -722,9 +721,8 @@ void loop() {
 		          DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
 		        }
 
-        		Wbyte(DTCDSK    , cDSK+144);					                            //drive # in ASCII + TI BASIC bias
-        		Wbyte(DTCDSK + 1, '=' + 96);					                            //"=" in ASCII + TI BASIC bias
-        		//cDot = "";
+        		Wbyte(DTCDSK    , cDSK+48+96);				                            //drive # in ASCII + TI BASIC bias
+        		Wbyte(DTCDSK + 1, '=' +   96);		  	                            //"=" in ASCII + TI BASIC bias
         		for ( byte ii = 2; ii < 10; ii++ ) {
 		          cDot = DOAD.charAt(ii+5) + 96;                                  //read character and add TI BASIC bias  	  
 		          if ( cDot != char(142) ) {                                      //is it "."?
@@ -738,32 +736,32 @@ void loop() {
 		      } 
  	        break;       
 
-          case 11:                                                            //FDSK(): Files on DOAD
+          case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {
             if (ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
               if ( aDSK[cDSK] ) {
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //open DOAD file                                       
+                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
                 Dbtidx = 256; 
               }
               else {
-                Wbyte(DTCDSK, 0xFF);
-                noExec();
+                Wbyte(DTCDSK, 0xFF);                                          //no; signal end of FDSK() command to DSR
+                noExec();                                                     //prevent multiple command execution
               }
             }
             
             DSK[cDSK].seek(Dbtidx);
-            Sbtidx = (DSK[cDSK].read() * NRBYSECT) + DSK[cDSK].read();             //make it a word (16 bits sector #)
-            if ( Sbtidx != 0 ) {
-              DSK[cDSK].seek(Sbtidx * NRBYSECT);
-              for ( byte ii = 2; ii < 11; ii++ ) {
+            Sbtidx = (DSK[cDSK].read() * NRBYSECT) + DSK[cDSK].read();        //make it a word (16 bits sector #)
+            if ( Sbtidx != 0 ) {                                              //past last used FDR entry?
+              DSK[cDSK].seek(Sbtidx * NRBYSECT);                              //no; go to FDR     
+              for ( byte ii = 2; ii < 11; ii++ ) {                            //read file name chars (8) and store @DTCDSK
                 cDot = char( DSK[cDSK].read() + 96 );
                 Wbyte( DTCDSK + ii, cDot);
               }     
-              Dbtidx += 2;
+              Dbtidx += 2;                                                    //next FDR pointer
             }
             else {
-              Wbyte(DTCDSK, 0xFF); 
+              Wbyte(DTCDSK, 0xFF);                                            //yes; done last FDR or blank floppy
               noExec();                                                       //prevent multiple Arduino command execution
             }
           } 
