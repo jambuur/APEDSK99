@@ -754,11 +754,12 @@ void loop() {
             }
             
             DSK[cDSK].seek(Dbtidx);
-            Sbtidx = (DSK[cDSK].read() * 256) + DSK[cDSK].read();             //make it a word (16 bits sector #)
+            Sbtidx = (DSK[cDSK].read() * NRBYSECT) + DSK[cDSK].read();             //make it a word (16 bits sector #)
             if ( Sbtidx != 0 ) {
-              DSK[cDSK].seek(Sbtidx * 256);
+              DSK[cDSK].seek(Sbtidx * NRBYSECT);
               for ( byte ii = 2; ii < 11; ii++ ) {
-                Wbyte( DTCDSK + ii, DSK[cDSK].read() + 96);
+                cDot = char( DSK[cDSK].read() + 96 );
+                Wbyte( DTCDSK + ii, cDot);
               }     
               Dbtidx += 2;
             }
