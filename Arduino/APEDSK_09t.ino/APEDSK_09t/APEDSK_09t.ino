@@ -329,6 +329,24 @@ boolean cDir              = HIGH;   //current step direction, step in(wards) tow
 String DOAD               = "";	    //TI BASIC CALL support (used by CDSK, SDSK and FDSK)
 char cDot		              = "";	    //"." detection in MSDOS 8.3 format
 
+//no further command execution (prevent seek/step commands to be executed multiple times)
+void noExec(void) {
+  DSK[cDSK].close();      //close current SD DOAD file
+  Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
+  FCcmd = FDINT;          // "" ""
+  FLcmd = FCcmd;          //reset new FD1771 command prep
+  Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
+  ACcmd = 0;              //reset APEDSK99-specific commands
+  ALcmd = ACcmd;          //reset new APEDSK99 command prep
+  Sbtidx = 0;             //clear byte index counter
+  Ssecidx = 0;            //clear sector counter
+  //Ridx = 0;               //clear READ ID index counter
+  cTrack = 0;             //clear current Track #
+  nTrack = 0;             //clear new Track #
+  DOAD = "";              //clear DOAD name
+  cDot = "";              //clear "." DOS extension detection
+}
+
 //clear various FD1771 registers (for powerup and Restore command)
 void FDrstr(void) {
   Wbyte(RSTAT,  0);       //clear Status Register
@@ -339,24 +357,6 @@ void FDrstr(void) {
   Wbyte(WSECTR, 0x01);	  //default value in Write Sector register
   Wbyte(WDATA,  0);       //clear Write Data register
   Wbyte(RSTAT, NOERROR);	//clear Status register
-}
-
-//no further command execution (prevent seek/step commands to be executed multiple times)
-void noExec(void) {
-  DSK[cDSK].close();      //close current SD DOAD file
-  Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
-  FCcmd = FDINT;          // "" ""
-  FLcmd = FCcmd;		      //reset new FD1771 command prep
-  Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
-  ACcmd = 0;              //reset APEDSK99-specific commands
-  ALcmd = ACcmd;          //reset new APEDSK99 command prep
-  Sbtidx = 0; 	          //clear byte index counter
-  Ssecidx = 0;            //clear sector counter
-  //Ridx = 0;               //clear READ ID index counter
-  cTrack = 0;             //clear current Track #
-  nTrack = 0;             //clear new Track #
-  DOAD = "";              //clear DOAD name
-  cDot = "";              //clear "." DOS extension detection
 }
 
 //calculate and return absolute DOAD byte index for R/W commands
