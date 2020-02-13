@@ -352,7 +352,7 @@ void noExec(void) {
   ALcmd = ACcmd;          //reset new APEDSK99 command prep
   Sbtidx = 0; 	          //clear byte index counter
   Ssecidx = 0;            //clear sector counter
-  Ridx = 0;               //clear READ ID index counter
+  //Ridx = 0;               //clear READ ID index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
