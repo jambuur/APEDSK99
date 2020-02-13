@@ -3509,11 +3509,11 @@ H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 	DEC	R6
 	JNE	H9904
 *
-*	LI	R5,>2D00 + >6000	write separation character ("-")
-*	MOVB	R5,@-2(R15)		write to VDP
+	LI	R5,>2D00 + >6000	write separation character ("-")
+	MOVB	R5,@-2(R15)		write to VDP
 *
 	LIMI	2			VDP interrupts back on
-*	JMP	FDSKL1
+	JMP	FDSKL1
 *		
 QFDSK	JMP	QSDSK
 *
