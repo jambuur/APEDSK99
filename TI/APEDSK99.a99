@@ -3482,7 +3482,7 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 	MOVB	R5,@-2(R15)		write to VDP
 *
 	LIMI	2			VDP interrupts back on
-	LI	R8,12			current CALL length
+QSDSK	LI	R8,12			current CALL length
 	JMP	RTNBAS			all is well, return without error
 *
 *-----------------------------------------------------------------
@@ -3515,8 +3515,7 @@ H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 	LIMI	2			VDP interrupts back on
 	JMP	FDSKL1
 *		
-QFDSK	LI	R8,12			current CALL length
-	JMP	RTNBAS			all is well, return without error
+QFDSK	JMP	QSDSK
 *
 *-----------------------------------------
 * APEDSK constants
@@ -3526,7 +3525,7 @@ SIDE01	DATA	>0100			floppy side select
 *-----------------------------------------
 
 *-----------------------------------------
-* The remaining bytes (~>5E0C to >5FDD) all contain >00
+* The remaining bytes (~>5E10 to >5FD5) all contain >00
 * >5FDE - >5FE7 is drive # and DOAD name storage for BASIC CALL's
 * >5FE8	is the Arduino Command Register (BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
