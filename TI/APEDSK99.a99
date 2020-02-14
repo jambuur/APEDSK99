@@ -3501,7 +3501,7 @@ FDSKL1	LI	R6,>0B00
 *
 	LIMI	0			VDP interrupts off so to not mess up TI BASIC screeN
 	LI	R2,64			starting screen position (screen scrolls after finishing FDSK() )
-	BLWP	@VDPWRI			set VDP address
+	BL	@VDPWRI			set VDP address
 *
 	LI	R5,DTCDSK+2		pointer to DOAD name
 	LI	R6,8			max 8 characters
