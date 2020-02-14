@@ -1409,7 +1409,7 @@ H127	BLWP	@>005A(R9)		set VDP to write
 	DEC	R5			point to drive #
 H128	SETO	R2			flag for read
 *	MOVB	R5,R2			add wanted drive
-	MOVB	R6,R2			APEDSK99: DEBUG!
+	MOVB	R6,R2			APEDSK99: error in original disassembly
 	JEQ	H129			none
 	INC	R5			point at VIB buffer
 	BL	@CALSUB			call subroutine
@@ -2860,7 +2860,7 @@ FNDRV	MOV	*R11+,R10		find drive in file control blocks
 	AI	R8,6			point to drive # in file ctrl block
 	LI	R3,>0020		filename begin with space (illegal: flag for dir)
 *	MOVB	R5,R3			add drive #
-	MOVB	R6,R3			APEDSK99: DEBUG!
+	MOVB	R6,R3			APEDSK99: error in original disassembly
 H241	BL	@VDPR2B			read 2 bytes from VDP at R8 into R0
 	C	R3,R0			match with that control block?
 	JEQ	H242			yes
