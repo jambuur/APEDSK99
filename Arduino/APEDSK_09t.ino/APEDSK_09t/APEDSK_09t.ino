@@ -324,7 +324,7 @@ boolean ANcmd             = false;  //flag new APEDSK command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
-//byte Ridx                 = 0;      //READ ID counter
+byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
@@ -342,7 +342,7 @@ void noExec(void) {
   ALcmd = ACcmd;          //reset new APEDSK99 command prep
   Sbtidx = 0;             //clear byte index counter
   Ssecidx = 0;            //clear sector counter
-  //Ridx = 0;               //clear READ ID index counter
+  Ridx = 0;               //clear READ ID index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
@@ -740,7 +740,13 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {
-            if ( ANcmd ) {
+            Ridx++;
+            if ( Ridx == 11) {
+              Wbyte(DTCDSK, 0xFF); 
+              noExec();  
+            }
+           
+           /* if ( ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                           //get requested DSKx
               Dbtidx = 256;                                                   //first FDR pointer
              
@@ -759,15 +765,16 @@ void loop() {
               for ( byte ii = 2; ii < 12; ii++ ) {                            //read file name chars (8) and store @DTCDSK
                 Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
               }     
-              Dbtidx += 2;                                                    //point to next FDR
+              Dbtidx++;                                                    //point to next FDR
+              Wbyte(0x1EE0, Dbtidx - 256);
               DSK[cDSK].seek(Dbtidx);                                         //jump to first FDR pointer
               Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it a word (16 bits sector #)
             }
             else {
               Wbyte(DTCDSK, 0xFF);                                            //done last FDR or blank floppy
               noExec();                                                       //prevent multiple Arduino command execution
-            }
-          }
+            } */
+          } 
           break;
 	        
         
