@@ -740,23 +740,34 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {
-            cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
-            DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
-            Dbtidx = 256; 
-              
-            DSK[cDSK].seek(Dbtidx);
-            Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it a word (16 bits sector #)
+            if ( ANcmd ) {
+              cDSK = Rbyte(DTCDSK);                                           //get requested DSKx
+              Dbtidx = 256;                                                   //first FDR pointer
+             
+              if ( aDSK[cDSK] ) {                                             //is the requested disk mapped to a DOAD?
+                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
+                DSK[cDSK].seek(Dbtidx);                                       //jump to first FDR pointer
+                Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();          //make it a word (16 bits sector #)
+              }  
+              else {
+                Sbtidx = 0;                                                   //DSKx not mapped
+              }
+            }
             
-            if ( aDSK[cDSK] && Sbtidx != 0 ) {
-              DSK[cDSK].seek(Sbtidx * NRBYSECT);                              //no; go to FDR     
-              for ( byte ii = 2; ii < 10; ii++ ) {                            //read file name chars (8) and store @DTCDSK
+            if ( Sbtidx != 0 ) {                                              //valid FDR pointer?
+              DSK[cDSK].seek(Sbtidx * NRBYSECT);                              //yes; locate FDR     
+              for ( byte ii = 2; ii < 12; ii++ ) {                            //read file name chars (8) and store @DTCDSK
                 Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
               }     
-            }  
-            Wbyte(DTCDSK, 0xFF);                                            //yes; done last FDR or blank floppy
-            noExec();                                                       //prevent multiple Arduino command execution
-            
-          } 
+              Dbtidx += 2;                                                    //point to next FDR
+              DSK[cDSK].seek(Dbtidx);                                         //jump to first FDR pointer
+              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it a word (16 bits sector #)
+            }
+            else {
+              Wbyte(DTCDSK, 0xFF);                                            //done last FDR or blank floppy
+              noExec();                                                       //prevent multiple Arduino command execution
+            }
+          }
           break;
 	        
         
