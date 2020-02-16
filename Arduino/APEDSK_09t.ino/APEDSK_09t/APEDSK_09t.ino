@@ -318,13 +318,11 @@ volatile boolean FD1771   = false;  //interrupt routine flag: new or continued F
 byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
 boolean FNcmd             = false;  //flag new FD1771 command
-byte ACcmd                = 0;      //APEDSK99 current command (TI BASIC CALL support)
-byte ALcmd                = 0;      //last APEDSK99 command
-boolean ANcmd             = false;  //flag new APEDSK command
+byte ACcmd                = 0;      //APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
-//byte Ridx                 = 0;      //READ ID counter
+byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
@@ -335,14 +333,14 @@ char cDot		              = "";	    //"." detection in MSDOS 8.3 format
 void noExec(void) {
   DSK[cDSK].close();      //close current SD DOAD file
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
-  FCcmd = FDINT;          // "" ""
+  FCcmd = FDINT;          //"" ""
   FLcmd = FCcmd;          //reset new FD1771 command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
-  ACcmd = 0;              //reset APEDSK99-specific commands
-  ALcmd = ACcmd;          //reset new APEDSK99 command prep
+  ACcmd = 0;              //reset APEDSK99 command
+  cDSK = 0;               //reset active DSKx
+  Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
   Ssecidx = 0;            //clear sector counter
-  //Ridx = 0;               //clear READ ID index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
@@ -607,45 +605,6 @@ void loop() {
           }
           break;
 
-          /*case 0xC0:  //read ID
-          {    
-            Ridx++;                                       //index to READ ID values (for some reason 0 doesn't work!?)
-
-            switch (Ridx) {
-              case 1:
-              {
-                Wbyte(RDATA, Rbyte(RTRACK) );		          //track #
-              } 
-              break;
-              case 2:
-              {
-                Wbyte(RDATA, Rbyte(CRUWRI) & B00000001);  //side #
-              } 
-              break;
-              case 3:
-              {
-                Wbyte(RDATA, Rbyte(RSECTR) );		          //sector #
-              } 
-              break;
-              case 4:
-              {
-                Wbyte(RDATA, 0x01); 		                  //sector size (256 bytes)
-              } 
-              break;
-              case 5:
-              {
-                Wbyte(RDATA, 0x0C);	                      //CC bogus byte #1
-              |
-              break;
-              case 6:
-              {
-                Wbyte(RDATA, 0x0D);                       //CC bogus byte #2
-                noExec();                                 //and we're done with READ ID
-              }
-              break;
-            }
-            break; */
-
         } //end R/W switch
       } //end else R/W commands
     } //end we needed to do something
@@ -655,12 +614,7 @@ void loop() {
       //check for APEDSK99-specfic commands
       ACcmd = Rbyte(ACOMND);
       if ( ACcmd != 0x00 ) {
-
-        ANcmd = (ACcmd != ALcmd);                                             //new or continue previous command?
-          if (ANcmd) {                                                        //new command?
-            ALcmd = ACcmd;                                                    //yes; remember new command for next compare
-        }
-
+     
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
 
@@ -740,6 +694,7 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {
+
             if ( ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
               if ( aDSK[cDSK] ) {
@@ -768,9 +723,9 @@ void loop() {
             noExec();                                                       //prevent multiple Arduino command execution
             
           } 
+
           break;
 	        
-        
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 
@@ -797,32 +752,3 @@ ISR(INT0_vect) {
   //set interrupt flag
   FD1771 = true;
 }
-
-/*if (ANcmd ) {
-              cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
-              if ( aDSK[cDSK] ) {
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
-                Dbtidx = 256; 
-              }
-              else {
-                Wbyte(DTCDSK, 0xFF);                                          //no; signal end of FDSK() command to DSR
-                noExec();                                                     //prevent multiple command execution
-              }
-            }
-            
-            DSK[cDSK].seek(Dbtidx);
-            Sbtidx = (DSK[cDSK].read() * NRBYSECT) + DSK[cDSK].read();        //make it a word (16 bits sector #)
-            if ( Sbtidx != 0 ) {                                              //past last used FDR entry?
-              DSK[cDSK].seek(Sbtidx * NRBYSECT);                              //no; go to FDR     
-              for ( byte ii = 2; ii < 11; ii++ ) {                            //read file name chars (8) and store @DTCDSK
-                cDot = char( DSK[cDSK].read() + 96 );
-                Wbyte( DTCDSK + ii, cDot);
-              }     
-              Dbtidx += 2;                                                    //next FDR pointer
-            }
-            else {
-              Wbyte(DTCDSK, 0xFF);                                            //yes; done last FDR or blank floppy
-              noExec();                                                       //prevent multiple Arduino command execution
-            }
-          } 
-          break; */
