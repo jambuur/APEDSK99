@@ -699,6 +699,7 @@ void loop() {
           {
             unsigned int pFDR;
             unsigned int lFDR; 
+ 
             if ( ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
               if ( aDSK[cDSK] ) {
@@ -707,8 +708,6 @@ void loop() {
               }
               else {
                 pFDR = 0;
-                Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-                noExec();     
               }
             }
 
@@ -726,8 +725,6 @@ void loop() {
               }  
               else {
                 pFDR = 0;
-                Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-                noExec();                                                     //prevent multiple Arduino command execution 
               }            
             }
           } 
