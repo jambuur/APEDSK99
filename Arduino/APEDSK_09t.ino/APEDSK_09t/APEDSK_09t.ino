@@ -617,6 +617,11 @@ void loop() {
       //check for APEDSK99-specfic commands
       ACcmd = Rbyte(ACOMND);
       if ( ACcmd != 0x00 ) {
+        
+        ANcmd = (ACcmd != ALcmd);                             //new or continue previous command?
+        if (ANcmd) {                                          //new command?
+          ALcmd = ACcmd;                                      //yes; remember new command for next compare
+        }  
      
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
@@ -697,16 +702,18 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {
+            Wbyte(0x1EE0, ANcmd);
             if ( ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
               if ( aDSK[cDSK] ) {
                 DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
-                Dbtidx = NRBYSECT;                                            //first FDR pointer / flag for valid DOAD mapping
+                Dbtidx = NRBYSECT;                                                 //first FDR pointer / flag for valid DOAD mapping
+                Wbyte(0x1EE0, 0xAB);
               }
             }
 
             if ( Dbtidx != 0 ) {                                              //FDR pointer / valid DOAD ?
-              
+            
               DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
               Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
 
