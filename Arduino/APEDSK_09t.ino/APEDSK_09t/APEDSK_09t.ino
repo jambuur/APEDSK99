@@ -625,7 +625,7 @@ void loop() {
      
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
-
+          
           case  1:                                                            //UDSK(1):  Unprotect DSK1
           case  2:                                                            //UDSK(2):  Unprotect DSK2
           case  3:                                                            //UDSK(3):  Unprotect DSK3      
@@ -702,35 +702,24 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {
-            Wbyte(0x1EE0, ANcmd);
-            if ( ANcmd ) {
-              cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
-              if ( aDSK[cDSK] ) {
+           
+              if ( ANcmd ) {
+                cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
                 DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
-                Dbtidx = NRBYSECT;                                                 //first FDR pointer / flag for valid DOAD mapping
-                Wbyte(0x1EE0, 0xAB);
+                Dbtidx = 256;                                                 //first FDR pointer / flag for valid DOAD mapping
               }
-            }
-
-            if ( Dbtidx != 0 ) {                                              //FDR pointer / valid DOAD ?
-            
+                                                 
               DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
               Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
-
-              if ( Sbtidx != 0 ) {                                            //valid next FDR?  
-                DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR 
-                for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
-                  Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
-                }   
-                Dbtidx += 2;                                                  //next FDR pointer
-              }  
-              else {
-                Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-                noExec();                                                     //prevent multiple Arduino command execution 
-              }            
-            }
-          } 
-          break;
+                        
+              DSK[cDSK].seek(Sbtidx * 256);                            //yes; go to FDR 
+              for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
+                Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
+              }   
+              Dbtidx += 2;                                                  //next FDR pointer
+               
+            } 
+            break;
 	        
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
