@@ -319,6 +319,8 @@ byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
 boolean FNcmd             = false;  //flag new FD1771 command
 byte ACcmd                = 0;      //APEDSK99 command
+byte ALcmd                = 0;      //APEDSK99 last command
+boolean ANcmd             = false;  //flag new APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
@@ -337,6 +339,7 @@ void noExec(void) {
   FLcmd = FCcmd;          //reset new FD1771 command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
   ACcmd = 0;              //reset APEDSK99 command
+  ALcmd = ACcmd;          //reset new APEDSK99 command prep
   cDSK = 0;               //reset active DSKx
   Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
@@ -694,36 +697,32 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {
-
             if ( ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
               if ( aDSK[cDSK] ) {
                 DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
-                Dbtidx = NRBYSECT;   
-                DSK[cDSK].seek(Dbtidx);
-                Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it a word (16 bits sector #)
-              }
-              else {
-                Sbtidx = 0;
+                Dbtidx = NRBYSECT;                                            //first FDR pointer / flag for valid DOAD mapping
               }
             }
-            
-            if ( Sbtidx != 0 ) {
-              DSK[cDSK].seek(Sbtidx * NRBYSECT);                              //no; go to FDR 
-              for ( byte ii = 2; ii < 12; ii++ ) {                            //read file name chars (8) and store @DTCDSK
-                Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
-              }   
-              Dbtidx += 2;
-              DSK[cDSK].seek(Dbtidx);
-              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it a word (16 bits sector #)
 
- 
-            }  
-            Wbyte(DTCDSK, 0xFF);                                            //yes; done last FDR or blank floppy
-            noExec();                                                       //prevent multiple Arduino command execution
-            
+            if ( Dbtidx != 0 ) {                                              //FDR pointer / valid DOAD ?
+              
+              DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
+              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
+
+              if ( Sbtidx != 0 ) {                                            //valid next FDR?  
+                DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR 
+                for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
+                  Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
+                }   
+                Dbtidx += 2;                                                  //next FDR pointer
+              }  
+              else {
+                Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
+                noExec();                                                     //prevent multiple Arduino command execution 
+              }            
+            }
           } 
-
           break;
 	        
         } //end switch accmd commands   
