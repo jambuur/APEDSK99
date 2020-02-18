@@ -698,7 +698,7 @@ void loop() {
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {
             unsigned int pFDR;
-            unsigned int lFDR; 
+            unsigned int rFDR; 
  
             if ( ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
@@ -714,10 +714,10 @@ void loop() {
             if ( pFDR != 0 ) {                                              //FDR pointer / valid DOAD ?
               
               DSK[cDSK].seek(pFDR);                                         //yes; locate FDR pointer
-              lFDR = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
+              rFDR = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
 
-              if ( lFDR != 0 ) {                                            //valid next FDR?  
-                DSK[cDSK].seek(lFDR * 256);                            //yes; go to FDR 
+              if ( rFDR != 0 ) {                                            //valid next FDR?  
+                DSK[cDSK].seek(rFDR * 256);                            //yes; go to FDR 
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
                   Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
                 }   
