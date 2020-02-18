@@ -617,6 +617,12 @@ void loop() {
       //check for APEDSK99-specfic commands
       ACcmd = Rbyte(ACOMND);
       if ( ACcmd != 0x00 ) {
+
+        ANcmd = (ACcmd != ALcmd);                             //new or continue previous command?
+          if (ANcmd) {                                          //new command?
+          ALcmd = ACcmd;                                      //yes; remember new command for next compare
+        }
+
      
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
@@ -696,42 +702,44 @@ void loop() {
  	        break;       
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
-          {
-            unsigned int pFDR;
-            unsigned int rFDR; 
- 
+          { 
+            Wbyte(0x1EE0, ANcmd);
+
+            byte debug;
             if ( ANcmd ) {
-              cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
+              cDSK = Rbyte(DTCDSK);
               if ( aDSK[cDSK] ) {
-                DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                      //yes; open DOAD file    
-                pFDR = 256;                                                                                                         
-              }
-              else {
-                pFDR = 0;
+                DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ); 
+                Dbtidx = 256;
+                //debug = 0;
+                Wbyte(0x1EE2, ++debug);
               }
             }
 
-            if ( pFDR != 0 ) {                                              //FDR pointer / valid DOAD ?
-              
-              DSK[cDSK].seek(pFDR);                                         //yes; locate FDR pointer
-              rFDR = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
+            if ( Dbtidx != 0 ) {
+              Wbyte(0x1EE4, ++debug);
+              DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
+              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
 
-              if ( rFDR != 0 ) {                                            //valid next FDR?  
-                DSK[cDSK].seek(rFDR * 256);                            //yes; go to FDR 
+              if ( Sbtidx != 0 ) {
+                Wbyte(0x1EE6, ++debug);
+                DSK[cDSK].seek(Sbtidx * 256);                                 //yes; go to FDR 
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
                   Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
-                }   
-                pFDR += 2;                                                  //next FDR pointer
-              }  
+                }  
+                Dbtidx += 2;
+              }
               else {
-                pFDR = 0;
-              }            
+                Wbyte(0x1EE8, ++debug);
+                Dbtidx = 0;
+              }
             }
             else {
-              Wbyte(DTCDSK, 0xFF);
-              noExec();
+              Wbyte(0x1EEA, ++debug);
+              Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
+              noExec();             
             }
-          } 
+          }   
           break;
 	        
         } //end switch accmd commands   
