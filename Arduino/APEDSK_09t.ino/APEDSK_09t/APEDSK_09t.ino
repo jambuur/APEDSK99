@@ -703,7 +703,7 @@ void loop() {
             if ( ANcmd ) {
               cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
               if ( aDSK[cDSK] ) {
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file    
+                DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                      //yes; open DOAD file    
                 pFDR = 256;                                                                                                         
               }
               else {
@@ -726,6 +726,10 @@ void loop() {
               else {
                 pFDR = 0;
               }            
+            }
+            else {
+              Wbyte(DTCDSK, 0xFF);
+              noExec();
             }
           } 
           break;
