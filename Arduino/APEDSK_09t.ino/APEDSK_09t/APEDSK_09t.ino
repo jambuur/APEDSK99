@@ -621,6 +621,9 @@ void loop() {
         ANcmd = (ACcmd != ALcmd);                             //new or continue previous command?
           if (ANcmd) {                                          //new command?
           ALcmd = ACcmd;                                      //yes; remember new command for next compare
+
+          Wbyte(0x1EE0, ACcmd);
+          Wbyte(0x1EE2, ALcmd);
         }
 
      
@@ -703,26 +706,22 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           { 
-            Wbyte(0x1EE0, ANcmd);
-
-            byte debug;
             if ( ANcmd ) {
               cDSK = Rbyte(DTCDSK);
               if ( aDSK[cDSK] ) {
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ); 
                 Dbtidx = 256;
-                //debug = 0;
-                Wbyte(0x1EE2, ++debug);
               }
             }
 
+            Wbyte(0x1EE4, ACcmd);
+            Wbyte(0x1EE6, ALcmd);
+
             if ( Dbtidx != 0 ) {
-              Wbyte(0x1EE4, ++debug);
               DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
               Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
 
               if ( Sbtidx != 0 ) {
-                Wbyte(0x1EE6, ++debug);
                 DSK[cDSK].seek(Sbtidx * 256);                                 //yes; go to FDR 
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
                   Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
@@ -730,16 +729,18 @@ void loop() {
                 Dbtidx += 2;
               }
               else {
-                Wbyte(0x1EE8, ++debug);
                 Dbtidx = 0;
               }
             }
             else {
-              Wbyte(0x1EEA, ++debug);
               Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
               noExec();             
             }
           }   
+          
+          Wbyte(0x1EE8, ACcmd);
+          Wbyte(0x1EEA, ALcmd);
+          
           break;
 	        
         } //end switch accmd commands   
