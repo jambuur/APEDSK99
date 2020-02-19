@@ -319,8 +319,6 @@ byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
 boolean FNcmd             = false;  //flag new FD1771 command
 byte ACcmd                = 0;      //APEDSK99 command
-byte ALcmd                = 0;      //APEDSK99 last command
-boolean ANcmd             = false;  //flag new APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
@@ -338,8 +336,6 @@ void noExec(void) {
   FCcmd = FDINT;          //"" ""
   FLcmd = FCcmd;          //reset new FD1771 command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
-  ACcmd = 0;              //reset APEDSK99 command
-  ALcmd = ACcmd;          //reset new APEDSK99 command prep
   cDSK = 0;               //reset active DSKx
   Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
@@ -618,15 +614,6 @@ void loop() {
       ACcmd = Rbyte(ACOMND);
       if ( ACcmd != 0x00 ) {
 
-        ANcmd = (ACcmd != ALcmd);                             //new or continue previous command?
-          if (ANcmd) {                                          //new command?
-          ALcmd = ACcmd;                                      //yes; remember new command for next compare
-
-          Wbyte(0x1EE0, ACcmd);
-          Wbyte(0x1EE2, ALcmd);
-        }
-
-     
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
 
@@ -706,17 +693,14 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           { 
-            if ( ANcmd ) {
+            if ( Dbtidx == 0 ) {
               cDSK = Rbyte(DTCDSK);
               if ( aDSK[cDSK] ) {
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ); 
                 Dbtidx = 256;
               }
             }
-
-            Wbyte(0x1EE4, ACcmd);
-            Wbyte(0x1EE6, ALcmd);
-
+            
             if ( Dbtidx != 0 ) {
               DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
               Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
@@ -729,7 +713,8 @@ void loop() {
                 Dbtidx += 2;
               }
               else {
-                Dbtidx = 0;
+                Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
+                noExec();             
               }
             }
             else {
@@ -737,10 +722,6 @@ void loop() {
               noExec();             
             }
           }   
-          
-          Wbyte(0x1EE8, ACcmd);
-          Wbyte(0x1EEA, ALcmd);
-          
           break;
 	        
         } //end switch accmd commands   
