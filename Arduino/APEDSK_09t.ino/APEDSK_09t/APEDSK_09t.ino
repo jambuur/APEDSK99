@@ -322,7 +322,7 @@ byte ACcmd                = 0;      //APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
-//byte Ridx                 = 0;      //READ ID counter
+byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
@@ -340,6 +340,7 @@ void noExec(void) {
   Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
   Ssecidx = 0;            //clear sector counter
+  Ridx = 0;               //clear case() index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
@@ -693,35 +694,32 @@ void loop() {
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           { 
-            if ( Dbtidx == 0 ) {
-              cDSK = Rbyte(DTCDSK);
-              if ( aDSK[cDSK] ) {
+            cDSK = Rbyte(DTCDSK);
+            if ( aDSK[cDSK] ) {
+              if ( Ridx == 0 ) {              
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ); 
-                Dbtidx = 256;
               }
-            }
+              
+              DSK[cDSK].seek(NRBYSECT + Ridx);                                //locate FDR pointer
+              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointe
             
-            if ( Dbtidx != 0 ) {
-              DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
-              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
-
-              if ( Sbtidx != 0 ) {
-                DSK[cDSK].seek(Sbtidx * 256);                                 //yes; go to FDR 
+              if ( Sbtidx != 0 ) {                                            //valid FDR pointer?
+                DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR 
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
                   Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
                 }  
-                Dbtidx += 2;
+                Ridx += 2;
               }
-              else {
+              else {    
                 Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
                 noExec();             
               }
             }
-            else {
+            else {    
               Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-              noExec();             
+              noExec();
             }
-          }   
+          }
           break;
 	        
         } //end switch accmd commands   
@@ -750,30 +748,3 @@ ISR(INT0_vect) {
   //set interrupt flag
   FD1771 = true;
 }
-
-/*if ( ANcmd ) {
-              cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
-              if ( aDSK[cDSK] ) {
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
-                Dbtidx = NRBYSECT;                                            //first FDR pointer / flag for valid DOAD mapping
-              }
-            }
-
-            if ( Dbtidx != 0 ) {                                              //FDR pointer / valid DOAD ?
-              
-              DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
-              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
-
-              if ( Sbtidx != 0 ) {                                            //valid next FDR?  
-                DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR 
-                for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
-                  Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
-                }   
-                Dbtidx += 2;                                                  //next FDR pointer
-              }  
-              else {
-                Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-                noExec();                                                     //prevent multiple Arduino command execution 
-              }            
-            }
-          } */
