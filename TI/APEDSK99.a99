@@ -3509,8 +3509,6 @@ H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 	DEC	R6
 	JNE	H9904
 *
-	LIMI 	2
-*
 	JMP	FDSKL1
 *		
 QFDSK	LIMI	2			VDP interrupts back on
