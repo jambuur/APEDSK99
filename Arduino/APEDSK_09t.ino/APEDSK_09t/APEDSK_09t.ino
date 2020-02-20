@@ -697,7 +697,7 @@ void loop() {
               cDSK = Rbyte(DTCDSK);
               if ( aDSK[cDSK] ) {
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ); 
-                Dbtidx = 256;
+                Dbtidx = NRBYSECT;
               }
             }
             
@@ -706,7 +706,7 @@ void loop() {
               Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
 
               if ( Sbtidx != 0 ) {
-                DSK[cDSK].seek(Sbtidx * 256);                                 //yes; go to FDR 
+                DSK[cDSK].seek(Sbtidx * NRBYSECT);                                 //yes; go to FDR 
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
                   Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
                 }  
