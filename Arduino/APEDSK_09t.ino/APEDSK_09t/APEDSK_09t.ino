@@ -698,29 +698,29 @@ void loop() {
             if ( aDSK[cDSK] ) {
               if ( Ridx == 0 ) {              
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ); 
-              }
-              
-              DSK[cDSK].seek(NRBYSECT + Ridx);                                //locate FDR pointer
-              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointe
-            
-              if ( Sbtidx != 0 ) {                                            //valid FDR pointer?
-                DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR 
-                for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
-                  Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
-                }  
-                Ridx += 2;
+  
+                DSK[cDSK].seek(NRBYSECT + Ridx);                                //locate FDR pointer
+                Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointe
+
+                if ( Sbtidx != 0 ) {                                            //valid FDR pointer?
+                  DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR                                  
+                  Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();          //make it word FDR pointer
+                  for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
+                    Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
+                  }  
+                  Ridx += 2;
+                }
+                else {    
+                  Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
+                  noExec();             
+                }
               }
               else {    
                 Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-                noExec();             
+                noExec();
               }
             }
-            else {    
-              Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-              noExec();
-            }
-          }
-          break;
+            break;
 	        
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
