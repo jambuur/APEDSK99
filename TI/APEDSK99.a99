@@ -3481,8 +3481,8 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 	LI	R5,>2000 + >6000	overwrite possible artifact with <space> (+ TI BASIC bias)
 	MOVB	R5,@-2(R15)		write to VDP
 *
-	LIMI	2			VDP interrupts back on
-QSDSK	LI	R8,12			current CALL length
+QSDSK	LIMI	2			VDP interrupts back on
+	LI	R8,12			current CALL length
 	JMP	RTNBAS			all is well, return without error
 *
 *-----------------------------------------------------------------
@@ -3492,16 +3492,14 @@ FDSK	LI	R4,>5858		Files DSK flag
 	JMP	PUCPRP
 *
 FDSK2	MOV	R0,@DTCDSK		save DSKx
-*
-FDSKL1	LI	R6,>0B00
-	MOVB	R6,@ACOMND		FDSK command to Arduino
-*
-	CB	@K012,@DTCDSK		last FDR?
-	JEQ	QFDSK			yes; quit
-*
 	LIMI	0			VDP interrupts off so to not mess up TI BASIC screeN
 	LI	R2,64			starting screen position (screen scrolls after finishing FDSK() )
 	BL	@VDPWRI			set VDP address
+*
+FDSKL1	LI	R6,>0B00
+	MOVB	R6,@ACOMND		FDSK command to Arduino
+	CB	@K012,@DTCDSK		last FDR?
+	JEQ	QFDSK			yes; quit
 *
 	LI	R5,DTCDSK+2		pointer to DOAD name
 	LI	R6,10			max 10 characters in file name
@@ -3511,8 +3509,7 @@ H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 *
 	JMP	FDSKL1
 *		
-QFDSK	LIMI	2			VDP interrupts back on
-	JMP	QSDSK
+QFDSK	JMP	QSDSK
 *
 *-----------------------------------------
 * APEDSK constants
