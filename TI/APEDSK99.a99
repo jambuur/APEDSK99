@@ -3507,15 +3507,7 @@ H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 	DEC	R6
 	JNE	H9904
 *
-	LI	R2,735			remove occasional screen artifact in TI BASIC
-	BL	@VDPWRI			screen position just after DOAD name
-	LI	R5,>2000 + >6000	overwrite possible artifact with <space> (+ TI BASIC bias)
-	MOVB	R5,@-2(R15)		write to VDP
-*
-	LI	R6,>0000
-	MOVB	R6,@WCOMND
-*
-*	JMP	FDSKL1
+	JMP	FDSKL1
 *		
 QFDSK	JMP	QSDSK
 *
