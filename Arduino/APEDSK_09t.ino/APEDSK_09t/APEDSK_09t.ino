@@ -695,7 +695,11 @@ void loop() {
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
           {            
             cDSK = Rbyte(DTCDSK);
-            if ( aDSK[cDSK] ) {
+            if ( !aDSK[cDSK] ) {
+              Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
+              noExec();
+            }
+            else {
             
               if ( Ridx == 0 ) {              
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);
@@ -706,7 +710,6 @@ void loop() {
 
               if ( Sbtidx != 0 ) {                                            //valid FDR pointer?
                 DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR                                  
-                Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();          //make it word FDR pointer
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
                   Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
                 }  
@@ -716,10 +719,6 @@ void loop() {
                 Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
                 noExec();             
               }
-            }
-            else {    
-              Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-              noExec();
             }
           }
           break;
