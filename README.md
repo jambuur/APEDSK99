@@ -92,7 +92,7 @@ The LED flashes in the following intricate patterns to indicate various error co
 
 ### *QA*
 
-Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code and double the functionality. But I dare to say that at least the basic I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am happy to be able to open all those dusty DOAD's, admire my work and have a beer. `
+Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code and double the functionality at the same time. But I dare to say that at least the basic I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work.
 
 ### *Bug's*
 
