@@ -3492,18 +3492,18 @@ FDSK	LI	R4,>5858		Files DSK flag
 	JMP	PUCPRP
 *
 FDSK2	MOV	R0,@DTCDSK		save DSKx
-	LIMI	0			VDP interrupts off so to not mess up TI BASIC screeN
-	LI	R2,64			starting screen position (screen scrolls after finishing FDSK() )
-	BL	@VDPWRI			set VDP address
-*
 FDSKL1	LI	R6,>0B00
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 	CB	@K012,@DTCDSK		last FDR?
 	JEQ	QFDSK			yes; quit
 *
+	LIMI	0			VDP interrupts off so to not mess up TI BASIC screeN
+	LI	R2,64			starting screen position (screen scrolls after finishing FDSK() )
+	BL	@VDPWRI			set VDP address
+*
 	LI	R5,DTCDSK+2		pointer to DOAD name
 	LI	R6,10			max 10 characters in file name
-H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
+H9904	MOVB	*R5+,@>5EE0		@-2(R15)		save file name character in VDP screen table
 	DEC	R6
 	JNE	H9904
 *
