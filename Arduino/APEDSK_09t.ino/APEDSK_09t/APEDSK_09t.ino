@@ -289,6 +289,8 @@ void eflash(byte error)
 #define RDINT   0x1FEA
 //TI BASIC screen bias
 #define TIBias 0x60
+//debug address 
+#define DEBUG 0x1EE0
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC  //emulated 8 CRU input bits           (>5FEC in TI99/4a DSR memory block); not used but possible future use
@@ -319,10 +321,12 @@ byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
 boolean FNcmd             = false;  //flag new FD1771 command
 byte ACcmd                = 0;      //APEDSK99 command
+byte ALcmd                = 0;      //last APEDSK99 command
+boolean ANcmd             = false;  //flag new APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
-byte Ridx                 = 0;      //READ ID counter
+byte FDRidx               = 0;      //FDR index
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
@@ -336,11 +340,12 @@ void noExec(void) {
   FCcmd = FDINT;          //"" ""
   FLcmd = FCcmd;          //reset new FD1771 command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
+  ACcmd = 0;              //"" ""
+  ALcmd = FCcmd;          //reset new FD1771 command prep
   cDSK = 0;               //reset active DSKx
   Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
   Ssecidx = 0;            //clear sector counter
-  Ridx = 0;               //clear case() index counter
   cTrack = 0;             //clear current Track #
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
@@ -489,7 +494,7 @@ void loop() {
     //the FD1771 "Force Interrupt" command is used to stop further command execution
     if ( FCcmd != FDINT ) { //do we need to do anything?
       
-      FNcmd = (FCcmd != FLcmd);                             //new or continue previous command?
+      FNcmd = (FCcmd != FLcmd);                             //new or continue previous FD1771 command?
       if (FNcmd) {                                          //new command?
         FLcmd = FCcmd;                                      //yes; remember new command for next compare
       }
@@ -613,7 +618,12 @@ void loop() {
       //------------------------------------------------------------------------------------------- APEDSK99-specifc commands
       //check for APEDSK99-specfic commands
       ACcmd = Rbyte(ACOMND);
-      if ( ACcmd != 0x00 ) {
+      if ( ACcmd != 0 ) {
+
+        ANcmd = (ACcmd != ALcmd);                                             //new or continue previous APEDSK99 command?
+        if (ANcmd) {                                                          //new command?
+          ALcmd = ACcmd;                                                      //yes; remember new command for next compare
+        }
 
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
@@ -676,7 +686,6 @@ void loop() {
 		        else {
 		          DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
 		        }
-
         		Wbyte(DTCDSK    , cDSK+48+TIBias);				                        //drive # in ASCII + TI BASIC bias
         		Wbyte(DTCDSK + 1, '=' +   TIBias);		  	                        //"=" in ASCII + TI BASIC bias
         		for ( byte ii = 2; ii < 10; ii++ ) {
@@ -693,33 +702,33 @@ void loop() {
  	        break;       
 
           case 11:                                                            //FDSK(): Files on DOAD (DIR)
-          {            
+          {                  
             cDSK = Rbyte(DTCDSK);
-            if ( !aDSK[cDSK] ) {
-              Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-              noExec();
-            }
-            else {
-            
-              if ( Ridx == 0 ) {              
+            if ( aDSK[cDSK] ) {
+              if ( ANcmd ) {
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);
-              } 
-  
-              DSK[cDSK].seek(NRBYSECT + Ridx);                                //locate FDR pointer
-              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointe
+                FDRidx = 0;
+              }
 
+              DSK[cDSK].seek(NRBYSECT + FDRidx);                              //locate FDR pointer
+              Sbtidx = (DSK[cDSK].read() * NRBYSECT) + DSK[cDSK].read();      //make it word FDR pointe
+      
               if ( Sbtidx != 0 ) {                                            //valid FDR pointer?
                 DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR                                  
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
                   Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
                 }  
-                Ridx += 2;
+                FDRidx += 2;
               }
-              else {    
-                Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-                noExec();             
+              else {
+                Wbyte(DTCDSK, 0xFF);
+                noExec();
               }
             }
+            else {
+              Wbyte(DTCDSK, 0xFF);
+              noExec();
+            }                
           }
           break;
 	        
