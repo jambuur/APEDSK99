@@ -3492,9 +3492,11 @@ FDSK	LI	R4,>5858		Files DSK flag
 	JMP	PUCPRP
 *
 FDSK2	MOV	R0,@DTCDSK		save DSKx
+	CLR 	R0			FDR index; start with 0
 	LI	R2,>B000
 *
-FDSKL1	LI	R6,>0B00
+FDSKL1	MOVB    R0,@DTCDSK+1		set FDR pointer
+	LI	R6,>0B00
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 	CB	@K012,@DTCDSK		last FDR?
 	JEQ	QSDSK			yes; quit
@@ -3505,7 +3507,8 @@ H9904	MOVB	*R5+,*R2+		save file name character in VDP screen table
 	DEC	R6
 	JNE	H9904
 *
-	JMP	FDSKL1
+	INCT	R0			increase FDR index
+	JMP	FDSKL1			check/get next FDR
 *
 *-----------------------------------------
 * APEDSK constants
