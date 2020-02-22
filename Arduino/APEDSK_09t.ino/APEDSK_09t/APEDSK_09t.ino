@@ -719,6 +719,7 @@ void loop() {
                   Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
                 }  
                 FDRidx += 2;
+                Wbyte(ACOMND,0);
               }
               else {
                 Wbyte(DTCDSK, 0xFF);
