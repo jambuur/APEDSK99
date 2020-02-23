@@ -714,8 +714,9 @@ void loop() {
               }
             }
             else {
-              Wbyte(DTCDSK, 0xFF);
+              Wbyte(DTCDSK, 0xFF);                                            //no; not mapped
             }
+            DSK[cDSK].close();
             noExec();                                                         //not mapped / done processing current FDR
           }
           break;
