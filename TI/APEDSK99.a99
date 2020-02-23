@@ -3507,7 +3507,7 @@ H9904	MOVB	*R5+,*R2+		save file name character in VDP screen table
 	DEC	R6
 	JNE	H9904
 *
-	INCT	R0			increase FDR index
+	AI	R0,>0200		increase FDR index
 	JMP	FDSKL1			check/get next FDR
 *
 *-----------------------------------------
