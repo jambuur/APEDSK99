@@ -713,6 +713,9 @@ void loop() {
                 Wbyte(DTCDSK, 0xFF);                                          //set last FDR flag 
               }
             }
+            else {
+              Wbyte(DTCDSK, 0xFF);
+            }
             noExec();                                                         //not mapped / done processing current FDR
           }
           break;
