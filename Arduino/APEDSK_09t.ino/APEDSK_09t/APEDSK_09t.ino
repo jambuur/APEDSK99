@@ -706,7 +706,7 @@ void loop() {
               if ( Sbtidx != 0 ) {                                            //valid FDR pointer?
                 DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR                                  
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (10) and store for FDSK()
-                  Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);             //"" ""
+                  Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias);             //"" ""
                 }                                                             //"" ""
               }
               else {                                                          //no; last FDR or blank "floppy"
@@ -716,7 +716,6 @@ void loop() {
             else {
               Wbyte(DTCDSK, 0xFF);                                            //no; not mapped
             }
-            DSK[cDSK].close();
             noExec();                                                         //not mapped / done processing current FDR
           }
           break;
