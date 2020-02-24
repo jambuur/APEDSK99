@@ -324,7 +324,7 @@ byte ACcmd                = 0;      //current APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
-byte FDRidx               = 0;      //FDR index
+byte FDRidx               = 0;      //FDR index; is cleared by APEDSK99 11 (FDSK) command, not noExec()
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
@@ -699,18 +699,19 @@ void loop() {
             if ( aDSK[cDSK] ) {                                               //is requested disk mapped?
               
               DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                     //yes; open DOAD for reading only
-              byte FDRidx = Rbyte( DTCDSK + 1 );                              //read FDR index supplied by FDSK() subprogram
               DSK[cDSK].seek(NRBYSECT + FDRidx);                              //locate FDR pointer
               Sbtidx = (DSK[cDSK].read() * NRBYSECT) + DSK[cDSK].read();      //make word FDR pointer
       
               if ( Sbtidx != 0 ) {                                            //valid FDR pointer?
                 DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR                                  
                 for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (10) and store for FDSK()
-                  Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias);             //"" ""
+                  Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias);              //"" ""
                 }                                                             //"" ""
+                FDRidx += 2;                                                  //next FDR pointer in Directory Link
               }
               else {                                                          //no; last FDR or blank "floppy"
                 Wbyte(DTCDSK, 0xFF);                                          //set last FDR flag 
+                FDRidx = 0;                                                   //clear FDR pointer
               }
             }
             else {
