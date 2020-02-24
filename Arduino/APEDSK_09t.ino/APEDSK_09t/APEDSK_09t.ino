@@ -657,7 +657,7 @@ void loop() {
               cDSK = Rbyte(DTCDSK);                                           //yes; assign to requested DSKx
               nDSK[cDSK] = DOAD;
               aDSK[cDSK] = true;
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open new DOAD file to check write protect y/n
+              DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                     //open new DOAD file to check write protect y/n
               DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
               pDSK[cDSK] = ( DSK[cDSK].read() == 0x50 );                      //0x50 || "P" means disk is write APEDSK99 protected
               DSK[cDSK].close();                                              //close new DOAD file
