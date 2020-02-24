@@ -324,7 +324,6 @@ byte ACcmd                = 0;      //current APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
-byte FDRidx               = 0;      //FDR index
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
