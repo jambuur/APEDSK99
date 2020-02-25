@@ -3502,7 +3502,7 @@ FDSKL1	MOV	R0,@DTCDSK		save DSKx + FDR index (start latter with 0)
 	CB	@K012,@DTCDSK		check Arduino FDSK return code
 	JEQ	QSDSK			>FF, done last FDR
 *	
-	LI	R5,DTCDSK+2		pointer to drive # and DOAD name
+	LI	R5,DTCDSK+2		pointer to file name
 	LI	R6,10			max 10 characters
 H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 	DEC	R6
