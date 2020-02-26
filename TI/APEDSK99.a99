@@ -3501,11 +3501,11 @@ FDSKL1	MOV	R0,@DTCDSK		save DSKx + FDR index (start with FDR 0)
 	CB	@K012,@DTCDSK		check Arduino FDSK return code
 	JEQ	QSDSK			>FF; "blank floppy" or done last FDR: quit
 *
+	LIMI    0			VDP interrupts off so to not mess up TI BASIC screen
 	LI	R5,DTCDSK+2		pointer to file name
 	LI	R6,10			[P/F/V]" "[nnn][ffffffffff]" "
-
-H9904	LIMI    0			VDP interrupts off so to not mess up TI BASIC screen	
-	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
+*	
+H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 	DEC	R6
 	JNE	H9904
 *	
