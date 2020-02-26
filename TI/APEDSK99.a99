@@ -121,23 +121,33 @@ EPWRUP	CI	R12,>1000		Dhr. F.G. Kaal check: are we powering up 1st CRU (>1000) pe
 	MOV	R11,R7			yes; save return address
 	STWP	R9			get workspace (should be >83E0)
 	AI	R9,-224			point to top of scratch-pad mem (>8300)
-	MOV	@>0070(R9),R0		highest free address in vdp mem (>8370)
-	MOV	R0,R2			save it
-	AI	R0,-2088		we'll need >828 bytes
-	MOV	R0,@>0070(R9)		update address
-	INC	R0			
-	BL	@VDPSET			set VDP address
+*	MOV	@>0070(R9),R0		highest free address in vdp mem (>8370)
+	MOV	@>0070(R9),R2		APEDSK99: use VDPWRI (VDPSET is redundant)
+*	MOV	R0,R2			save it
+	MOV	R2,R0			APEDSK99: use VDPWRI (VDPSET is redundant)
+*	AI	R0,-2088		we'll need >828 bytes
+	AI	R2,-2088		APEDSK99: use VDPWRI (VDPSET is redundant)
+*	MOV	R0,@>0070(R9)		update address
+	MOV	R2,@>0070(R9)		APEDSK99: use VDPWRI (VDPSET is redundant)
+*	INC	R0			
+	INC	R2			APEDSK99: use VDPWRI (VDPSET is redundant)
+*	BL	@VDPSET			set VDP address
+	BL	@VDPWRI			APEDSK99: use VDPWRI (VDPSET is redundant)
 	LI	R1,2088			
 H001	CLR	@-2(R15)		clear these >828 bytes
 	DEC	R1			
 	JNE	H001			
-	BL	@VDPSET			set VDP address (same)
+*	BL	@VDPSET			set VDP address (same)
+	BL	@VDPWRI			APEDSK99: use VDPWRI (VDPSET is redundant)
 	LI	R3,>AA03			
 	MOVB	R3,@-2(R15)		write buffer ID mark
 	NOP				
-	MOVB	R2,@-2(R15)		write old highest free address
-	SWPB	R2			
-	MOVB	R2,@-2(R15)			
+*	MOVB	R2,@-2(R15)		write old highest free address
+	MOVB	R0,@-2(R15)		APEDSK99: use VDPWRI (VDPSET is redundant)
+*	SWPB	R2			
+	SWPB 	R0			APEDSK99: use VDPWRI (VDPSET is redundant)
+*	MOVB	R2,@-2(R15)			
+	MOVB 	R0,@-2(R15)		APEDSK99: use VDPWRI (VDPSET is redundant)
 	NOP				
 	MOVB	R12,@-2(R15)		write CRU address (>1000 for APEDSK99)
 	SWPB	R3			
@@ -153,12 +163,12 @@ NOCRU	B	*R11			return
 					
 K001	DATA	>0404			
 					
-VDPSET	ORI	R0,>4000		set VDP for a write
-	SWPB	R0			
-	MOVB	R0,*R15			pass address
-	SWPB	R0			
-	MOVB	R0,*R15			
-	B	*R11			
+*VDPSET	ORI	R0,>4000		set VDP for a write
+*	SWPB	R0			
+*	MOVB	R0,*R15			pass address
+*	SWPB	R0			
+*	MOVB	R0,*R15			
+*	B	*R11			
 
 *---------------------------------------
 * Sector read/write
