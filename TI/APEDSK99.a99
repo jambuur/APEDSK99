@@ -3490,10 +3490,9 @@ QSDSK	LIMI	2			VDP interrupts back on
 * ----------------------------------------------------------------
 FDSK	LI	R4,>5858		Files DSK flag
 	JMP	PUCPRP
-*
-FDSK2	LIMI 	0			VDP interrupts off so to not mess up TI BASIC screen
-	LI	R2,>B000		screen starting position
-*	BL	@VDPWRI			set VDP address
+*			
+FDSK2	LI	R2,32			screen starting position
+	BL	@VDPWRI			set VDP address
 *
 FDSKL1	MOV	R0,@DTCDSK		save DSKx + FDR index (start with FDR 0)
 	BL	@FDELAY
@@ -3502,16 +3501,18 @@ FDSKL1	MOV	R0,@DTCDSK		save DSKx + FDR index (start with FDR 0)
 	CB	@K012,@DTCDSK		check Arduino FDSK return code
 	JEQ	QSDSK			>FF; "blank floppy" or done last FDR: quit
 *	
+	LIMI    0			VDP interrupts off so to not mess up TI BASIC screen
 	LI	R5,DTCDSK+2		pointer to file name
-	LI	R6,10			max 10 characters
-H9904	MOVB	*R5+,R2+		@-2(R15)		save file name character in VDP screen table
+	LI	R6,16			[P/F/V]" "[nnn][ffffffffff]" "
+H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 	DEC	R6
 	JNE	H9904
 *	
+	LIMI	2
 	INCT	R0			increase FDR pointer
 	JMP	FDSKL1			do next FDR
 *
-FDELAY  LI 	R6,>0040
+FDELAY  LI 	R6,64
 DLYLP1	DEC	R6
 	JNE	DLYLP1
 	B	*R11
