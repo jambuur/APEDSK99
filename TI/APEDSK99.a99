@@ -3490,17 +3490,16 @@ QSDSK	LIMI	2			VDP interrupts back on
 * ----------------------------------------------------------------
 FDSK	LI	R4,>5858		Files DSK flag
 	JMP	PUCPRP
-*	
-FDSK2	LI	R6,>0B00
 *
-	LIMI 	0			VDP interrupts off so to not mess up TI BASIC screen
+FDSK2	LIMI 	0			VDP interrupts off so to not mess up TI BASIC screen
 	LI	R2,64			screen starting position
 	BL	@VDPWRI			set VDP address
 *
-FDSKL1	MOV	R0,@DTCDSK		save DSKx + FDR index (start latter with 0)
+FDSKL1	MOV	R0,@DTCDSK		save DSKx + FDR index (start with FDR 0)
+	LI	R6,>0B00		FDSK command in MSB R6
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 	CB	@K012,@DTCDSK		check Arduino FDSK return code
-	JEQ	QSDSK			>FF, done last FDR
+	JEQ	QSDSK			>FF; "blank floppy" or done last FDR: quit
 *	
 	LI	R5,DTCDSK+2		pointer to file name
 	LI	R6,10			max 10 characters
@@ -3511,6 +3510,11 @@ H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
 	INCT	R0			increase FDR pointer
 	JMP	FDSKL1			do next FDR
 *
+FKDELAY LI 	R6,>0040
+DELAYLP	DEC	R6
+	JNE	DELAYLP
+	B	*R11
+*	
 *-----------------------------------------
 * APEDSK constants
 *-----------------------------------------
@@ -3519,8 +3523,8 @@ SIDE01	DATA	>0100			floppy side select
 *-----------------------------------------
 
 *-----------------------------------------
-* The remaining bytes (~>5E10 to >5FD5) all contain >00
-* >5FDE - >5FE7 is drive # and DOAD name storage for BASIC CALL's
+* The remaining bytes (~>5E00 to >5FD5) all contain >00
+* >5FD6 - >5FE7 is drive #, DOAD / file name storage for BASIC CALL's
 * >5FE8	is the Arduino Command Register (BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers
