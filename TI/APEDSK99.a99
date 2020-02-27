@@ -3475,17 +3475,16 @@ SDSK2	MOV	R0,@DTCDSK		save DSKx
 *
 	LI	R5,DTCDSK		pointer to drive # and DOAD name
 	LI	R6,10			max 10 characters
-H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
+H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table	
 	DEC	R6
 	JNE	H9903
 *	
-*	LI	R2,735			remove occasional screen artifact in TI BASIC
-*	BL	@VDPWRI			screen position just after DOAD name
-*	LI	R5,>2000 + >6000	overwrite possible artifact with <space> (+ TI BASIC bias)
-*	MOVB	R5,@-2(R15)		write to VDP
+	LI	R2,736			remove occasional screen artifact in TI BASIC
+	BL	@VDPWRI			screen position just after DOAD name
+	LI	R5,>2000 + >6000	overwrite possible artifact with <space> (+ TI BASIC bias)
+	MOVB	R5,@-2(R15)		write to VDP
 *
-QSDSK	LIMI	2			VDP interrupts back on
-	LI	R8,12			current CALL length
+QSDSK	LI	R8,12			current CALL length
 	JMP	RTNBAS			all is well, return without error
 *	
 *-----------------------------------------
