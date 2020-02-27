@@ -246,6 +246,8 @@ void TIgo()
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
+//-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
+
 //flash error code:
 //  flash                   : SPI / SD Card fault/not ready
 //  flash-flash             : can't read DSR binary image (/APEDSK99.DSR)
@@ -258,7 +260,6 @@ void eflash(byte error)
   //... enable Arduino CE* for flashing the error code
   pinAsOutput(CE);
 
-//-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
   //error routine: stuck in code flashing loop until reset
   while (true) {
 
@@ -282,7 +283,7 @@ void eflash(byte error)
 //-APEDSK99 specific-------------------------------------------------------------------------- FD1771 emu: variables and functions
 
 //DOAD file name handling (DSKx 1-3 (2 bytes) + 8 bytes/characters)
-#define DTCDSK  0x1FD6
+#define DTCDSK  0x1FDC
 //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
@@ -691,34 +692,7 @@ void loop() {
  	          noExec();
 		      } 
  	        break;       
-
-          case 11:                                                            //FDSK(): Files on DOAD (DIR)
-          {                  
-            cDSK = Rbyte(DTCDSK);                                             //which DSKx?
-            if ( aDSK[cDSK] ) {                                               //is requested disk mapped?
-              
-              DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                     //yes; open DOAD for reading only
-              byte FDRidx = Rbyte( DTCDSK + 1 );                              //read FDR index supplied by FDSK() subprogram
-              DSK[cDSK].seek(NRBYSECT + FDRidx);                              //locate FDR pointer
-              Sbtidx = (DSK[cDSK].read() * NRBYSECT) + DSK[cDSK].read();      //make word FDR pointer
-      
-              if ( Sbtidx != 0 ) {                                            //valid FDR pointer?
-                DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR                                  
-                for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (10) and store for FDSK()
-                  Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias);             //"" ""
-                }                                                             //"" ""
-              }
-              else {                                                          //no; last FDR or blank "floppy"
-                Wbyte(DTCDSK, 0xFF);                                          //set last FDR flag 
-              }
-            }
-            else {
-              Wbyte(DTCDSK, 0xFF);                                            //no; not mapped
-            }
-            noExec();                                                         //not mapped / done processing current FDR
-          }
-          break;
-	        
+   
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 
@@ -731,8 +705,6 @@ void loop() {
     TIgo();
 
   } //end FD1771 flag check
-
-
 
 } //end loop()
 
