@@ -3451,8 +3451,6 @@ H9901	JEQ	H9900			DSK0 not valid, return with error
 	JEQ	CDSK2			yes, continue after generic prep
 	CI	R4,>5757		SDSK?
 	JEQ	SDSK2			yes, continue after generic prep
-	CI	R4,>5858
-	JEQ	FDSK2
 *
 	JMP	PUDSK2			PDSK() / UDSK()
 *
