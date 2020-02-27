@@ -11,7 +11,7 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
-DTCDSK	EQU	>5FDD			CDSK data: DSK number (1-3) and DOAD name (10 characters)
+DTCDSK	EQU	>5FDC			CDSK data: DSK number (1-3) and DOAD name (10 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
@@ -3470,7 +3470,7 @@ SDSK2	MOV	R0,@DTCDSK		save DSKx
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
 	LIMI 	0			VDP interrupts off so to not mess up TI BASIC screen
-	LI	R2,725			screen starting position
+	LI	R2,726			screen starting position
 	BL	@VDPWRI			set VDP address
 *
 	LI	R5,DTCDSK		pointer to drive # and DOAD name
