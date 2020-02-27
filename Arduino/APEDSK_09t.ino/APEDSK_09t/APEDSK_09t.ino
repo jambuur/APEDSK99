@@ -283,7 +283,7 @@ void eflash(byte error)
 //-APEDSK99 specific-------------------------------------------------------------------------- FD1771 emu: variables and functions
 
 //DOAD file name handling (DSKx 1-3 (2 bytes) + 8 bytes/characters)
-#define DTCDSK  0x1FDC
+#define DTCDSK  0x1FDE
 //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
