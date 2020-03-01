@@ -60,15 +60,15 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 
 //!!!APEDSK99 board version v0.12k 2019
 //74HC595 shift-out definitions
-//#define DS      17  //PC5
+//#define DS      17  //PC3
 //#define LATCH	  18	//PC4
-//#define CLOCK   19  //PC3
+//#define CLOCK   19  //PC5
 
 //!!!APEDSK99 board version v0.12m 2020
 //74HC595 shift-out definitions
-#define CLOCK     17  //PC5
+#define CLOCK     17  //PC3
 #define LATCH     18  //PC4
-#define DS        19  //PC3
+#define DS        19  //PC5
 
 //IO lines for Arduino RAM control
 #define CE  14  //PC0  LED flashes for both Arduino CE* and TI MBE*
@@ -78,13 +78,13 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 //!!!APEDSK99 board version v0.12k 2019
 //#define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
 //!!!APEDSK99 board version v0.12m 2020
-#define TI_READY      3   //PD0; TI READY line + enable/disable 74HC595 shift registers
-#define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
+#define TI_READY       3  //PD0; TI READY line + enable/disable 74HC595 shift registers
+#define TI_INT      	 2  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
 #define TI_BUFFERS    15  //PC1; 74LS541 buffers enable/disable
 
 //error blinking parameters: on, off, delay between sequence
-#define LED_ON      500
-#define LED_OFF     250
+#define LED_ON       500
+#define LED_OFF      250
 #define LED_REPEAT  1500
 
 //Status Register bits
@@ -191,31 +191,31 @@ void set_abus(unsigned int address)
   //!!!APEDSK99 board version v0.12m 2020
   //PORTC |= ( (address >>  x) & B00100000); ...
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  9) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A12
+  PORTC |= ( (address >>  7) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A12
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  8) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A11
+  PORTC |= ( (address >>  6) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A11
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  7) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A10
+  PORTC |= ( (address >>  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A10
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  6) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A9
+  PORTC |= ( (address >>  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A9
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A8
+  PORTC |= ( (address >>  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A8
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A7
+  PORTC |= ( (address >>  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A7
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A6
+  PORTC |= ( (address >>  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A6
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A5
+  PORTC |= ( (address      ) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A5
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A4
+  PORTC |= ( (address <<  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A4
   digitalLow(CLOCK);
-  PORTC |= ( (address      ) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A3
+  PORTC |= ( (address <<  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A3
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A2
+  PORTC |= ( (address <<  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A2
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A1
+  PORTC |= ( (address <<  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A1
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A0
+  PORTC |= ( (address <<  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A0
 
   //stop shifting
   digitalLow(CLOCK);
