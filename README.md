@@ -5,11 +5,11 @@ APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4
 
 ![KiCAD 3D view](img/APEDSK99.jpg)
 
-Like the TI, APEDSK99 is based on good old through-hole technology. Besides the fact I don't like SMD soldering much, I also wanted to design something that fitted the TI era and could be put together by anybody with the same basic skills as myself. 
+Like the TI, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day, it's period-correct and can be put together by anybody with basic electronics skills.
 
-The TI <-> shield interface is the familiar design, with 74LS241 buffers (actually they are 74LS541's, easier PCB layout) for address/control lines and a bi-directional 74LS245 buffer for the databus. An 8Kx8 RAM stores the DSR code. 
+The TI <-> shield interface is the familiar design, with 74LS541 buffers for address/control lines and a bi-directional 74LS245 buffer for the databus. An 8Kx8 RAM stores the DSR code. 
 
-The DSR is based on the TI Disk Controller ROM, adapted to interface with a reliable SD card instead of wonky floppies. CRU is emulated through 2 memory mapped addresses, simplifying shield design. An 8KB binary DSR file is loaded into APEDSK99 RAM by the Arduino at powerup or reset. Various DSR optimisations have left about 3/4 KB RAM available for _TI BASIC_ support and future enhancements. 
+The DSR is based on the TI Disk Controller ROM, adapted to interface with a reliable SD card instead of wonky floppies. CRU is emulated through 2 memory mapped addresses, simplifying shield design. An 8KB binary DSR file is loaded into RAM by the Arduino at powerup / reset. Further DSR code optimisation made enough RAM 3/4 KB RAM available for _TI BASIC_ support and future enhancements. 
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. As GPIO pins are in rather short supply, Arduino RAM addressing is serial-to-parallel through 74HC595 shift registers. 
 
