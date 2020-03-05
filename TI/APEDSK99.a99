@@ -11,7 +11,7 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
-DTCDSK	EQU	>5FD6			CDSK data: DSK number (1-3) and DOAD/file name (8 characters)
+DTCDSK	EQU	>5FDE			CDSK data: DSK number (1-3) and DOAD name (10 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
@@ -77,15 +77,10 @@ SUB11	DATA	SUB12
 	BYTE	>04
 	TEXT	'CDSK'			set RTC date / time
 	EVEN
-SUB12	DATA	SUB13
+SUB12	DATA	>0000
 	DATA	SDSK
 	BYTE	>04
 	TEXT	'SDSK'
-	EVEN
-SUB13	DATA	>0000
-	DATA	FDSK
-	BYTE	>04
-	TEXT	'FDSK'
 	EVEN
 
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -121,23 +116,33 @@ EPWRUP	CI	R12,>1000		Dhr. F.G. Kaal check: are we powering up 1st CRU (>1000) pe
 	MOV	R11,R7			yes; save return address
 	STWP	R9			get workspace (should be >83E0)
 	AI	R9,-224			point to top of scratch-pad mem (>8300)
-	MOV	@>0070(R9),R0		highest free address in vdp mem (>8370)
-	MOV	R0,R2			save it
-	AI	R0,-2088		we'll need >828 bytes
-	MOV	R0,@>0070(R9)		update address
-	INC	R0			
-	BL	@VDPSET			set VDP address
+*	MOV	@>0070(R9),R0		highest free address in vdp mem (>8370)
+	MOV	@>0070(R9),R2		APEDSK99: use VDPWRI (VDPSET is redundant)
+*	MOV	R0,R2			save it
+	MOV	R2,R0			APEDSK99: use VDPWRI (VDPSET is redundant)
+*	AI	R0,-2088		we'll need >828 bytes
+	AI	R2,-2088		APEDSK99: use VDPWRI (VDPSET is redundant)
+*	MOV	R0,@>0070(R9)		update address
+	MOV	R2,@>0070(R9)		APEDSK99: use VDPWRI (VDPSET is redundant)
+*	INC	R0			
+	INC	R2			APEDSK99: use VDPWRI (VDPSET is redundant)
+*	BL	@VDPSET			set VDP address
+	BL	@VDPWRI			APEDSK99: use VDPWRI (VDPSET is redundant)
 	LI	R1,2088			
 H001	CLR	@-2(R15)		clear these >828 bytes
 	DEC	R1			
 	JNE	H001			
-	BL	@VDPSET			set VDP address (same)
+*	BL	@VDPSET			set VDP address (same)
+	BL	@VDPWRI			APEDSK99: use VDPWRI (VDPSET is redundant)
 	LI	R3,>AA03			
 	MOVB	R3,@-2(R15)		write buffer ID mark
 	NOP				
-	MOVB	R2,@-2(R15)		write old highest free address
-	SWPB	R2			
-	MOVB	R2,@-2(R15)			
+*	MOVB	R2,@-2(R15)		write old highest free address
+	MOVB	R0,@-2(R15)		APEDSK99: use VDPWRI (VDPSET is redundant)
+*	SWPB	R2			
+	SWPB 	R0			APEDSK99: use VDPWRI (VDPSET is redundant)
+*	MOVB	R2,@-2(R15)			
+	MOVB 	R0,@-2(R15)		APEDSK99: use VDPWRI (VDPSET is redundant)
 	NOP				
 	MOVB	R12,@-2(R15)		write CRU address (>1000 for APEDSK99)
 	SWPB	R3			
@@ -153,12 +158,12 @@ NOCRU	B	*R11			return
 					
 K001	DATA	>0404			
 					
-VDPSET	ORI	R0,>4000		set VDP for a write
-	SWPB	R0			
-	MOVB	R0,*R15			pass address
-	SWPB	R0			
-	MOVB	R0,*R15			
-	B	*R11			
+*VDPSET	ORI	R0,>4000		set VDP for a write
+*	SWPB	R0			
+*	MOVB	R0,*R15			pass address
+*	SWPB	R0			
+*	MOVB	R0,*R15			
+*	B	*R11			
 
 *---------------------------------------
 * Sector read/write
@@ -3379,7 +3384,7 @@ PUDSK2	MOV	R4,R4			Unprotect?
 	AI	R0,>0400		set Protect flag
 UPRTCT	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 *
-	LI 	R8,12			current CALL length
+QPUDSK	LI 	R8,12			current CALL length
 	JMP	RTNBAS
 *			
 *-----------------------------------------------------------------
@@ -3446,8 +3451,6 @@ H9901	JEQ	H9900			DSK0 not valid, return with error
 	JEQ	CDSK2			yes, continue after generic prep
 	CI	R4,>5757		SDSK?
 	JEQ	SDSK2			yes, continue after generic prep
-	CI	R4,>5858
-	JEQ	FDSK2
 *
 	JMP	PUDSK2			PDSK() / UDSK()
 *
@@ -3467,57 +3470,22 @@ SDSK2	MOV	R0,@DTCDSK		save DSKx
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
 	LIMI 	0			VDP interrupts off so to not mess up TI BASIC screen
-	LI	R2,725			screen starting position
+	LI	R2,726			screen starting position
 	BL	@VDPWRI			set VDP address
 *
 	LI	R5,DTCDSK		pointer to drive # and DOAD name
 	LI	R6,10			max 10 characters
-H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table
+H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table	
 	DEC	R6
 	JNE	H9903
 *	
-	LI	R2,735			remove occasional screen artifact in TI BASIC
+	LI	R2,736			remove occasional screen artifact in TI BASIC
 	BL	@VDPWRI			screen position just after DOAD name
 	LI	R5,>2000 + >6000	overwrite possible artifact with <space> (+ TI BASIC bias)
 	MOVB	R5,@-2(R15)		write to VDP
 *
-	LIMI	2			VDP interrupts back on
-QSDSK	LI	R8,12			current CALL length
-	JMP	RTNBAS			all is well, return without error
-*
-*-----------------------------------------------------------------
-* Subprogram FDSK: show Files
-* ----------------------------------------------------------------
-FDSK	LI	R4,>5858		Files DSK flag
-	JMP	PUCPRP
-*
-FDSK2	MOV	R0,@DTCDSK		save DSKx
-*
-	LIMI	0			VDP interrupts off so to not mess up TI BASIC screeN
-	LI	R2,64			starting screen position (screen scrolls after finishing FDSK() )
-	BL	@VDPWRI			set VDP address
-
-*
-FDSKL1	LI	R6,>0B00
-	MOVB	R6,@ACOMND		FDSK command to Arduino
-*
-	CB	@K012,@DTCDSK		last FDR?
-	JEQ	QFDSK			yes; quit
-*
-	LI	R5,DTCDSK+2		pointer to DOAD name
-	LI	R6,10			max 10 characters in file name
-H9904	MOVB	*R5+,@-2(R15)		save file name character in VDP screen table
-	DEC	R6
-	JNE	H9904
-*
-	LI	R5,>2D00 + >6000	write separation character ("-")
-	MOVB	R5,@-2(R15)		write to VDP
-*
-	JMP	FDSKL1
-*		
-QFDSK	LIMI	2			VDP interrupts back on
-	JMP	QSDSK
-*
+QSDSK	JMP	QPUDSK
+*	
 *-----------------------------------------
 * APEDSK constants
 *-----------------------------------------
@@ -3526,8 +3494,8 @@ SIDE01	DATA	>0100			floppy side select
 *-----------------------------------------
 
 *-----------------------------------------
-* The remaining bytes (~>5E10 to >5FD5) all contain >00
-* >5FDE - >5FE7 is drive # and DOAD name storage for BASIC CALL's
+* The remaining bytes (~>5DA0 to >5FDB) all contain >00
+* >5FDC - >5FE7 is drive #, DOAD name storage for BASIC CALL's
 * >5FE8	is the Arduino Command Register (BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers

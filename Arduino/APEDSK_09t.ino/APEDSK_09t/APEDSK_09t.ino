@@ -58,23 +58,33 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 #define isLow(P)((*(pinOfPin(P))& pinMask(P))==0)
 #define digitalState(P)((uint8_t)isHigh(P))
 
+//!!!APEDSK99 board version v0.12k 2019
 //74HC595 shift-out definitions
-#define DS      17  //PC5
-#define LATCH	  18	//PC4
-#define CLOCK   19  //PC3
+//#define DS      17  //PC3
+//#define LATCH	  18	//PC4
+//#define CLOCK   19  //PC5
+
+//!!!APEDSK99 board version v0.12m 2020
+//74HC595 shift-out definitions
+#define CLOCK     17  //PC3
+#define LATCH     18  //PC4
+#define DS        19  //PC5
 
 //IO lines for Arduino RAM control
 #define CE  14  //PC0  LED flashes for both Arduino CE* and TI MBE*
 #define WE  16	//PC2
 
 //IO lines for TI99/4a control
-#define TI_BUFFERS 	  15  //PC1; 74LS541 buffers enable/disable
-#define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
-#define TI_INT      	2	  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
+//!!!APEDSK99 board version v0.12k 2019
+//#define TI_READY      0	 	//PD0; TI READY line + enable/disable 74HC595 shift registers
+//!!!APEDSK99 board version v0.12m 2020
+#define TI_READY       3  //PD0; TI READY line + enable/disable 74HC595 shift registers
+#define TI_INT      	 2  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
+#define TI_BUFFERS    15  //PC1; 74LS541 buffers enable/disable
 
 //error blinking parameters: on, off, delay between sequence
-#define LED_ON      500
-#define LED_OFF     250
+#define LED_ON       500
+#define LED_OFF      250
 #define LED_REPEAT  1500
 
 //Status Register bits
@@ -100,19 +110,29 @@ void NOP() {
 }
 
 //databus:
+//!!!APEDSK99 board version v0.12k 2019
 //D0,1,PD1 / D1,3,PD3 / D2,4,PD4 / D3,5,PD5 / D4,6,PD6 / D5,7,PD7 / D6,8,PD8 / D7,9,PD9
-
+//!!!APEDSK99 board version v0.12m 2020
+//D0,0,PD0 / D1,1,PD1 / D2,4,PD4 / D3,5,PD5 / D4,6,PD6 / D5,7,PD7 / D6,8,PD8 / D7,9,PD9
 //switch databus to INPUT state for reading from RAM
+
 void dbus_in() {
-  DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
-  PORTD &= B00000101;  //initialise input pins
+  //!!!APEDSK99 board version v0.12k 2019
+  //DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
+  //PORTD &= B00000101;  //initialise input pins
+  //!!!APEDSK99 board version v0.12m 2020
+  DDRD  &= B00001100;  //set PD7-PD4 and PD1-PD0 to input (D5-D2, D1-D0)
+  PORTD &= B00001100;  //initialise input pins
   DDRB  &= B11111100;  //set PB1-PB0 to input (D7-D6)
   PORTB &= B11111100;  //initialise input pins
 }
 
 //switch databus to OUTPUT state for writing to RAM
 void dbus_out() {
-  DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
+  //!!!APEDSK99 board version v0.12k 2019
+  //DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
+  //!!!APEDSK99 board version v0.12m 2020
+  DDRD  |= B11110011;  //set PD7-PD4 and PD1-PD0 to output (D5-D2, D1-D0)
   DDRB  |= B00000011;  //set PB1-PB0 to output (D7-D6)
 }
 
@@ -133,18 +153,26 @@ void ena_cbus() {
 //read a byte from the databus
 byte dbus_read()
 {
-  NOP();				                          //long live the Logic Analyzer
-  return ( ((PIND & B00000010) >> 1) +    //read PD1 (D0)
-           ((PIND & B11111000) >> 2) +    //read PD7-PD3 (D5-D1)
-           ((PINB & B00000011) << 6) );   //read PB1-PBO (D7-D6)
+  NOP();				                            //long live the Logic Analyzer
+  //!!!APEDSK99 board version v0.12k 2019
+  //return ( ((PIND & B00000010) >> 1) +    //read PD1 (D0)
+           //((PIND & B11111000) >> 2) +    //read PD7-PD3 (D5-D1)
+  //!!!APEDSK99 board version v0.12m 2020
+  return ( ((PIND & B00000011)     ) +      //read PD1,PD0 (D1-D0)
+           ((PIND & B11110000) >> 2) +      //read PD7-PD3 (D5-D1)     
+           ((PINB & B00000011) << 6) );     //read PB1-PBO (D7-D6)
 }
 
 //place a byte on the databus
 void dbus_write(byte data)
 {
-  PORTD |= ((data << 1) & B00000010);     //write PD1 (D0)
-  PORTD |= ((data << 2) & B11111000);     //write PD7-PD3 (D5-D1)
-  PORTB |= ((data >> 6) & B00000011);     //write PB1-PBO (D7-D6)
+  //!!!APEDSK99 board version v0.12k 2019
+  //PORTD |= ((data << 1) & B00000010);     //write PD1 (D0)
+  //PORTD |= ((data << 2) & B11111000);     //write PD7-PD3 (D5-D1)
+  //!!!APEDSK99 board version v0.12m 2020
+  PORTD |= ((data     ) & B00000011);       //write PD1 (D0)
+  PORTD |= ((data << 2) & B11110000);       //write PD7-PD3 (D5-D1)
+  PORTB |= ((data >> 6) & B00000011);       //write PB1-PBO (D7-D6)
 }
 
 //shift out the given address to the 74HC595 registers
@@ -158,32 +186,36 @@ void set_abus(unsigned int address)
   //OK, repetitive, slightly ugly code but ... 1.53x as fast as the more elegant for() - if() - else()
   //for every address bit (13 bits to address 8Kbytes) set:
   //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
+  //!!!APEDSK99 board version v0.12k 2019
+  //PORTC |= ( (address >>  x) & B00001000); ...
+  //!!!APEDSK99 board version v0.12m 2020
+  //PORTC |= ( (address >>  x) & B00100000); ...
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  9) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A12
+  PORTC |= ( (address >>  7) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A12
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  8) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A11
+  PORTC |= ( (address >>  6) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A11
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  7) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A10
+  PORTC |= ( (address >>  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A10
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  6) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A9
+  PORTC |= ( (address >>  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A9
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  5) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A8
+  PORTC |= ( (address >>  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A8
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  4) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A7
+  PORTC |= ( (address >>  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A7
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A6
+  PORTC |= ( (address >>  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A6
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A5
+  PORTC |= ( (address      ) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A5
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A4
+  PORTC |= ( (address <<  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A4
   digitalLow(CLOCK);
-  PORTC |= ( (address      ) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A3
+  PORTC |= ( (address <<  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A3
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A2
+  PORTC |= ( (address <<  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A2
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A1
+  PORTC |= ( (address <<  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A1
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A0
+  PORTC |= ( (address <<  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A0
 
   //stop shifting
   digitalLow(CLOCK);
@@ -246,6 +278,8 @@ void TIgo()
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
+//-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
+
 //flash error code:
 //  flash                   : SPI / SD Card fault/not ready
 //  flash-flash             : can't read DSR binary image (/APEDSK99.DSR)
@@ -258,7 +292,6 @@ void eflash(byte error)
   //... enable Arduino CE* for flashing the error code
   pinAsOutput(CE);
 
-//-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
   //error routine: stuck in code flashing loop until reset
   while (true) {
 
@@ -282,13 +315,15 @@ void eflash(byte error)
 //-APEDSK99 specific-------------------------------------------------------------------------- FD1771 emu: variables and functions
 
 //DOAD file name handling (DSKx 1-3 (2 bytes) + 8 bytes/characters)
-#define DTCDSK  0x1FD6
+#define DTCDSK  0x1FDE
 //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
 #define RDINT   0x1FEA
 //TI BASIC screen bias
 #define TIBias 0x60
+//debug address 
+#define DEBUG 0x1EE0
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC  //emulated 8 CRU input bits           (>5FEC in TI99/4a DSR memory block); not used but possible future use
@@ -318,13 +353,10 @@ volatile boolean FD1771   = false;  //interrupt routine flag: new or continued F
 byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
 boolean FNcmd             = false;  //flag new FD1771 command
-byte ACcmd                = 0;      //APEDSK99 command
-byte ALcmd                = 0;      //APEDSK99 last command
-boolean ANcmd             = false;  //flag new APEDSK99 command
+byte ACcmd                = 0;      //current APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index (also used in FDSK() )
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter (also used in FDSK() )
 byte Ssecidx              = 0;      // R/W sector counter
-byte Ridx                 = 0;      //READ ID counter
 byte cTrack               = 0;      //current Track #
 byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
@@ -339,7 +371,6 @@ void noExec(void) {
   FLcmd = FCcmd;          //reset new FD1771 command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
   ACcmd = 0;              //reset APEDSK99 command
-  ALcmd = ACcmd;          //reset new APEDSK99 command prep
   cDSK = 0;               //reset active DSKx
   Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
@@ -492,7 +523,7 @@ void loop() {
     //the FD1771 "Force Interrupt" command is used to stop further command execution
     if ( FCcmd != FDINT ) { //do we need to do anything?
       
-      FNcmd = (FCcmd != FLcmd);                             //new or continue previous command?
+      FNcmd = (FCcmd != FLcmd);                             //new or continue previous FD1771 command?
       if (FNcmd) {                                          //new command?
         FLcmd = FCcmd;                                      //yes; remember new command for next compare
       }
@@ -616,8 +647,8 @@ void loop() {
       //------------------------------------------------------------------------------------------- APEDSK99-specifc commands
       //check for APEDSK99-specfic commands
       ACcmd = Rbyte(ACOMND);
-      if ( ACcmd != 0x00 ) {
-     
+      if ( ACcmd != 0 ) {
+    
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
 
@@ -658,7 +689,7 @@ void loop() {
               cDSK = Rbyte(DTCDSK);                                           //yes; assign to requested DSKx
               nDSK[cDSK] = DOAD;
               aDSK[cDSK] = true;
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open new DOAD file to check write protect y/n
+              DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                     //open new DOAD file to check write protect y/n
               DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
               pDSK[cDSK] = ( DSK[cDSK].read() == 0x50 );                      //0x50 || "P" means disk is write APEDSK99 protected
               DSK[cDSK].close();                                              //close new DOAD file
@@ -679,7 +710,6 @@ void loop() {
 		        else {
 		          DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
 		        }
-
         		Wbyte(DTCDSK    , cDSK+48+TIBias);				                        //drive # in ASCII + TI BASIC bias
         		Wbyte(DTCDSK + 1, '=' +   TIBias);		  	                        //"=" in ASCII + TI BASIC bias
         		for ( byte ii = 2; ii < 10; ii++ ) {
@@ -694,46 +724,7 @@ void loop() {
  	          noExec();
 		      } 
  	        break;       
-
-          case 11:                                                            //FDSK(): Files on DOAD (DIR)
-          {
-            unsigned int pFDR;
-            unsigned int rFDR; 
- 
-            if ( ANcmd ) {
-              cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
-              if ( aDSK[cDSK] ) {
-                DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                      //yes; open DOAD file    
-                pFDR = 256;                                                                                                         
-              }
-              else {
-                pFDR = 0;
-              }
-            }
-
-            if ( pFDR != 0 ) {                                              //FDR pointer / valid DOAD ?
-              
-              DSK[cDSK].seek(pFDR);                                         //yes; locate FDR pointer
-              rFDR = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
-
-              if ( rFDR != 0 ) {                                            //valid next FDR?  
-                DSK[cDSK].seek(rFDR * 256);                            //yes; go to FDR 
-                for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
-                  Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
-                }   
-                pFDR += 2;                                                  //next FDR pointer
-              }  
-              else {
-                pFDR = 0;
-              }            
-            }
-            else {
-              Wbyte(DTCDSK, 0xFF);
-              noExec();
-            }
-          } 
-          break;
-	        
+   
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 
@@ -747,8 +738,6 @@ void loop() {
 
   } //end FD1771 flag check
 
-
-
 } //end loop()
 
 //---------------------------------------------------------------------------------------------------- Interrupt routine; puts TI on hold and sets flag
@@ -760,30 +749,3 @@ ISR(INT0_vect) {
   //set interrupt flag
   FD1771 = true;
 }
-
-/*if ( ANcmd ) {
-              cDSK = Rbyte(DTCDSK);                                           //is the requested disk mapped to a DOAD?
-              if ( aDSK[cDSK] ) {
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                      //yes; open DOAD file                                       
-                Dbtidx = NRBYSECT;                                            //first FDR pointer / flag for valid DOAD mapping
-              }
-            }
-
-            if ( Dbtidx != 0 ) {                                              //FDR pointer / valid DOAD ?
-              
-              DSK[cDSK].seek(Dbtidx);                                         //yes; locate FDR pointer
-              Sbtidx = (DSK[cDSK].read() << 8) + DSK[cDSK].read();            //make it word FDR pointer
-
-              if ( Sbtidx != 0 ) {                                            //valid next FDR?  
-                DSK[cDSK].seek(Sbtidx * NRBYSECT);                            //yes; go to FDR 
-                for ( byte ii = 2; ii < 12; ii++ ) {                          //read file name chars (8) and store @DTCDSK
-                  Wbyte( DTCDSK + ii, DSK[cDSK].read() + TIBias);
-                }   
-                Dbtidx += 2;                                                  //next FDR pointer
-              }  
-              else {
-                Wbyte(DTCDSK, 0xFF);                                          //no; done last FDR or blank floppy
-                noExec();                                                     //prevent multiple Arduino command execution 
-              }            
-            }
-          } */
