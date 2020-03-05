@@ -39,9 +39,9 @@ The only thing that needs a little bit of attention is mounting the [edge connec
 
 After clamping it for a while the bottom row pins can now be soldered. 
 
-- The top row pins are soldered to the PCB via a [suitable length of standard header](img/APEDSK99connsold).
+- The top row pins are soldered to the PCB via a [suitable length of standard header](img/APEDSK99connsold.jpg).
 
-The [Arduino shield sandwich](img/APEDSK99stack) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
+The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
 ### *DOAD's*
 
