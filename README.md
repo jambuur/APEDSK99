@@ -91,7 +91,9 @@ The LED flashes in the following intricate patterns to indicate various error co
 
 ### *QA*
 
-Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code, doubling the functionality while you're at it. But I dare to say that at least the basic I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. I did come across some inconsistent behaviour in Arduino sketche, in particular in switch() case() statements. You might notice that individual cases are encased (ha) in {}. Although this should not be necessary I finally found out that some things, such as declaring local variables, throws off case execution. Apparently the outer {} should be the final remedy but I don't trust it.
+Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code, doubling the functionality while you're at it. But I dare to say that at least the basic I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
+
+I did come across some inconsistent behaviour in Arduino sketches, in particular in switch() case() statements. You might notice that individual cases are encased (ha) in {}. Although this should not be necessary I finally found out that some things, such as declaring local variables, throws off case execution. Apparently the outer {} should be the final remedy.
 
 ### *Bug's*
 
