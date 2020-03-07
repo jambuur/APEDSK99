@@ -145,9 +145,7 @@ void dis_cbus() {
 //enable Arduino control bus; CE* and WE* both HIGH
 void ena_cbus() {
   pinAsOutput(CE);
-  digitalHigh(CE);   	//default output state is LOW, we obviously don't want that
   pinAsOutput(WE);
-  digitalHigh(WE);  	//default output state is LOW, we obviously don't want that
 }
 
 //read a byte from the databus
