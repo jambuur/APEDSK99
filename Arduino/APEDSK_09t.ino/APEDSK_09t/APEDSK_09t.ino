@@ -512,9 +512,6 @@ void loop() {
   //check if flag has set by interrupt routine
   if (FD1771) {
 
-    //disable interrupts; although the TI is on hold and won't generate interrupts, the Arduino is ready to rumble
-    noInterrupts();
-
     //read Command Register, stripping the unnecessary floppy bits but keeping command nybble
     FCcmd = Rbyte(WCOMND) & B11110000;
 
@@ -742,6 +739,7 @@ void loop() {
 //Interrupt Service Routine (INT0 on pin 2)
 ISR(INT0_vect) {
 
+  noInterrupts();     ////disable interrupts; although the TI will be on hold and won't generate interrupts, the Arduino will be ready to rumble
   TIstop();
 
   //set interrupt flag
