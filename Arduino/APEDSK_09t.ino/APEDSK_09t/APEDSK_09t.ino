@@ -727,11 +727,9 @@ void loop() {
     //----------------------------------------------------------------------------------------------- End of command processing, wait for next interrupt (TI write to DSR space)
     FD1771 = false;   //clear interrupt flag
 
-    //interrupts();     //enable interrupts for the next round
+    interrupts();     //enable interrupts for the next round
 
     TIgo();
-
-    interrupts();     //enable interrupts for the next round
 
   } //end FD1771 flag check
 
