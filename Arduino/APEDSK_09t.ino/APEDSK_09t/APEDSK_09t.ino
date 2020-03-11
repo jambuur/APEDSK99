@@ -145,7 +145,9 @@ void dis_cbus() {
 //enable Arduino control bus; CE* and WE* both HIGH
 void ena_cbus() {
   pinAsOutput(CE);
+  //digitalHigh(CE);     //default output state is LOW, we obviously don't want that
   pinAsOutput(WE);
+  //digitalHigh(WE);    //default output state is LOW, we obviously don't want that
 }
 
 //read a byte from the databus
@@ -249,7 +251,8 @@ void Wbyte(unsigned int address, byte data)
   dbus_write(data);
   //enable write
   digitalLow(WE);
-  //enable RAM chip select
+  //enable RAM chip select (twice to comfortable stay within CE timing)
+  digitalLow(CE);
   digitalLow(CE);
   //disable chip select
   digitalHigh(CE);
@@ -269,6 +272,7 @@ void TIstop() {
 }
 
 //enable TI I/O, disable Arduino shift registers and control bus
+inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
@@ -477,7 +481,7 @@ void setup() {
   //check for valid DSR mark (>AA) at first DSR RAM byte
   if (  Rbyte(0x0000) != 0xAA ) {
     //loading DSR unsuccessful -> flash error 3
-    eflash(3);
+    //eflash(3);
   }
   
   for ( byte ii = 1; ii < 4; ii++ ) {
