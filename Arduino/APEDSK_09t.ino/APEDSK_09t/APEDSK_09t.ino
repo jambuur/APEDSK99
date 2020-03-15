@@ -58,11 +58,11 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 #define isLow(P)((*(pinOfPin(P))& pinMask(P))==0)
 #define digitalState(P)((uint8_t)isHigh(P))
 
-//!!!APEDSK99 board version v0.12k 2019
+/* //!!!APEDSK99 board version v0.12k 2019
 //74HC595 shift-out definitions
-//#define DS      17  //PC3
-//#define LATCH	  18	//PC4
-//#define CLOCK   19  //PC5
+#define DS      17  //PC3
+#define LATCH	  18	//PC4
+#define CLOCK   19  //PC5 */
 
 //!!!APEDSK99 board version v0.12m 2020
 //74HC595 shift-out definitions
@@ -117,9 +117,9 @@ void NOP() {
 //switch databus to INPUT state for reading from RAM
 
 void dbus_in() {
-  //!!!APEDSK99 board version v0.12k 2019
-  //DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
-  //PORTD &= B00000101;  //initialise input pins
+  /* //!!!APEDSK99 board version v0.12k 2019
+  DDRD  &= B00000101;  //set PD7-PD3 and PD1 to input (D5-D1, D0)
+  PORTD &= B00000101;  //initialise input pins */
   //!!!APEDSK99 board version v0.12m 2020
   DDRD  &= B00001100;  //set PD7-PD4 and PD1-PD0 to input (D5-D2, D1-D0)
   PORTD &= B00001100;  //initialise input pins
@@ -129,8 +129,8 @@ void dbus_in() {
 
 //switch databus to OUTPUT state for writing to RAM
 void dbus_out() {
-  //!!!APEDSK99 board version v0.12k 2019
-  //DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0)
+  /* //!!!APEDSK99 board version v0.12k 2019
+  DDRD  |= B11111010;  //set PD7-PD3 and PD1 to output (D5-D1, D0) */
   //!!!APEDSK99 board version v0.12m 2020
   DDRD  |= B11110011;  //set PD7-PD4 and PD1-PD0 to output (D5-D2, D1-D0)
   DDRB  |= B00000011;  //set PB1-PB0 to output (D7-D6)
@@ -155,11 +155,11 @@ byte dbus_read()
 {
   NOP();				                            //long live the Logic Analyzer
   //!!!APEDSK99 board version v0.12k 2019
-  //return ( ((PIND & B00000010) >> 1) +    //read PD1 (D0)
-           //((PIND & B11111000) >> 2) +    //read PD7-PD3 (D5-D1)
+  return ( ((PIND & B00000010) >> 1) +    //read PD1 (D0)
+           ((PIND & B11111000) >> 2) +    //read PD7-PD3 (D5-D1)
   //!!!APEDSK99 board version v0.12m 2020
-  return ( ((PIND & B00000011)     ) +      //read PD1,PD0 (D1-D0)
-           ((PIND & B11110000) >> 2) +      //read PD7-PD3 (D5-D1)     
+  //return ( ((PIND & B00000011)     ) +      //read PD1,PD0 (D1-D0)
+           //((PIND & B11110000) >> 2) +      //read PD7-PD3 (D5-D1)     
            ((PINB & B00000011) << 6) );     //read PB1-PBO (D7-D6)
 }
 
@@ -167,11 +167,11 @@ byte dbus_read()
 void dbus_write(byte data)
 {
   //!!!APEDSK99 board version v0.12k 2019
-  //PORTD |= ((data << 1) & B00000010);     //write PD1 (D0)
-  //PORTD |= ((data << 2) & B11111000);     //write PD7-PD3 (D5-D1)
+  PORTD |= ((data << 1) & B00000010);     //write PD1 (D0)
+  PORTD |= ((data << 2) & B11111000);     //write PD7-PD3 (D5-D1)
   //!!!APEDSK99 board version v0.12m 2020
-  PORTD |= ((data     ) & B00000011);       //write PD1 (D0)
-  PORTD |= ((data << 2) & B11110000);       //write PD7-PD3 (D5-D1)
+  //PORTD |= ((data     ) & B00000011);       //write PD1 (D0)
+  //PORTD |= ((data << 2) & B11110000);       //write PD7-PD3 (D5-D1)
   PORTB |= ((data >> 6) & B00000011);       //write PB1-PBO (D7-D6)
 }
 
@@ -187,35 +187,35 @@ void set_abus(unsigned int address)
   //for every address bit (13 bits to address 8Kbytes) set:
   //CLOCK -> LOW, address bit -> DS bit, CLOCK -> HIGH to shift and DS bit -> LOW to prevent bleed-through
   //!!!APEDSK99 board version v0.12k 2019
-  //PORTC |= ( (address >>  x) & B00001000); ...
+  //PORTC |= ( (address >>  9) & B00001000); ...
   //!!!APEDSK99 board version v0.12m 2020
-  //PORTC |= ( (address >>  x) & B00100000); ...
+  //PORTC |= ( (address >>  7) & B00100000); ...
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  7) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A12
+  PORTC |= ( (address >>  9) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A12
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  6) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A11
+  PORTC |= ( (address >>  8) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A11
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A10
+  PORTC |= ( (address >>  7) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A10
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A9
+  PORTC |= ( (address >>  6) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A9
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A8
+  PORTC |= ( (address >>  5) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A8
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A7
+  PORTC |= ( (address >>  4) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A7
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A6
+  PORTC |= ( (address >>  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A6
   digitalLow(CLOCK);
-  PORTC |= ( (address      ) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A5
+  PORTC |= ( (address >>  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A5
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A4
+  PORTC |= ( (address <<  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A4
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A3
+  PORTC |= ( (address      ) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A3
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A2
+  PORTC |= ( (address <<  1) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A2
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A1
+  PORTC |= ( (address <<  2) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A1
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A0
+  PORTC |= ( (address <<  3) & B00001000); digitalHigh(CLOCK); digitalLow(DS); //A0
 
   //stop shifting
   digitalLow(CLOCK);
