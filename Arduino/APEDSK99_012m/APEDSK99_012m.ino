@@ -126,9 +126,9 @@ void dis_cbus() {
 //enable Arduino control bus; CE* and WE* both HIGH
 void ena_cbus() {
   pinAsOutput(CE);
-  digitalHigh(CE);    //default output state is LOW, leaves the LED on
+  //digitalHigh(CE);    //default output state is LOW, leaves the LED on
   pinAsOutput(WE);
-  digitalHigh(WE);    //default output state is LOW
+  //digitalHigh(WE);    //default output state is LOW
 }
 
 //read a byte from the databus
@@ -234,17 +234,19 @@ void Wbyte(unsigned int address, byte data)
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
-  pinAsOutput(TI_READY);   //switch from HighZ to output (default LOW)
-  digitalHigh(TI_BUFFERS); //disables 74LS541's
-  ena_cbus();              //Arduino in control of RAM
+  pinAsOutput(TI_READY);    //switch from HighZ to output (default LOW)
+  //digitalHigh(TI_BUFFERS);  //disables 74LS541's
+  pinAsInput(TI_BUFFERS);
+  ena_cbus();               //Arduino in control of RAM
 }
 
 //enable TI I/O, disable Arduino shift registers and control bus
-inline void TIgo() __attribute__((always_inline));
+//inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
-  digitalLow(TI_BUFFERS);   //enable 74LS541's
+  //digitalLow(TI_BUFFERS);   //enable 74LS541's
+  pinAsOutput(TI_BUFFERS);  //enable 74LS541's
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
@@ -257,7 +259,7 @@ void TIgo()
 void eflash(byte error)
 {
   //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
-  digitalHigh(TI_BUFFERS);	  //disable 74LS541's
+  //digitalHigh(TI_BUFFERS);	  //disable 74LS541's
   digitalHigh(TI_READY);	    //enable TI but ...
   //... enable Arduino CE* for flashing the error code
   pinAsOutput(CE);
@@ -428,7 +430,7 @@ void setup() {
   pinAsInput(TI_INT);
 
   //TI99-4a I/O control
-  pinAsOutput(TI_BUFFERS);
+  //pinAsOutput(TI_BUFFERS);
 
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
@@ -703,7 +705,7 @@ void loop() {
 
     interrupts();     //enable interrupts for the next round
 
-    TIgo();
+    TIgo(); 
 
   } //end FD1771 flag check
 
