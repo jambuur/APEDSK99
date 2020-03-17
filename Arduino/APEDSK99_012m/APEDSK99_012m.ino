@@ -246,6 +246,7 @@ void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
   //digitalLow(TI_BUFFERS);   //enable 74LS541's
+  NOP();
   pinAsOutput(TI_BUFFERS);  //enable 74LS541's
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
@@ -259,14 +260,11 @@ void TIgo()
 void eflash(byte error)
 {
   //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
-  //digitalHigh(TI_BUFFERS);	  //disable 74LS541's
   digitalHigh(TI_READY);	    //enable TI but ...
   //... enable Arduino CE* for flashing the error code
   pinAsOutput(CE);
-
   //error routine: stuck in code flashing loop until reset
-  while (true) {
-
+  while (true) { 
     for (byte flash = 0; flash < error; flash++)
     {
       //set RAM CE* LOW, turns on LED
@@ -280,7 +278,7 @@ void eflash(byte error)
       delay(LED_OFF);
     }
     //allow human error interpretation
-    delay(LED_REPEAT);
+    delay(LED_REPEAT); 
   }
 }
 
@@ -716,6 +714,7 @@ void loop() {
 ISR(INT0_vect) {
 
   noInterrupts();     ////disable interrupts; although the TI will be on hold and won't generate interrupts, the Arduino will be ready to rumble
+
   TIstop();
 
   //set interrupt flag
