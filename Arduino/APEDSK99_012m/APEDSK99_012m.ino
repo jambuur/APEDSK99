@@ -123,12 +123,10 @@ void dis_cbus() {
   pinAsInput(WE);
 }
 
-//enable Arduino control bus; CE* and WE* both HIGH
+//enable Arduino control bus; CE* and WE* both HIGH due to 5.1K pull-ups
 void ena_cbus() {
   pinAsOutput(CE);
-  //digitalHigh(CE);    //default output state is LOW, leaves the LED on
   pinAsOutput(WE);
-  //digitalHigh(WE);    //default output state is LOW
 }
 
 //read a byte from the databus
@@ -235,8 +233,8 @@ void Wbyte(unsigned int address, byte data)
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
   pinAsOutput(TI_READY);    //switch from HighZ to output (default LOW)
-  //digitalHigh(TI_BUFFERS);  //disables 74LS541's
-  pinAsInput(TI_BUFFERS);
+  NOP();
+  pinAsInput(TI_BUFFERS);   //disables 74LS541's
   ena_cbus();               //Arduino in control of RAM
 }
 
@@ -245,10 +243,9 @@ void TIstop() {
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
-  //digitalLow(TI_BUFFERS);   //enable 74LS541's
-  NOP();
   pinAsOutput(TI_BUFFERS);  //enable 74LS541's
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
+  NOP();
 }
 
 //-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
