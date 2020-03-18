@@ -245,7 +245,6 @@ void TIgo()
   dis_cbus();               //cease Arduino RAM control
   pinAsOutput(TI_BUFFERS);  //enable 74LS541's
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
-  NOP();
 }
 
 //-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
@@ -468,8 +467,8 @@ void setup() {
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
-  EICRA = 1 << ISC00;  //sense any change on the INT0 pin
-  EIMSK = 1 << INT0;   //enable INT0 interrupt
+  //EICRA = 1 << ISC00;  //sense any change on the INT0 pin
+  //EIMSK = 1 << INT0;   //enable INT0 interrupt
 
   //TI: take it away
   TIgo();
