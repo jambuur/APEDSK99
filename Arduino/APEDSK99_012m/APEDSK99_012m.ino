@@ -234,17 +234,17 @@ inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
+  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
   pinAsOutput(TI_BUFFERS);  //enable 74LS541's
   EIMSK |= B00000001;       //enable INT0
-  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
 //disable TI I/O, enable Arduino shift registers and control bus
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
-  EIMSK &= B11111110;       //disable INT0
   pinAsOutput(TI_READY);    //switch from HighZ to output (default LOW)
+  EIMSK &= B11111110;       //disable INT0
   pinAsInput(TI_BUFFERS);   //disables 74LS541's
   ena_cbus();               //Arduino in control of RAM
 }
@@ -464,9 +464,7 @@ void setup() {
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
-  //EICRA |= (1 << ISC00);  //sense any change on the INT0 pin
-  EICRA &= B11110000;       //sense LOW on the INT0 pin
-  //EIMSK |= (1 << INT0);     //enable INT0 interrupt
+  EICRA |= B00000011;       //sense rising edge on INT0 pin
 
   //TI: take it away
   TIgo();
@@ -500,14 +498,8 @@ void loop() {
          
           case 0x00:					                              //Restore            
           { 
-	          /* cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
-            FDrstr(); */
-            Wbyte(aDEBUG, vDEBUG);
-            if ( vDEBUG == 0xFF ) {
-              vDEBUG = 0;
-            } else {
-              vDEBUG++;              
-            }
+	          cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
+            FDrstr(); 
           }  
           break;
 
@@ -565,8 +557,10 @@ void loop() {
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
+            cli();
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
+            sei();
           } else {
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK1, DSK2 or DSK3 is not available
               Wbyte(RSTAT, NOTREADY);                           //set "Not Ready" bit in Status Register
@@ -588,7 +582,9 @@ void loop() {
 	        case 0x90:                                      //read multiple sectors
 	        case 0xE0:                                      //read track		
           {
+            cli();
             RWsector( true );
+            sei();
           }
           break;
 
@@ -597,7 +593,9 @@ void loop() {
           case 0xF0:                                      //write track
           {
             if ( !pDSK[cDSK] ) {                          //is DOAD write protected?
+              cli();
               RWsector( false );                          //no; go ahead and write
+              sei();
             } else {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
               FCcmd = FDINT;                              //exit      
@@ -710,3 +708,14 @@ ISR(INT0_vect) {
   //set interrupt flag
   FD1771 = true;
 }
+
+//---------------------------------------------------------------------------------------------------- TEMP DEBUG CODE
+
+/* 
+Wbyte(aDEBUG, vDEBUG);
+  if ( vDEBUG == 0xFF ) {
+    vDEBUG = 0;
+  } else {
+    vDEBUG++;              
+  }
+*/
