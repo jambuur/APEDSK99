@@ -228,23 +228,24 @@ void Wbyte(unsigned int address, byte data)
   dbus_in();
 }
 
-//disable TI I/O, enable Arduino shift registers and control bus
-//INLINE: need for speed in ISR
-inline void TIstop() __attribute__((always_inline));
-void TIstop() {
-  pinAsOutput(TI_READY);    //switch from HighZ to output (default LOW)
-  NOP();
-  pinAsInput(TI_BUFFERS);   //disables 74LS541's
-  ena_cbus();               //Arduino in control of RAM
-}
-
 //enable TI I/O, disable Arduino shift registers and control bus
-//inline void TIgo() __attribute__((always_inline));
+inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
   pinAsOutput(TI_BUFFERS);  //enable 74LS541's
+  EIMSK |= (1 << INT0);     //enable INT0
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
+}
+
+//disable TI I/O, enable Arduino shift registers and control bus
+//INLINE: need for speed in ISR
+inline void TIstop() __attribute__((always_inline));
+void TIstop() {
+  EIMSK &= ~(1 << INT0);    //disable INT0
+  pinAsOutput(TI_READY);    //switch from HighZ to output (default LOW)
+  pinAsInput(TI_BUFFERS);   //disables 74LS541's
+  ena_cbus();               //Arduino in control of RAM
 }
 
 //-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
@@ -288,8 +289,8 @@ void eflash(byte error)
 #define RDINT   0x1FEA
 //TI BASIC screen bias
 #define TIBias 0x60
-//debug address 
-#define DEBUG 0x1EE0
+//pulling my hair out trouleshooting address
+#define aDEBUG 0x1EE0
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC  //emulated 8 CRU input bits           (>5FEC in TI99/4a DSR memory block); not used but possible future use
@@ -328,6 +329,7 @@ byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
 String DOAD               = "";	    //TI BASIC CALL support (used by CDSK and SDSK)
 char cDot		              = "";	    //"." detection in MSDOS 8.3 format
+byte vDEBUG               = 0;      //generic pulling my hair out trouleshooting variable
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec(void) {
@@ -376,30 +378,25 @@ void RWsector( boolean rw ) {
   if ( Sbtidx < NRBYSECT ) {			                    //have we done all 256 bytes yet?
     if ( rw ) {				                                //no; do we need to read a sector?
       Wbyte(RDATA, DSK[cDSK].read() );        	      //yes -> supply next byte
-    }
-    else {
+    } else {
       DSK[cDSK].write( Rbyte(WDATA) );        	      //no -> next byte to DOAD
     }
     Sbtidx++;					                                //increase sector byte counter
-  }
-  else {
+  } else {
     if (FCcmd == 0x80 || FCcmd == 0xA0) {               //done with R/W single sector
       noExec();                                       //exit
-    }
-    else {
+    } else {
       if ( Ssecidx < (NRSECTS - 1) ) {                //last sector (8)?
         Ssecidx++;                                    //no; increase Sector #
         Wbyte(WSECTR, Ssecidx);                       //sync Sector Registers
         Wbyte(RSECTR, Ssecidx);                       //""
         if ( rw ) {                                   //do we need to read a sector?
           Wbyte(RDATA, DSK[cDSK].read() );            //yes -> supply next byte
-        }
-        else {
+        } else {
           DSK[cDSK].write( Rbyte(WDATA) );            //no -> next byte to DOAD
         } 
         Sbtidx = 1;                                   //adjust sector byte counter
-      }
-      else {
+      } else {
         noExec();                                     //all sectors done; exit
       }
     }
@@ -431,7 +428,7 @@ void setup() {
 
   //--------------------------------------------------------------------------------------------- DSR initialisation
   //read DSR binary from SD and write into DSR RAM
-  
+
   File InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
   if (InDSR) {
     for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
@@ -439,8 +436,7 @@ void setup() {
       Wbyte(ii, DSRAM);
     }
     InDSR.close();
-  }
-  else {
+  } else {
     //couldn't find DSR binary image: flash error 2
     eflash(2);
   }
@@ -467,8 +463,9 @@ void setup() {
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
-  //EICRA = 1 << ISC00;  //sense any change on the INT0 pin
-  //EIMSK = 1 << INT0;   //enable INT0 interrupt
+  //EICRA |= (1 << ISC00);  //sense any change on the INT0 pin
+  EICRA &= B11110000;       //sense LOW on the INT0 pin
+  //EIMSK |= (1 << INT0);     //enable INT0 interrupt
 
   //TI: take it away
   TIgo();
@@ -502,8 +499,14 @@ void loop() {
          
           case 0x00:					                              //Restore            
           { 
-	          cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
-            FDrstr();
+	          /* cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
+            FDrstr(); */
+            Wbyte(aDEBUG, vDEBUG);
+            if ( vDEBUG == 0xFF ) {
+              vDEBUG = 0;
+            } else {
+              vDEBUG++;              
+            }
           }  
           break;
 
@@ -519,8 +522,7 @@ void loop() {
           {
             if ( cDir == LOW ) {
               FCcmd = 0x70;				                          //execute Step-Out+T
-            }
-            else {
+            } else {
               FCcmd = 0x50;				                          //execute Step-In+T
 	          }
           }
@@ -548,9 +550,9 @@ void loop() {
         Wbyte(WTRACK, cTrack);				                      //update Track Register
 	      Wbyte(RTRACK, cTrack);                              //sync Track Registers
         noExec();                                           //prevent multiple step/seek execution                                        
-      } // end FCcmd < 0x80
 
-      else {  // read/write commands
+      // end FCcmd < 0x80
+      } else {  // read/write commands
         
         //----------------------------------------------------------------------------------------- FD1771 R/W commands: prep
         if ( FNcmd ) {					                                  //new command prep
@@ -564,8 +566,7 @@ void loop() {
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
-          }
-          else {
+          } else {
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK1, DSK2 or DSK3 is not available
               Wbyte(RSTAT, NOTREADY);                           //set "Not Ready" bit in Status Register
               FCcmd = FDINT;                                    //exit 
@@ -596,8 +597,7 @@ void loop() {
           {
             if ( !pDSK[cDSK] ) {                          //is DOAD write protected?
               RWsector( false );                          //no; go ahead and write
-            }
-            else {
+            } else {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
               FCcmd = FDINT;                              //exit      
             }
@@ -606,8 +606,9 @@ void loop() {
 
         } //end R/W switch
       } //end else R/W commands
-    } //end we needed to do something
-    else {
+
+    //end we needed to do something
+    } else {    
 
       //------------------------------------------------------------------------------------------- APEDSK99-specifc commands
       //check for APEDSK99-specfic commands
@@ -632,8 +633,7 @@ void loop() {
               if ( ACcmd & B00000100 ) {                                      //Protect bit set?
                 DSK[cDSK].write(0x50);                                        //yes; apply adhesive tab
                 pDSK[cDSK] = true;
-              }
-              else {
+              } else {
                 DSK[cDSK].write(0x20);                                        //no; remove adhesive tab
                 pDSK[cDSK] = false;            
               }
@@ -658,8 +658,7 @@ void loop() {
               DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
               pDSK[cDSK] = ( DSK[cDSK].read() == 0x50 );                      //0x50 || "P" means disk is write APEDSK99 protected
               DSK[cDSK].close();                                              //close new DOAD file
-            }
-            else {
+            } else {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
 	          }    
 	          noExec();
@@ -671,8 +670,7 @@ void loop() {
 		        cDSK = Rbyte(DTCDSK);						                                  //is the requested disk mapped to a DOAD?
 	          if ( aDSK[cDSK] ) {
 		         DOAD = nDSK[cDSK];						                                    //yes; get current DOAD name
-		        }
-		        else {
+		        } else {
 		          DOAD = "/DISKS/<NO MAP>";					                              //no; indicate as such
 		        }
         		Wbyte(DTCDSK    , cDSK+48+TIBias);				                        //drive # in ASCII + TI BASIC bias
@@ -681,8 +679,7 @@ void loop() {
 		          cDot = DOAD.charAt(ii+5) + TIBias;                              //read character and add TI BASIC bias  	  
 		          if ( cDot != char(142) ) {                                      //is it "."?
                 Wbyte(DTCDSK + ii, cDot);                                     //no; prepare next character
-              }                                                   
-              else {
+              } else {
                 ii = 11;                                                      //yes; don't print, end loop          
               }	   
         		}
@@ -697,8 +694,6 @@ void loop() {
     //----------------------------------------------------------------------------------------------- End of command processing, wait for next interrupt (TI write to DSR space)
     FD1771 = false;   //clear interrupt flag
 
-    interrupts();     //enable interrupts for the next round
-
     TIgo(); 
 
   } //end FD1771 flag check
@@ -708,8 +703,6 @@ void loop() {
 //---------------------------------------------------------------------------------------------------- Interrupt routine; puts TI on hold and sets flag
 //Interrupt Service Routine (INT0 on pin 2)
 ISR(INT0_vect) {
-
-  noInterrupts();     ////disable interrupts; although the TI will be on hold and won't generate interrupts, the Arduino will be ready to rumble
 
   TIstop();
 
