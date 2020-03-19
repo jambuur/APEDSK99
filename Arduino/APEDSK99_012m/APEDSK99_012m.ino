@@ -218,7 +218,8 @@ void Wbyte(unsigned int address, byte data)
   dbus_write(data);
   //enable write
   digitalLow(WE);
-  //enable RAM chip select
+  //enable RAM chip select (2x to cater for slower RAM chips)
+  digitalLow(CE);
   digitalLow(CE);
   //disable chip select
   digitalHigh(CE);
@@ -234,7 +235,7 @@ void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
   pinAsOutput(TI_BUFFERS);  //enable 74LS541's
-  EIMSK |= (1 << INT0);     //enable INT0
+  EIMSK |= B00000001;       //enable INT0
   pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
 }
 
@@ -242,7 +243,7 @@ void TIgo()
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
-  EIMSK &= ~(1 << INT0);    //disable INT0
+  EIMSK &= B11111110;       //disable INT0
   pinAsOutput(TI_READY);    //switch from HighZ to output (default LOW)
   pinAsInput(TI_BUFFERS);   //disables 74LS541's
   ena_cbus();               //Arduino in control of RAM
@@ -693,7 +694,7 @@ void loop() {
 
     //----------------------------------------------------------------------------------------------- End of command processing, wait for next interrupt (TI write to DSR space)
     FD1771 = false;   //clear interrupt flag
-
+    
     TIgo(); 
 
   } //end FD1771 flag check
