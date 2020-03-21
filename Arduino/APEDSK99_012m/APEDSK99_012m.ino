@@ -230,7 +230,8 @@ void Wbyte(unsigned int address, byte data)
 }
 
 //enable TI I/O, disable Arduino shift registers and control bus
-inline void TIgo() __attribute__((always_inline));
+//INLINE: need for speed
+//inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
@@ -348,6 +349,7 @@ void noExec(void) {
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
   cDot = "";              //clear "." DOS extension detection
+  interrupts();
 }
 
 //clear various FD1771 registers (for powerup and Restore command)
@@ -464,7 +466,7 @@ void setup() {
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed (attachInterrupt is too slow)
-  EICRA |= B00000011;       //sense rising edge on INT0 pin
+  EICRA |= B00000010;       //sense falling edge on INT0 pin
 
   //TI: take it away
   TIgo();
@@ -473,11 +475,10 @@ void setup() {
 
 //------------------------------------------------------------------------------------------------ Loop
 void loop() {
-
  
   //check if flag has set by interrupt routine
   if (FD1771) {
-
+    
     //read Command Register, stripping the unnecessary floppy bits but keeping command nybble
     FCcmd = Rbyte(WCOMND) & B11110000;
 
@@ -499,8 +500,8 @@ void loop() {
           case 0x00:					                              //Restore            
           { 
 	          cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
-            FDrstr(); 
-          }  
+            FDrstr();
+          }
           break;
 
           case 0x10:					                              //Seek
@@ -557,10 +558,8 @@ void loop() {
             }
             DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
-            cli();
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
-            sei();
           } else {
             if ( cDSK != 0 ) {                                  //ignore DSK0; either DSK1, DSK2 or DSK3 is not available
               Wbyte(RSTAT, NOTREADY);                           //set "Not Ready" bit in Status Register
@@ -582,9 +581,7 @@ void loop() {
 	        case 0x90:                                      //read multiple sectors
 	        case 0xE0:                                      //read track		
           {
-            cli();
             RWsector( true );
-            sei();
           }
           break;
 
@@ -593,9 +590,7 @@ void loop() {
           case 0xF0:                                      //write track
           {
             if ( !pDSK[cDSK] ) {                          //is DOAD write protected?
-              cli();
               RWsector( false );                          //no; go ahead and write
-              sei();
             } else {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
               FCcmd = FDINT;                              //exit      
@@ -626,7 +621,6 @@ void loop() {
           {
             cDSK = ACcmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
-              
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);              //open DOAD file to change write protect status 
               DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
               if ( ACcmd & B00000100 ) {                                      //Protect bit set?
@@ -648,7 +642,6 @@ void loop() {
             }          
             DOAD.trim();                                                      //remove leading / trailing spaces
             DOAD = "/DISKS/" + DOAD + ".DSK";                                 //construct full DOAD path
-            
             if ( SD.exists( DOAD ) ) {                                        //exists?
               cDSK = Rbyte(DTCDSK);                                           //yes; assign to requested DSKx
               nDSK[cDSK] = DOAD;
@@ -704,7 +697,7 @@ void loop() {
 ISR(INT0_vect) {
 
   TIstop();
-
+   
   //set interrupt flag
   FD1771 = true;
 }
