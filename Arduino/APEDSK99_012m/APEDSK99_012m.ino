@@ -231,7 +231,7 @@ void Wbyte(unsigned int address, byte data)
 
 //enable TI I/O, disable Arduino shift registers and control bus
 //INLINE: need for speed
-//inline void TIgo() __attribute__((always_inline));
+inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
@@ -349,7 +349,6 @@ void noExec(void) {
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
   cDot = "";              //clear "." DOS extension detection
-  interrupts();
 }
 
 //clear various FD1771 registers (for powerup and Restore command)
