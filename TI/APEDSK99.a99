@@ -628,9 +628,7 @@ RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK99: reset all drives including side
 *	AI	R12,-8			
 *	SBZ	1			motor strobe
 *	SBO	1			
-	LIMI 	0
 	MOVB	@K013,@WCOMND		send Force Interrupt with no interrupt flag set
-	LIMI	2
 	MOV	@>0058(R9),R2		ptr to VIB buffer
 	AI	R2,-10			now points to drive info buffer
 	BL	@VDPWRI			set VDP to write to address in R2
@@ -682,9 +680,7 @@ SNDCMD	MOV	*R11+,R0		send command to FDC from data word
 *	SRC	R5,4			
 *	DEC	R6			
 *	JNE	H067			
-	LIMI	0
 H066	MOVB	R0,@WCOMND		send command
-	LIMI	2
 *	SBO	3			signal head loaded (HLT pin) APEDSK99: we don't have to load anything
 *	SRC	R5,8			kill time. APEDSK99: we don't have to kill anything
 *	SRC	R5,8			APEDSK99: we don't have to kill anything
