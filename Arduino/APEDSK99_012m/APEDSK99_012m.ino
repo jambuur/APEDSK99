@@ -231,12 +231,12 @@ void Wbyte(unsigned int address, byte data)
 
 //enable TI I/O, disable Arduino shift registers and control bus
 //INLINE: need for speed
-inline void TIgo() __attribute__((always_inline));
+//inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
-  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
   pinAsOutput(TI_BUFFERS);  //enable 74LS541's
+  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
   EIMSK |= B00000001;       //enable INT0
 }
 
@@ -245,8 +245,8 @@ void TIgo()
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
   pinAsOutput(TI_READY);    //switch from HighZ to output (default LOW)
-  EIMSK &= B11111110;       //disable INT0
   pinAsInput(TI_BUFFERS);   //disables 74LS541's
+  EIMSK &= B11111110;       //disable INT0
   ena_cbus();               //Arduino in control of RAM
 }
 
