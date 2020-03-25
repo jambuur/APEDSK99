@@ -231,23 +231,23 @@ void Wbyte(unsigned int address, byte data)
 
 //enable TI I/O, disable Arduino shift registers and control bus
 //INLINE: need for speed
-//inline void TIgo() __attribute__((always_inline));
+inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
-  pinAsOutput(TI_BUFFERS);  //enable 74LS541's
-  pinAsInput(TI_READY);     //switch from output to HighZ: disables 74HC595's and wakes up TI
+  pinAsOutput(TI_BUFFERS);  //enable 74LS541's  
   EIMSK |= B00000001;       //enable INT0
+  pinAsInput(TI_READY);     //switch to HIGH: disables 74HC595's and wakes up TI
 }
 
 //disable TI I/O, enable Arduino shift registers and control bus
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
-  pinAsOutput(TI_READY);    //switch from HighZ to output (default LOW)
-  pinAsInput(TI_BUFFERS);   //disables 74LS541's
-  EIMSK &= B11111110;       //disable INT0
-  ena_cbus();               //Arduino in control of RAM
+  EIMSK &= B11111110;         //disable INT0
+  pinAsOutput(TI_READY);      //bring READY line LOW (halt TI)
+  pinAsInput(TI_BUFFERS);     //disables 74LS541's    
+  ena_cbus();                 //Arduino in control of RAM
 }
 
 //-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
@@ -424,6 +424,7 @@ void setup() {
 
   //TI99-4a I/O control
   //pinAsOutput(TI_BUFFERS);
+  //pinAsOutput(TI_READY);
 
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
