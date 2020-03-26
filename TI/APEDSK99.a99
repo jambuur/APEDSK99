@@ -3390,7 +3390,6 @@ CDSK	LI	R4,4			Change DSK jump table entry
 SDSK	LI	R4,6			Show DSK jump table entry
 	JMP	ACLPRP			generic prep
 FDSK	LI	R4,8			Show Files jump table entry
-	JMP	ACLPRP			generic prep
 *----------------------------------------------------------------------------
 * Generic prep and return to TI BASIC for PDSK/UDSK/CDSK/SDSK/FDSK
 *----------------------------------------------------------------------------
