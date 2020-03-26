@@ -3489,7 +3489,7 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 	DEC	R6
 	JNE	H9903
 *	
-QSDSK	JMP	ACLBAS
+	JMP	ACLBAS
 *-----------------------------------------------------------------
 * Subprogram FDSK: show FILES on DSKx
 * ----------------------------------------------------------------
