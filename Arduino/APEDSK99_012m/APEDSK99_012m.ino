@@ -97,7 +97,7 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 //doesn't use timers so safe to use in a noInterrupt zone
 inline void NOP() __attribute__((always_inline));
 void NOP() {
-  delayMicroseconds(3);
+  delayMicroseconds(8);
 }
 
 //databus:
@@ -218,8 +218,7 @@ void Wbyte(unsigned int address, byte data)
   dbus_write(data);
   //enable write
   digitalLow(WE);
-  //enable RAM chip select (2x to cater for slower RAM chips)
-  digitalLow(CE);
+  //enable RAM chip select
   digitalLow(CE);
   //disable chip select
   digitalHigh(CE);
@@ -231,7 +230,7 @@ void Wbyte(unsigned int address, byte data)
 
 //enable TI I/O, disable Arduino shift registers and control bus
 //INLINE: need for speed
-inline void TIgo() __attribute__((always_inline));
+//inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
@@ -246,6 +245,7 @@ inline void TIstop() __attribute__((always_inline));
 void TIstop() {
   EIMSK &= B11111110;         //disable INT0
   pinAsOutput(TI_READY);      //bring READY line LOW (halt TI)
+  NOP();                      //long live the Logic Analyzer
   pinAsInput(TI_BUFFERS);     //disables 74LS541's    
   ena_cbus();                 //Arduino in control of RAM
 }
@@ -312,12 +312,11 @@ File DSK[4];  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available
 boolean aDSK[4] = {false, false, false, false};                                                 //disk availability
-String  nDSK[4] = {"x", "/DISKS/_DRIVE01.DSK", "/DISKS/_DRIVE02.DSK", "/DISKS/_DRIVE03.DSK"};	  //DOAD file names; startup defaults
+String  nDSK[4] = {"x", "/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};	  //DOAD file names; startup defaults
 boolean pDSK[4] = {false, false, false, false};                                                 //DOAD write protect status aka the adhesive tab
 byte    cDSK    = 0;                                                                            //current selected DSK
 
 //various storage and flags for command interpretation and handling
-byte DSRAM	              = 0;	    //generic DSR RAM R/W variable
 volatile boolean FD1771   = false;  //interrupt routine flag: new or continued FD1771 command
 byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
@@ -355,11 +354,9 @@ void noExec(void) {
 void FDrstr(void) {
   Wbyte(RSTAT,  0);       //clear Status Register
   Wbyte(RTRACK, 0);       //clear Read Track register
-  //Wbyte(RSECTR, 0x01);	  //default value in Read Sector register
   Wbyte(RSECTR, 0);       //clear Read Sector register
   Wbyte(RDATA,  0);		    //clear Read Data register
   Wbyte(WTRACK, 0);       //clear Write Track register
-  //Wbyte(WSECTR, 0x01);	  //default value in Write Sector register
   Wbyte(WSECTR, 0);       //clear Write Sector register
   Wbyte(WDATA,  0);       //clear Write Data register
   Wbyte(RSTAT, NOERROR);	//clear Status register
@@ -422,10 +419,6 @@ void setup() {
   //a write to DSR space (aka CRU, FD1771 registers; or sector/track Read through R6 counter in RAM, see DSR source)
   pinAsInput(TI_INT);
 
-  //TI99-4a I/O control
-  //pinAsOutput(TI_BUFFERS);
-  //pinAsOutput(TI_READY);
-
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
 
@@ -435,8 +428,7 @@ void setup() {
   File InDSR = SD.open("/APEDSK99.DSR", FILE_READ);
   if (InDSR) {
     for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
-      DSRAM = InDSR.read();
-      Wbyte(ii, DSRAM);
+      Wbyte(ii, InDSR.read() );
     }
     InDSR.close();
   } else {
@@ -549,14 +541,13 @@ void loop() {
       } else {  // read/write commands
         
         //----------------------------------------------------------------------------------------- FD1771 R/W commands: prep
-        if ( FNcmd ) {					                                  //new command prep
+        if ( FNcmd ) {					                                //new command prep
           cDSK = ( Rbyte(CRUWRI) >> 1) & B00000011;             //yes do some prep; determine selected disk
           if ( aDSK[cDSK] ) {                                   //is selected disk available?
-            Wbyte(RSTAT, NOERROR);                              //reset "Not Ready" bit in Status Register
-            if ( FCcmd == 0xE0 || FCcmd == 0xF0 ) {               // R/W whole track?
+            Wbyte(RSTAT, NOERROR);                              //reset possible "Not Ready" bit in Status Register
+            if ( FCcmd == 0xE0 || FCcmd == 0xF0 ) {             // R/W whole track?
               Wbyte(WSECTR, 0x00);                              //yes; start from sector 0
             }
-            DSRAM = Rbyte(WSECTR);                              //store starting sector #
             DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);  //open SD DOAD file
             Dbtidx = cDbtidx();                                 //calc absolute DOAD byte index
             DSK[cDSK].seek(Dbtidx);                             //set to first absolute DOAD byte for R/W
