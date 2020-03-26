@@ -77,10 +77,15 @@ SUB11	DATA	SUB12
 	BYTE	>04
 	TEXT	'CDSK'			set RTC date / time
 	EVEN
-SUB12	DATA	>0000
+SUB12	DATA	SUB13
 	DATA	SDSK
 	BYTE	>04
 	TEXT	'SDSK'
+	EVEN
+SUB13	DATA 	>0000
+	DATA	FDSK
+	BYTE	>04
+	TEXT	'FDSK'
 	EVEN
 
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3451,6 +3456,8 @@ H9901	JEQ	H9900			DSK0 not valid, return with error
 	JEQ	CDSK2			yes, continue after generic prep
 	CI	R4,>5757		SDSK?
 	JEQ	SDSK2			yes, continue after generic prep
+	CI	R4,>5858		FDSK?
+	JEQ	FDSK2			yes, continue after generic prep
 *
 	JMP	PUDSK2			PDSK() / UDSK()
 *
@@ -3469,7 +3476,6 @@ SDSK2	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,>0A00
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
-	LIMI 	0			VDP interrupts off so to not mess up TI BASIC screen
 	LI	R2,726			screen starting position
 	BL	@VDPWRI			set VDP address
 *
@@ -3479,12 +3485,28 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 	DEC	R6
 	JNE	H9903
 *	
-	LI	R2,736			remove occasional screen artifact in TI BASIC
-	BL	@VDPWRI			screen position just after DOAD name
-	LI	R5,>2000 + >6000	overwrite possible artifact with <space> (+ TI BASIC bias)
-	MOVB	R5,@-2(R15)		write to VDP
-*
 QSDSK	JMP	QPUDSK
+*-----------------------------------------------------------------
+* Subprogram FDSK: show FILES on DSKx
+* ----------------------------------------------------------------
+FDSK	LI	R4,>5858		Show Files flag
+	JMP	PUCPRP
+*
+FDSK2	MOV	R0,@DTCDSK		save DSKx
+	LI	R6,704			22 lines of 32 characters to print
+	MOV	R6,@RDINT		prep read interrupt
+*
+	LI	R2,32			
+	BL	@VDPWRI			start 2nd screen line; 1st is lost due to TI BASIC scroll
+*
+	LI	R6,>0B00
+	MOVB	R6,@ACOMND		FDSK command to Arduino
+*
+H9904	MOVB	@DTCDSK+2,@-2(R15)	store Arduino data byte in VDP screen memory
+	DEC	@RDINT			generate Read interrupt for next character
+ 	JNE	H9904			
+*
+	JMP	QSDSK
 *	
 *-----------------------------------------
 * APEDSK constants
