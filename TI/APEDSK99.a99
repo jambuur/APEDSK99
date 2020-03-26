@@ -3505,6 +3505,9 @@ FDSK2	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,>0B00
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 *
+	CB	@K012,@DTCDSK		check Arduino FDSK return code
+	JEQ	ACLERR			>FF, no DOAD mapped; return with error
+*
 H9904	MOVB	@DTCDSK+2,@-2(R15)	store Arduino data byte in VDP screen memory
 	DEC	@RDINT			generate Read interrupt for next character
  	JNE	H9904			
