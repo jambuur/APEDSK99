@@ -3416,7 +3416,8 @@ H9901	JEQ	ACLERR			DSK0 not valid, return with error
 	JH	ACLERR			return with error if more
 	SWPB	R0			drive # back in MSB
 *
-	B	@CLLTBL(R4)		execute jump table routine
+	AI	R4,CLLTBL
+	B	*R4			execute jump table routine
 *
 CLLTBL	DATA	PDSK2			CALL PDSK()
 	DATA	UDSK2			CALL UDSK()
