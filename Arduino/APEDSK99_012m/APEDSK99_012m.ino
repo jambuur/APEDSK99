@@ -670,25 +670,6 @@ void loop() {
 		      } 
  	        break;       
 
-          case 11:                                                            //FDSK() Show Files on DSKx
-          {
-            /*cDSK = Rbyte(DTCDSK);                                              //is the requested disk mapped to a DOAD?
-            if ( aDSK[cDSK] ) {
-              DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);    
-            
-          
-          
-          
-          
-          
-          
-          */
-          }
-
-
-
-
-   
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 
