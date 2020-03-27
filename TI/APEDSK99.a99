@@ -27,7 +27,7 @@ WDATA	EQU	>5FFE			write FD1771 Data register
 
 	AORG	>4000
 
-DSRDTA	BYTE	>AA			standard header mark
+DSRDAT	BYTE	>AA			standard header mark
 	BYTE	>02			version 2
 	DATA	>0000			no programs
 	DATA	PWRUP			power-up chain ptr
@@ -65,27 +65,27 @@ SUB08	DATA	SUB09
 SUB09	DATA	SUB10
 	DATA	PDSK
 	BYTE	>04
-	TEXT	'PDSK'			protect DOAD (apply adhesive tab)
+	TEXT	'PDSK'			Protect DSKx (apply adhesive tab)
 	EVEN
 SUB10	DATA	SUB11			
 	DATA	UDSK
 	BYTE	>04
-	TEXT	'UDSK'			un-protect DOAD (remove adhesive tab)
+	TEXT	'UDSK'			Un-protect DSKx (remove adhesive tab)
 	EVEN
 SUB11	DATA	SUB12
-	DATA	CDSK
+	DATA	MDSK
 	BYTE	>04
-	TEXT	'CDSK'			set RTC date / time
+	TEXT	'MDSK'			Map DOAD to DSKx
 	EVEN
 SUB12	DATA	SUB13
 	DATA	SDSK
 	BYTE	>04
-	TEXT	'SDSK'
+	TEXT	'SDSK'			Show DOAD mapping for DSKx
 	EVEN
 SUB13	DATA 	>0000
-	DATA	FDSK
+	DATA	LDSK
 	BYTE	>04
-	TEXT	'FDSK'
+	TEXT	'LDSK'			List files on DSKx
 	EVEN
 
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3385,11 +3385,11 @@ PDSK	CLR	R4			Protect jump table entry
 	JMP	ACLPRP			generic prep
 UDSK	LI	R4,2			Unprotect jump table entry
 	JMP	ACLPRP			generic prep
-CDSK	LI	R4,4			Change DSK jump table entry
+MDSK	LI	R4,4			Change DSK jump table entry
 	JMP	ACLPRP			generic prep
 SDSK	LI	R4,6			Show DSK jump table entry
 	JMP	ACLPRP			generic prep
-FDSK	LI	R4,8			Show Files jump table entry
+LDSK	LI	R4,8			Show Files jump table entry
 *----------------------------------------------------------------------------
 * Generic prep and return to TI BASIC for PDSK/UDSK/CDSK/SDSK/FDSK
 *----------------------------------------------------------------------------
@@ -3406,9 +3406,9 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	SWPB	R0			
 *
 	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3 / "," or >B6 / ")", LSB= # of files, 
-	JLT	H9902			>B3
+	JLT	H9900			>B3
 	JMP	H9901			>B6
-H9902	AI	R0,768			>B3, adjust R0 to positive range
+H9900	AI	R0,768			>B3, adjust R0 to positive range
 *
 H9901	JEQ	ACLERR			DSK0 not valid, return with error
 	CI	R0,>0003		only 3 DSK's allowed
@@ -3420,9 +3420,9 @@ H9901	JEQ	ACLERR			DSK0 not valid, return with error
 *
 CLLTBL	DATA	PDSK2			CALL PDSK()
 	DATA	UDSK2			CALL UDSK()
-	DATA	CDSK2			CALL CDSK()
+	DATA	MDSK2			CALL CDSK()
 	DATA	SDSK2			CALL SDSK()
-	DATA	FDSK2			CALL FDSK()
+	DATA	LDSK2			CALL FDSK()
 *
 ACLBAS	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
@@ -3441,10 +3441,10 @@ UDSK2	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 	JMP	ACLBAS			return to TI BASIC
 *			
 *-----------------------------------------------------------------
-* Subprogram CDSK: link DOAD to DSKx
+* Subprogram MDSK: map DOAD to DSKx
 * ----------------------------------------------------------------
 *
-CDSK2	MOV	R0,@DTCDSK		save DSKx	
+MDSK2	MOV	R0,@DTCDSK		save DSKx	
 	
 	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
@@ -3454,11 +3454,11 @@ CDSK2	MOV	R0,@DTCDSK		save DSKx
 *
 	LI	R5,DTCDSK+2		pointer to DOAD name
 	LI	R6,4			4 words / 8 characters
-NWDOAD	BL	@VDPR2B			get next two digits
+H9902	BL	@VDPR2B			get next two digits
 	MOV	R0,*R5+			save two digits
 	INCT	R8			adjust VDP buffer pointer
 	DEC	R6			decrease word counter
-	JNE	NWDOAD			next pair
+	JNE	H9902			next pair
 *
 	BL      @VDPR2B                 get next two bytes
 	SRL     R0,8                    move ")" into LSB
@@ -3492,10 +3492,10 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 *	
 	JMP	ACLBAS
 *-----------------------------------------------------------------
-* Subprogram FDSK: show FILES on DSKx
+* Subprogram LDSK: List files on DSKx
 * ----------------------------------------------------------------
 *
-FDSK2	MOV	R0,@DTCDSK		save DSKx
+LDSK2	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,704			22 lines of 32 characters to print
 	MOV	R6,@RDINT		prep read interrupt
 *
@@ -3516,12 +3516,12 @@ H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
 *
 	MOV 	@RDINT,R6
 	AI	R6,-16		
- 	JEQ	QFDSK			
+ 	JEQ	QLDSK			
 *
 	MOV	R6,@RDINT		generate Read interrupt for next file
 	JMP	H9904
 *
-QFDSK	JMP	ACLBAS
+QLDSK	JMP	ACLBAS
 *	
 *-----------------------------------------
 * APEDSK constants

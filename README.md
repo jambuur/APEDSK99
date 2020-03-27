@@ -13,7 +13,7 @@ The DSR is based on the TI Disk Controller ROM, adapted to interface with a reli
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. As GPIO pins are in rather short supply, Arduino RAM addressing is serial-to-parallel through 74HC595 shift registers. 
 
-A status LED indicates APEDSK99 access as well as showing error codes.
+A status LED indicates APEDSK99 access as well as showing possible error codes.
 
 ### *How does it work?*
 
@@ -53,13 +53,15 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
-- CALL PDSK( [1-3] ): This subprogram applies a virtual "adhesive tab" (remember those?) by setting a flag in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Keep in mind that this is separate to the familiar _Protected_ flag as used by disk managers.
+- CALL PDSK( [1-3] ): applies a virtual "adhesive tab" (remember those?) by setting a flag in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Keep in mind that this is separate to the familiar _Protected_ flag as used by disk managers.
 
-- CALL UDSK( [1-3] ): This subprogram removes the "tab"
+- CALL UDSK( [1-3] ): removes the "tab"
 
-- CALL CDSK( [1-3] ,"8 character DOAD name"): This subprogram maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if shorter.
+- CALL CDSK( [1-3] ,"8 character DOAD name"): maps DSK[1-3] to a DOAD. The DOAD name must be exactly 8 characters, padded with spaces if ne cessary.
 
-- CALL SDSK( [1-3] ): This subprogram displays the current DOAD mapping for the relevant drive. 
+- CALL MDSK( [1-3] ): shows the current DOAD mapping for the relevant drive. 
+
+- CALL LDSK( [1-3] ): list the files on a DOAD.
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error ("SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
@@ -91,9 +93,9 @@ The LED flashes in the following intricate patterns to indicate various error co
 
 ### *QA*
 
-Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code, doubling the functionality while you're at it. But I dare to say that at least the basic I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
+Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code, doubling the functionality while you're at it. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
 
-I did come across some inconsistent behaviour in Arduino sketches, in particular in switch() case() statements. You might notice that individual cases are encased (ha) in {}. Although this should not be necessary I finally found out that some things, such as declaring local variables, throws off case execution. Apparently the outer {} should be the final remedy.
+The Arduino SD library is rather slow, there are alternatives that would speed up DSKx access substantially. But you know what, it removes that nostalgic LED flicker for tracks and sectors and 
 
 ### *Bug's*
 
