@@ -11,7 +11,7 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
-DTCDSK	EQU	>5FDE			CDSK data: DSK number (1-3) and DOAD name (10 characters)
+DTCDSK	EQU	>5FD6			xDSK data: DSK number (1-3); DOAD name (10 characters) or File info (16 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
@@ -3508,11 +3508,20 @@ FDSK2	MOV	R0,@DTCDSK		save DSKx
 	CB	@K012,@DTCDSK		check Arduino FDSK return code
 	JEQ	ACLERR			>FF, no DOAD mapped; return with error
 *
-H9904	MOVB	@DTCDSK+2,@-2(R15)	store Arduino data byte in VDP screen memory
-	DEC	@RDINT			generate Read interrupt for next character
- 	JNE	H9904			
+H9904	LI	R5,DTCDSK+2		start of our file name buffer
+	LI	R6,16			16 characters to display
+H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
+	DEC	R6
+	JNE	H9905	
 *
-	JMP	ACLBAS
+	MOV 	@RDINT,R6
+	AI	R6,-16		
+ 	JEQ	QFDSK			
+*
+	MOV	R6,@RDINT		generate Read interrupt for next file
+	JMP	H9904
+
+QFDSK	JMP	ACLBAS
 *	
 *-----------------------------------------
 * APEDSK constants

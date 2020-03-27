@@ -78,19 +78,6 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 #define LED_OFF      250
 #define LED_REPEAT  1500
 
-//Status Register bits
-#define NOTREADY  0x80
-#define PROTECTED 0x40
-#define NOERROR	  0x00
-
-//"Force Interrupt" command
-#define FDINT	0xD0
-
-//"disk" characteristics
-#define NRTRACKS   40		//# of tracks/side
-#define NRSECTS	    9	  //# sectors/track
-#define NRBYSECT  256		//# bytes/sector
-
 //-DSR generic---------------------------------------------------------------------------------- Hardware functions
 
 //short delay function to let bus/signals settle
@@ -283,8 +270,21 @@ void eflash(byte error)
 
 //-APEDSK99 specific-------------------------------------------------------------------------- FD1771 emu: variables and functions
 
+//Status Register bits
+#define NOTREADY  0x80
+#define PROTECTED 0x40
+#define NOERROR   0x00
+
+//"Force Interrupt" command
+#define FDINT 0xD0
+
+//"disk" characteristics
+#define NRTRACKS   40   //# of tracks/side
+#define NRSECTS     9   //# sectors/track
+#define NRBYSECT  256   //# bytes/sector
+
 //DOAD file name handling (DSKx 1-3 (2 bytes) + 8 bytes/characters)
-#define DTCDSK  0x1FDE
+#define DTCDSK  0x1FD6
 //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
 //R6 counter value to detect read access in sector, ReadID and track commands
@@ -599,7 +599,9 @@ void loop() {
       //check for APEDSK99-specfic commands
       ACcmd = Rbyte(ACOMND);
       if ( ACcmd != 0 ) {
-    
+
+        Wbyte(aDEBUG, ACcmd);
+        
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
 
@@ -669,6 +671,30 @@ void loop() {
  	          noExec();
 		      } 
  	        break;       
+
+          case 11:
+          {
+            cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
+            if ( aDSK[cDSK] ) {
+              /*DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                     //yes; open it for reading
+              DSK[cDSK].seek(NRBYSECT * 1);                                   //sector 1 contains the File Descriptor Records
+              Dbtidx = ( DSK[cDSK].read() * 256 ) + DSK[cDSK].read();         //first FDR pointer
+              
+              while ( Sbtidx <= 704 ) {                                       //characters to display
+                DSK[cDSK].seek(NRBYSECT * 1);*/
+
+
+              
+            } else {
+              Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
+              noExec();                                                      //no more FDSK processing
+            }
+          }
+
+
+
+
+
 
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
