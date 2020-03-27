@@ -3505,9 +3505,9 @@ FDSK2	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,>0B00
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 *
-H9904	LI	R5,DTCDSK+2		start of our file name buffer
+H9904	LI	R5,DTCDSK+2		start of file name buffer
 	CB	@K012,*R5		check Arduino FDSK return code
-	JEQ	ACLBAS			>FF, no DOAD mapped, blank "floppy" or we've done last file
+	JEQ	ACLBAS			>FF; no DOAD mapped, blank "floppy" or done last file
 *
 	LI	R6,16			16 characters to display
 H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
@@ -3531,7 +3531,7 @@ SIDE01	DATA	>0100			floppy side select
 *-----------------------------------------
 
 *-----------------------------------------
-* The remaining bytes (~>5DA0 to >5FDB) all contain >00
+* The remaining bytes (~>5DE0 to >5FD5) all contain >00
 * >5FDC - >5FE7 is drive #, DOAD name storage for BASIC CALL's
 * >5FE8	is the Arduino Command Register (BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
