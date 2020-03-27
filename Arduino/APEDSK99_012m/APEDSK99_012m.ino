@@ -689,28 +689,26 @@ void loop() {
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                         //yes; open DOAD for reading
                 DSK[cDSK].seek(NRBYSECT * 1);                                       //sector 1 contains the File Descriptor Records
               }
-
-              if ( cFDR <= 127 ) {                                                  //maximum 127 FDR's / files
-                unsigned int pFDR = ( DSK[cDSK].read() * 256 ) + DSK[cDSK].read();  //construct FDR pointer
-                if ( pFDR != 0 ) {                                                  //valid pointer?
-                  unsigned int cPos = DSK[cDSK].position();                         //yes; remember current DOAD position for next FDR
-                  unsigned int FDR  = DSK[cDSK].seek(NRBYSECT * pFDR);              //ready to read file name
-                  for ( byte ii = 2; ii < 12; ii++ ) {
-                    Wbyte(DTCDSK + ii, DSK[cDSK].read()+ TIBias );
-                  }
-                  for ( byte ii = 12; ii < 18; ii++ ) {
-                    Wbyte(DTCDSK + ii, 96 + TIBias);
-                  }
-                  DSK[cDSK].seek(cPos);                                             //next FDR
-                  cFDR++;                                                           //""""
-                } else {
-                  cFDR = 128;                                                         //no; blank disk or finished last file           
+              
+              unsigned int pFDR = ( DSK[cDSK].read() * 256 ) + DSK[cDSK].read();    //construct FDR pointer
+              if ( pFDR != 0 || cFDR < 127 ) {                                                  //valid pointer?
+                unsigned int cPos = DSK[cDSK].position();                           //yes; remember current DOAD position for next FDR
+                unsigned int FDR  = DSK[cDSK].seek(NRBYSECT * pFDR);                //ready to read file name
+                for ( byte ii = 2; ii < 12; ii++ ) {
+                  Wbyte(DTCDSK + ii, DSK[cDSK].read()+ TIBias );
                 }
-              } else {   
+                for ( byte ii = 12; ii < 18; ii++ ) {
+                  Wbyte(DTCDSK + ii, 95 + TIBias);
+                }
+                DSK[cDSK].seek(cPos);                                               //next FDR
+                cFDR++; 
+              } else {
+                Wbyte(DTCDSK + 2, 0xFF);                                            //blank "floppy" or processed FDR
                 noExec();                                                           //no more FDSK processing 
-              } 
+              }
             } else {
-              Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
+              Wbyte(DTCDSK + 2, 0xFF);                                              //no DOAD mapped
+              noExec();                                                             //no more FDSK processing            
             }
           }
         } //end switch accmd commands   
