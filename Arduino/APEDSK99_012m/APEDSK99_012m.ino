@@ -687,11 +687,27 @@ void loop() {
 
               if ( ANcmd ) {                                                        //yes; first time run for FDSK() ? 
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                         //yes; open DOAD for reading
-                DSK[cDSK].seek(NRBYSECT * 1);                                       //sector 1 contains the File Descriptor Records
+                DSK[cDSK].seek(NRBYSECT);                                           //sector 1 contains the File Descriptor Records
               }
+
+              unsigned int pFDR = ( DSK[cDSK].read() << 8 + DSK[cDSK].read() );     //16 bits FDR pointer
+              if ( pFDR != 0 ) {                                                    //valid FDR pointer?
+                unsigned int cPos = DSK[cDSK].position();                           //yes; store current DOAD position (start of next FDR pointer)
+                DSK[cDSK].seek( pFDR * NRBYSECT );                                  //seek actual FDR sector
+                for ( byte ii = 2; ii < 12; ii++ ) {
+                  Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias);                    //store file name in APEDSK99 CALL buffer
+                }
+                for ( byte ii = 12; ii < 18; ii++ ) {
+                  Wbyte(DTCDSK + ii, 95 + TIBias);                                  //store filler "_" in APEDSK99 CALL buffer
+                }                            
+                DSK[cDSK].seek(cPos);                                               //back to start of next FDR pointer
+              } else {
+                Wbyte(DTCDSK + 2, 0xFF);
+                noExec;
+              } 
             } else {
               Wbyte(DTCDSK + 2, 0xFF);
-              noExec;
+              noExec; 
             }
           }
         } //end switch accmd commands   
