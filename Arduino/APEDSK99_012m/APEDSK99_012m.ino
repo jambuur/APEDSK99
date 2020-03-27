@@ -689,26 +689,9 @@ void loop() {
                 DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                         //yes; open DOAD for reading
                 DSK[cDSK].seek(NRBYSECT * 1);                                       //sector 1 contains the File Descriptor Records
               }
-              
-              unsigned int pFDR = ( DSK[cDSK].read() * 256 ) + DSK[cDSK].read();    //construct FDR pointer
-              if ( pFDR != 0 || cFDR < 127 ) {                                                  //valid pointer?
-                unsigned int cPos = DSK[cDSK].position();                           //yes; remember current DOAD position for next FDR
-                unsigned int FDR  = DSK[cDSK].seek(NRBYSECT * pFDR);                //ready to read file name
-                for ( byte ii = 2; ii < 12; ii++ ) {
-                  Wbyte(DTCDSK + ii, DSK[cDSK].read()+ TIBias );
-                }
-                for ( byte ii = 12; ii < 18; ii++ ) {
-                  Wbyte(DTCDSK + ii, 95 + TIBias);
-                }
-                DSK[cDSK].seek(cPos);                                               //next FDR
-                cFDR++; 
-              } else {
-                Wbyte(DTCDSK + 2, 0xFF);                                            //blank "floppy" or processed FDR
-                noExec();                                                           //no more FDSK processing 
-              }
             } else {
-              Wbyte(DTCDSK + 2, 0xFF);                                              //no DOAD mapped
-              noExec();                                                             //no more FDSK processing            
+              Wbyte(DTCDSK + 2, 0xFF);
+              noExec;
             }
           }
         } //end switch accmd commands   
