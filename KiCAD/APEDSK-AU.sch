@@ -37,28 +37,6 @@ F 3 "" H 7950 3450 50  0000 C CNN
 	1    7950 3450
 	-1   0    0    1   
 $EndComp
-$Comp
-L Connector_Generic:Conn_01x08 P4
-U 1 1 56D7164F
-P 7550 3550
-F 0 "P4" H 7550 3050 50  0000 C CNN
-F 1 "Digital" V 7650 3550 50  0000 C CNN
-F 2 "Socket_Arduino_Uno:Socket_Strip_Arduino_1x08" V 7700 3500 20  0000 C CNN
-F 3 "" H 7550 3550 50  0000 C CNN
-	1    7550 3550
-	1    0    0    1   
-$EndComp
-$Comp
-L Connector_Generic:Conn_01x10 P3
-U 1 1 56D721E0
-P 7550 4550
-F 0 "P3" H 7550 5100 50  0000 C CNN
-F 1 "Digital" V 7650 4550 50  0000 C CNN
-F 2 "Socket_Arduino_Uno:Socket_Strip_Arduino_1x10" V 7700 4550 20  0000 C CNN
-F 3 "" H 7550 4550 50  0000 C CNN
-	1    7550 4550
-	1    0    0    1   
-$EndComp
 Text Notes 7850 4550 2    60   ~ 0
 1
 Text Label 1350 3000 0    50   ~ 0
@@ -648,7 +626,7 @@ L Device:R_Small_US R4
 U 1 1 5D2D399D
 P 9650 3350
 F 0 "R4" H 9718 3396 50  0000 L CNN
-F 1 "220R" H 9718 3305 50  0000 L CNN
+F 1 "330R" H 9718 3305 50  0000 L CNN
 F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Vertical" H 9650 3350 50  0001 C CNN
 F 3 "~" H 9650 3350 50  0001 C CNN
 	1    9650 3350
@@ -1128,4 +1106,26 @@ Wire Wire Line
 	6100 5250 6800 5250
 Wire Wire Line
 	6800 5250 6800 6250
+$Comp
+L Connector_Generic:Conn_01x10 P3
+U 1 1 56D721E0
+P 7550 4550
+F 0 "P3" H 7550 5100 50  0000 C CNN
+F 1 "Digital" V 7650 4550 50  0000 C CNN
+F 2 "Socket_Arduino_Uno:Socket_Strip_Arduino_1x10" V 7700 4550 20  0000 C CNN
+F 3 "" H 7550 4550 50  0000 C CNN
+	1    7550 4550
+	1    0    0    1   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x08 P4
+U 1 1 56D7164F
+P 7550 3550
+F 0 "P4" H 7550 3050 50  0000 C CNN
+F 1 "Digital" V 7650 3550 50  0000 C CNN
+F 2 "Socket_Arduino_Uno:Socket_Strip_Arduino_1x08" V 7700 3500 20  0000 C CNN
+F 3 "" H 7550 3550 50  0000 C CNN
+	1    7550 3550
+	1    0    0    1   
+$EndComp
 $EndSCHEMATC

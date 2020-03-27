@@ -80,8 +80,8 @@ resetFunc();  This software is freeware and can be modified, re-used or thrown a
 
 //-DSR generic---------------------------------------------------------------------------------- Hardware functions
 
-//short delay function to let bus/signals settle
-//doesn't use timers so safe to use in a noInterrupt zone
+//short delay function to let bus/signals settle. 
+//6us is the minumum stable value on my TI but your mileage may vary
 inline void NOP() __attribute__((always_inline));
 void NOP() {
   delayMicroseconds(8);
@@ -217,7 +217,7 @@ void Wbyte(unsigned int address, byte data)
 
 //enable TI I/O, disable Arduino shift registers and control bus
 //INLINE: need for speed
-//inline void TIgo() __attribute__((always_inline));
+inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
