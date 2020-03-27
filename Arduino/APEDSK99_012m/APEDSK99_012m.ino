@@ -290,7 +290,7 @@ void eflash(byte error)
 //R6 counter value to detect read access in sector, ReadID and track commands
 #define RDINT   0x1FEA
 //TI BASIC screen bias
-#define TIBias 0x60
+#define TIBias  0x60
 //pulling my hair out trouleshooting address
 #define aDEBUG 0x1EE0
 
@@ -322,6 +322,8 @@ byte FCcmd                = 0;      //current FD1771 command
 byte FLcmd                = 0;      //last FD1771 command
 boolean FNcmd             = false;  //flag new FD1771 command
 byte ACcmd                = 0;      //current APEDSK99 command
+byte ALcmd                = 0;      //last APEDSK99 command
+boolean ANcmd             = false;  //flag new APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;	    // R/W sector/byte index counter
 byte Ssecidx              = 0;      // R/W sector counter
@@ -330,6 +332,7 @@ byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
 String DOAD               = "";	    //TI BASIC CALL support (used by CDSK and SDSK)
 char cDot		              = "";	    //"." detection in MSDOS 8.3 format
+byte cFDR                 = 0;      //FDSK() FDR index
 byte vDEBUG               = 0;      //generic pulling my hair out trouleshooting variable
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
@@ -340,6 +343,7 @@ void noExec(void) {
   FLcmd = FCcmd;          //reset new FD1771 command prep
   Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
   ACcmd = 0;              //reset APEDSK99 command
+  ALcmd = ACcmd;          //reset new APEDSK99 command prep
   cDSK = 0;               //reset active DSKx
   Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
@@ -348,6 +352,7 @@ void noExec(void) {
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
   cDot = "";              //clear "." DOS extension detection
+  cFDR = 0;               //clear FDR index
 }
 
 //clear various FD1771 registers (for powerup and Restore command)
@@ -600,8 +605,11 @@ void loop() {
       ACcmd = Rbyte(ACOMND);
       if ( ACcmd != 0 ) {
 
-        Wbyte(aDEBUG, ACcmd);
-        
+        ANcmd = (ACcmd != ALcmd);                                             //new or continue previous APEDSK99 command?
+        if (ANcmd) {                                                          //new command?
+          ALcmd = ACcmd;                                                      //yes; remember new command for next compare
+        }
+       
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
         switch ( ACcmd ) {
 
@@ -674,28 +682,37 @@ void loop() {
 
           case 11:
           {
-            cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
+            cDSK = Rbyte(DTCDSK);                                                   //is the requested disk mapped to a DOAD?
             if ( aDSK[cDSK] ) {
-              /*DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                     //yes; open it for reading
-              DSK[cDSK].seek(NRBYSECT * 1);                                   //sector 1 contains the File Descriptor Records
-              Dbtidx = ( DSK[cDSK].read() * 256 ) + DSK[cDSK].read();         //first FDR pointer
-              
-              while ( Sbtidx <= 704 ) {                                       //characters to display
-                DSK[cDSK].seek(NRBYSECT * 1);*/
 
+              if ( ANcmd ) {                                                        //yes; first time run for FDSK() ? 
+                DSK[cDSK] = SD.open(nDSK[cDSK], FILE_READ);                         //yes; open DOAD for reading
+                DSK[cDSK].seek(NRBYSECT * 1);                                       //sector 1 contains the File Descriptor Records
+              }
 
-              
+              if ( cFDR <= 127 ) {                                                  //maximum 127 FDR's / files
+                unsigned int pFDR = ( DSK[cDSK].read() * 256 ) + DSK[cDSK].read();  //construct FDR pointer
+                if ( pFDR != 0 ) {                                                  //valid pointer?
+                  unsigned int cPos = DSK[cDSK].position();                         //yes; remember current DOAD position for next FDR
+                  unsigned int FDR  = DSK[cDSK].seek(NRBYSECT * pFDR);              //ready to read file name
+                  for ( byte ii = 2; ii < 12; ii++ ) {
+                    Wbyte(DTCDSK + ii, DSK[cDSK].read()+ TIBias );
+                  }
+                  for ( byte ii = 12; ii < 18; ii++ ) {
+                    Wbyte(DTCDSK + ii, 96 + TIBias);
+                  }
+                  DSK[cDSK].seek(cPos);                                             //next FDR
+                  cFDR++;                                                           //""""
+                } else {
+                  cFDR = 128;                                                         //no; blank disk or finished last file           
+                }
+              } else {   
+                noExec();                                                           //no more FDSK processing 
+              } 
             } else {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
-              noExec();                                                      //no more FDSK processing
             }
           }
-
-
-
-
-
-
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 
