@@ -332,8 +332,6 @@ byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
 String DOAD               = "";	    //TI BASIC CALL support (used by CDSK and SDSK)
 char cDot		              = "";	    //"." detection in MSDOS 8.3 format
-unsigned int pFDR         = 0;
-unsigned int cPos         = 0;
 byte vDEBUG               = 0;      //generic pulling my hair out trouleshooting variable
 
 
@@ -354,8 +352,6 @@ void noExec(void) {
   nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
   cDot = "";              //clear "." DOS extension detection
-  pFDR = 0;
-  cPos = 0; 
 }
 
 //clear various FD1771 registers (for powerup and Restore command)
@@ -685,30 +681,23 @@ void loop() {
 
           case 11:
           {            
-            cDSK = Rbyte(DTCDSK);                                                   //is the requested disk mapped to a DOAD?
-            if ( aDSK[cDSK] ) {
-
-              if ( ANcmd ) {                                                        //yes; first time run for FDSK() ? 
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                         //yes; open DOAD for reading
-                DSK[cDSK].seek(NRBYSECT);                                           //sector 1 contains the File Descriptor Records
+            cDSK = Rbyte(DTCDSK);                                              //is the requested disk mapped to a DOAD?
+            if ( aDSK[cDSK] ) { 
+              if ( ANcmd ) {  
+                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);
+                DSK[cDSK].seek(NRBYSECT);
               }
-             
-              pFDR = ( (DSK[cDSK].read() * NRBYSECT) + DSK[cDSK].read() );          //16 bits FDR pointer
-              cPos = DSK[cDSK].position();                                          //store position next FDR pointer
-              DSK[cDSK].seek(pFDR * NRBYSECT);                                      //locate FDR
- 
-              /*for ( byte ii = 2; ii < 12; ii++ ) {
-                Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias);                      //store file name in APEDSK99 CALL buffer
+
+              unsigned int pFDR = ( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );         //16bits FDR pointer  
+              if ( pFDR != 0 ) {
+                Wbyte(aDEBUG, ++vDEBUG);
+              } else {
+                Wbyte(DTCDSK + 2, 0xFC);
+                noExec();
               }
-              for ( byte ii = 12; ii < 18; ii++ ) {
-                Wbyte(DTCDSK + ii, 95 + TIBias);                                    //store filler "_" in APEDSK99 CALL buffer
-              }   */   
-
-              DSK[cDSK].seek(cPos);                                                 //back to start of next FDR pointer
-
             } else {
-              Wbyte(DTCDSK + 2, 0xFF);
-              noExec; 
+              Wbyte(DTCDSK + 2, 0xFD);
+              noExec();
             }
           }
         } //end switch accmd commands   
@@ -743,4 +732,30 @@ Wbyte(aDEBUG, vDEBUG);
   } else {
     vDEBUG++;              
   }
-*/
+
+DOAD += ' ' + TIBias;
+                
+                DSK[cDSK].seek( DSK[cDSK].position() + 3 );
+                byte fStat = DSK[cDSK].read();
+                if ( fStat && B00000001 ) {
+                  DOAD += 'P' + TIBias;
+                } else if ( fStat && B00000010 ) {
+                  DOAD += 'D' + TIBias;;
+                  } else {
+                    DOAD += 'I' + TIBias;;
+                  }
+
+                DSK[cDSK].seek( DSK[cDSK].position() + 2 );
+                DOAD += String( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );
+
+                DOAD += ' ' + TIBias;
+
+                for ( byte ii = 2; ii < 18; ii++ ) {  
+                  Wbyte(DTCDSK + ii, DOAD.charAt(ii-2) + TIBias);   
+                } 
+
+                DSK[cDSK].seek(cPos);
+              } else {
+                Wbyte(DTCDSK + 2, 0xFF);
+                noExec();
+              } */
