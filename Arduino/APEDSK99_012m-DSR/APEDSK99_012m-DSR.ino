@@ -681,20 +681,27 @@ void loop() {
 
           case 11:
           {            
-            cDSK = Rbyte(DTCDSK);                                              //is the requested disk mapped to a DOAD?
+            cDSK = Rbyte(DTCDSK);                                                   //is the requested disk mapped to a DOAD?
             if ( aDSK[cDSK] ) { 
-              if ( ANcmd ) {  
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);
+              if ( ANcmd ) {                                                        //yes; first run of LDSK()?
+                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                            //yes; prep DOAD
                 DSK[cDSK].seek(NRBYSECT);
               }
 
-              unsigned int pFDR = ( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );         //16bits FDR pointer  
-              if ( pFDR != 0 ) {
-                Wbyte(aDEBUG, ++vDEBUG);
+              unsigned int pFDR = ( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );  //16bits FDR pointer  
+              if ( pFDR != 0 ) {                                                    //0x0000 means no more files
+                unsigned int cPos = DSK[cDSK].position();                           //remember next FDR pointer
+                DSK[cDSK].seek(pFDR * 256);                                         //locate FDR within DOAD
+
+                for ( byte ii=2; ii < 12; ii++ ) {
+                  Wbyte(DTCDSK + ii, DSK[cDSK].read() );
+                }
+
+                DSK[cDSK].seek(cPos);
               } else {
                 Wbyte(DTCDSK + 2, 0xFC);
                 noExec();
-              }
+              }          
             } else {
               Wbyte(DTCDSK + 2, 0xFD);
               noExec();
