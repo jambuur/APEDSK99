@@ -694,10 +694,23 @@ void loop() {
                 DSK[cDSK].seek(pFDR * 256);                                         //locate FDR within DOAD
 
                 for ( byte ii=2; ii < 12; ii++ ) {
-                  Wbyte(DTCDSK + ii, DSK[cDSK].read() );
+                  Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias );
                 }
 
+                Wbyte(DTCDSK + 12, ' ' + TIBias);             
+                DSK[cDSK].seek( DSK[cDSK].position() + 2);
+                
+                byte fStat = DSK[cDSK].read();
+                if ( fStat && B00000001 ) {
+                  Wbyte(DTCDSK + 12, 'P' + TIBias);
+                } else if ( fStat && B00000010 ) {
+                    Wbyte(DTCDSK + 12, 'D' + TIBias);
+                  } else {
+                      Wbyte(DTCDSK + 12, 'I' + TIBias);
+                    }
+                    
                 DSK[cDSK].seek(cPos);
+                
               } else {
                 Wbyte(DTCDSK + 2, 0xFC);
                 noExec();
