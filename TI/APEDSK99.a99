@@ -3505,11 +3505,18 @@ LDSK2	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,>0B00
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 *
-	LI	R5,DTCDSK+2		start of file name buffer
-H9904	CB	@K012,*R5		check Arduino LDSK return code
+H9904	LI	R5,DTCDSK+2		start of file name buffer
+	CB	@K012,*R5		check Arduino LDSK return code
 	JEQ	ACLBAS			>FF; no DOAD mapped, blank "floppy" or done last file
-	MOVB	*R5,@-2(R15)		store file character in VDP screen memory
-	DEC	@RDINT			decrease # of VDP bytes to write
+*
+	LI	R6,16
+H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
+	DEC	R6
+	JNE	H9905
+*
+	MOV	@RDINT,R6
+	AI	R6,-16
+	MOV	R6,@RDINT
 	JNE	H9904	
 *	
 	JMP 	ACLBAS
