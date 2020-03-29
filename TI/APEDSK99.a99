@@ -3496,7 +3496,7 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 * ----------------------------------------------------------------
 *
 LDSK2	MOV	R0,@DTCDSK		save DSKx
-	LI	R6,704			22 lines of 32 characters to print
+	LI	R6,672			21 lines of 32 characters to print
 	MOV	R6,@RDINT		prep read interrupt
 *
 	LI	R2,32			
