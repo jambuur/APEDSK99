@@ -126,4 +126,4 @@ void loop() {
       } //end else R/W commands
 
     //end we needed to do something
-    } else {    
+    } else {  //check out APEDSK99 commands  

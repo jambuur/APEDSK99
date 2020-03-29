@@ -57,8 +57,6 @@ boolean ANcmd             = false;  //flag new APEDSK99 command
 unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;      // R/W sector/byte index counter
 byte Ssecidx              = 0;      // R/W sector counter
-//byte cTrack               = 0;      //current Track #
-//byte nTrack               = 0;      //new Track # (Seek)
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
 String DOAD               = "";     //TI BASIC CALL support (used by CDSK and SDSK)
 char cDot                 = "";     //"." detection in MSDOS 8.3 format
@@ -78,8 +76,6 @@ void noExec(void) {
   Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
   Ssecidx = 0;            //clear sector counter
-  //cTrack = 0;             //clear current Track #
-  //nTrack = 0;             //clear new Track #
   DOAD = "";              //clear DOAD name
   cDot = "";              //clear "." DOS extension detection
 }
