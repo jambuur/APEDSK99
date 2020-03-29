@@ -694,10 +694,14 @@ void loop() {
                 unsigned int cPos = DSK[cDSK].position();                                   //remember next FDR pointer
                 DSK[cDSK].seek(pFDR * 256);                                                 //locate FDR within DOAD
 
+                for ( byte ii=2; ii < 18; ii++) {                                           //fill buffer with " "
+                  Wbyte(DTCDSK + ii, 0x80);
+                }
+                
                 for ( byte ii=2; ii < 12; ii++ ) {                                  
                   Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias );                           //read/save filename characters in CALL buffer
                 }
-                Wbyte(DTCDSK + 12, ' ' + TIBias);                                           //separator space                     
+                Wbyte(DTCDSK + 12, '-' + TIBias);                                           //separator space                     
                           
                 DSK[cDSK].seek( DSK[cDSK].position() + 2);                                  //locate File Status Flags
                 byte fStat = DSK[cDSK].read();               
@@ -710,11 +714,15 @@ void loop() {
                 }
 
                 DSK[cDSK].seek( DSK[cDSK].position() + 1);                                  //locate total # of sectors
-                String fSize = String( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );       //convert 16bits int to string 
-                for ( byte ii = (char)fSize.length(); ii > 0; ii-- ) {
-                  Wbyte( (DTCDSK + 16 + ii ) - fSize.length(), fSize.charAt(ii) + TIBias ); //save individual ASCII digits in CALL buffer           
+                String fSize = String( ((DSK[cDSK].read() * 256) + DSK[cDSK].read() + 1) ); //convert 16bits int to string 
+                byte fLength = (char)fSize.length();                                        //get ASCII string length
+                Wbyte(DTCDSK + 16, fSize.charAt(fLength-1) + TIBias);                         //least significant digit in ASCII to CALL buffer 
+                if ( fLength > 1 ) {
+                  Wbyte (DTCDSK + 15, fSize.charAt(fLength - 2) + TIBias );                 //"10's" digit in ASCII to CALL buffer
                 }
-                Wbyte(DTCDSK + 12, '-' + TIBias);                                           //separator between file names
+                if ( fLength == 3) {
+                  Wbyte (DTCDSK + 14, fSize.charAt(fLength - 3) + TIBias);                  //"100's" digit in ASCII to CALL buffer
+                }
                     
                 DSK[cDSK].seek(cPos);                                                       //locate next FDR
               } else {
@@ -722,7 +730,7 @@ void loop() {
                 noExec();
               }          
             } else {
-              Wbyte(DTCDSK + 2, 0xFE);                                                      //error; no mapped DOAD
+              Wbyte(DTCDSK + 2, 0xF0);                                                      //error; no mapped DOAD
               noExec();
             }
           }
@@ -748,40 +756,3 @@ ISR(INT0_vect) {
   //set interrupt flag
   FD1771 = true;
 }
-
-//---------------------------------------------------------------------------------------------------- TEMP DEBUG CODE
-
-/* 
-Wbyte(aDEBUG, vDEBUG);
-  if ( vDEBUG == 0xFF ) {
-    vDEBUG = 0;
-  } else {
-    vDEBUG++;              
-  }
-
-DOAD += ' ' + TIBias;
-                
-                DSK[cDSK].seek( DSK[cDSK].position() + 3 );
-                byte fStat = DSK[cDSK].read();
-                if ( fStat && B00000001 ) {
-                  DOAD += 'P' + TIBias;
-                } else if ( fStat && B00000010 ) {
-                  DOAD += 'D' + TIBias;;
-                  } else {
-                    DOAD += 'I' + TIBias;;
-                  }
-
-                DSK[cDSK].seek( DSK[cDSK].position() + 2 );
-                DOAD += String( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );
-
-                DOAD += ' ' + TIBias;
-
-                for ( byte ii = 2; ii < 18; ii++ ) {  
-                  Wbyte(DTCDSK + ii, DOAD.charAt(ii-2) + TIBias);   
-                } 
-
-                DSK[cDSK].seek(cPos);
-              } else {
-                Wbyte(DTCDSK + 2, 0xFF);
-                noExec();
-              } */
