@@ -221,7 +221,8 @@ inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
   dis_cbus();               //cease Arduino RAM control
-  pinAsOutput(TI_BUFFERS);  //enable 74LS541's  
+  pinAsOutput(TI_BUFFERS);  //enable 74LS541's 
+  EIFR = bit (INTF0);       // clear flag for interrupt 0 
   EIMSK |= B00000001;       //enable INT0
   pinAsInput(TI_READY);     //switch to HIGH: disables 74HC595's and wakes up TI
 }
@@ -681,42 +682,47 @@ void loop() {
 
           case 11:
           {            
-            cDSK = Rbyte(DTCDSK);                                                   //is the requested disk mapped to a DOAD?
+            cDSK = Rbyte(DTCDSK);                                                           //is the requested disk mapped to a DOAD?
             if ( aDSK[cDSK] ) { 
-              if ( ANcmd ) {                                                        //yes; first run of LDSK()?
-                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                            //yes; prep DOAD
+              if ( ANcmd ) {                                                                //yes; first run of LDSK()?
+                DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                                    //yes; prep DOAD
                 DSK[cDSK].seek(NRBYSECT);
               }
+              
+              unsigned int pFDR = ( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );          //16bits FDR pointer  
+              if ( pFDR != 0 ) {                                                            //0x0000 means no more files
+                unsigned int cPos = DSK[cDSK].position();                                   //remember next FDR pointer
+                DSK[cDSK].seek(pFDR * 256);                                                 //locate FDR within DOAD
 
-              unsigned int pFDR = ( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );  //16bits FDR pointer  
-              if ( pFDR != 0 ) {                                                    //0x0000 means no more files
-                unsigned int cPos = DSK[cDSK].position();                           //remember next FDR pointer
-                DSK[cDSK].seek(pFDR * 256);                                         //locate FDR within DOAD
-
-                for ( byte ii=2; ii < 12; ii++ ) {
-                  Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias );
+                for ( byte ii=2; ii < 12; ii++ ) {                                  
+                  Wbyte(DTCDSK + ii, DSK[cDSK].read() + TIBias );                           //read/save filename characters in CALL buffer
+                }
+                Wbyte(DTCDSK + 12, ' ' + TIBias);                                           //separator space                     
+                          
+                DSK[cDSK].seek( DSK[cDSK].position() + 2);                                  //locate File Status Flags
+                byte fStat = DSK[cDSK].read();               
+                if ( fStat & B00000001 ) {
+                  Wbyte(DTCDSK + 13, 'P' + TIBias);                                         //"PROGRAM"
+                } else if ( fStat & B00000010 ) {
+                  Wbyte(DTCDSK + 13, 'I' + TIBias);                                         //"INTERNAL"
+                } else {
+                  Wbyte(DTCDSK + 13, 'D' + TIBias);                                         //"DISPLAY"
                 }
 
-                Wbyte(DTCDSK + 12, ' ' + TIBias);             
-                DSK[cDSK].seek( DSK[cDSK].position() + 2);
-                
-                byte fStat = DSK[cDSK].read();
-                if ( fStat && B00000001 ) {
-                  Wbyte(DTCDSK + 12, 'P' + TIBias);
-                } else if ( fStat && B00000010 ) {
-                    Wbyte(DTCDSK + 12, 'D' + TIBias);
-                  } else {
-                      Wbyte(DTCDSK + 12, 'I' + TIBias);
-                    }
+                DSK[cDSK].seek( DSK[cDSK].position() + 1);                                  //locate total # of sectors
+                String fSize = String( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );       //convert 16bits int to string 
+                for ( byte ii = (char)fSize.length(); ii > 0; ii-- ) {
+                  Wbyte( (DTCDSK + 16 + ii ) - fSize.length(), fSize.charAt(ii) + TIBias ); //save individual ASCII digits in CALL buffer           
+                }
+                Wbyte(DTCDSK + 12, '-' + TIBias);                                           //separator between file names
                     
-                DSK[cDSK].seek(cPos);
-                
+                DSK[cDSK].seek(cPos);                                                       //locate next FDR
               } else {
-                Wbyte(DTCDSK + 2, 0xFC);
+                Wbyte(DTCDSK + 2, 0xFF);                                                    //blank "floppy" or processed all FDR's
                 noExec();
               }          
             } else {
-              Wbyte(DTCDSK + 2, 0xFD);
+              Wbyte(DTCDSK + 2, 0xFE);                                                      //error; no mapped DOAD
               noExec();
             }
           }
