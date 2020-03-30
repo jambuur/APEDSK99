@@ -3527,7 +3527,7 @@ H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
 	JEQ	ACLBAS			yes; exit
 *	
 	LI	R2,738			no; more files for current DOAD
-	BLWP	@VDPWRI
+	BL	@VDPWRI
 	LI	R5,>9E00		print ">" 
 	MOVB	R5,@-2(R15)
 *
