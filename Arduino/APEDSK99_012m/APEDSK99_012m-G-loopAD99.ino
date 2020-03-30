@@ -80,17 +80,21 @@
 
           case 11:
           {            
-            cDSK = Rbyte(DTCDSK);                                                           //is the requested disk mapped to a DOAD?
+            if ( Rbyte(DTCDSK) != cDSK ) {                                                  //new DOAD?
+                ANcmd = true;                                                               //yes; close possible open DOAD
+                cDSK = Rbyte(DTCDSK);                                                       //read new DOAD    
+            }
+     
             if ( aDSK[cDSK] ) { 
               if ( ANcmd ) {                                                                //yes; first run of LDSK()?
                 DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                                    //yes; prep DOAD
                 DSK[cDSK].seek(NRBYSECT);
               }
               
-              unsigned int pFDR = ( (DSK[cDSK].read() * 256) + DSK[cDSK].read() );          //16bits FDR pointer  
-              if ( pFDR != 0 ) {                                                            //0x0000 means no more files
+              unsigned long pFDR = (DSK[cDSK].read() << 8) + DSK[cDSK].read();              //16bits FDR pointer  
+              if ( pFDR != 0 ) {                                                            //0x0000 means no more files              
                 unsigned int cPos = DSK[cDSK].position();                                   //remember next FDR pointer
-                DSK[cDSK].seek(pFDR * 256);                                                 //locate FDR within DOAD
+                DSK[cDSK].seek(pFDR * NRBYSECT);                                            //locate FDR within DOAD
 
                 for ( byte ii=2; ii < 18; ii++) {                                           //fill buffer with " "
                   Wbyte(DTCDSK + ii, 0x80);
@@ -112,7 +116,7 @@
                 }
 
                 DSK[cDSK].seek( DSK[cDSK].position() + 1);                                  //locate total # of sectors
-                String fSize = String( ((DSK[cDSK].read() * 256) + DSK[cDSK].read() + 1) ); //convert 16bits int to string 
+                String fSize = String( ((DSK[cDSK].read() << 8) + DSK[cDSK].read() + 1) );  //convert 16bits int to string 
                 byte fLength = (char)fSize.length();                                        //get ASCII string length
                 Wbyte(DTCDSK + 16, fSize.charAt(fLength-1) + TIBias);                         //least significant digit in ASCII to CALL buffer 
                 if ( fLength > 1 ) {
