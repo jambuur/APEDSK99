@@ -3496,7 +3496,14 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 * Subprogram LDSK: List files on DSKx
 * ----------------------------------------------------------------
 *
-LDSK2	MOV	R0,@DTCDSK		save DSKx
+LDSK2	CLR	R2			clear screen; position 0
+	LI	R5,>8000		space + TI BASIC bias
+	LI	R6,672			672 positions to clear
+LDCLR	MOVB	R5,@-2(R15)		move " " to VDP
+	DEC	R6
+	JNE	LDLCR
+*
+	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,640			21 lines of 32 characters to print
 	MOV	R6,@RDINT		prep read interrupt
 *
