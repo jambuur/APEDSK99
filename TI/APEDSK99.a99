@@ -197,7 +197,7 @@ H002	MOVB	R0,@WTRACK		place last track or >00 in track register
 	CI	R1,>0168		on which side is it?
 	JL	H004			0-359: on side 0 
 *	AI	R1,-719			on side 1: sector # grow from in to out
-	AI	R1,-358			APEDSK99: KISS and use DOAD scheme:
+	AI	R1,-360			APEDSK99: KISS and use DOAD scheme:
 *	ABS	R1			719 - sector #
 *	CLR	R0			
 *	DIV	@K003,R0		sect/track (=9)
