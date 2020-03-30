@@ -2795,7 +2795,8 @@ H227	AI	R5,255			disk info: point to data buffer area in ctrl block
 	LI	R2,>0A00		diskname is 10 chars
 					
 H232	BL	@PABR2B			get 2 bytes from PAB into R0
-	DATA	R2			data buffer address
+*	DATA	R2			data buffer address
+	DATA	2			APEDSK99: error in source listing
 	MOV	R0,R8			duplicate it
 	INC	R8			skip first byte
 	SRL	R2,8			filename length (or diskname)
