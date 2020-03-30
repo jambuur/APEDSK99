@@ -3525,14 +3525,14 @@ H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
 	DEC	R6
 	JNE	H9905
 *
-	AI	R2,32
+	AI	R2,16
 	CI	R2,672
 	JEQ	NXTPRP
 *
 	MOV	R2,@RDINT		generates interrupt for next file
 	JMP	H9904	
 *	
-NXTPRP	LI	R2,738			no; more files for current DOAD
+NXTPRP	LI	R2,735			no; more files for current DOAD
 	BL	@VDPWRI
 	LI	R5,>9E00		print ">" 
 	MOVB	R5,@-2(R15)
