@@ -3497,7 +3497,7 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 * ----------------------------------------------------------------
 *
 LDSK2	MOV	R0,@DTCDSK		save DSKx
-	LI	R6,672			21 lines of 32 characters to print
+	LI	R6,640			21 lines of 32 characters to print
 	MOV	R6,@RDINT		prep read interrupt
 *
 	LI	R2,32			
@@ -3523,6 +3523,14 @@ H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
 	MOV	R6,@RDINT		writing back signals interrupt
 	JNE	H9904	
 *	
+	MOVB	@ACOMND,R6		LDSK() finished?
+	JEQ	ACLBAS			yes; exit
+*	
+	LI	R2,738			no; more files for current DOAD
+	BLWP	@VDPWRI
+	LI	R5,>9E00		print ">" 
+	MOVB	R5,@-2(R15)
+*
 	JMP 	ACLBAS
 *
 *-----------------------------------------
