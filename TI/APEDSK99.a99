@@ -3435,7 +3435,6 @@ ACLERR	B	@RTURN1			return to caller (i.e. Basic)
 * ----------------------------------------------------------------
 *
 PDSK2	AI	R0,>0400		set Protect flag
-	MOV	R0,@>5EE2		DEBUG
 UDSK2	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 *
 	LI 	R8,12			current CALL length
@@ -3499,22 +3498,22 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 LDSK2	CLR	R2			clear screen; position 0
 	LI	R5,>8000		space + TI BASIC bias
 	LI	R6,672			672 positions to clear
-LDCLR	MOVB	R5,@-2(R15)		move " " to VDP
+LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
 	DEC	R6
-	JNE	LDLCR
-*
-	MOV	R0,@DTCDSK		save DSKx
-	LI	R6,640			21 lines of 32 characters to print
-	MOV	R6,@RDINT		prep read interrupt
-*
-	LI	R2,32			
-	BL	@VDPWRI			start 2nd screen line; 1st is lost due to TI BASIC scroll
+	JNE	LDCLR
 *
 	LI	R6,>0B00
+	CB	@ACOMND,R6		next screen?
+	JEQ	LDNXTS
+*
+	MOV	R0,@DTCDSK		save DSKx
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 *
 	CB	@K004,@DTCDSK+2
 	JEQ	ACLERR			>F0; no DOAD mapped -> error
+*
+LDNXTS	LI	R2,32			
+	BL	@VDPWRI			start 2nd screen line; 1st is lost due to TI BASIC scroll
 *
 H9904	LI	R5,DTCDSK+2		start of file name buffer
 	CB	@K012,*R5		check Arduino LDSK return code
@@ -3525,15 +3524,14 @@ H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
 	DEC	R6
 	JNE	H9905
 *
-	MOV	@RDINT,R6		adjust total screen bytes
-	AI	R6,-16
-	MOV	R6,@RDINT		writing back signals interrupt
-	JNE	H9904	
+	AI	R2,32
+	CI	R2,672
+	JEQ	NXTPRP
+*
+	MOV	R2,@RDINT		generates interrupt for next file
+	JMP	H9904	
 *	
-	MOVB	@ACOMND,R6		LDSK() finished?
-	JEQ	ACLBAS			yes; exit
-*	
-	LI	R2,738			no; more files for current DOAD
+NXTPRP	LI	R2,738			no; more files for current DOAD
 	BL	@VDPWRI
 	LI	R5,>9E00		print ">" 
 	MOVB	R5,@-2(R15)
