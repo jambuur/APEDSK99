@@ -3496,6 +3496,7 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 * ----------------------------------------------------------------
 *
 LDSK2	CLR	R2			clear screen; position 0
+	BL	@VDPWRI
 	LI	R5,>8000		space + TI BASIC bias
 	LI	R6,672			672 positions to clear
 LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
@@ -3504,16 +3505,16 @@ LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
 *
 	LI	R6,>0B00
 	CB	@ACOMND,R6		next screen?
-	JEQ	LDNXTS
+	JEQ	LDNXTS			yes
 *
-	MOV	R0,@DTCDSK		save DSKx
+	MOV	R0,@DTCDSK		no, first run; save DSKx
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 *
 	CB	@K004,@DTCDSK+2
 	JEQ	ACLERR			>F0; no DOAD mapped -> error
 *
-LDNXTS	LI	R2,32			
-	BL	@VDPWRI			start 2nd screen line; 1st is lost due to TI BASIC scroll
+LDNXTS	LI	R2,32			start 2nd screen line; 1st is lost due to TI BASIC scroll
+	BL	@VDPWRI			
 *
 H9904	LI	R5,DTCDSK+2		start of file name buffer
 	CB	@K012,*R5		check Arduino LDSK return code
