@@ -58,8 +58,6 @@ unsigned long Dbtidx      = 0;      //absolute DOAD byte index
 unsigned long Sbtidx      = 0;      // R/W sector/byte index counter
 byte Ssecidx              = 0;      // R/W sector counter
 boolean cDir              = HIGH;   //current step direction, step in(wards) towards track 39 by default
-String DOAD               = "";     //TI BASIC CALL support (used by CDSK and SDSK)
-char cDot                 = "";     //"." detection in MSDOS 8.3 format
 byte vDEBUG               = 0;      //generic pulling my hair out trouleshooting variable
 
 
@@ -76,8 +74,6 @@ void noExec(void) {
   Dbtidx = 0;             //clear absolute DOAD byte index
   Sbtidx = 0;             //clear byte index counter
   Ssecidx = 0;            //clear sector counter
-  DOAD = "";              //clear DOAD name
-  cDot = "";              //clear "." DOS extension detection
 }
 
 //clear various FD1771 registers (for powerup and Restore command)

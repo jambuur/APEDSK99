@@ -24,26 +24,29 @@
               DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
               if ( ACcmd & B00000100 ) {                                      //Protect bit set?
                 DSK[cDSK].write(0x50);                                        //yes; apply adhesive tab
+                DSK[cDSK].flush();
                 pDSK[cDSK] = true;
               } else {
                 DSK[cDSK].write(0x20);                                        //no; remove adhesive tab
-                pDSK[cDSK] = false;            
+                DSK[cDSK].flush();
+                pDSK[cDSK] = false;        
               }
             } 
             noExec();
           }
           break;  
 
-          case 9:                                                             //CDSK(): Change DOAD mapping
+          case 9:                                                             //MDSK(): Map DOAD
            {
+            String mDOAD = "";
             for ( byte ii = 2; ii < 10; ii++ ) {                              //merge CALL CDSK characters into string
-              DOAD += char( Rbyte(DTCDSK + ii) );
+              mDOAD += char( Rbyte(DTCDSK + ii) );
             }          
-            DOAD.trim();                                                      //remove leading / trailing spaces
-            DOAD = "/DISKS/" + DOAD + ".DSK";                                 //construct full DOAD path
-            if ( SD.exists( DOAD ) ) {                                        //exists?
+            mDOAD.trim();                                                     //remove leading / trailing spaces
+            mDOAD = "/DISKS/" + mDOAD + ".DSK";                               //construct full DOAD path
+            if ( SD.exists( mDOAD ) ) {                                       //exists?
               cDSK = Rbyte(DTCDSK);                                           //yes; assign to requested DSKx
-              nDSK[cDSK] = DOAD;
+              nDSK[cDSK] = mDOAD;
               aDSK[cDSK] = true;
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open new DOAD file to check write protect y/n
               DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
@@ -58,16 +61,18 @@
             
           case 10:                                                            //SDSK(): Show DOAD mapping       
           {
+            String sDOAD = "";
+            char cDot = "";
             cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
             if ( aDSK[cDSK] ) {
-             DOAD = nDSK[cDSK];                                               //yes; get current DOAD name
+             sDOAD = nDSK[cDSK];                                               //yes; get current DOAD name
             } else {
-              DOAD = "/DISKS/<NO MAP>";                                       //no; indicate as such
+              sDOAD = "/DISKS/<NO MAP>";                                       //no; indicate as such
             }
             Wbyte(DTCDSK    , cDSK+48+TIBias);                                //drive # in ASCII + TI BASIC bias
             Wbyte(DTCDSK + 1, '=' +   TIBias);                                //"=" in ASCII + TI BASIC bias
             for ( byte ii = 2; ii < 10; ii++ ) {
-              cDot = DOAD.charAt(ii+5) + TIBias;                              //read character and add TI BASIC bias      
+              cDot = sDOAD.charAt(ii+5) + TIBias;                              //read character and add TI BASIC bias      
               if ( cDot != char(142) ) {                                      //is it "."?
                 Wbyte(DTCDSK + ii, cDot);                                     //no; prepare next character
               } else {
