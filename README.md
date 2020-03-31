@@ -27,7 +27,7 @@ When the TI issues a disk controller command by writing to one of the FD1771 reg
 
 ### *Construction*
 
-Putting the APEDSK99 shield together is straightforward and no problem for anybody with basic electronic skills. The 74LS/HCT541's and the slimline RAM are probably not stock items at your local electronics store but can be easily obtained online.
+Putting the APEDSK99 shield together is straightforward and no problem for anybody with basic electronic skills. The 74LS541's and the slimline RAM are probably not stock items at your local electronics store but can be easily obtained online.
 
 The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)). 
 
