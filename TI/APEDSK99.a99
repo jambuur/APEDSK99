@@ -3508,7 +3508,7 @@ LDSK2	MOV	R0,@DTCDSK		save DSKx
 LDNXTS	CLR	R2			clear screen; position 0
 	BL	@VDPWRI
 	LI	R5,>8000		space + TI BASIC bias
-	LI	R6,672			672 positions to clear
+	LI	R6,704			704 positions to clear
 LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
 	DEC	R6
 	JNE	LDCLR
