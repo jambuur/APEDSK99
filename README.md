@@ -43,6 +43,8 @@ After clamping it for a while the bottom row pins can now be soldered.
 
 The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
+As the 74LS series is harder and harder to get, 74HCT replacements may be a better bet. Either works fine but there is a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch that you need to adjust. Default is set for the 74HCT series.
+
 ### *DOAD's*
 
 The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".DSK" extension. At powerup or reset the Arduino looks for optional "_DRIVE01.DSK" / "_DRIVE02.DSK" / "_DRIVE03.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
