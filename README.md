@@ -45,6 +45,8 @@ The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is at
 
 As the 74LS series is harder and harder to get, 74HCT replacements may be a better bet. Either works fine but there is a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch that you need to adjust. Default is set for the 74HCT series.
 
+Another thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO; make sure you get the long version.
+
 ### *DOAD's*
 
 The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
@@ -63,7 +65,7 @@ The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 
 - CALL MDSK( [1-3] ): shows the current DOAD mapping for the relevant drive. 
 
-- CALL LDSK( [1-3] ): list the files on a DOAD.
+- CALL LDSK( [1-3] ): list the files on a DOAD. 
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error ("SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
@@ -97,7 +99,7 @@ The LED flashes in the following intricate patterns to indicate various error co
 
 Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code, doubling the functionality while you're at it. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
 
-The Arduino SD library is rather slow, there are alternatives that would speed up DSKx access substantially. But you know what, it removes that nostalgic LED flicker for tracks and sectors and 
+The Arduino SD library is rather slow, there are alternatives that would speed up DSKx access substantially. But I have decided to stay with the slow version; it's fast enough not to be irritating but still keeps some of that floppy nostalgia (yactivity).
 
 ### *Bug's*
 
