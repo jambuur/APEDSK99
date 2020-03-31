@@ -26,7 +26,7 @@
                 DSK[cDSK].write(0x50);                                        //yes; apply adhesive tab
                 pDSK[cDSK] = true;  
               } else {
-                DSK[cDSK].write(0x28);                                        //no; remove adhesive tab
+                DSK[cDSK].write(0x20);                                        //no; remove adhesive tab
                 pDSK[cDSK] = false;        
               }
             } 
