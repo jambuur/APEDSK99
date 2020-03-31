@@ -24,11 +24,9 @@
               DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
               if ( ACcmd & B00000100 ) {                                      //Protect bit set?
                 DSK[cDSK].write(0x50);                                        //yes; apply adhesive tab
-                DSK[cDSK].flush();
                 pDSK[cDSK] = true;
               } else {
                 DSK[cDSK].write(0x20);                                        //no; remove adhesive tab
-                DSK[cDSK].flush();
                 pDSK[cDSK] = false;        
               }
             } 
