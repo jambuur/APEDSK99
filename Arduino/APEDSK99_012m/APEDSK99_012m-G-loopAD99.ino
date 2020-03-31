@@ -118,7 +118,7 @@
                 DSK[cDSK].seek( DSK[cDSK].position() + 1);                                  //locate total # of sectors
                 String fSize = String( ((DSK[cDSK].read() << 8) + DSK[cDSK].read() + 1) );  //convert 16bits int to string 
                 byte fLength = (char)fSize.length();                                        //get ASCII string length
-                Wbyte(DTCDSK + 16, fSize.charAt(fLength-1) + TIBias);                         //least significant digit in ASCII to CALL buffer 
+                Wbyte(DTCDSK + 16, fSize.charAt(fLength-1) + TIBias);                       //least significant digit in ASCII to CALL buffer 
                 if ( fLength > 1 ) {
                   Wbyte (DTCDSK + 15, fSize.charAt(fLength - 2) + TIBias );                 //"10's" digit in ASCII to CALL buffer
                 }
@@ -127,6 +127,7 @@
                 }
                     
                 DSK[cDSK].seek(cPos);                                                       //locate next FDR
+                
               } else {
                 Wbyte(DTCDSK + 2, 0xFF);                                                    //blank "floppy" or processed all FDR's
                 noExec();
@@ -136,6 +137,8 @@
               noExec();
             }
           }
+          break;
+          
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 

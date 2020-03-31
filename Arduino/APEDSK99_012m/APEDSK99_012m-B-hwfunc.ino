@@ -4,7 +4,10 @@
 //6us is the minumum stable value on my TI but your mileage may vary
 inline void NOP() __attribute__((always_inline));
 void NOP() {
-  delayMicroseconds(8);
+  //uncomment for 74LS541
+  delayMicroseconds(6);
+  //uncomment for 74HCT541
+  //delayMicroseconds(8);  
 }
 
 //databus:

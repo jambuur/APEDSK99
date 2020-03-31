@@ -3503,11 +3503,11 @@ LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
 	DEC	R6
 	JNE	LDCLR
 *
+	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,>0B00
 	CB	@ACOMND,R6		next screen?
 	JEQ	LDNXTS			yes
 *
-	MOV	R0,@DTCDSK		no, first run; save DSKx
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 *
 	CB	@K004,@DTCDSK+2
