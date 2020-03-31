@@ -2,7 +2,7 @@
 void setup() {
 
   //see if the SD card is present and can be initialized
-  if (!SD.begin(SPI_CS)) {
+  if ( !SD.begin(SPI_CS) ) {
     //nope -> flash LED error 1
     eflash(1);
   }
