@@ -3495,15 +3495,7 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 * Subprogram LDSK: List files on DSKx
 * ----------------------------------------------------------------
 *
-LDSK2	CLR	R2			clear screen; position 0
-	BL	@VDPWRI
-	LI	R5,>8000		space + TI BASIC bias
-	LI	R6,672			672 positions to clear
-LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
-	DEC	R6
-	JNE	LDCLR
-*
-	MOV	R0,@DTCDSK		save DSKx
+LDSK2	MOV	R0,@DTCDSK		save DSKx
 	LI	R6,>0B00
 	CB	@ACOMND,R6		next screen?
 	JEQ	LDNXTS			yes
@@ -3513,7 +3505,15 @@ LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
 	CB	@K004,@DTCDSK+2
 	JEQ	ACLERR			>F0; no DOAD mapped -> error
 *
-LDNXTS	LI	R2,32			start 2nd screen line; 1st is lost due to TI BASIC scroll
+LDNXTS	CLR	R2			clear screen; position 0
+	BL	@VDPWRI
+	LI	R5,>8000		space + TI BASIC bias
+	LI	R6,672			672 positions to clear
+LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
+	DEC	R6
+	JNE	LDCLR
+*
+	LI	R2,32			start 2nd screen line; 1st is lost due to TI BASIC scroll
 	BL	@VDPWRI			
 *
 H9904	LI	R5,DTCDSK+2		start of file name buffer
@@ -3526,15 +3526,15 @@ H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
 	JNE	H9905
 *
 	AI	R2,16
-	CI	R2,672
-	JEQ	NXTPRP
+	CI	R2,672			end of display area?
+	JEQ	NXTPRP			yes; prep for next screen
 *
 	MOV	R2,@RDINT		generates interrupt for next file
 	JMP	H9904	
 *	
-NXTPRP	LI	R2,735			no; more files for current DOAD
+NXTPRP	LI	R2,735
 	BL	@VDPWRI
-	LI	R5,>9E00		print ">" 
+	LI	R5,>9E00		indicate ">", more files to display
 	MOVB	R5,@-2(R15)
 *
 	JMP 	ACLBAS
