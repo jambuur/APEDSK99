@@ -14,7 +14,7 @@
 #define NRBYSECT  256   //# bytes/sector
 
 //CALL() buffer for DOAD and file name handling
-#define DTCDSK  0x1FD6
+#define CALLBF  0x1FD6
 //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
 //R6 counter value to generate interrupt in read sector / track commands

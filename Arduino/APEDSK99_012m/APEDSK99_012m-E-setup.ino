@@ -42,7 +42,7 @@ void setup() {
     if ( SD.exists(nDSK[ii])) {                       //does DOAD x exist?
       aDSK[ii] = true;                                //yes; flag as such
       DSK[ii] = SD.open(nDSK[ii], O_READ);            //open DOAD file to check write protect y/n
-      DSK[ii].seek(0x10);                             //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
+      DSK[ii].seek(0x10);                             //byte 0x10 in Volume Information Block stores Protected status
       pDSK[ii] = DSK[ii].read();                      //0x50 || "P" means disk is write protected 
       DSK[ii].close();                                //close current SD DOAD file
     }
