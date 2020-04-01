@@ -21,7 +21,7 @@
 #define RDINT   0x1FEA
 //TI BASIC screen bias
 #define TIBias  0x60
-//pulling my hair out trouleshooting address
+//pulling my hair out trouleshooting storage address
 #define aDEBUG 0x1EE0
 
 //CRU emulation bytes + FD1771 registers
@@ -42,8 +42,8 @@ File DSK[4];  //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available
 boolean aDSK[4] = {false, false, false, false};                                                 //disk availability
-String  nDSK[4] = {"x", "/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};    //DOAD file names; startup defaults
-boolean pDSK[4] = {false, false, false, false};                                                 //DOAD write protect status aka the adhesive tab
+String  nDSK[4] = {"x", "/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};   //DOAD file names; startup defaults
+byte pDSK[4]    = {0x20, 0x20, 0x20, 0x20};                                                     //DOAD write protect status
 byte    cDSK    = 0;                                                                            //current selected DSK
 
 //various storage and flags for command interpretation and handling

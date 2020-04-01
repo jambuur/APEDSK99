@@ -8,7 +8,7 @@
           ALcmd = ACcmd;                                                      //yes; remember new command for next compare
         }
        
-        //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), CDSK(), SDSK() and FDSK()
+        //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), MDSK(), SDSK() and LDSK()
         switch ( ACcmd ) {
 
           case  1:                                                            //UDSK(1):  Unprotect DSK1
@@ -20,16 +20,15 @@
           {
             cDSK = ACcmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ | O_WRITE);              //open DOAD file to change write protect status 
-              DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status 
-              if ( ACcmd & B00000100 ) {                                      //Protect bit set?
-                DSK[cDSK].write(0x50);                                        //yes; apply adhesive tab
-                pDSK[cDSK] = true;  
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);                       //open DOAD file to change write protect status 
+              DSK[cDSK].seek(0x10);                                           //byte 0x10 in Volume Information Block stores APEDSK99 adhesive tab status 
+              if ( ACcmd & B00000100 ) {
+                pDSK[cDSK] = 0x50;
               } else {
-                DSK[cDSK].write(0x20);                                        //no; remove adhesive tab
-                pDSK[cDSK] = false;        
+                pDSK[cDSK] = 0x20;
               }
-            } 
+                DSK[cDSK].write(pDSK[cDSK]);
+            }
             noExec();
           }
           break;  
@@ -47,9 +46,8 @@
               nDSK[cDSK] = mDOAD;
               aDSK[cDSK] = true;
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open new DOAD file to check write protect y/n
-              DSK[cDSK].seek(0x28);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
+              DSK[cDSK].seek(0x10);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
               pDSK[cDSK] = ( DSK[cDSK].read() == 0x50 );                      //0x50 || "P" means disk is write APEDSK99 protected
-              DSK[cDSK].close();                                              //close new DOAD file
             } else {
               Wbyte(DTCDSK, 0xFF);                                            //no; return error flag
             }    
@@ -81,7 +79,7 @@
           } 
           break;       
 
-          case 11:
+          case 11:                                                                          //LDSK(): List files on DOAD
           {            
             if ( Rbyte(DTCDSK) != cDSK ) {                                                  //new DOAD?
                 ANcmd = true;                                                               //yes; close possible open DOAD

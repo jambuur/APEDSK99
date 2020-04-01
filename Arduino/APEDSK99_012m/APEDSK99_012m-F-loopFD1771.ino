@@ -113,7 +113,7 @@ void loop() {
           case 0xB0:                                      //write multiple sectors
           case 0xF0:                                      //write track
           {
-            if ( !pDSK[cDSK] ) {                          //is DOAD write protected?
+            if ( pDSK[cDSK] != 0x50 ) {                   //is DOAD write protected?
               RWsector( false );                          //no; go ahead and write
             } else {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
