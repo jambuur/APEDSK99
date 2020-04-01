@@ -11,7 +11,7 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
-DTCDSK	EQU	>5FD6			xDSK data: DSK number (1-3); DOAD name (10 characters) or File info (16 characters)
+CALLBF	EQU	>5FD6			xDSK data: DSK number (1-3); DOAD name (10 characters) or File info (16 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
@@ -3444,7 +3444,7 @@ UDSK2	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 * Subprogram MDSK: map DOAD to DSKx
 * ----------------------------------------------------------------
 *
-MDSK2	MOV	R0,@DTCDSK		save DSKx	
+MDSK2	MOV	R0,@CALLBF		save DSKx	
 	
 	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
@@ -3452,7 +3452,7 @@ MDSK2	MOV	R0,@DTCDSK		save DSKx
 	JNE	ACLERR			no, return with error set
 	INCT	R8			increment pointer
 *
-	LI	R5,DTCDSK+2		pointer to DOAD name
+	LI	R5,CALLBF+2		pointer to DOAD name
 	LI	R6,4			4 words / 8 characters
 H9902	BL	@VDPR2B			get next two digits
 	MOV	R0,*R5+			save two digits
@@ -3468,7 +3468,7 @@ H9902	BL	@VDPR2B			get next two digits
 	LI	R6,>0900		
 	MOVB	R6,@ACOMND		CDSK command to Arduino
 *
-	CB	@K012,@DTCDSK		check Arduino CDSK return code
+	CB	@K012,@CALLBF		check Arduino CDSK return code
 	JEQ	ACLERR			>FF, DOAD doesn't exist; return with error
 	LI	R8,23			current CALL length
 	JMP	ACLBAS			all is well, return without error
@@ -3477,14 +3477,14 @@ H9902	BL	@VDPR2B			get next two digits
 * Subprogram SDSK: show DOAD mapping
 * ----------------------------------------------------------------
 *
-SDSK2	MOV	R0,@DTCDSK		save DSKx
+SDSK2	MOV	R0,@CALLBF		save DSKx
 	LI	R6,>0A00
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
 	LI	R2,726			screen starting position
 	BL	@VDPWRI			set VDP address
 *
-	LI	R5,DTCDSK		pointer to drive # and DOAD name
+	LI	R5,CALLBF		pointer to drive # and DOAD name
 	LI	R6,10			max 10 characters
 H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table	
 	DEC	R6
@@ -3495,14 +3495,14 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 * Subprogram LDSK: List files on DSKx
 * ----------------------------------------------------------------
 *
-LDSK2	MOV	R0,@DTCDSK		save DSKx
+LDSK2	MOV	R0,@CALLBF		save DSKx
 	LI	R6,>0B00
 	CB	@ACOMND,R6		next screen?
 	JEQ	LDNXTS			yes
 *
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 *
-	CB	@K004,@DTCDSK+2
+	CB	@K004,@CALLBF+2
 	JEQ	ACLERR			>F0; no DOAD mapped -> error
 *
 LDNXTS	CLR	R2			clear screen; position 0
@@ -3516,7 +3516,7 @@ LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
 	LI	R2,32			start 2nd screen line; 1st is lost due to TI BASIC scroll
 	BL	@VDPWRI			
 *
-H9904	LI	R5,DTCDSK+2		start of file name buffer
+H9904	LI	R5,CALLBF+2		start of file name buffer
 	CB	@K012,*R5		check Arduino LDSK return code
 	JEQ	ACLBAS			>FF; blank "floppy" or done last file
 *
@@ -3534,7 +3534,7 @@ H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
 *	
 NXTPRP	LI	R2,735
 	BL	@VDPWRI
-	LI	R5,>9E00		indicate ">", more files to display
+	LI	R5,>9E00		">", more files to display
 	MOVB	R5,@-2(R15)
 *
 	JMP 	ACLBAS
