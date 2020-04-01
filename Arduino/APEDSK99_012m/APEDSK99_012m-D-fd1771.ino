@@ -13,11 +13,11 @@
 #define NRSECTS     9   //# sectors/track
 #define NRBYSECT  256   //# bytes/sector
 
-//DOAD file name handling (DSKx 1-3 (2 bytes) + 8 bytes/characters)
+//CALL() buffer for DOAD and file name handling
 #define DTCDSK  0x1FD6
 //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define ACOMND  0x1FE8
-//R6 counter value to detect read access in sector, ReadID and track commands
+//R6 counter value to generate interrupt in read sector / track commands
 #define RDINT   0x1FEA
 //TI BASIC screen bias
 #define TIBias  0x60

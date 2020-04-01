@@ -61,9 +61,9 @@
             char cDot = "";
             cDSK = Rbyte(DTCDSK);                                             //is the requested disk mapped to a DOAD?
             if ( aDSK[cDSK] ) {
-             sDOAD = nDSK[cDSK];                                               //yes; get current DOAD name
+             sDOAD = nDSK[cDSK];                                              //yes; get current DOAD name
             } else {
-              sDOAD = "/DISKS/<NO MAP>";                                       //no; indicate as such
+              sDOAD = "/DISKS/<NO MAP>";                                      //no; indicate as such
             }
             Wbyte(DTCDSK    , cDSK+48+TIBias);                                //drive # in ASCII + TI BASIC bias
             Wbyte(DTCDSK + 1, '=' +   TIBias);                                //"=" in ASCII + TI BASIC bias
