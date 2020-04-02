@@ -1,4 +1,5 @@
 //----------------------------------------------------------------------------------------------- Setup
+
 void setup() {
 
   //see if the SD card is present and can be initialized
@@ -37,7 +38,7 @@ void setup() {
     //loading DSR unsuccessful -> flash error 3
     eflash(3);
   }
-  
+
   for ( byte ii = 1; ii < 4; ii++ ) {
     if ( SD.exists(nDSK[ii])) {                       //does DOAD x exist?
       aDSK[ii] = true;                                //yes; flag as such
@@ -47,7 +48,7 @@ void setup() {
       DSK[ii].close();                                //close current SD DOAD file
     }
   }
- 
+  
   //--------------------------------------------------------------------------------------------- Let's go
   //"initialize FD1771":
   FDrstr();   //"Restore" command

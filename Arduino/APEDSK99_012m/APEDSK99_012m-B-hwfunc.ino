@@ -5,9 +5,9 @@
 inline void NOP() __attribute__((always_inline));
 void NOP() {
   //uncomment for 74LS541
-  delayMicroseconds(6);
+  //delayMicroseconds(3);
   //uncomment for 74HCT541
-  //delayMicroseconds(8);  
+  delayMicroseconds(8);  
 }
 
 //databus:

@@ -18,6 +18,7 @@
           case  6:                                                            //PDSK(2):  Protect DSK2
           case  7:                                                            //PDSK(3):  Protect DSK3
           {
+            Wbyte(aDEBUG + 8, ACcmd);
             cDSK = ACcmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
               DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);                       //open DOAD file to change write protect status 
@@ -27,7 +28,7 @@
               } else {
                 pDSK[cDSK] = 0x20;
               }
-                DSK[cDSK].write(pDSK[cDSK]);
+              DSK[cDSK].write(pDSK[cDSK]);
             }
             noExec();
           }
@@ -47,7 +48,7 @@
               aDSK[cDSK] = true;
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open new DOAD file to check write protect y/n
               DSK[cDSK].seek(0x10);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
-              pDSK[cDSK] = ( DSK[cDSK].read() == 0x50 );                      //0x50 || "P" means disk is write APEDSK99 protected
+              pDSK[cDSK] = DSK[cDSK].read();                                  //0x50 || "P" means disk is write APEDSK99 protected
             } else {
               Wbyte(CALLBF, 0xFF);                                            //no; return error flag
             }    
@@ -139,7 +140,19 @@
             }
           }
           break;
-          
+
+          case 12:
+          {
+            Wbyte(aDEBUG,     aDSK[1]);
+            Wbyte(aDEBUG + 1, pDSK[1]);
+            Wbyte(aDEBUG + 2, aDSK[2]);
+            Wbyte(aDEBUG + 3, pDSK[2]);
+            Wbyte(aDEBUG + 4, aDSK[3]);
+            Wbyte(aDEBUG + 5, pDSK[3]);
+            noExec();
+          }
+          break;
+
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 

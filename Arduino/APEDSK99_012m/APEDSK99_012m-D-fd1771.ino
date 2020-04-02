@@ -67,7 +67,7 @@ void noExec(void) {
   Wbyte(WCOMND, FDINT);   //"force interrupt" command (aka no further execution)
   FCcmd = FDINT;          //"" ""
   FLcmd = FCcmd;          //reset new FD1771 command prep
-  Wbyte(ACOMND, 0x00);    //clear APEDSK99 Command Register
+  Wbyte(ACOMND, 0);       //clear APEDSK99 Command Register
   ACcmd = 0;              //reset APEDSK99 command
   ALcmd = ACcmd;          //reset new APEDSK99 command prep
   cDSK = 0;               //reset active DSKx
