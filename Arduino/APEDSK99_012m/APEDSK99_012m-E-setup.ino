@@ -34,7 +34,7 @@ void setup() {
     eflash(2);
   }
   //check for valid DSR mark (>AA) at first DSR RAM byte
-  if (  Rbyte(0x0000) != 0xAA ) {
+  if ( Rbyte(0x0000) != 0xAA ) {
     //loading DSR unsuccessful -> flash error 3
     eflash(3);
   }

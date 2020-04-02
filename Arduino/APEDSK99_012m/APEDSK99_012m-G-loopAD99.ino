@@ -35,22 +35,27 @@
 
           case 9:                                                             //MDSK(): Map DOAD
            {
-            String mDOAD = "";
-            for ( byte ii = 2; ii < 10; ii++ ) {                              //merge CALL CDSK characters into string
-              mDOAD += char( Rbyte(CALLBF + ii) );
-            }          
-            mDOAD.trim();                                                     //remove leading / trailing spaces
-            mDOAD = "/DISKS/" + mDOAD + ".DSK";                               //construct full DOAD path
+            char mDOAD[20] = "/DISKS/";
+            for ( byte ii = 2; ii < 12; ii++) {
+              byte cDOAD = Rbyte(CALLBF + ii);
+              if ( cDOAD != ' ' ) {
+                mDOAD[ii+5] = cDOAD;
+              } else {
+                ii = 12;
+              }
+            }
+            strcat(mDOAD, ".DSK" );
+  
             if ( SD.exists( mDOAD ) ) {                                       //exists?
               cDSK = Rbyte(CALLBF);                                           //yes; assign to requested DSKx
-              nDSK[cDSK] = mDOAD;
+              strcpy(nDSK[cDSK], mDOAD);
               aDSK[cDSK] = true;
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open new DOAD file to check write protect y/n
               DSK[cDSK].seek(0x10);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
               pDSK[cDSK] = DSK[cDSK].read();                                  //0x50 || "P" means disk is write APEDSK99 protected
             } else {
               Wbyte(CALLBF, 0xFF);                                            //no; return error flag
-            }    
+            }  
             noExec();
           } 
           break;        
