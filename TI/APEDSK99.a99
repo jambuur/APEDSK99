@@ -3431,7 +3431,7 @@ ACLBAS	CLR	@>0050(R9)		clear error flag
 ACLERR	B	@RTURN1			return to caller (i.e. Basic)
 *
 *-----------------------------------------------------------------
-* Subprogram PDSK/UDSK: set/reset APEDSK99 Protect (0x50) @VIB >28
+* Subprogram PDSK/UDSK: set/reset APEDSK99 Protect @VIB >10
 * ----------------------------------------------------------------
 *
 PDSK2	AI	R0,>0400		set Protect flag
