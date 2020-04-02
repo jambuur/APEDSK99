@@ -18,16 +18,15 @@
           case  6:                                                            //PDSK(2):  Protect DSK2
           case  7:                                                            //PDSK(3):  Protect DSK3
           {
-            Wbyte(aDEBUG + 8, ACcmd);
             cDSK = ACcmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);                       //open DOAD file to change write protect status 
-              DSK[cDSK].seek(0x10);                                           //byte 0x10 in Volume Information Block stores APEDSK99 adhesive tab status 
               if ( ACcmd & B00000100 ) {
                 pDSK[cDSK] = 0x50;
               } else {
                 pDSK[cDSK] = 0x20;
               }
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);                       //open DOAD file to change write protect status 
+              DSK[cDSK].seek(0x10);                                           //byte 0x10 in Volume Information Block stores Protected status 
               DSK[cDSK].write(pDSK[cDSK]);
             }
             noExec();
@@ -138,18 +137,6 @@
               Wbyte(CALLBF + 2, 0xF0);                                                      //error; no mapped DOAD
               noExec();
             }
-          }
-          break;
-
-          case 12:
-          {
-            Wbyte(aDEBUG,     aDSK[1]);
-            Wbyte(aDEBUG + 1, pDSK[1]);
-            Wbyte(aDEBUG + 2, aDSK[2]);
-            Wbyte(aDEBUG + 3, pDSK[2]);
-            Wbyte(aDEBUG + 4, aDSK[3]);
-            Wbyte(aDEBUG + 5, pDSK[3]);
-            noExec();
           }
           break;
 

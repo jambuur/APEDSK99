@@ -1,7 +1,7 @@
 //-DSR generic---------------------------------------------------------------------------------- Hardware functions
 
 //short delay function to let bus/signals settle. 
-//6us is the minumum stable value on my TI but your mileage may vary
+//6us is the minumum stable value for HCT on my TI but your mileage may vary
 inline void NOP() __attribute__((always_inline));
 void NOP() {
   //uncomment for 74LS541
@@ -74,25 +74,25 @@ void set_abus(unsigned int address)
   digitalLow(CLOCK);
   PORTC |= ( (address >>  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A10
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A9
+  PORTC |= ( (address >>  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A9
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A8
+  PORTC |= ( (address >>  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A8
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A7
+  PORTC |= ( (address >>  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A7
   digitalLow(CLOCK);
-  PORTC |= ( (address >>  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A6
+  PORTC |= ( (address >>  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A6
   digitalLow(CLOCK);
-  PORTC |= ( (address      ) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A5
+  PORTC |= ( (address      ) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A5
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A4
+  PORTC |= ( (address <<  1) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A4
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A3
+  PORTC |= ( (address <<  2) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A3
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A2
+  PORTC |= ( (address <<  3) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A2
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A1
+  PORTC |= ( (address <<  4) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A1
   digitalLow(CLOCK);
-  PORTC |= ( (address <<  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); //A0
+  PORTC |= ( (address <<  5) & B00100000); digitalHigh(CLOCK); digitalLow(DS); // A0
 
   //stop shifting
   digitalLow(CLOCK);
