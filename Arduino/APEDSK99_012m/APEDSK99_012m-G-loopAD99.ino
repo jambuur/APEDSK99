@@ -11,6 +11,10 @@
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), MDSK(), SDSK() and LDSK()
         switch ( ACcmd ) {
 
+          for ( byte ii=2; ii < 18; ii++) {                                   //prep for M-/S-/LDSK: fill CALL() buffer with " " (TIBias)
+            Wbyte(CALLBF + ii, 0x80);
+          }
+
           case  1:                                                            //UDSK(1):  Unprotect DSK1
           case  2:                                                            //UDSK(2):  Unprotect DSK2
           case  3:                                                            //UDSK(3):  Unprotect DSK3      
@@ -20,12 +24,12 @@
           {
             cDSK = ACcmd & B00000011;                                         //strip U/P flag, keep DSKx
             if ( aDSK[cDSK] ) {
-              if ( ACcmd & B00000100 ) {
+              if ( ACcmd & B00000100 ) {                                      //0x04 is Protect flag
                 pDSK[cDSK] = 0x50;
               } else {
                 pDSK[cDSK] = 0x20;
               }
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);                       //open DOAD file to change write protect status 
+              DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);                    //open DOAD file to change write protect status 
               DSK[cDSK].seek(0x10);                                           //byte 0x10 in Volume Information Block stores Protected status 
               DSK[cDSK].write(pDSK[cDSK]);
             }
@@ -36,23 +40,24 @@
           case 9:                                                             //MDSK(): Map DOAD
            {
             char mDOAD[20] = "/DISKS/";
-            for ( byte ii = 2; ii < 12; ii++) {
-              byte cDOAD = Rbyte(CALLBF + ii);
-              if ( cDOAD != ' ' ) {
-                mDOAD[ii+5] = cDOAD;
-              } else {
-                ii = 12;
+            byte mPos;
+            for ( mPos = 2; mPos < 10; mPos++) {
+              mDOAD[5 + mPos] = Rbyte(CALLBF + mPos);
+              if ( mDOAD[5 + mPos] == ' ' ) {
+                 break;
               }
             }
-            strcat(mDOAD, ".DSK" );
+            mDOAD[5 + mPos] = '\0';
+            strncat(mDOAD, ".DSK", 4);
+            mDOAD[9 + mPos] = '\0';
   
             if ( SD.exists( mDOAD ) ) {                                       //exists?
               cDSK = Rbyte(CALLBF);                                           //yes; assign to requested DSKx
-              strcpy(nDSK[cDSK], mDOAD);
-              aDSK[cDSK] = true;
+              strcpy(nDSK[cDSK], mDOAD);                        
+              aDSK[cDSK] = true;                                              //flag active
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open new DOAD file to check write protect y/n
-              DSK[cDSK].seek(0x10);                                           //byte 0x28 in Volume Information Block stores APEDSK99 adhesive tab status
-              pDSK[cDSK] = DSK[cDSK].read();                                  //0x50 || "P" means disk is write APEDSK99 protected
+              DSK[cDSK].seek(0x10);                                           //byte 0x10 in Volume Information Block stores Protect status
+              pDSK[cDSK] = DSK[cDSK].read();                                  //0x50 || "P", 0x20 || " "
             } else {
               Wbyte(CALLBF, 0xFF);                                            //no; return error flag
             }  
@@ -62,24 +67,23 @@
             
           case 10:                                                            //SDSK(): Show DOAD mapping       
           {
-            String sDOAD = "";
-            char cDot = "";
-            cDSK = Rbyte(CALLBF);                                             //is the requested disk mapped to a DOAD?
-            if ( aDSK[cDSK] ) {
-             sDOAD = nDSK[cDSK];                                              //yes; get current DOAD name
+            char sDOAD[20];
+            cDSK = Rbyte(CALLBF);                                             
+            if ( aDSK[cDSK] ) {                                               //is the requested disk mapped to a DOAD?
+             strcpy(sDOAD, nDSK[cDSK]);                                       //yes; get current DOAD name     
             } else {
-              sDOAD = "/DISKS/<NO MAP>";                                      //no; indicate as such
+             strcpy(sDOAD, "/DISKS/<NO MAP>.");                              //no; indicate not mapped
             }
-            Wbyte(CALLBF    , cDSK+48+TIBias);                                //drive # in ASCII + TI BASIC bias
-            Wbyte(CALLBF + 1, '=' +   TIBias);                                //"=" in ASCII + TI BASIC bias
-            for ( byte ii = 2; ii < 10; ii++ ) {
-              cDot = sDOAD.charAt(ii+5) + TIBias;                              //read character and add TI BASIC bias      
-              if ( cDot != char(142) ) {                                      //is it "."?
-                Wbyte(CALLBF + ii, cDot);                                     //no; prepare next character
-              } else {
-                ii = 11;                                                      //yes; don't print, end loop          
-              }    
-            }
+            
+            Wbyte(CALLBF    , cDSK+48+TIBias);                                //DSKx # in ASCII + TI BASIC bias
+            Wbyte(CALLBF + 1, '=' +   TIBias);                                //"=" + TI BASIC bias  
+            for ( byte ii = 2; ii < 10; ii++ ) {                                  
+              Wbyte(CALLBF + ii, sDOAD[ii + 5] + TIBias);                     //store mapping character in CALL buffer
+              if ( sDOAD[ii + 5] == 46 ) {                                    //if it's a "." we're done
+                Wbyte(CALLBF + ii, ' ' + TIBias);                             //but the "." needs to be a " "
+                break;
+              }
+            } 
             noExec();
           } 
           break;       
@@ -101,10 +105,6 @@
               if ( pFDR != 0 ) {                                                            //0x0000 means no more files              
                 unsigned int cPos = DSK[cDSK].position();                                   //remember next FDR pointer
                 DSK[cDSK].seek(pFDR * NRBYSECT);                                            //locate FDR within DOAD
-
-                for ( byte ii=2; ii < 18; ii++) {                                           //fill buffer with " "
-                  Wbyte(CALLBF + ii, 0x80);
-                }
                 
                 for ( byte ii=2; ii < 12; ii++ ) {                                  
                   Wbyte(CALLBF + ii, DSK[cDSK].read() + TIBias );                           //read/save filename characters in CALL buffer
@@ -122,16 +122,13 @@
                 }
 
                 DSK[cDSK].seek( DSK[cDSK].position() + 1);                                  //locate total # of sectors
-                String fSize = String( ((DSK[cDSK].read() << 8) + DSK[cDSK].read() + 1) );  //convert 16bits int to string 
-                byte fLength = (char)fSize.length();                                        //get ASCII string length
-                Wbyte(CALLBF + 16, fSize.charAt(fLength-1) + TIBias);                       //least significant digit in ASCII to CALL buffer 
-                if ( fLength > 1 ) {
-                  Wbyte (CALLBF + 15, fSize.charAt(fLength - 2) + TIBias );                 //"10's" digit in ASCII to CALL buffer
+                char fSize[4];                                                              //ASCII store
+                sprintf( fSize, "%3d", (DSK[cDSK].read() << 8) + (DSK[cDSK].read() + 1) );  //convert number to string
+                
+                for ( byte ii = 14; ii < 18130; ii++ ) {                                    //store ASCII file size in CALL buffer
+                  Wbyte( CALLBF + ii, fSize[ii-14] + TIBias);
                 }
-                if ( fLength == 3) {
-                  Wbyte (CALLBF + 14, fSize.charAt(fLength - 3) + TIBias);                  //"100's" digit in ASCII to CALL buffer
-                }
-                    
+                                  
                 DSK[cDSK].seek(cPos);                                                       //locate next FDR
                 
               } else {
