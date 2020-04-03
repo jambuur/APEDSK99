@@ -43,7 +43,7 @@ File DSK[4];  //file pointers to DOAD's
 //flags for "drives" (aka DOAD files) available
 boolean aDSK[4]   = {false, false, false, false};                                                 //disk availability
 char nDSK[4][20]  = {"x", "/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};   //DOAD file names; startup defaults
-byte pDSK[4]      = {0x20, 0x20, 0x20, 0x20};                                                     //DOAD write protect status
+byte pDSK[4]      = {0x00, 0x20, 0x20, 0x20};                                                     //DOAD write protect status
 byte cDSK         = 0;                                                                            //current selected DSK
 
 //various storage and flags for command interpretation and handling

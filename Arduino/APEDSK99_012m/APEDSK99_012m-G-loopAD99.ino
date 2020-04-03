@@ -29,10 +29,15 @@
               } else {
                 pDSK[cDSK] = 0x20;
               }
-              DSK[cDSK] = SD.open(nDSK[cDSK], FILE_WRITE);                    //open DOAD file to change write protect status 
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);                       //open DOAD file to change write protect status 
               DSK[cDSK].seek(0x10);                                           //byte 0x10 in Volume Information Block stores Protected status 
               DSK[cDSK].write(pDSK[cDSK]);
             }
+            for ( byte ii = 0; ii < 3; ii++ ) {
+              Wbyte(aDEBUG + ii, aDSK[ii+1]);
+              Wbyte(aDEBUG + 3 + ii, pDSK[ii+1]);
+            }
+            
             noExec();
           }
           break;  
@@ -125,7 +130,7 @@
                 char fSize[4];                                                              //ASCII store
                 sprintf( fSize, "%3d", (DSK[cDSK].read() << 8) + (DSK[cDSK].read() + 1) );  //convert number to string
                 
-                for ( byte ii = 14; ii < 18130; ii++ ) {                                    //store ASCII file size in CALL buffer
+                for ( byte ii = 14; ii < 18; ii++ ) {                                       //store ASCII file size in CALL buffer
                   Wbyte( CALLBF + ii, fSize[ii-14] + TIBias);
                 }
                                   
