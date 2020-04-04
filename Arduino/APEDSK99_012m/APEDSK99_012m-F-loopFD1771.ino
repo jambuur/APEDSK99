@@ -117,7 +117,7 @@ void loop() {
               RWsector( false );                          //no; go ahead and write
             } else {
               Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
-              FCcmd = FDINT;                              //exit      
+              noExec();                                   //exit      
             }
           }
           break;

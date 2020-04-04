@@ -27,12 +27,6 @@
             } else {
               Wbyte(CALLBF, 0xFF);                          //no; return error flag
             }
-
-            for ( byte ii = 0; ii < 3; ii++ ) {
-              Wbyte(aDEBUG + ii, aDSK[ii+1]);
-              Wbyte(aDEBUG + 3 + ii, pDSK[ii+1]);
-            }
-            
             noExec();
           }
           break;      
@@ -52,7 +46,7 @@
             mDOAD[9 + mPos] = '\0';
   
             if ( SD.exists( mDOAD ) ) {                     //exists?
-              cDSK = Rbyte(CALLBF);                         //yes; assign to requested DSKx
+              //cDSK = Rbyte(CALLBF);                         //yes; assign to requested DSKx
               strcpy(nDSK[cDSK], mDOAD);                        
               aDSK[cDSK] = true;                            //flag active
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);      //open new DOAD file to check write protect y/n
