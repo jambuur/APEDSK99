@@ -21,24 +21,11 @@ void setup() {
   TIstop();
 
   //--------------------------------------------------------------------------------------------- DSR initialisation
+  
   //read DSR binary from SD and write into DSR RAM
+  lDSR("APEDSK99");
 
-  File InDSR = SD.open("/APEDSK99.DSR", O_READ);
-  if (InDSR) {
-    for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
-      Wbyte(ii, InDSR.read() );
-    }
-    InDSR.close();
-  } else {
-    //couldn't find DSR binary image: flash error 2
-    eflash(2);
-  }
-  //check for valid DSR mark (>AA) at first DSR RAM byte
-  if ( Rbyte(0x0000) != 0xAA ) {
-    //loading DSR unsuccessful -> flash error 3
-    eflash(3);
-  }
-
+  //initialise DSKx Active and Protect flags
   for ( byte ii = 1; ii < 4; ii++ ) {
     if ( SD.exists(nDSK[ii])) {                       //does DOAD x exist?
       aDSK[ii] = true;                                //yes; flag as such

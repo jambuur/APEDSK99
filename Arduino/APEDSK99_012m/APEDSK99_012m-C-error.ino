@@ -1,5 +1,26 @@
 //-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
 
+void lDSR( char fDSR[12] )
+{
+  strncat(fDSR, ".DSR", 4);
+  fDSR[12] = '\0';
+  File iDSR = SD.open(fDSR, O_READ);
+  if (iDSR) {
+    for ( unsigned int ii = 0; ii < 0x2000; ii++ ) {
+      Wbyte(ii, iDSR.read() );
+    }
+  iDSR.close();
+  } else {
+    //couldn't find DSR binary image: flash error 2
+    eflash(2);
+  }
+  //check for valid DSR mark (>AA) at first DSR RAM byte
+  if ( Rbyte(0x0000) != 0xAA ) {
+    //loading DSR unsuccessful -> flash error 3
+    eflash(3);
+  }
+}
+
 //flash error code:
 //  flash                   : SPI / SD Card fault/not ready
 //  flash-flash             : can't read DSR binary image (/APEDSK99.DSR)

@@ -46,8 +46,7 @@
             mDOAD[9 + mPos] = '\0';
   
             if ( SD.exists( mDOAD ) ) {                     //exists?
-              //cDSK = Rbyte(CALLBF);                         //yes; assign to requested DSKx
-              strcpy(nDSK[cDSK], mDOAD);                        
+              strcpy(nDSK[cDSK], mDOAD);                    //yes; assign to requested DSKx    
               aDSK[cDSK] = true;                            //flag active
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);      //open new DOAD file to check write protect y/n
               DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protect status
@@ -103,7 +102,6 @@
               if ( pFDR != 0 ) {                                                            //0x0000 means no more files              
                 unsigned int cPos = DSK[cDSK].position();                                   //remember next FDR pointer
                 DSK[cDSK].seek(pFDR * NRBYSECT);                                            //locate FDR within DOAD
-                
                 for ( byte ii=2; ii < 12; ii++ ) {                                  
                   Wbyte(CALLBF + ii, DSK[cDSK].read() + TIBias );                           //read/save filename characters in CALL buffer
                 }
@@ -122,7 +120,6 @@
                 DSK[cDSK].seek( DSK[cDSK].position() + 1);                                  //locate total # of sectors
                 char fSize[4];                                                              //ASCII store
                 sprintf( fSize, "%3d", (DSK[cDSK].read() << 8) + (DSK[cDSK].read() + 1) );  //convert number to string
-                
                 for ( byte ii = 14; ii < 18; ii++ ) {                                       //store ASCII file size in CALL buffer
                   Wbyte( CALLBF + ii, fSize[ii-14] + TIBias);
                 }
@@ -130,16 +127,34 @@
                 DSK[cDSK].seek(cPos);                                                       //locate next FDR
                 
               } else {
-                Wbyte(CALLBF + 2, 0xFF);                                                    //blank "floppy" or processed all FDR's
+                Wbyte(CALLBF + 2, 0xF0);                                                    //blank "floppy" or processed all FDR's
                 noExec();
               }          
             } else {
-              Wbyte(CALLBF + 2, 0xF0);                                                      //error; no mapped DOAD
+              Wbyte(CALLBF + 2, 0xFF);                                                      //error; no mapped DOAD
               noExec();
             }
           }
           break;
 
+          case 6:
+          {
+            dis_cbus();
+            Serial.begin(9600);
+            Serial.print("Hello world!");
+            Serial.end();
+            noExec();
+          }
+          break;
+
+          case 7:
+          {
+            wdt_disable();
+            wdt_enable(WDTO_15MS);
+            while (1) {}
+          }
+          break;
+          
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
     } //end else 
