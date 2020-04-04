@@ -43,9 +43,9 @@ After clamping it for a while the bottom row pins can now be soldered.
 
 The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
-As the 74LS series is harder and harder to get, 74HCT replacements may be a better bet. Either works fine but there is a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch that you need to adjust. Default is set for the 74HCT series.
+As the 74LS series is harder and harder to get, 74HCT replacements for the 74LS541's may be a better bet. Either works fine but there is a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch that you need to adjust. Default is set for the 74HCT series. NB: I haven't tried HCT versions for the 74LS245, 74LS138 and 75HC595's so no guarantees there (should work though).
 
-Another thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO; make sure you get the long version.
+Another thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB (type B) and the power adapter connectors. Make sure you get the long version.
 
 ### *DOAD's*
 
