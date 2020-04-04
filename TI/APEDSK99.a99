@@ -3416,6 +3416,7 @@ H9901	JEQ	ACLERR			DSK0 not valid, return with error
 	JH	ACLERR			return with error if more
 	SWPB	R0			drive # back in MSB
 *
+	MOV	R0,@CALLBF		save DSKx
 	MOV	@CLLTBL(R4),R4
 	B	*R4
 *
@@ -3434,8 +3435,13 @@ ACLERR	B	@RTURN1			return to caller (i.e. Basic)
 * Subprogram PDSK/UDSK: set/reset APEDSK99 Protect @VIB >10
 * ----------------------------------------------------------------
 *
-PDSK2	AI	R0,>0400		set Protect flag
-UDSK2	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
+PDSK2	LI	R6,>0100		set Protect flag
+	JMP	PUDSK2
+UDSK2	LI	R6,>0200
+PUDSK2	MOVB	R6,@ACOMND		send U/P DSK command to Arduino
+*
+	CB	@K012,@CALLBF		check Arduino CDSK return code
+	JEQ	ACLERR			>FF; DSKx not mapped, return with error
 *
 	LI 	R8,12			current CALL length
 	JMP	ACLBAS			return to TI BASIC
@@ -3444,9 +3450,7 @@ UDSK2	MOVB	R0,@ACOMND		send U/P DSK command to Arduino
 * Subprogram MDSK: map DOAD to DSKx
 * ----------------------------------------------------------------
 *
-MDSK2	MOV	R0,@CALLBF		save DSKx	
-	
-	INCT	R8			increment pointer
+MDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
 	CI	R0,>C708		quoted string, 8 characters?
 	JNE	ACLERR			no, return with error set
@@ -3465,7 +3469,7 @@ H9902	BL	@VDPR2B			get next two digits
 	CI      R0,>00B6                is it a ")"?
 	JNE     ACLERR                  no, return with error set
 *
-	LI	R6,>0900		
+	LI	R6,>0300		
 	MOVB	R6,@ACOMND		CDSK command to Arduino
 *
 	CB	@K012,@CALLBF		check Arduino CDSK return code
@@ -3477,16 +3481,15 @@ H9902	BL	@VDPR2B			get next two digits
 * Subprogram SDSK: show DOAD mapping
 * ----------------------------------------------------------------
 *
-SDSK2	MOV	R0,@CALLBF		save DSKx
-	LI	R6,>0A00
+SDSK2	LI	R6,>0400
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
 	LI	R2,726			screen starting position
 	BL	@VDPWRI			set VDP address
 *
-	LI	R5,CALLBF		pointer to drive # and DOAD name
+	LI	R5,CALLBF+2		pointer to drive # and DOAD name
 	LI	R6,10			max 10 characters
-H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen table	
+H9903	MOVB	*R5+,@-2(R15)		save drive # / "=" / DOAD character in VDP screen table	
 	DEC	R6
 	JNE	H9903
 *	
@@ -3495,8 +3498,7 @@ H9903	MOVB	*R5+,@-2(R15)		save drive # + "=" + DOAD character in VDP screen tabl
 * Subprogram LDSK: List files on DSKx
 * ----------------------------------------------------------------
 *
-LDSK2	MOV	R0,@CALLBF		save DSKx
-	LI	R6,>0B00
+LDSK2	LI	R6,>0500
 	CB	@ACOMND,R6		next screen?
 	JEQ	LDNXTS			yes
 *
@@ -3507,11 +3509,10 @@ LDSK2	MOV	R0,@CALLBF		save DSKx
 *
 LDNXTS	CLR	R2			clear screen; position 0
 	BL	@VDPWRI
-	LI	R5,>8000		space + TI BASIC bias
-	LI	R6,704			704 positions to clear
-LDCLR	MOVB	R5,@-2(R15)		move " " to VDP screen memory
-	DEC	R6
-	JNE	LDCLR
+*
+	LI	R0,>8000		space + TI BASIC bias
+	BL	@VDPRPW
+	DATA	704			704 positions to clear
 *
 	LI	R2,32			start 2nd screen line; 1st is lost due to TI BASIC scroll
 	BL	@VDPWRI			

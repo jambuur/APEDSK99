@@ -6,33 +6,28 @@
         ANcmd = (ACcmd != ALcmd);                                             //new or continue previous APEDSK99 command?
         if (ANcmd) {                                                          //new command?
           ALcmd = ACcmd;                                                      //yes; remember new command for next compare
+          cDSK = Rbyte(CALLBF);                                               //read target DSKx
         }
        
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), MDSK(), SDSK() and LDSK()
         switch ( ACcmd ) {
 
-          for ( byte ii=2; ii < 18; ii++) {                                   //prep for M-/S-/LDSK: fill CALL() buffer with " " (TIBias)
-            Wbyte(CALLBF + ii, 0x80);
-          }
-
-          case  1:                                                            //UDSK(1):  Unprotect DSK1
-          case  2:                                                            //UDSK(2):  Unprotect DSK2
-          case  3:                                                            //UDSK(3):  Unprotect DSK3      
-          case  5:                                                            //PDSK(1):  Protect DSK1
-          case  6:                                                            //PDSK(2):  Protect DSK2
-          case  7:                                                            //PDSK(3):  Protect DSK3
+          case  1:                                          //UDSK(1):  Unprotect DSK1      
+          case  2:                                          //UDSK(2):  Unprotect DSK2
           {
-            cDSK = ACcmd & B00000011;                                         //strip U/P flag, keep DSKx
-            if ( aDSK[cDSK] ) {
-              if ( ACcmd & B00000100 ) {                                      //0x04 is Protect flag
-                pDSK[cDSK] = 0x50;
+            if ( aDSK[cDSK] ) {                             //is the requested disk mapped to a DOAD?
+              if ( ACcmd == 1 ) {                           //yes; PDSK?
+                pDSK[cDSK] = 0x50;                          //Protect DSKx
               } else {
-                pDSK[cDSK] = 0x20;
+                pDSK[cDSK] = 0x20;                          //UDSK(); Unprotect DSKx
               }
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);                       //open DOAD file to change write protect status 
-              DSK[cDSK].seek(0x10);                                           //byte 0x10 in Volume Information Block stores Protected status 
-              DSK[cDSK].write(pDSK[cDSK]);
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);     //open DOAD file to change write protect status 
+              DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected status 
+              DSK[cDSK].write(pDSK[cDSK]);                  //update Protect status
+            } else {
+              Wbyte(CALLBF, 0xFF);                          //no; return error flag
             }
+
             for ( byte ii = 0; ii < 3; ii++ ) {
               Wbyte(aDEBUG + ii, aDSK[ii+1]);
               Wbyte(aDEBUG + 3 + ii, pDSK[ii+1]);
@@ -40,9 +35,9 @@
             
             noExec();
           }
-          break;  
-
-          case 9:                                                             //MDSK(): Map DOAD
+          break;      
+ 
+          case 3:                                           //MDSK(): Map DOAD
            {
             char mDOAD[20] = "/DISKS/";
             byte mPos;
@@ -56,36 +51,36 @@
             strncat(mDOAD, ".DSK", 4);
             mDOAD[9 + mPos] = '\0';
   
-            if ( SD.exists( mDOAD ) ) {                                       //exists?
-              cDSK = Rbyte(CALLBF);                                           //yes; assign to requested DSKx
+            if ( SD.exists( mDOAD ) ) {                     //exists?
+              cDSK = Rbyte(CALLBF);                         //yes; assign to requested DSKx
               strcpy(nDSK[cDSK], mDOAD);                        
-              aDSK[cDSK] = true;                                              //flag active
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                        //open new DOAD file to check write protect y/n
-              DSK[cDSK].seek(0x10);                                           //byte 0x10 in Volume Information Block stores Protect status
-              pDSK[cDSK] = DSK[cDSK].read();                                  //0x50 || "P", 0x20 || " "
+              aDSK[cDSK] = true;                            //flag active
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);      //open new DOAD file to check write protect y/n
+              DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protect status
+              pDSK[cDSK] = DSK[cDSK].read();                //0x50 || "P", 0x20 || " "
             } else {
-              Wbyte(CALLBF, 0xFF);                                            //no; return error flag
+              Wbyte(CALLBF, 0xFF);                          //no; return error flag
             }  
             noExec();
           } 
           break;        
             
-          case 10:                                                            //SDSK(): Show DOAD mapping       
+          case 4:                                            //SDSK(): Show DOAD mapping       
           {
             char sDOAD[20];
-            cDSK = Rbyte(CALLBF);                                             
-            if ( aDSK[cDSK] ) {                                               //is the requested disk mapped to a DOAD?
-             strcpy(sDOAD, nDSK[cDSK]);                                       //yes; get current DOAD name     
+                                                     
+            if ( aDSK[cDSK] ) {                              //is the requested disk mapped to a DOAD?
+             strcpy(sDOAD, nDSK[cDSK]);                      //yes; get current DOAD name     
             } else {
-             strcpy(sDOAD, "/DISKS/<NO MAP>.");                              //no; indicate not mapped
+             strcpy(sDOAD, "/DISKS/<NO MAP>.");              //no; indicate not mapped
             }
             
-            Wbyte(CALLBF    , cDSK+48+TIBias);                                //DSKx # in ASCII + TI BASIC bias
-            Wbyte(CALLBF + 1, '=' +   TIBias);                                //"=" + TI BASIC bias  
-            for ( byte ii = 2; ii < 10; ii++ ) {                                  
-              Wbyte(CALLBF + ii, sDOAD[ii + 5] + TIBias);                     //store mapping character in CALL buffer
-              if ( sDOAD[ii + 5] == 46 ) {                                    //if it's a "." we're done
-                Wbyte(CALLBF + ii, ' ' + TIBias);                             //but the "." needs to be a " "
+            Wbyte(CALLBF + 2, cDSK+48+TIBias);               //DSKx # in ASCII + TI BASIC bias
+            Wbyte(CALLBF + 3, '=' +   TIBias);               //"=" + TI BASIC bias  
+            for ( byte ii = 4; ii < 12; ii++ ) {                                  
+              Wbyte(CALLBF + ii, sDOAD[ii + 3] + TIBias);    //store mapping character in CALL buffer
+              if ( sDOAD[ii + 3] == 46 ) {                   //if it's a "." we're done
+                Wbyte(CALLBF + ii, ' ' + TIBias);            //but the "." needs to be a " "
                 break;
               }
             } 
@@ -93,17 +88,21 @@
           } 
           break;       
 
-          case 11:                                                                          //LDSK(): List files on DOAD
+          case 5:                                                                           //LDSK(): List files on DOAD
           {            
-            if ( Rbyte(CALLBF) != cDSK ) {                                                  //new DOAD?
-                ANcmd = true;                                                               //yes; close possible open DOAD
-                cDSK = Rbyte(CALLBF);                                                       //read new DOAD    
+            if ( Rbyte(CALLBF) != cDSK ) {                                                  //different DSKx while ">" for previous DSKx?
+              cDSK = Rbyte(CALLBF);                                                         //yes; read new DSKx
+              ANcmd = true;                                                                 //close possible open DOAD 
             }
      
             if ( aDSK[cDSK] ) { 
               if ( ANcmd ) {                                                                //yes; first run of LDSK()?
                 DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                                    //yes; prep DOAD
                 DSK[cDSK].seek(NRBYSECT);
+              }
+
+              for ( byte ii=2; ii < 18; ii++) {                                             //fill CALL() buffer with " "
+                Wbyte(CALLBF + ii, 0x20 + TIBias);
               }
               
               unsigned long pFDR = (DSK[cDSK].read() << 8) + DSK[cDSK].read();              //16bits FDR pointer  
