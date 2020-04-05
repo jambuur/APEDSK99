@@ -25,7 +25,7 @@
               DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected status 
               DSK[cDSK].write(pDSK[cDSK]);                  //update Protect status
             } else {
-              Wbyte(CALLBF, 0xFF);                          //no; return error flag
+              Wbyte(CALLBF + 2, 0xFF);                      //no; return error flag
             }
             noExec();
           }
@@ -41,10 +41,15 @@
                  break;
               }
             }
+            Wbyte(aDEBUG, mPos);
+            Wbyte(aDEBUG + 1, strlen(mDOAD) );
             mDOAD[5 + mPos] = '\0';
+            Wbyte(aDEBUG + 2, strlen(mDOAD) );
             strncat(mDOAD, ".DSK", 4);
-            mDOAD[9 + mPos] = '\0';
-  
+            Wbyte(aDEBUG + 3, strlen(mDOAD) );
+            mDOAD[9 + mPos] = '\0';  
+            Wbyte(aDEBUG + 4, strlen(mDOAD) );
+
             if ( SD.exists( mDOAD ) ) {                     //exists?
               strcpy(nDSK[cDSK], mDOAD);                    //yes; assign to requested DSKx    
               aDSK[cDSK] = true;                            //flag active
@@ -52,7 +57,7 @@
               DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protect status
               pDSK[cDSK] = DSK[cDSK].read();                //0x50 || "P", 0x20 || " "
             } else {
-              Wbyte(CALLBF, 0xFF);                          //no; return error flag
+              Wbyte(CALLBF + 2, 0xFF);                      //no; return error flag
             }  
             noExec();
           } 
@@ -60,8 +65,7 @@
             
           case 4:                                            //SDSK(): Show DOAD mapping       
           {
-            char sDOAD[20];
-                                                     
+            char sDOAD[19];                                
             if ( aDSK[cDSK] ) {                              //is the requested disk mapped to a DOAD?
              strcpy(sDOAD, nDSK[cDSK]);                      //yes; get current DOAD name     
             } else {

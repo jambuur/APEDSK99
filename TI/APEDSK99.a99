@@ -3440,7 +3440,7 @@ PDSK2	LI	R6,>0100		set Protect flag
 UDSK2	LI	R6,>0200
 PUDSK2	MOVB	R6,@ACOMND		send U/P DSK command to Arduino
 *
-	CB	@K012,@CALLBF		check Arduino CDSK return code
+	CB	@K012,@CALLBF+2		check Arduino CDSK return code
 	JEQ	ACLERR			>FF; DSKx not mapped, return with error
 *
 	LI 	R8,12			current CALL length
@@ -3472,7 +3472,7 @@ H9902	BL	@VDPR2B			get next two digits
 	LI	R6,>0300		
 	MOVB	R6,@ACOMND		CDSK command to Arduino
 *
-	CB	@K012,@CALLBF		check Arduino CDSK return code
+	CB	@K012,@CALLBF+2		check Arduino CDSK return code
 	JEQ	ACLERR			>FF, DOAD doesn't exist; return with error
 	LI	R8,23			current CALL length
 	JMP	ACLBAS			all is well, return without error
@@ -3505,7 +3505,7 @@ LDSK2	LI	R6,>0500
 	MOVB	R6,@ACOMND		FDSK command to Arduino
 *
 	CB	@K012,@CALLBF+2
-	JEQ	ACLERR			>F0; no DOAD mapped -> error
+	JEQ	ACLERR			>FF; no DOAD mapped -> error
 *
 LDNXTS	CLR	R2			clear screen; position 0
 	BL	@VDPWRI
@@ -3549,8 +3549,8 @@ SIDE01	DATA	>0100			floppy side select
 
 *-----------------------------------------
 * The remaining bytes (~>5DE0 to >5FD5) all contain >00
-* >5FDC - >5FE7 is drive #, DOAD name storage for BASIC CALL's
-* >5FE8	is the Arduino Command Register (BASIC CALL support)
+* >5FD6 - >5FE7 is DSKx / DOAD name / file name storage for TI BASIC CALL's
+* >5FE8	is the Arduino Command Register (TI BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers
 * Bytes >5FF0 to >5FFE map to the FDC emulation registers

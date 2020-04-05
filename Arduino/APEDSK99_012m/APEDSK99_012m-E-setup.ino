@@ -45,6 +45,7 @@ void setup() {
   //direct interrupt register access for speed (attachInterrupt is too slow)
   EICRA |= B00000010;       //sense falling edge on INT0 pin
 
+  
   //TI: take it away
   TIgo();
 
