@@ -32,46 +32,45 @@
           break;      
  
           case 3:                                           //MDSK(): Map DOAD
-           {
-            char mDOAD[20] = "/DISKS/";
-            byte mPos;
-            for ( mPos = 2; mPos < 10; mPos++) {
-              mDOAD[5 + mPos] = Rbyte(CALLBF + mPos);
-              if ( mDOAD[5 + mPos] == ' ' ) {
-                 break;
+          {
+            char mDOAD[20] = "/DISKS/";                     //complete path + filename
+            byte fPos;                                      //character position in filename from MDSK()
+            for ( fPos = 7; fPos < 15; fPos++ ) {                                           
+              byte fKar = Rbyte(CALLBF + (fPos - 5) );
+              if ( fKar != ' ' ) {                          //if " ", the filename is < 8 characters ...
+                  mDOAD[fPos] = fKar;
+              } else {                                                                      
+                break;                                      // ... and we need to get out
               }
-            }
-            Wbyte(aDEBUG, mPos);
-            Wbyte(aDEBUG + 1, strlen(mDOAD) );
-            mDOAD[5 + mPos] = '\0';
-            Wbyte(aDEBUG + 2, strlen(mDOAD) );
-            strncat(mDOAD, ".DSK", 4);
-            Wbyte(aDEBUG + 3, strlen(mDOAD) );
-            mDOAD[9 + mPos] = '\0';  
-            Wbyte(aDEBUG + 4, strlen(mDOAD) );
-
-            if ( SD.exists( mDOAD ) ) {                     //exists?
-              strcpy(nDSK[cDSK], mDOAD);                    //yes; assign to requested DSKx    
+            }                                                                              
+            mDOAD[fPos + 1] = '\0';                         //terminate filename                                                                             
+            strncat(mDOAD, ".DSK", 4);                      //add to path
+            mDOAD[fPos + 4] = '\0';                         //terminate full path + filename
+                        
+            if ( SD.exists( mDOAD ) ) {                     //valid DOAD MS-DOS name?
+              strncpy(nDSK[cDSK], mDOAD, 20);               //yes; assign to requested DSKx      
               aDSK[cDSK] = true;                            //flag active
               DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);      //open new DOAD file to check write protect y/n
               DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protect status
               pDSK[cDSK] = DSK[cDSK].read();                //0x50 || "P", 0x20 || " "
             } else {
               Wbyte(CALLBF + 2, 0xFF);                      //no; return error flag
-            }  
-            noExec();
-          } 
-          break;        
+            }
+          }
+          break;  
             
           case 4:                                            //SDSK(): Show DOAD mapping       
           {
-            char sDOAD[19];                                
+            char sDOAD[20];                                
             if ( aDSK[cDSK] ) {                              //is the requested disk mapped to a DOAD?
              strcpy(sDOAD, nDSK[cDSK]);                      //yes; get current DOAD name     
             } else {
-             strcpy(sDOAD, "/DISKS/<NO MAP>.");              //no; indicate not mapped
+             strcpy(sDOAD, "/DISKS/<NO MAP>.DSK");           //no; indicate not mapped
             }
             
+            for ( byte ii = 4; ii < 12; ii++ ){             //clear buffer space
+              Wbyte(CALLBF + ii, ' ');
+            }
             Wbyte(CALLBF + 2, cDSK+48+TIBias);               //DSKx # in ASCII + TI BASIC bias
             Wbyte(CALLBF + 3, '=' +   TIBias);               //"=" + TI BASIC bias  
             for ( byte ii = 4; ii < 12; ii++ ) {                                  
@@ -139,23 +138,23 @@
               noExec();
             }
           }
-          break;
+          break;      
 
           case 6:
           {
-            dis_cbus();
-            Serial.begin(9600);
-            Serial.print("Hello world!");
-            Serial.end();
-            noExec();
+            /*wdt_disable();
+            wdt_enable(WDTO_15MS);
+            while (1) {}*/
           }
           break;
 
-          case 7:
+          case 99:
           {
-            wdt_disable();
-            wdt_enable(WDTO_15MS);
-            while (1) {}
+            dis_cbus();
+            Serial.begin(9600);
+            Serial.print("APEDSK99 (c)2020 by Jochen Buur");
+            Serial.end();
+            noExec();
           }
           break;
           

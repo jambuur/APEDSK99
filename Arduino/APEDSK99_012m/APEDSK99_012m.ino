@@ -38,7 +38,7 @@
 #define SPI_CS 10
 
 //watchdog timer handling for reset/load DSR
-#include <avr/wdt.h>
+//#include <avr/wdt.h>
 
 //-DSR generic--------------------------------------------------------------------------------- Definitions
 //faster digitalRead / digitalWrite definitions

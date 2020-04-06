@@ -15,4 +15,7 @@ ISR(INT0_vect) {
               Wbyte(aDEBUG + 3 + ii, pDSK[ii+1]);
             }
  *  
+ *  for ( byte ii = 0; ii < 20; ii++ ) {
+              Wbyte(aDEBUG + ii, mDOAD[ii]);
+            }
  */

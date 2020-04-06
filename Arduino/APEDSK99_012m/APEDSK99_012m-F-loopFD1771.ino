@@ -17,8 +17,8 @@ void loop() {
       //----------------------------------------------------------------------------------------- FD1771 Seek / Step
       if ( FCcmd < 0x80 ) {                                 //step/seek commands?
 
-        byte cTrack = Rbyte(WTRACK);                             //read current Track #
-        byte nTrack = Rbyte(WDATA);                              //read new Track # (Seek)
+        byte cTrack = Rbyte(WTRACK);                        //read current Track #
+        byte nTrack = Rbyte(WDATA);                         //read new Track # (Seek)
 
         switch(FCcmd) {
          
