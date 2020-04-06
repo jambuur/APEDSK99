@@ -111,12 +111,17 @@ DSR03	DATA	DSR04
 	BYTE	>04			
 	TEXT	'DSK2'			
 	EVEN				
-DSR04	DATA	>0000			no more
+DSR04	DATA	DSR05			no more
 	DATA	EDSR04			
 	BYTE	>04			
 	TEXT	'DSK3'			
-	EVEN				
-
+	EVEN	
+DSR05	DATA	>0000
+	DATA 	EDSR05
+	BYTE	>05
+	TEXT	'RS232'
+	EVEN		
+*
 *=====================================
 * Power-up routine
 *=====================================						
@@ -195,7 +200,7 @@ SECRW1	MOVB	@K002,@>0050(R9)	APEDSK99: no error
 H002	MOVB	R0,@WTRACK		place last track or >00 in track register
 	MOV	@>004A(R9),R1		sector #
 *	SBZ	7			side 0
-	SZCB	@SIDE01,@CRUWRI		APEDSK99: side 0 
+	SZCB	@K006,@CRUWRI		APEDSK99: side 0 
 	CLR	R7			
 	CI	R1,>02D0		max 720 (DS/SD)
 	JHE	H003			error 7
@@ -209,7 +214,7 @@ H002	MOVB	R0,@WTRACK		place last track or >00 in track register
 *	AI	R1,-8			invert: 8=0, 0=8, 7=1, etc
 *	ABS	R1			
 *	SBO	7			side 1
-	SOCB	@SIDE01,@CRUWRI		APEDSK99: side 1
+	SOCB	@K006,@CRUWRI		APEDSK99: side 1
 	LI	R7,>0100		side number = >01
 *	JMP	H005			
 	JMP	H006			APEDSK99: skipped DIV above
@@ -394,11 +399,11 @@ H028	MOVB	@K002,@>0050(R9)	no error
 H030	MOV	@>004A(R9),@>004A(R9)	check # of sides flag
 	JEQ	H029			single-side
 *	SBO	7			set CRU bit for side 1
-	SOCB	@SIDE01,@CRUWRI		APEDSK99: set CRU bit for side 1
+	SOCB	@K006,@CRUWRI		APEDSK99: set CRU bit for side 1
 	LI	R7,>0100		value for side 1 in sector ID
 	BL	@FMTTRK			format one track
 *H029	SBZ	7			set CRU bit for side 0
-H029	SZCB	@SIDE01,@CRUWRI		APEDSK99: set CRU bit for side 0
+H029	SZCB	@K006,@CRUWRI		APEDSK99: set CRU bit for side 0
 	CLR	R7			>00 = value for side 0 in sector ID
 	BL	@FMTTRK			format one track
 	BL	@SNDCMD			send command
@@ -411,7 +416,7 @@ H029	SZCB	@SIDE01,@CRUWRI		APEDSK99: set CRU bit for side 0
 	MOV	@>004A(R9),@>004A(R9)	check # of sides
 	JEQ	H031			single-side
 *	SBO	7			
-*	SOCB	@SIDE01,@CRUWRI		APEDSK99: select side 1
+*	SOCB	@K006,@CRUWRI		APEDSK99: select side 1
 *	LI	R4,10			try 10 times
 *READID	BL	@SKTRK0			seek track 0
 *	MOV	@>004E(R9),R2		data buffer address
@@ -742,7 +747,8 @@ K012	DATA	>FFFF
 *	DATA	>00FB			
 *K010	BYTE	>F7			code for CRC
 *K009	BYTE	0,7,5,3,1,8,6,4		sector interlace pattern
-K005	BYTE	2			
+K005	BYTE	2
+DSDRVS	BYTE	>0F			APEDSK99: deselect all drives + side (reset CRUWRI bits 7,6,5 and 4)			
 	
 	EVEN
 				
@@ -1828,9 +1834,9 @@ H162	JLE	H163
 	CI	R0,>FF00		is rec len 255?
 	JHE	ERROR9			yes: bad attribute
 	MOV	R1,R0			retrieve attributes
-	ANDI	R0,>0600			keep only access mode
+	ANDI	R0,>0600		keep only access mode
 					
-H163	CI	R0,>0200			is it output?
+H163	CI	R0,>0200		is it output?
 	JNE	H164			no
 	BL	@CALSUB			call subroutine
 	DATA	CRFIL1			create file
@@ -3567,13 +3573,13 @@ ADSR4	LI	R6,>0600
 *
 	LI	R8,21			current CALL length
 	JMP	ACLBAS
-*-----------------------------------------
-* APEDSK constants
-*-----------------------------------------
-DSDRVS	DATA	>0F00			deselect all drives + side (set bits 7,6,5 and 4 in MSB CRUWRI to 0)	
-SIDE01	DATA	>0100			floppy side select
-*-----------------------------------------
-
+*
+*-----------------------------------------------------------------
+* APEDSK99 DSR entry point
+* ----------------------------------------------------------------
+*
+EDSR05	B	@RTURN1			return to caller (i.e. Basic)
+*
 *-----------------------------------------
 * The remaining bytes (~>5DE0 to >5FD5) all contain >00
 * >5FD6 - >5FE7 is DSKx / DOAD name / file name storage for TI BASIC CALL's
