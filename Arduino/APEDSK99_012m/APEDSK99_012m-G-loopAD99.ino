@@ -7,8 +7,12 @@
         if (ANcmd) {                                                          //new command?
           ALcmd = ACcmd;                                                      //yes; remember new command for next compare
           cDSK = Rbyte(CALLBF);                                               //read target DSKx
+          if ( ACcmd != 3 ) {                                                 //clear CALL buffer except for MDSK()
+            for ( byte ii=2; ii < 18; ii++) {                                 //fill CALL() buffer with " "
+              Wbyte(CALLBF + ii, 0x20 + TIBias);
+            }
+          }
         }
-       
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), MDSK(), SDSK() and LDSK()
         switch ( ACcmd ) {
 
@@ -68,9 +72,6 @@
              strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);     //no; indicate not mapped
             }
             
-            for ( byte ii = 4; ii < 14; ii++ ){             //clear buffer space
-              Wbyte(CALLBF + ii, ' ');
-            }
             Wbyte(CALLBF + 2, cDSK+48+TIBias);              //DSKx # in ASCII + TI BASIC bias
             Wbyte(CALLBF + 3, '=' +   TIBias);              //"=" + TI BASIC bias  
             for ( byte ii = 4; ii < 12; ii++ ) {                                  
@@ -80,7 +81,6 @@
                 break;
               }
             } 
-            Wbyte(CALLBF + 12, ' ' + TIBias);               // "-" separator
             if ( pDSK[cDSK] == 0x50 ) {
               Wbyte(CALLBF + 13, 'P' + TIBias);             //indicate DOAD is Protected
             } else {
@@ -103,10 +103,6 @@
                 DSK[cDSK].seek(NRBYSECT);
               }
 
-              for ( byte ii=2; ii < 18; ii++) {                                             //fill CALL() buffer with " "
-                Wbyte(CALLBF + ii, 0x20 + TIBias);
-              }
-              
               unsigned long pFDR = (DSK[cDSK].read() << 8) + DSK[cDSK].read();              //16bits FDR pointer  
               if ( pFDR != 0 ) {                                                            //0x0000 means no more files              
                 unsigned int cPos = DSK[cDSK].position();                                   //remember next FDR pointer
