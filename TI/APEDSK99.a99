@@ -88,9 +88,9 @@ SUB13	DATA 	SUB14
 	TEXT	'LDSK'			List files on DSKx
 	EVEN
 SUB14	DATA	>0000
-	DATA	APEDSR
-	BYTE	>06
-	TEXT	'APEDSR'		APEDSK99 reset / load DSR
+	DATA	ADSR
+	BYTE	>04
+	TEXT	'ADSR'			APEDSK99 reset / load DSR
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3397,7 +3397,8 @@ SDSK	LI	R4,6			Show DSK jump table entry
 	JMP	ACLPRP			generic prep
 LDSK	LI	R4,8			Show Files jump table entry
 	JMP	ACLPRP			generic prep
-APEDSR	B	@APDSR2			reset APEDSK99 / load DSR
+ADSR	LI	R4,10			reset APEDSK99 / load DSR
+	JMP	ACLPRP			generic prep
 *
 *-----------------------------------------------------------------
 * Subprogram PDSK/UDSK: set/reset APEDSK99 Protect @VIB >10
@@ -3453,10 +3454,13 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	MOV	@>002C(R9),R8		ptr to next basic token
 	AI	R8,6			skip "[PUMSLA]DSK("
 	BL	@VDPR2B			get next two bytes in R0
-	CI	R0,>C801		>C8=unquoted string, size=1 char
-	JEQ	ACLERR			return (with error) if different
+	CI	R0,>C801		>C8=unquoted string, size=1 char?
+	JEQ	ACLPR2			yes, continue
+	CI	R0,>C708		quoted string, 8 characters?
+	JEQ	ADSR2			yes, DSR CALL
+	JMP	ACLERR			return (with error) if different
 *
-	INCT	R8			increment pointer
+ACLPR2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two bytes
 	SWPB	R0			
 *
@@ -3471,7 +3475,7 @@ H9901	JEQ	ACLERR			DSK0 not valid, return with error
 	SWPB	R0			drive # back in MSB
 *
 	MOV	R0,@CALLBF		save DSKx
-	MOV	@CLLTBL(R4),R4
+ADSR2	MOV	@CLLTBL(R4),R4
 	B	*R4
 *
 CLLTBL	DATA	PDSK2			CALL PDSK()
@@ -3479,6 +3483,7 @@ CLLTBL	DATA	PDSK2			CALL PDSK()
 	DATA	MDSK2			CALL CDSK()
 	DATA	SDSK2			CALL SDSK()
 	DATA	LDSK2			CALL FDSK()
+	DATA	ADSR3			CALL ADSR()
 *
 ACLBAS	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
@@ -3554,10 +3559,10 @@ NXTPRP	LI	R2,735
 * Subprogram APEDSR: reset APEDSK99 / load DSR (todo)
 * ----------------------------------------------------------------
 *
-APDSR2	LI	R6,>0600
+ADSR3	LI	R6,>0600
 	MOVB	R6,@ACOMND
 *
-	LI	R8,11			current CALL length
+	LI	R8,21			current CALL length
 	JMP	ACLBAS
 *-----------------------------------------
 * APEDSK constants
