@@ -144,7 +144,6 @@
 
           case 6:
           {
-            TIstop();
             wdt_disable();
             wdt_enable(WDTO_15MS);
             while (1) {
