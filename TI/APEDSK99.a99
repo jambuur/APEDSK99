@@ -3423,9 +3423,9 @@ MDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
 	CI	R0,>C708		quoted string, 8 characters?
 	JNE	ACLERR			no, return with error set
-	INCT	R8			increment pointer
+ADSR2	INCT	R8			increment pointer
 *
-	LI	R5,CALLBF+2		pointer to DOAD name
+	LI	R5,CALLBF+2		pointer to DOAD / DSR name
 	LI	R6,4			4 words / 8 characters
 H9902	BL	@VDPR2B			get next two digits
 	MOV	R0,*R5+			save two digits
@@ -3438,10 +3438,13 @@ H9902	BL	@VDPR2B			get next two digits
 	CI      R0,>00B6                is it a ")"?
 	JNE     ACLERR                  no, return with error set
 *
-	LI	R6,>0300		
-	MOVB	R6,@ACOMND		CDSK command to Arduino
+	CI	R4,10			DSR CALL?
+	JEQ	ADSR3			yes, continue that
 *
-	CB	@K012,@CALLBF+2		check Arduino CDSK return code
+	LI	R6,>0300		
+	MOVB	R6,@ACOMND		MDSK command to Arduino
+*
+	CB	@K012,@CALLBF+2		check Arduino MDSK return code
 	JEQ	ACLERR			>FF, DOAD doesn't exist; return with error
 	LI	R8,23			current CALL length
 	JMP	ACLBAS			all is well, return without error
@@ -3475,7 +3478,7 @@ H9901	JEQ	ACLERR			DSK0 not valid, return with error
 	SWPB	R0			drive # back in MSB
 *
 	MOV	R0,@CALLBF		save DSKx
-ADSR2	MOV	@CLLTBL(R4),R4
+ADSR3	MOV	@CLLTBL(R4),R4
 	B	*R4
 *
 CLLTBL	DATA	PDSK2			CALL PDSK()
@@ -3483,7 +3486,7 @@ CLLTBL	DATA	PDSK2			CALL PDSK()
 	DATA	MDSK2			CALL CDSK()
 	DATA	SDSK2			CALL SDSK()
 	DATA	LDSK2			CALL FDSK()
-	DATA	ADSR3			CALL ADSR()
+	DATA	ADSR4			CALL ADSR()
 *
 ACLBAS	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
@@ -3559,7 +3562,7 @@ NXTPRP	LI	R2,735
 * Subprogram APEDSR: reset APEDSK99 / load DSR (todo)
 * ----------------------------------------------------------------
 *
-ADSR3	LI	R6,>0600
+ADSR4	LI	R6,>0600
 	MOVB	R6,@ACOMND
 *
 	LI	R8,21			current CALL length
