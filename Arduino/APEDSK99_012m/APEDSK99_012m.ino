@@ -21,8 +21,8 @@
     digitalState( pin ) == LOW         can be isLow( pin )
 
   $Author: Jochen Buur $
-  $Date: Aug 2019 $
-  $Revision: 0.12l $
+  $Date: April 2020 $
+  $Revision: 0.12m $
   
   This software is freeware and can be modified, re-used or thrown away without any restrictions.
   Use this code at your own risk.
@@ -38,7 +38,7 @@
 #define SPI_CS 10
 
 //watchdog timer handling for reset/load DSR
-//#include <avr/wdt.h>
+#include <avr/wdt.h>
 
 //-DSR generic--------------------------------------------------------------------------------- Definitions
 //faster digitalRead / digitalWrite definitions

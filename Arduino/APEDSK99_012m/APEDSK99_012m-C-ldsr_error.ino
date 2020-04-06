@@ -1,7 +1,10 @@
 //-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
 
-void lDSR( char fDSR[12] )
+void lDSR( char nDSR[9] )
 {
+  char fDSR[12] = "";
+  strncpy(fDSR, nDSR, 8);
+  fDSR[8] = '\0';
   strncat(fDSR, ".DSR", 4);
   fDSR[12] = '\0';
   File iDSR = SD.open(fDSR, O_READ);

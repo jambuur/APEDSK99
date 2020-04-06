@@ -82,12 +82,17 @@ SUB12	DATA	SUB13
 	BYTE	>04
 	TEXT	'SDSK'			Show DOAD mapping for DSKx
 	EVEN
-SUB13	DATA 	>0000
+SUB13	DATA 	SUB14
 	DATA	LDSK
 	BYTE	>04
 	TEXT	'LDSK'			List files on DSKx
 	EVEN
-
+SUB14	DATA	>0000
+	DATA	APEDSR
+	BYTE	>06
+	TEXT	'APEDSR'		APEDSK99 reset / load DSR
+	EVEN
+*
 PWRUP	DATA	>0000			power-up chain (no more)
 	DATA	EPWRUP			address of power-up routine
 	DATA	>0000			no name
@@ -3391,45 +3396,8 @@ MDSK	LI	R4,4			Change DSK jump table entry
 SDSK	LI	R4,6			Show DSK jump table entry
 	JMP	ACLPRP			generic prep
 LDSK	LI	R4,8			Show Files jump table entry
-*----------------------------------------------------------------------------
-* Generic prep and return to TI BASIC for PDSK/UDSK/CDSK/SDSK/FDSK
-*----------------------------------------------------------------------------
-ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
-	BL	@PRPFDO			prepare TI Controller DSR operations
-	MOV	@>002C(R9),R8		ptr to next basic token
-	AI	R8,6			skip "PDSK(" / "UDSK(" / "CDSK("
-	BL	@VDPR2B			get next two bytes in R0
-	CI	R0,>C801		>C8=unquoted string, size=1 char
-	JNE	ACLERR			return (with error) if different
-*
-	INCT	R8			increment pointer
-	BL	@VDPR2B			get next two bytes
-	SWPB	R0			
-*
-	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3 / "," or >B6 / ")", LSB= # of files, 
-	JLT	H9900			>B3
-	JMP	H9901			>B6
-H9900	AI	R0,768			>B3, adjust R0 to positive range
-*
-H9901	JEQ	ACLERR			DSK0 not valid, return with error
-	CI	R0,>0003		only 3 DSK's allowed
-	JH	ACLERR			return with error if more
-	SWPB	R0			drive # back in MSB
-*
-	MOV	R0,@CALLBF		save DSKx
-	MOV	@CLLTBL(R4),R4
-	B	*R4
-*
-CLLTBL	DATA	PDSK2			CALL PDSK()
-	DATA	UDSK2			CALL UDSK()
-	DATA	MDSK2			CALL CDSK()
-	DATA	SDSK2			CALL SDSK()
-	DATA	LDSK2			CALL FDSK()
-*
-ACLBAS	CLR	@>0050(R9)		clear error flag		
-	A	R8, @>002C(R9)		add call length to token pointer		
-	SZCB	@>0042(R9),@>0042(R9)	clear current token
-ACLERR	B	@RTURN1			return to caller (i.e. Basic)
+	JMP	ACLPRP			generic prep
+APEDSR	B	@APDSR2			reset APEDSK99 / load DSR
 *
 *-----------------------------------------------------------------
 * Subprogram PDSK/UDSK: set/reset APEDSK99 Protect @VIB >10
@@ -3477,6 +3445,46 @@ H9902	BL	@VDPR2B			get next two digits
 	LI	R8,23			current CALL length
 	JMP	ACLBAS			all is well, return without error
 *			
+*----------------------------------------------------------------------------
+* Generic prep and return to TI BASIC for PDSK/UDSK/CDSK/SDSK/FDSK
+*----------------------------------------------------------------------------
+ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
+	BL	@PRPFDO			prepare TI Controller DSR operations
+	MOV	@>002C(R9),R8		ptr to next basic token
+	AI	R8,6			skip "[PUMSLA]DSK("
+	BL	@VDPR2B			get next two bytes in R0
+	CI	R0,>C801		>C8=unquoted string, size=1 char
+	JEQ	ACLERR			return (with error) if different
+*
+	INCT	R8			increment pointer
+	BL	@VDPR2B			get next two bytes
+	SWPB	R0			
+*
+	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3 / "," or >B6 / ")", LSB= # of files, 
+	JLT	H9900			>B3
+	JMP	H9901			>B6
+H9900	AI	R0,768			>B3, adjust R0 to positive range
+*
+H9901	JEQ	ACLERR			DSK0 not valid, return with error
+	CI	R0,>0003		only 3 DSK's allowed
+	JH	ACLERR			return with error if more
+	SWPB	R0			drive # back in MSB
+*
+	MOV	R0,@CALLBF		save DSKx
+	MOV	@CLLTBL(R4),R4
+	B	*R4
+*
+CLLTBL	DATA	PDSK2			CALL PDSK()
+	DATA	UDSK2			CALL UDSK()
+	DATA	MDSK2			CALL CDSK()
+	DATA	SDSK2			CALL SDSK()
+	DATA	LDSK2			CALL FDSK()
+*
+ACLBAS	CLR	@>0050(R9)		clear error flag		
+	A	R8, @>002C(R9)		add call length to token pointer		
+	SZCB	@>0042(R9),@>0042(R9)	clear current token
+ACLERR	B	@RTURN1			return to caller (i.e. Basic)
+*
 *-----------------------------------------------------------------
 * Subprogram SDSK: show DOAD mapping
 * ----------------------------------------------------------------
@@ -3484,15 +3492,16 @@ H9902	BL	@VDPR2B			get next two digits
 SDSK2	LI	R6,>0400
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
-	LI	R2,726			screen starting position
+	LI	R2,724			screen starting position
 	BL	@VDPWRI			set VDP address
 *
 	LI	R5,CALLBF+2		pointer to drive # and DOAD name
-	LI	R6,10			max 10 characters
-H9903	MOVB	*R5+,@-2(R15)		save drive # / "=" / DOAD character in VDP screen table	
+	LI	R6,12			max 12 characters
+H9903	MOVB	*R5+,@-2(R15)		save drive #,"=",DOAD character,"-",P/U in VDP screen table	
 	DEC	R6
 	JNE	H9903
 *	
+	LI	R8,12			current CALL length
 	JMP	ACLBAS
 *-----------------------------------------------------------------
 * Subprogram LDSK: List files on DSKx
@@ -3538,8 +3547,18 @@ NXTPRP	LI	R2,735
 	LI	R5,>9E00		">", more files to display
 	MOVB	R5,@-2(R15)
 *
+	LI	R8,12			current CALL length
 	JMP 	ACLBAS
 *
+*-----------------------------------------------------------------
+* Subprogram APEDSR: reset APEDSK99 / load DSR (todo)
+* ----------------------------------------------------------------
+*
+APDSR2	LI	R6,>0600
+	MOVB	R6,@ACOMND
+*
+	LI	R8,11			current CALL length
+	JMP	ACLBAS
 *-----------------------------------------
 * APEDSK constants
 *-----------------------------------------

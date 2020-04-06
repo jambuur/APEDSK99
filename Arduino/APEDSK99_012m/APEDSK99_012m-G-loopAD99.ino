@@ -59,27 +59,33 @@
           }
           break;  
             
-          case 4:                                            //SDSK(): Show DOAD mapping       
+          case 4:                                           //SDSK(): Show DOAD mapping       
           {
             char sDOAD[20];                                
-            if ( aDSK[cDSK] ) {                              //is the requested disk mapped to a DOAD?
-             strcpy(sDOAD, nDSK[cDSK]);                      //yes; get current DOAD name     
+            if ( aDSK[cDSK] ) {                             //is the requested disk mapped to a DOAD?
+             strncpy(sDOAD, nDSK[cDSK], 20);                //yes; get current DOAD name     
             } else {
-             strcpy(sDOAD, "/DISKS/<NO MAP>.DSK");           //no; indicate not mapped
+             strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);     //no; indicate not mapped
             }
             
-            for ( byte ii = 4; ii < 12; ii++ ){             //clear buffer space
+            for ( byte ii = 4; ii < 14; ii++ ){             //clear buffer space
               Wbyte(CALLBF + ii, ' ');
             }
-            Wbyte(CALLBF + 2, cDSK+48+TIBias);               //DSKx # in ASCII + TI BASIC bias
-            Wbyte(CALLBF + 3, '=' +   TIBias);               //"=" + TI BASIC bias  
+            Wbyte(CALLBF + 2, cDSK+48+TIBias);              //DSKx # in ASCII + TI BASIC bias
+            Wbyte(CALLBF + 3, '=' +   TIBias);              //"=" + TI BASIC bias  
             for ( byte ii = 4; ii < 12; ii++ ) {                                  
-              Wbyte(CALLBF + ii, sDOAD[ii + 3] + TIBias);    //store mapping character in CALL buffer
-              if ( sDOAD[ii + 3] == 46 ) {                   //if it's a "." we're done
-                Wbyte(CALLBF + ii, ' ' + TIBias);            //but the "." needs to be a " "
+              Wbyte(CALLBF + ii, sDOAD[ii + 3] + TIBias);   //store mapping character in CALL buffer
+              if ( sDOAD[ii + 3] == 46 ) {                  //if it's a "." we're done
+                Wbyte(CALLBF + ii, ' ' + TIBias);           //but need to display " ", not "."
                 break;
               }
             } 
+            Wbyte(CALLBF + 12, ' ' + TIBias);               // "-" separator
+            if ( pDSK[cDSK] == 0x50 ) {
+              Wbyte(CALLBF + 13, 'P' + TIBias);             //indicate DOAD is Protected
+            } else {
+              Wbyte(CALLBF + 13, 'U' + TIBias);             //indicate DOAD is Unprotected
+            }
             noExec();
           } 
           break;       
@@ -124,7 +130,7 @@
                 char fSize[4];                                                              //ASCII store
                 sprintf( fSize, "%3d", (DSK[cDSK].read() << 8) + (DSK[cDSK].read() + 1) );  //convert number to string
                 for ( byte ii = 14; ii < 18; ii++ ) {                                       //store ASCII file size in CALL buffer
-                  Wbyte( CALLBF + ii, fSize[ii-14] + TIBias);
+                  Wbyte(CALLBF + ii, fSize[ii-14] + TIBias);
                 }
                                   
                 DSK[cDSK].seek(cPos);                                                       //locate next FDR
@@ -142,9 +148,11 @@
 
           case 6:
           {
-            /*wdt_disable();
+            TIstop();
+            wdt_disable();
             wdt_enable(WDTO_15MS);
-            while (1) {}*/
+            while (1) {
+            };
           }
           break;
 
