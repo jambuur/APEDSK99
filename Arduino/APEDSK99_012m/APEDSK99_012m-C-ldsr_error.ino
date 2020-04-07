@@ -30,7 +30,7 @@ void lDSR( char nDSR[] )
 //  flash-flash-flash       : no valid DSR header (>AA) at DSR RAM >0000
 void eflash(byte error)
 {
-  //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
+  //"no APEDSK99 for you" but you can still enjoy a vanilla TI console
   digitalHigh(TI_READY);      //enable TI
   //error routine: stuck in code flashing loop until reset
   while (true) { 

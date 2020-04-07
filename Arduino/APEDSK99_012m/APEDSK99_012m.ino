@@ -61,20 +61,20 @@
 #define digitalState(P)((uint8_t)isHigh(P))
 
 //74HC595 shift-out definitions
-#define CLOCK     17  //PC3
-#define LATCH     18  //PC4
-#define DS        19  //PC5
+#define CLOCK     17                //PC3
+#define LATCH     18                //PC4
+#define DS        19                //PC5
 
 //IO lines for Arduino RAM control
-#define CE  14  //PC0  LED flashes for both Arduino CE* and TI MBE*
-#define WE  16	//PC2
+#define CE  14                      //PC0  LED flashes for both Arduino CE* and TI MBE*
+#define WE  16	                    //PC2
 
 //IO lines for TI99/4a control
-#define TI_READY       3  //PD0; TI READY line + enable/disable 74HC595 shift registers
-#define TI_INT      	 2  //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
-#define TI_BUFFERS    15  //PC1; 74LS541 buffers enable/disable
+#define TI_READY       3            //PD0; TI READY line + enable/disable 74HC595 shift registers
+#define TI_INT      	 2            //PD2; 74LS138 interrupt (MBE*, WE* and A15) 
+#define TI_BUFFERS    15            //PC1; 74LS541 buffers enable/disable
 
-//error blinking parameters: on, off, delay between sequence
-#define LED_ON       500
-#define LED_OFF      250
-#define LED_REPEAT  1500
+//error blinking parameters
+#define LED_ON       500            //on
+#define LED_OFF      250            //off
+#define LED_REPEAT  1500            //delay between sequence

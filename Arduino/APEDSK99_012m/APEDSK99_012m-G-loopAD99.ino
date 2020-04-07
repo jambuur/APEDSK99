@@ -139,37 +139,7 @@
               noExec();
             }
           }
-          break;      
-
-          case 6:
-          {
-            char rDSR[9] = "";                              //DSR filename without extension
-        
-            for ( byte ii = 0; ii < 8; ii++ ) {             //read DSR filename from CALL buffer                               
-              rDSR[ii] = Rbyte(CALLBF + (ii + 2) );
-            }                                                  
-            rDSR[8] = '\0';                                 //terminate filename     
-            
-            //lDSR(rDSR);                                     //load DSR
-           
-            noExec();
-          }
-          break;
-
-          case 7:
-          {
-            dis_cbus();
-            Serial.begin(115200);           
-            Serial.write(Rbyte(aDEBUG));
-            Serial.end();
-            ena_cbus;
-            noExec();
-          }
-          break;          
-          
-        } //end switch accmd commands   
-      } //end check APEDSK99-specific commands                                 
-    } //end else 
+          break; 
 
     //----------------------------------------------------------------------------------------------- End of command processing, wait for next interrupt (TI write to DSR space)
     FD1771 = false;   //clear interrupt flag
