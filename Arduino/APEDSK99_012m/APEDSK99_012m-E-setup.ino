@@ -2,6 +2,9 @@
 
 void setup() {
 
+  //put TI on hold and enable 74HC595 shift registers
+  TIstop();
+
   //see if the SD card is present and can be initialized
   if ( !SD.begin(SPI_CS) ) {
     //nope -> flash LED error 1
@@ -16,9 +19,6 @@ void setup() {
   //74LS138 interrupt: TI WE*, MBE* and A15 -> O0 output
   //a write to DSR space (aka CRU, FD1771 registers; or sector/track Read through R6 counter in RAM, see DSR source)
   pinAsInput(TI_INT);
-
-  //put TI on hold and enable 74HC595 shift registers
-  TIstop();
 
   //--------------------------------------------------------------------------------------------- DSR initialisation
   

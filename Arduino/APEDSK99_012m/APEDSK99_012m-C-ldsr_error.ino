@@ -31,9 +31,7 @@ void lDSR( char nDSR[9] )
 void eflash(byte error)
 {
   //"no APEDSK99 for you" but let user still enjoy a vanilla TI console
-  digitalHigh(TI_READY);      //enable TI but ...
-  //... enable Arduino CE* for flashing the error code
-  pinAsOutput(CE);
+  digitalHigh(TI_READY);      //enable TI
   //error routine: stuck in code flashing loop until reset
   while (true) { 
     for (byte flash = 0; flash < error; flash++)

@@ -7,7 +7,7 @@
         if (ANcmd) {                                                          //new command?
           ALcmd = ACcmd;                                                      //yes; remember new command for next compare
           cDSK = Rbyte(CALLBF);                                               //read target DSKx
-          if ( ACcmd != 3 ) {                                                 //clear CALL buffer except for MDSK()
+          if ( ACcmd != 3 && ACcmd !=6) {                                     //clear CALL buffer except for MDSK() and ADSR()
             for ( byte ii=2; ii < 18; ii++) {                                 //fill CALL() buffer with " "
               Wbyte(CALLBF + ii, 0x20 + TIBias);
             }
@@ -143,10 +143,15 @@
 
           case 6:
           {
-            wdt_disable();
-            wdt_enable(WDTO_15MS);
-            while (1) {
-            };
+            char rDSR[9] = "";                              //DSR filename without extension
+            for ( byte ii = 0; ii < 8; ii++ ) {             //read DSR filename from CALL buffer                               
+              rDSR[ii] = Rbyte(CALLBF + (ii + 2) );
+            }                                                  
+            rDSR[8] = '\0';                                  //terminate filename     
+            
+            lDSR(rDSR);                                     //load DSR
+           
+            noExec();
           }
           break;
 
