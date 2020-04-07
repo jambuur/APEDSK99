@@ -144,7 +144,7 @@
           case 6:
           {
             char rDSR[9] = "";                              //DSR filename without extension
-            char tDSR[9] = "";
+        
             for ( byte ii = 0; ii < 8; ii++ ) {             //read DSR filename from CALL buffer                               
               rDSR[ii] = Rbyte(CALLBF + (ii + 2) );
             }                                                  
@@ -156,15 +156,16 @@
           }
           break;
 
-          case 99:
+          case 7:
           {
             dis_cbus();
-            Serial.begin(9600);
-            Serial.print("APEDSK99 (c)2020 by Jochen Buur");
+            Serial.begin(115200);           
+            Serial.write(Rbyte(aDEBUG));
             Serial.end();
+            ena_cbus;
             noExec();
           }
-          break;
+          break;          
           
         } //end switch accmd commands   
       } //end check APEDSK99-specific commands                                 
