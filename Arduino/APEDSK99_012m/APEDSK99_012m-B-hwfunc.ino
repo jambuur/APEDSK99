@@ -116,7 +116,7 @@ void Wbyte(unsigned int address, byte data)
   dbus_write(data);                         //set data bus value
   digitalLow(WE);                           //enable write
   digitalLow(CE);                           //enable RAM chip select
-  digitalHigh(CE);                          //disable chip select
+  digitalHigh(CE);                          //disable RAM chip select
   digitalHigh(WE);                          //disable write
   dbus_in();                                //set databus to (default) input state
 } 

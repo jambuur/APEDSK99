@@ -32,7 +32,7 @@
 #define WDATA   0x1FFE                                //write FD1771 Data register,     >5FFE in TI99/4a DSR memory block
 
 //DSKx file pointers
-File DSK[4];  //file pointers to DOAD's
+File DSK[4];                                          //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available
 boolean aDSK[4]   = {false, false, false, false};                                                 //DSKx active flag

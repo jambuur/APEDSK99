@@ -24,7 +24,7 @@ void lDSR( char nDSR[] )
 //flash error code:
 //  flash            : SPI / SD Card fault/not ready
 //  flash-flash      : can't read DSR binary image (/APEDSK99.DSR)
-//  flash-flash-flash: no valid DSR header (>AA) at DSR RAM >0000
+//  flash-flash-flash: no valid DSR header (0xAA) at DSR RAM 0x0000)
 
 void eflash(byte error)                 //error routine: stuck in code flashing loop until reset
 {
