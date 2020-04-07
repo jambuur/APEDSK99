@@ -144,12 +144,13 @@
           case 6:
           {
             char rDSR[9] = "";                              //DSR filename without extension
+            char tDSR[9] = "";
             for ( byte ii = 0; ii < 8; ii++ ) {             //read DSR filename from CALL buffer                               
               rDSR[ii] = Rbyte(CALLBF + (ii + 2) );
             }                                                  
-            rDSR[8] = '\0';                                  //terminate filename     
+            rDSR[8] = '\0';                                 //terminate filename     
             
-            lDSR(rDSR);                                     //load DSR
+            //lDSR(rDSR);                                     //load DSR
            
             noExec();
           }

@@ -1,6 +1,6 @@
 //-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
 
-void lDSR( char nDSR[9] )
+void lDSR( char nDSR[] )
 {
   char fDSR[12] = "";
   strncpy(fDSR, nDSR, 8);
