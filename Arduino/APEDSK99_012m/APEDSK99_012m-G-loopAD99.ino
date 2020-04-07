@@ -2,107 +2,107 @@
       //check for APEDSK99-specfic commands
       ACcmd = Rbyte(ACOMND);
       if ( ACcmd != 0 ) {
-
-        ANcmd = (ACcmd != ALcmd);                                             //new or continue previous APEDSK99 command?
-        if (ANcmd) {                                                          //new command?
-          ALcmd = ACcmd;                                                      //yes; remember new command for next compare
-          cDSK = Rbyte(CALLBF);                                               //read target DSKx
-          if ( ACcmd != 3 && ACcmd !=6) {                                     //clear CALL buffer except for MDSK() and ADSR()
-            for ( byte ii=2; ii < 18; ii++) {                                 //fill CALL() buffer with " "
+        
+        ANcmd = (ACcmd != ALcmd);                                                           //new or continue previous APEDSK99 command?
+        if (ANcmd) {                                                                        //new command?
+          ALcmd = ACcmd;                                                                    //yes; remember new command for next compare
+          cDSK = Rbyte(CALLBF);                                                             //read target DSKx
+          if ( ACcmd != 3 && ACcmd != 6) {                                                  //clear CALL buffer except for MDSK() and ADSR()
+            for ( byte ii=2; ii < 18; ii++) {                                               //fill CALL() buffer with " "
               Wbyte(CALLBF + ii, 0x20 + TIBias);
             }
           }
         }
         //----------------------------------------------------------------- TI BASIC PDSK(), UDSK(), MDSK(), SDSK() and LDSK()
         switch ( ACcmd ) {
-
-          case  1:                                          //UDSK(1):  Unprotect DSK1      
-          case  2:                                          //UDSK(2):  Unprotect DSK2
+      
+          case  1:                                                                          //PDSK(x):  Protect DSKx      
+          case  2:                                                                          //UDSK(x):  Unprotect DSKx
           {
-            if ( aDSK[cDSK] ) {                             //is the requested disk mapped to a DOAD?
-              if ( ACcmd == 1 ) {                           //yes; PDSK?
-                pDSK[cDSK] = 0x50;                          //Protect DSKx
+            if ( aDSK[cDSK] ) {                                                             //is the requested disk mapped to a DOAD?
+              if ( ACcmd == 1 ) {                                                           //yes; PDSK?
+                pDSK[cDSK] = 0x50;                                                          //Protect DSKx
               } else {
-                pDSK[cDSK] = 0x20;                          //UDSK(); Unprotect DSKx
+                pDSK[cDSK] = 0x20;                                                          //Unprotect DSKx
               }
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);     //open DOAD file to change write protect status 
-              DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protected status 
-              DSK[cDSK].write(pDSK[cDSK]);                  //update Protect status
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_WRITE);                                     //open DOAD file to change write protect status 
+              DSK[cDSK].seek(0x10);                                                         //byte 0x10 in Volume Information Block stores Protected status 
+              DSK[cDSK].write(pDSK[cDSK]);                                                  //update Protect status
             } else {
-              Wbyte(CALLBF + 2, 0xFF);                      //no; return error flag
+              Wbyte(CALLBF + 2, 0xFF);                                                      //no; return error flag
             }
             noExec();
           }
           break;      
- 
-          case 3:                                           //MDSK(): Map DOAD
+      
+          case 3:                                                                           //MDSK(): Map DOAD
           {
-            char mDOAD[20] = "/DISKS/";                     //complete path + filename
-            byte fPos;                                      //character position in filename from MDSK()
+            char mDOAD[20] = "/DISKS/";                                                     //complete path + filename
+            byte fPos;                                                                      //character position in filename from MDSK()
             for ( fPos = 7; fPos < 15; fPos++ ) {                                           
               byte fKar = Rbyte(CALLBF + (fPos - 5) );
-              if ( fKar != ' ' ) {                          //if " ", the filename is < 8 characters ...
+              if ( fKar != ' ' ) {                                                          //if " ", the filename is < 8 characters ...
                   mDOAD[fPos] = fKar;
               } else {                                                                      
-                break;                                      // ... and we need to get out
+                break;                                                                      // ... and we need to get out
               }
             }                                                                              
-            mDOAD[fPos + 1] = '\0';                         //terminate filename                                                                             
-            strncat(mDOAD, ".DSK", 4);                      //add to path
-            mDOAD[fPos + 4] = '\0';                         //terminate full path + filename
+            mDOAD[fPos + 1] = '\0';                                                         //terminate filename                                                                             
+            strncat(mDOAD, ".DSK", 4);                                                      //add to path
+            mDOAD[fPos + 4] = '\0';                                                         //terminate full path + filename
                         
-            if ( SD.exists( mDOAD ) ) {                     //valid DOAD MS-DOS name?
-              strncpy(nDSK[cDSK], mDOAD, 20);               //yes; assign to requested DSKx      
-              aDSK[cDSK] = true;                            //flag active
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);      //open new DOAD file to check write protect y/n
-              DSK[cDSK].seek(0x10);                         //byte 0x10 in Volume Information Block stores Protect status
-              pDSK[cDSK] = DSK[cDSK].read();                //0x50 || "P", 0x20 || " "
+            if ( SD.exists( mDOAD ) ) {                                                     //valid DOAD MS-DOS name?
+              strncpy(nDSK[cDSK], mDOAD, 20);                                               //yes; assign to requested DSKx      
+              aDSK[cDSK] = true;                                                            //flag as active
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                                      //open new DOAD file to check write protect y/n
+              DSK[cDSK].seek(0x10);                                                         //byte 0x10 in Volume Information Block stores Protect status
+              pDSK[cDSK] = DSK[cDSK].read();                                                //0x50 || "P", 0x20 || " "
             } else {
-              Wbyte(CALLBF + 2, 0xFF);                      //no; return error flag
+              Wbyte(CALLBF + 2, 0xFF);                                                      //no; return error flag
             }
           }
           break;  
             
-          case 4:                                           //SDSK(): Show DOAD mapping       
+          case 4:                                                                           //SDSK(): Show DOAD mapping       
           {
             char sDOAD[20];                                
-            if ( aDSK[cDSK] ) {                             //is the requested disk mapped to a DOAD?
-             strncpy(sDOAD, nDSK[cDSK], 20);                //yes; get current DOAD name     
+            if ( aDSK[cDSK] ) {                                                             //is the requested disk mapped to a DOAD?
+             strncpy(sDOAD, nDSK[cDSK], 20);                                                //yes; get current DOAD name     
             } else {
-             strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);     //no; indicate not mapped
+             strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);                                     //no; indicate not mapped
             }
             
-            Wbyte(CALLBF + 2, cDSK+48+TIBias);              //DSKx # in ASCII + TI BASIC bias
-            Wbyte(CALLBF + 3, '=' +   TIBias);              //"=" + TI BASIC bias  
+            Wbyte(CALLBF + 2, cDSK+48+TIBias);                                              //DSKx # in ASCII + TI BASIC bias
+            Wbyte(CALLBF + 3, '=' +   TIBias);                                              //"=" + TI BASIC bias  
             for ( byte ii = 4; ii < 12; ii++ ) {                                  
-              Wbyte(CALLBF + ii, sDOAD[ii + 3] + TIBias);   //store mapping character in CALL buffer
-              if ( sDOAD[ii + 3] == 46 ) {                  //if it's a "." we're done
-                Wbyte(CALLBF + ii, ' ' + TIBias);           //but need to display " ", not "."
+              Wbyte(CALLBF + ii, sDOAD[ii + 3] + TIBias);                                   //store mapping character in CALL buffer
+              if ( sDOAD[ii + 3] == 46 ) {                                                  //if it's a "." we're done
+                Wbyte(CALLBF + ii, ' ' + TIBias);                                           //but need to display " ", not "."
                 break;
               }
             } 
             if ( pDSK[cDSK] == 0x50 ) {
-              Wbyte(CALLBF + 13, 'P' + TIBias);             //indicate DOAD is Protected
+              Wbyte(CALLBF + 13, 'P' + TIBias);                                             //indicate DOAD is Protected
             } else {
-              Wbyte(CALLBF + 13, 'U' + TIBias);             //indicate DOAD is Unprotected
+              Wbyte(CALLBF + 13, 'U' + TIBias);                                             //indicate DOAD is Unprotected
             }
             noExec();
           } 
           break;       
-
+      
           case 5:                                                                           //LDSK(): List files on DOAD
           {            
             if ( Rbyte(CALLBF) != cDSK ) {                                                  //different DSKx while ">" for previous DSKx?
               cDSK = Rbyte(CALLBF);                                                         //yes; read new DSKx
               ANcmd = true;                                                                 //close possible open DOAD 
             }
-     
+      
             if ( aDSK[cDSK] ) { 
               if ( ANcmd ) {                                                                //yes; first run of LDSK()?
                 DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                                    //yes; prep DOAD
                 DSK[cDSK].seek(NRBYSECT);
               }
-
+      
               unsigned long pFDR = (DSK[cDSK].read() << 8) + DSK[cDSK].read();              //16bits FDR pointer  
               if ( pFDR != 0 ) {                                                            //0x0000 means no more files              
                 unsigned int cPos = DSK[cDSK].position();                                   //remember next FDR pointer
@@ -120,7 +120,7 @@
                 } else {
                   Wbyte(CALLBF + 13, 'D' + TIBias);                                         //"DISPLAY"
                 }
-
+      
                 DSK[cDSK].seek( DSK[cDSK].position() + 1);                                  //locate total # of sectors
                 char fSize[4];                                                              //ASCII store
                 sprintf( fSize, "%3d", (DSK[cDSK].read() << 8) + (DSK[cDSK].read() + 1) );  //convert number to string
@@ -140,12 +140,21 @@
             }
           }
           break; 
-
+      
+          case 6:                                                                           //ADSR(): todo
+          {
+            noExec();
+          }
+          break;
+          
+        }//end ACcmd switch
+      }//end APEDSK99 commands
+    }//end we needed to do something
+    
     //----------------------------------------------------------------------------------------------- End of command processing, wait for next interrupt (TI write to DSR space)
     FD1771 = false;   //clear interrupt flag
     
     TIgo(); 
-
+    
   } //end FD1771 flag check
-
 } //end loop()

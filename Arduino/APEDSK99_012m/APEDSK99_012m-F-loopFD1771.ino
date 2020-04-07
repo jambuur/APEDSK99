@@ -8,67 +8,67 @@ void loop() {
     FCcmd = Rbyte(WCOMND) & B11110000;
 
     //the FD1771 "Force Interrupt" command is used to stop further command execution
-    if ( FCcmd != FDINT ) { //do we need to do anything?
+    if ( FCcmd != FDINT ) {                                     //do we need to do anything?
       
-      FNcmd = (FCcmd != FLcmd);                             //new or continue previous FD1771 command?
-      if (FNcmd) {                                          //new command?
-        FLcmd = FCcmd;                                      //yes; remember new command for next compare
+      FNcmd = (FCcmd != FLcmd);                                 //new or continue previous FD1771 command?
+      if (FNcmd) {                                              //new command?
+        FLcmd = FCcmd;                                          //yes; remember new command for next compare
       }
       //----------------------------------------------------------------------------------------- FD1771 Seek / Step
-      if ( FCcmd < 0x80 ) {                                 //step/seek commands?
+      if ( FCcmd < 0x80 ) {                                     //step/seek commands?
 
-        byte cTrack = Rbyte(WTRACK);                        //read current Track #
-        byte nTrack = Rbyte(WDATA);                         //read new Track # (Seek)
+        byte cTrack = Rbyte(WTRACK);                            //read current Track #
+        byte nTrack = Rbyte(WDATA);                             //read new Track # (Seek)
 
         switch(FCcmd) {
          
-          case 0x00:                                        //Restore            
+          case 0x00:                                            //Restore            
           { 
-            cTrack = 0;                                     //reset cTrack so Track Registers will be cleared after switch{}
+            cTrack = 0;                                         //reset cTrack so Track Registers will be cleared after switch{}
             FDrstr();
           }
           break;
 
-          case 0x10:                                        //Seek
+          case 0x10:                                            //Seek
           {
-            cTrack = nTrack;                                //prepare to update Track Register
-            cDir = (nTrack > cTrack);                       //set direction: HIGH=track # increase, LOW=track # decrease
+            cTrack = nTrack;                                    //prepare to update Track Register
+            cDir = (nTrack > cTrack);                           //set direction: HIGH=track # increase, LOW=track # decrease
           } 
           break;
             
-          case 0x20:                                        //Step
-          case 0x30:                                        //Step+T
+          case 0x20:                                            //Step
+          case 0x30:                                            //Step+T
           {
             if ( cDir == LOW ) {
-              FCcmd = 0x70;                                 //execute Step-Out+T
+              FCcmd = 0x70;                                     //execute Step-Out+T
             } else {
-              FCcmd = 0x50;                                 //execute Step-In+T
+              FCcmd = 0x50;                                     //execute Step-In+T
             }
           }
-          case 0x40:                                        //Step-In
-          case 0x50:                                        //Step-In+T
+          case 0x40:                                            //Step-In
+          case 0x50:                                            //Step-In+T
           {
-            if ( cTrack < NRTRACKS ) {                      //any tracks left to step to?
-              cTrack++;                                     //yes; increase Track #
-              cDir = HIGH;                                  //set stepping direction towards last track 
+            if ( cTrack < NRTRACKS ) {                          //any tracks left to step to?
+              cTrack++;                                         //yes; increase Track #
+              cDir = HIGH;                                      //set stepping direction towards last track 
             }
           }
           break;
 
-          case 0x60:                                        //Step-Out
-          case 0x70:                                        //Step-Out+T
+          case 0x60:                                            //Step-Out
+          case 0x70:                                            //Step-Out+T
           {
-            if ( cTrack > 0 ) {                             //any tracks left to step to?
-              cTrack--;                                     //decrease Track #
-              cDir = LOW;                                   //set stepping direction towards track 0
+            if ( cTrack > 0 ) {                                 //any tracks left to step to?
+              cTrack--;                                         //decrease Track #
+              cDir = LOW;                                       //set stepping direction towards track 0
             }
           }
           break;
             
         } //end switch FCcmd
-        Wbyte(WTRACK, cTrack);                              //update Track Register
-        Wbyte(RTRACK, cTrack);                              //sync Track Registers
-        noExec();                                           //prevent multiple step/seek execution                                        
+        Wbyte(WTRACK, cTrack);                                  //update Track Register
+        Wbyte(RTRACK, cTrack);                                  //sync Track Registers
+        noExec();                                               //prevent multiple step/seek execution                                        
 
       // end FCcmd < 0x80
       } else {  // read/write commands
@@ -101,29 +101,27 @@ void loop() {
           }
           break;
 
-          case 0x80:                                      //read sector
-          case 0x90:                                      //read multiple sectors
-          case 0xE0:                                      //read track    
+          case 0x80:                                            //read sector
+          case 0x90:                                            //read multiple sectors
+          case 0xE0:                                            //read track    
           {
             RWsector( true );
           }
           break;
 
-          case 0xA0:                                      //write sector
-          case 0xB0:                                      //write multiple sectors
-          case 0xF0:                                      //write track
+          case 0xA0:                                            //write sector
+          case 0xB0:                                            //write multiple sectors
+          case 0xF0:                                            //write track
           {
-            if ( pDSK[cDSK] != 0x50 ) {                   //is DOAD write protected?
-              RWsector( false );                          //no; go ahead and write
+            if ( pDSK[cDSK] != 0x50 ) {                         //is DOAD write protected?
+              RWsector( false );                                //no; go ahead and write
             } else {
-              Wbyte(RSTAT, PROTECTED);                    //yes; set "Write Protect" bit in Status Register
-              noExec();                                   //exit      
+              Wbyte(RSTAT, PROTECTED);                          //yes; set "Write Protect" bit in Status Register
+              noExec();                                         //exit      
             }
           }
           break;
 
         } //end R/W switch
       } //end else R/W commands
-
-    //end we needed to do something
-    } else {  //check out APEDSK99 commands  
+    } else {  //check out APEDSK99 commands

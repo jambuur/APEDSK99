@@ -100,25 +100,25 @@ void set_abus(unsigned int address)
 byte Rbyte(unsigned int address)
 {
   byte data = 0x00;
-  set_abus(address);                //set address bus
-  dbus_in();                        //set databus for reading
-  digitalLow(CE);                   //enable RAM chip select                               
-  data = dbus_read();               //get databus value
-  digitalHigh(CE);                  //disable RAM chip select
+  set_abus(address);                        //set address bus
+  dbus_in();                                //set databus for reading
+  digitalLow(CE);                           //enable RAM chip select                               
+  data = dbus_read();                       //get databus value
+  digitalHigh(CE);                          //disable RAM chip select
   return data;
 }
 
 //write a byte to RAM address
 void Wbyte(unsigned int address, byte data)
 {
-  set_abus(address);                //set address bus
-  dbus_out();                       //set databus for writing
-  dbus_write(data);                 //set data bus value
-  digitalLow(WE);                   //enable write
-  digitalLow(CE);                   //enable RAM chip select
-  digitalHigh(CE);                  //disable chip select
-  digitalHigh(WE);                  //disable write
-  dbus_in();                        //set databus to (default) input state
+  set_abus(address);                        //set address bus
+  dbus_out();                               //set databus for writing
+  dbus_write(data);                         //set data bus value
+  digitalLow(WE);                           //enable write
+  digitalLow(CE);                           //enable RAM chip select
+  digitalHigh(CE);                          //disable chip select
+  digitalHigh(WE);                          //disable write
+  dbus_in();                                //set databus to (default) input state
 } 
 
 //enable TI I/O, disable Arduino shift registers and control bus
@@ -126,20 +126,20 @@ void Wbyte(unsigned int address, byte data)
 inline void TIgo() __attribute__((always_inline));
 void TIgo()
 {
-  dis_cbus();                       //cease Arduino RAM control
-  pinAsOutput(TI_BUFFERS);          //enable 74LS541's 
-  EIFR = bit (INTF0);               //clear flag for interrupt 0 
-  EIMSK |= B00000001;               //enable INT0
-  pinAsInput(TI_READY);             //switch to HIGH: disables 74HC595's and wakes up TI
+  dis_cbus();                               //cease Arduino RAM control
+  pinAsOutput(TI_BUFFERS);                  //enable 74LS541's 
+  EIFR = bit (INTF0);                       //clear flag for interrupt 0 
+  EIMSK |= B00000001;                       //enable INT0
+  pinAsInput(TI_READY);                     //switch to HIGH: disables 74HC595's and wakes up TI
 }
 
 //disable TI I/O, enable Arduino shift registers and control bus
 //INLINE: need for speed in ISR
 inline void TIstop() __attribute__((always_inline));
 void TIstop() {
-  EIMSK &= B11111110;               //disable INT0
-  pinAsOutput(TI_READY);            //bring READY line LOW (halt TI)
-  NOP();                            //long live the Logic Analyzer
-  pinAsInput(TI_BUFFERS);           //disables 74LS541's    
-  ena_cbus();                       //Arduino in control of RAM
+  EIMSK &= B11111110;                       //disable INT0
+  pinAsOutput(TI_READY);                    //bring READY line LOW (halt TI)
+  NOP();                                    //long live the Logic Analyzer
+  pinAsInput(TI_BUFFERS);                   //disables 74LS541's    
+  ena_cbus();                               //Arduino in control of RAM
 }

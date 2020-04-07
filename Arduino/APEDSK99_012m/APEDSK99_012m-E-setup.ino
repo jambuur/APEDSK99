@@ -5,9 +5,8 @@ void setup() {
   //put TI on hold and enable 74HC595 shift registers
   TIstop();
 
-  //see if the SD card is present and can be initialized
-  if ( !SD.begin(SPI_CS) ) {
-    //nope -> flash LED error 1
+  //SD card present and can be initialized?
+  if ( !SD.begin(SPI_CS) ) {                          //nope -> flash LED error 1
     eflash(1);
   }
   
@@ -38,15 +37,13 @@ void setup() {
   
   //--------------------------------------------------------------------------------------------- Let's go
   //"initialize FD1771":
-  FDrstr();   //"Restore" command
-  noExec();   //"no command" as default
+  FDrstr();                                           //"Restore" command
+  noExec();                                           //"no command" as default
 
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  //direct interrupt register access for speed (attachInterrupt is too slow)
-  EICRA |= B00000010;       //sense falling edge on INT0 pin
+  //direct interrupt register access for speed
+  EICRA |= B00000010;                                 //sense falling edge on INT0 pin
 
-  
-  //TI: take it away
-  TIgo();
+  TIgo();                                             //TI: take it away
 
 } //end of setup()
