@@ -17,7 +17,7 @@ A status LED indicates APEDSK99 access as well as showing possible error codes.
 The DSR is very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
 DSR code optimisation has made enough RAM available for handy _TI BASIC_ support and some future enhancements. 
 
-I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmer's clever BS&T lives on.
+I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' clever BS&T lives on.
 
 ### *How does it work?*
 
