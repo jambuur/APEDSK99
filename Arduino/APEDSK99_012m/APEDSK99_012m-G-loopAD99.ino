@@ -109,8 +109,7 @@
                 DSK[cDSK].seek(pFDR * NRBYSECT);                                            //locate FDR within DOAD
                 for ( byte ii=2; ii < 12; ii++ ) {                                  
                   Wbyte(CALLBF + ii, DSK[cDSK].read() + TIBias );                           //read/save filename characters in CALL buffer
-                }
-                Wbyte(CALLBF + 12, '-' + TIBias);                                           //separator space                     
+                }                 
                           
                 DSK[cDSK].seek( DSK[cDSK].position() + 2);                                  //locate File Status Flags
                 byte fStat = DSK[cDSK].read();               
