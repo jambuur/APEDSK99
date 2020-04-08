@@ -139,13 +139,12 @@
               noExec();
             }
           }
-          break; 
-      
-          case 6:                                                                           //ADSR(): todo
+          break;
+
+          case 6:
           {
             noExec();
           }
-          break;
           
         }//end ACcmd switch
       }//end APEDSK99 commands

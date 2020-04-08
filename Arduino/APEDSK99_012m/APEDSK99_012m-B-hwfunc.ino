@@ -7,7 +7,7 @@ void NOP() {
   //uncomment line below for 74LS541
   //delayMicroseconds(3);
   //uncomment line below for 74HCT541
-  delayMicroseconds(8);  
+  delayMicroseconds(6);  
 }
 
 //databus:

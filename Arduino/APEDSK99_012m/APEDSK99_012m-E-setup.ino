@@ -3,7 +3,6 @@
 void setup() {
   
   TIstop();                                             //put TI on hold and enable 74HC595 shift registers
-
   
   if ( !SD.begin(SPI_CS) ) {                            //SD card present and can be initialized?              
     eflash(1);                                          //nope -> flash LED error 1
