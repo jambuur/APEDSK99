@@ -3506,12 +3506,12 @@ ACLERR	B	@RTURN1			return to caller (i.e. Basic)
 SDSK2	LI	R6,>0400
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
-	LI	R2,724			screen starting position
+	LI	R2,721			screen starting position
 	BL	@VDPWRI			set VDP address
 *
 	LI	R5,CALLBF+2		pointer to drive # and DOAD name
-	LI	R6,12			max 12 characters
-H9903	MOVB	*R5+,@-2(R15)		save drive #,"=",DOAD character,"-",P/U in VDP screen table	
+	LI	R6,16			max 16 characters
+H9903	MOVB	*R5+,@-2(R15)		save drive #,"=",DOAD character,"-",P/U,  in VDP screen table	
 	DEC	R6
 	JNE	H9903
 *	

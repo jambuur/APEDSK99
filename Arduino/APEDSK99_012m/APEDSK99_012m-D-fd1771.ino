@@ -17,7 +17,7 @@
 #define ACOMND  0x1FE8                                //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define RDINT   0x1FEA                                //R6 counter value to generate interrupt in read sector / track commands
 #define TIBias  0x60                                  //TI BASIC screen bias
-//#define aDEBUG 0x1EE0                                 //pulling my hair out trouleshooting storage address
+#define aDEBUG 0x1EE0                                 //pulling my hair out trouleshooting storage address
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x1FEC                                //emulated 8 CRU input bits,      >5FEC in TI99/4a DSR memory block; not used 

@@ -66,13 +66,36 @@
           case 4:                                                                           //SDSK(): Show DOAD mapping       
           {
             char sDOAD[20];                                
+            unsigned int nOnes = 0;
             if ( aDSK[cDSK] ) {                                                             //is the requested disk mapped to a DOAD?
-             strncpy(sDOAD, nDSK[cDSK], 20);                                                //yes; get current DOAD name     
+        
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                                    //yes; prep DOAD
+              DSK[cDSK].seek(0x12);                                                       //# of formatted sides
+              byte tSect = DSK[cDSK].read() * 45;                                         //# of Sector Bitmap bytes to process for SD or DS
+              DSK[cDSK].seek(0x38);                                                       //1st Sector Bitmap byte for side 0
+
+              for ( byte ii = 0; ii < tSect; ii++) {                          //sum all set bits (=sectors used) for all Sector Bitmap bytes
+                byte bSBM = DSK[cDSK].read();
+                for ( byte jj = 0; jj < 8; jj++ ) {
+                  nOnes += ( bSBM >> 1) & 0x01;
+                }
+              }
+              char dSize[4];                                                              //ASCII store
+              sprintf( dSize, "%3d",  (tSect * 360) - nOnes );                             //convert -> number of free sectors -> string
+              for ( byte ii = 14; ii < 17; ii++ ) {                                       //store ASCII file size in CALL buffer
+                Wbyte(CALLBF + ii, dSize[ii-14] + TIBias);
+              }
+              strncpy(sDOAD, nDSK[cDSK], 20);                                                //yes; get current DOAD name     
+
+              if ( pDSK[cDSK] == 0x50 ) {
+              Wbyte(CALLBF + 13, 'P' + TIBias);                                             //indicate DOAD is Protected
+              } else {
+                Wbyte(CALLBF + 13, 'U' + TIBias);                                             //indicate DOAD is Unprotected
+              }
             } else {
-             strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);                                     //no; indicate not mapped
+              strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);                                     //no; indicate not mapped
             }
             
-            Wbyte(CALLBF + 2, cDSK+48+TIBias);                                              //DSKx # in ASCII + TI BASIC bias
             Wbyte(CALLBF + 3, '=' +   TIBias);                                              //"=" + TI BASIC bias  
             for ( byte ii = 4; ii < 12; ii++ ) {                                  
               Wbyte(CALLBF + ii, sDOAD[ii + 3] + TIBias);                                   //store mapping character in CALL buffer
@@ -81,11 +104,7 @@
                 break;
               }
             } 
-            if ( pDSK[cDSK] == 0x50 ) {
-              Wbyte(CALLBF + 13, 'P' + TIBias);                                             //indicate DOAD is Protected
-            } else {
-              Wbyte(CALLBF + 13, 'U' + TIBias);                                             //indicate DOAD is Unprotected
-            }
+            
             noExec();
           } 
           break;       
@@ -124,7 +143,7 @@
                 DSK[cDSK].seek( DSK[cDSK].position() + 1);                                  //locate total # of sectors
                 char fSize[4];                                                              //ASCII store
                 sprintf( fSize, "%3d", (DSK[cDSK].read() << 8) + (DSK[cDSK].read() + 1) );  //convert number to string
-                for ( byte ii = 14; ii < 18; ii++ ) {                                       //store ASCII file size in CALL buffer
+                for ( byte ii = 14; ii < 17; ii++ ) {                                       //store ASCII file size in CALL buffer
                   Wbyte(CALLBF + ii, fSize[ii-14] + TIBias);
                 }
                                   
