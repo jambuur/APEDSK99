@@ -69,43 +69,42 @@
             unsigned int nOnes = 0;
             if ( aDSK[cDSK] ) {                                                             //is the requested disk mapped to a DOAD?
         
-              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                                    //yes; prep DOAD
-              DSK[cDSK].seek(0x12);                                                       //# of formatted sides
-              byte tSect = DSK[cDSK].read() * 45;                                         //# of Sector Bitmap bytes to process for SD or DS
-              DSK[cDSK].seek(0x38);                                                       //1st Sector Bitmap byte for side 0
+              DSK[cDSK] = SD.open(nDSK[cDSK], O_READ);                                      //yes ...
+              DSK[cDSK].seek(0x12);                                                         //# of formatted sides
+              byte tSect = DSK[cDSK].read() * 45;                                           //# of Sector Bitmap bytes to process for SD or DS
+              DSK[cDSK].seek(0x38);                                                         //1st Sector Bitmap byte for side 0
 
-              for ( byte ii = 0; ii < tSect; ii++) {                          //sum all set bits (=sectors used) for all Sector Bitmap bytes
+              for ( byte ii = 0; ii < tSect -1 ; ii++) {                                    //sum all set bits (=sectors used) for all Sector Bitmap bytes
                 byte bSBM = DSK[cDSK].read();
-                for ( byte jj = 0; jj < 8; jj++ ) {
-                  nOnes += ( bSBM >> 1) & 0x01;
+                for ( byte jj = 0; jj < 8; jj++ ) {                                         
+                  nOnes += ( bSBM >> jj) & 0x01;                                            //"on the one you hear what I'm sayin'"
                 }
               }
-              char dSize[4];                                                              //ASCII store
-              sprintf( dSize, "%3d",  (tSect * 360) - nOnes );                             //convert -> number of free sectors -> string
-              for ( byte ii = 14; ii < 17; ii++ ) {                                       //store ASCII file size in CALL buffer
+              char dSize[4];                                                                //ASCII store
+              sprintf( dSize, "%3d", (tSect * 8) - nOnes );                                 //convert: -> number of free sectors -> string
+              for ( byte ii = 14; ii < 17; ii++ ) {                                         //store ASCII file size in CALL buffer
                 Wbyte(CALLBF + ii, dSize[ii-14] + TIBias);
               }
-              strncpy(sDOAD, nDSK[cDSK], 20);                                                //yes; get current DOAD name     
+              strncpy(sDOAD, nDSK[cDSK], 20);                                               //get current DOAD name     
 
               if ( pDSK[cDSK] == 0x50 ) {
               Wbyte(CALLBF + 13, 'P' + TIBias);                                             //indicate DOAD is Protected
               } else {
-                Wbyte(CALLBF + 13, 'U' + TIBias);                                             //indicate DOAD is Unprotected
+                Wbyte(CALLBF + 13, 'U' + TIBias);                                           //indicate DOAD is Unprotected
               }
             } else {
-              strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);                                     //no; indicate not mapped
+              strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);                                    //... no; indicate not mapped
             }
             
-            Wbyte(CALLBF + 3, '=' +   TIBias);                                              //"=" + TI BASIC bias  
+            Wbyte(CALLBF + 3, '=' + TIBias);                                                //"=" + TI BASIC bias  
             for ( byte ii = 4; ii < 12; ii++ ) {                                  
               Wbyte(CALLBF + ii, sDOAD[ii + 3] + TIBias);                                   //store mapping character in CALL buffer
               if ( sDOAD[ii + 3] == 46 ) {                                                  //if it's a "." we're done
-                Wbyte(CALLBF + ii, ' ' + TIBias);                                           //but need to display " ", not "."
+                Wbyte(CALLBF + ii, ' ' + TIBias);                                           //replace "." with " "
                 break;
               }
             } 
-            
-            noExec();
+            noExec();                                                                       //we're done
           } 
           break;       
       
@@ -160,7 +159,7 @@
           }
           break;
 
-          case 6:
+          case 6:                                                                           //ADSR():  todo (a99 done)
           {
             noExec();
           }
