@@ -1,0 +1,18 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    </head>
+    <body>
+    <h1>C:\Users\Jochen\Documents\GitHub\APEDSK99\KiCAD\APEDSK-AU.sch</h1>
+    <p>9/04/2020 21:00:28</p>
+    <p>Eeschema (5.1.2)-2</p>
+    <p><b>Component Count:</b>25</p>
+    <table>
+    <tr><th style='width:640px'>Ref</th><th>Qnty</th><th>Value</th><th>Part</th><th>Datasheet</th><th>Description</th><th>Vendor</th></tr><tr><td>C1, C2, C3, C4, C5, C6, C7</td><td>7</td><td>100N</td><td>Device:C_Small</td><td>~</td><td>Unpolarized capacitor, small symbol</td><td></td></tr><tr><td>D1</td><td>1</td><td>~CE</td><td>Device:LED_Small_ALT</td><td>~</td><td>Light emitting diode, small symbol, filled shape</td><td></td></tr><tr><td>D2</td><td>1</td><td>1N5711</td><td>Device:D_Schottky_Small</td><td>~</td><td>Schottky diode, small symbol</td><td></td></tr><tr><td>J1</td><td>1</td><td>240-44-44Pins</td><td>Connector_Generic:240-44-44Pins</td><td>~</td><td>Generic connector, double row, 45 pins, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)</td><td></td></tr><tr><td>P1</td><td>1</td><td>Power</td><td>Connector_Generic:Conn_01x08</td><td></td><td>Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)</td><td></td></tr><tr><td>P2</td><td>1</td><td>Analog</td><td>Connector_Generic:Conn_01x06</td><td></td><td>Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)</td><td></td></tr><tr><td>P3</td><td>1</td><td>Digital</td><td>Connector_Generic:Conn_01x10</td><td></td><td>Generic connector, single row, 01x10, script generated (kicad-library-utils/schlib/autogen/connector/)</td><td></td></tr><tr><td>P4</td><td>1</td><td>Digital</td><td>Connector_Generic:Conn_01x08</td><td></td><td>Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)</td><td></td></tr><tr><td>R1, R2, R3</td><td>3</td><td>5.1K</td><td>Device:R_Small_US</td><td>~</td><td>Resistor, small US symbol</td><td></td></tr><tr><td>R4</td><td>1</td><td>330R</td><td>Device:R_Small_US</td><td>~</td><td>Resistor, small US symbol</td><td></td></tr><tr><td>U1</td><td>1</td><td>74LS245</td><td>74xx:74LS245</td><td>http://www.ti.com/lit/gpn/sn74LS245</td><td>Octal BUS Transceivers, 3-State outputs</td><td></td></tr><tr><td>U2, U3</td><td>2</td><td>74LS541</td><td>74xx:74LS541</td><td>http://www.ti.com/lit/gpn/sn74LS244</td><td>8-bit Buffer/Line Driver 3-state outputs</td><td></td></tr><tr><td>U4</td><td>1</td><td>74LS138</td><td>74xx:74LS138</td><td>http://www.ti.com/lit/gpn/sn74LS138</td><td>Decoder 3 to 8 active low outputs</td><td></td></tr><tr><td>U5, U6</td><td>2</td><td>74HC595</td><td>74xx:74HC595</td><td>http://www.ti.com/lit/ds/symlink/sn74hc595.pdf</td><td>8-bit serial in/out Shift Register 3-State Outputs</td><td></td></tr><tr><td>U7</td><td>1</td><td>HM65764</td><td>Memory_RAM:6264ALP_DIP32_SSOP32</td><td>http://www.futurlec.com/Datasheet/Memory/628128.pdf</td><td>128K x 8 High-Speed CMOS Static RAM, 55/70ns, DIP-32/SSOP-32</td><td></td></tr><!--TABLEROW-->
+    </table>
+    </body>
+</html>
+    
