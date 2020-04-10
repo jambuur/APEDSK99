@@ -163,6 +163,12 @@
           {
             noExec();
           }
+
+          case 7:
+          {
+            APEDSK99rst();
+          }
+          break;
           
         }//end ACcmd switch
       }//end APEDSK99 commands
