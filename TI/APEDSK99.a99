@@ -3470,6 +3470,7 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	JEQ	ACLPR2			yes, continue
 	CI	R0,>C708		quoted string, 8 characters?
 	JEQ	ADSR2			yes, DSR CALL
+	INCT	R8			get next two bytes in R0
 	JMP	ARST2			check for ARST() or error
 *
 ACLPR2	INCT	R8			increment pointer
