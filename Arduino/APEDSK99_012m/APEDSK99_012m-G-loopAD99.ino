@@ -163,7 +163,8 @@
           {
             noExec();
           }
-
+          break;
+          
           case 7:
           {
             APEDSK99rst();

@@ -87,10 +87,15 @@ SUB13	DATA 	SUB14
 	BYTE	>04
 	TEXT	'LDSK'			List files on DSKx
 	EVEN
-SUB14	DATA	>0000
+SUB14	DATA	SUB15
 	DATA	ADSR
 	BYTE	>04
-	TEXT	'ADSR'			APEDSK99 reset / load DSR
+	TEXT	'ADSR'			APEDSK99 load DSR
+	EVEN
+SUB15	DATA	>0000
+	DATA	ARST
+	BYTE	>04
+	TEXT	'ARST'			APEDSK99 Reset
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -111,15 +116,10 @@ DSR03	DATA	DSR04
 	BYTE	>04			
 	TEXT	'DSK2'			
 	EVEN				
-DSR04	DATA	DSR05			no more
+DSR04	DATA	>0000			no more
 	DATA	EDSR04			
 	BYTE	>04			
 	TEXT	'DSK3'			
-	EVEN	
-DSR05	DATA	>0000
-	DATA 	EDSR05
-	BYTE	>05
-	TEXT	'RS232'
 	EVEN		
 *
 *=====================================
@@ -3403,7 +3403,9 @@ SDSK	LI	R4,6			Show DSK jump table entry
 	JMP	ACLPRP			generic prep
 LDSK	LI	R4,8			Show Files jump table entry
 	JMP	ACLPRP			generic prep
-ADSR	LI	R4,10			reset APEDSK99 / load DSR
+ADSR	LI	R4,10			load DSR
+	JMP	ACLPRP			generic prep
+ARST	LI	R4,12			reset APEDSK99
 	JMP	ACLPRP			generic prep
 *
 *-----------------------------------------------------------------
@@ -3439,13 +3441,13 @@ H9902	BL	@VDPR2B			get next two digits
 	DEC	R6			decrease word counter
 	JNE	H9902			next pair
 *
-	BL      @VDPR2B                 get next two bytes
+ARST2	BL      @VDPR2B                 get next two bytes
 	SRL     R0,8                    move ")" into LSB
 	CI      R0,>00B6                is it a ")"?
 	JNE     ACLERR                  no, return with error set
 *
-	CI	R4,10			DSR CALL?
-	JEQ	ADSR3			yes, continue that
+	CI	R4,10			DSR OR RST CALL?
+	JHE	DSRRST			yes, continue with that
 *
 	LI	R6,>0300		
 	MOVB	R6,@ACOMND		MDSK command to Arduino
@@ -3461,13 +3463,14 @@ H9902	BL	@VDPR2B			get next two digits
 ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
 	MOV	@>002C(R9),R8		ptr to next basic token
-	AI	R8,6			skip "[PUMSLA]DSK("
+	AI	R8,6			skip "<CALL>("
 	BL	@VDPR2B			get next two bytes in R0
+	MOV	R4,@>5EE0
 	CI	R0,>C801		>C8=unquoted string, size=1 char?
 	JEQ	ACLPR2			yes, continue
 	CI	R0,>C708		quoted string, 8 characters?
 	JEQ	ADSR2			yes, DSR CALL
-	JMP	ACLERR			return (with error) if different
+	JMP	ARST2			check for ARST() or error
 *
 ACLPR2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two bytes
@@ -3484,7 +3487,7 @@ H9901	JEQ	ACLERR			DSK0 not valid, return with error
 	SWPB	R0			drive # back in MSB
 *
 	MOV	R0,@CALLBF		save DSKx
-ADSR3	MOV	@CLLTBL(R4),R4
+DSRRST	MOV	@CLLTBL(R4),R4
 	B	*R4
 *
 CLLTBL	DATA	PDSK2			CALL PDSK()
@@ -3492,7 +3495,8 @@ CLLTBL	DATA	PDSK2			CALL PDSK()
 	DATA	MDSK2			CALL CDSK()
 	DATA	SDSK2			CALL SDSK()
 	DATA	LDSK2			CALL FDSK()
-	DATA	ADSR4			CALL ADSR()
+	DATA	ADSR2			CALL ADSR()
+	DATA	ARST2			CALL ARST()
 *
 ACLBAS	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
@@ -3565,20 +3569,24 @@ NXTPRP	LI	R2,735
 	JMP 	ACLBAS
 *
 *-----------------------------------------------------------------
-* Subprogram APEDSR: reset APEDSK99 / load DSR (todo)
+* Subprogram APEDSR: load DSR (todo)
 * ----------------------------------------------------------------
 *
-ADSR4	LI	R6,>0600
+ADSR3	LI	R6,>0600
 	MOVB	R6,@ACOMND
 *
 	LI	R8,21			current CALL length
 	JMP	ACLBAS
 *
 *-----------------------------------------------------------------
-* APEDSK99 DSR entry point
+* Subprogram APERST: reset APEDSK99
 * ----------------------------------------------------------------
 *
-EDSR05	B	@RTURN1			return to caller (i.e. Basic)
+ARST3	LI	R6,>0700
+	MOVB	R6,@ACOMND
+*
+	LI	R8,11
+	JMP	ACLBAS
 *
 *-----------------------------------------
 * The remaining bytes (~>5DE0 to >5FD5) all contain >00
