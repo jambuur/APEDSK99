@@ -1,10 +1,10 @@
 //-DSR generic---------------------------------------------------------------------------------------- Hardware Error handling
 
-//load DSR of choice (only APEDSK99 suppported for now)
+//load DSR of choice 
 boolean lDSR( char nDSR[] )
 {
   char fDSR[18] = "/";
-  strncpy(fDSR, nDSR, 18);                               //copy CALL ADSR() file name     
+  strncpy(fDSR, nDSR, 18);                              //copy startup / reset / CALL ADSR() file name     
   strncat(fDSR, ".DSR", 4);                             //add extension
   File iDSR = SD.open(fDSR, O_READ);                    //open DSR file and if exists copy to RAM
   if (iDSR) {
@@ -12,14 +12,9 @@ boolean lDSR( char nDSR[] )
       Wbyte(ii, iDSR.read() );
     }
   iDSR.close();
-  return (0);
+  return (0);                                           //success
   } else {
-    
-    
-    eflash(2);                                          //couldn't find DSR binary image: flash error 2
-  }
-  if ( Rbyte(0x0000) != 0xAA ) {                        //check for valid DSR mark (>AA) at first DSR RAM byte
-    eflash(3);                                          //loading DSR unsuccessful -> flash error 3
+    return(1);                                          //indicate failure
   }
 }
 

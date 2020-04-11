@@ -20,7 +20,12 @@ void setup() {
   //--------------------------------------------------------------------------------------------- DSR initialisation
   
   //read DSR binary from SD and write into DSR RAM
-  lDSR("APEDSK99");
+  if ( lDSR("APEDSK99") == 1 ) {
+    eflash(2);                                          //couldn't find DSR binary image: flash error 2
+  }
+  if ( Rbyte(0x0000) != 0xAA ) {                        //check for valid DSR mark (>AA) at first DSR RAM byte
+    eflash(3);                                          //loading DSR unsuccessful -> flash error 3
+  }
 
   //initialise DSKx Active and Protect flags
   for ( byte ii = 1; ii < 4; ii++ ) {

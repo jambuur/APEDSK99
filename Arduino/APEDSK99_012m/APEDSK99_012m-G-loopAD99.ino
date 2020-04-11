@@ -158,25 +158,17 @@
           }
           break;
 
-          case 6:                                                                           //ADSR():  todo (a99 done)
-          {                                                                                 //reminder: should return error code if DSR file doesn't exist
-            char mDSR[8] = "";                                                            //complete path + filename
-            for ( byte ii = 2; ii < 10; ii++ ) {                                      //read file name from CALL buffer
-             mDSR[ii - 2] = Rbyte(CALLBF + ii);
+          case 6:                                                                           //ADSR():  load DSR
+          {                                                                                 
+            char mDSR[13] = "DSR/";                                                         //complete path + filename
+            for ( byte ii = 2; ii < 10; ii++ ) {                                            //read file name from CALL buffer
+             mDSR[ii + 2] = Rbyte(CALLBF + ii);
             }                                                                  
                                                                                    
-            mDSR[9] = '\0';                                                                 //terminate filename                                                                             
-            strncat(mDSR, ".DSR", 4);                                                       //add to path
-                        
-            if ( SD.exists( mDSR ) ) {                                                      //valid DSR MS-DOS name?
-              lDSR("APEDSK99");
-            } else {
-              Wbyte(CALLBF + 2, 0xFF);                                                      //no; return error code
+            mDSR[12] = '\0';                                                                //terminate filename                                                                             
+            if ( lDSR(mDSR) == 1 ) {                                                        //load DSR and if unsuccessful ...
+              Wbyte(CALLBF + 2, 0xFF);                                                      //... return error code
             }
-            for ( byte ii = 0; ii < 14; ii++ ) {
-              Wbyte(aDEBUG + ii, mDSR[ii]);
-            }
-            
             noExec();
           }
           break;
