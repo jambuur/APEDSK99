@@ -69,7 +69,7 @@ The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 
 - CALL MDSK( [1-3] ,"8 character DOAD name"): maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if necessary.
 
-- CALL SDSK( [1-3] ): shows the current DOAD mapping and Protect/Unprotect status for the relevant DSK
+- CALL SDSK( [1-3] ): shows the current DOAD mapping, Protect/Unprotect status and # of free sectors for the relevant DSK
 
 - CALL LDSK( [1-3] ): list the files on a DOAD (I always thought that was a really nice feature the C64 had), their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. A ">" indicates that the same LDSK() command will show the next lot of files.
 
