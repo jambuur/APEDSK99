@@ -160,14 +160,15 @@
           break;
 
           case 6:                                                                           //ADSR():  todo (a99 done)
-          {
+          {                                                                                 //reminder: should return error code if DSR file doesn't exist
             noExec();
           }
           break;
           
           case 7:
           {
-            APEDSK99rst();
+            TIgo();                                                                         //release TI
+            APEDSK99rst();                                                                  //reset APEDSK99
           }
           break;
           
