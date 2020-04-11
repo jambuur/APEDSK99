@@ -3547,7 +3547,7 @@ LDNXTS	CLR	R2			clear screen; position 0
 	BL	@VDPRPW
 	DATA	704			704 positions to clear
 *
-	LI	R2,32			start 2nd screen line; 1st is lost due to TI BASIC scroll
+	LI	R2,33			start 2nd screen line; 1st is lost due to TI BASIC scroll
 	BL	@VDPWRI			
 *
 H9904	LI	R5,CALLBF+2		start of file name buffer
@@ -3560,7 +3560,7 @@ H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
 	JNE	H9905
 *
 	AI	R2,16
-	CI	R2,672			end of display area?
+	CI	R2,673			end of display area?
 	JEQ	NXTPRP			yes; prep for next screen
 *
 	MOV	R2,@RDINT		generates interrupt for next file
