@@ -47,7 +47,7 @@ After clamping it for a while the bottom row pins can now be soldered.
 
 The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
-As the 74LS series is harder and harder to get, 74HCT replacements for the 74LS541's may be a better bet. Either works fine but there is a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch that you need to adjust. Default is set for the 74HCT series. NB: I haven't tried HCT versions for the 74LS245, 74LS138 and 75HC595's so no guarantees there (should work though).
+As the 74LS series is getting harder to get, 74HCT replacements for the 74LS541's may be a better bet. Either works fine but there is a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch that you need to adjust. Default is set for the 74HCT series. NB: I haven't tried HCT versions for the 74LS245, 74LS138 and 75HC595's so no guarantees there (should work though).
 
 Another thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB (type B) and the power adapter connectors. Make sure you get the long version.
 
@@ -67,15 +67,17 @@ The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 
 - CALL UDSK( [1-3] ): removes the "tab"
 
-- CALL MDSK( [1-3] ,"8 character DOAD name"): maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if necessary.
+- CALL MDSK( [1-3] ,"*8 character DOAD name*"): maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if necessary.
 
 - CALL SDSK( [1-3] ): shows the current DOAD mapping, Protect/Unprotect status and # of free sectors for the relevant DSKx
 
-- CALL LDSK( [1-3] ): list the files on a DOAD (I always thought that was a really nice feature the C64 had), their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. A ">" indicates that the same LDSK() command will show the next lot of files.
+- CALL LDSK( [1-3] ): list the files on a DOAD (I always thought that was a really nice feature the C64 had), 
+their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. 
+A ">" indicates that the same LDSK() command will show the next lot of files.
 
 2 further CALL's concern the management of the DSR itself:
 
-- CALL ADSR("8 character DSR file name"): loads a DSR file from the root of the SD card and optionally resets APEDSK99. It currently does nothing but returning nicely to TI BASIC; watch this space.
+- CALL ADSR("*8 character DSR file name*"): loads a DSR file from the root of the SD card and optionally resets APEDSK99. It currently does nothing but returning nicely to TI BASIC; watch this space.
 
 - CALL ARST(): resets APEDSK99 including reloading the current DSR. It's a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same as power cycling the stack.
 
@@ -103,9 +105,9 @@ So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 t
 
 The LED can flash in the following intricate error patterns:
 
-1. flash            : SPI / SD Card fault/not ready
-2. flash-flash      : can't read DSR binary image (/APEDSK99.DSR)
-3. flash-flash-flash: no valid DSR header (>AA) at DSR RAM >4000
+1. *flash*            : SPI / SD Card fault/not ready
+2. *flash-flash*      : can't read DSR binary image (/APEDSK99.DSR)
+3. *flash-flash-flash*: no valid DSR header (>AA) at DSR RAM >4000
 
 ### *QA*
 
