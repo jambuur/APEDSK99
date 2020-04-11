@@ -61,7 +61,7 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 ### *TI BASIC support*
 
-The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
+The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 
 - CALL PDSK( [1-3] ): sets the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 write access to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
 
@@ -72,6 +72,12 @@ The DSR contains 4 additional TI BASIC CALL's to manage DOAD's:
 - CALL SDSK( [1-3] ): shows the current DOAD mapping and Protect/Unprotect status for the relevant DSK
 
 - CALL LDSK( [1-3] ): list the files on a DOAD (I always thought that was a really nice feature the C64 had), their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. A ">" indicates that the same LDSK() command will show the next lot of files.
+
+2 further CALL's concern the management of the DSR itself:
+
+- CALL ADSR("8 character DSR file name"): loads a DSR file from the root of the SD card and optionally resets APEDSK99. It currently does nothing but returning nicely to TI BASIC; watch this space.
+
+- CALL ARST(): resets APEDSK99 including reloading the current DSR. It's a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same as power cycling the stack.
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
