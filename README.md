@@ -103,9 +103,9 @@ So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 t
 
 The LED can flash in the following intricate error patterns:
 
-1. flash                   : SPI / SD Card fault/not ready
-2. flash-flash             : can't read DSR binary image (/APEDSK99.DSR)
-3. flash-flash-flash       : no valid DSR header (>AA) at DSR RAM >4000
+1. flash            : SPI / SD Card fault/not ready
+2. flash-flash      : can't read DSR binary image (/APEDSK99.DSR)
+3. flash-flash-flash: no valid DSR header (>AA) at DSR RAM >4000
 
 ### *QA*
 
