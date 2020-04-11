@@ -113,7 +113,9 @@ The LED can flash in the following intricate error patterns:
 
 Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code, doubling the functionality while you're at it. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
 
-The Arduino SD library is rather slow, there are alternatives that would speed up DSKx access substantially. But I have decided to stay with the slow version; it is fast enough not to be irritating but still keeps some of that floppy nostalgia. I don't know about you but emulators with instant loading times always strike me as so ... not real ;-)
+The Arduino SD library is not the fastest option, there are alternatives available that would speed up DSKx access quite a bit. But I have decided to stay with the standard option; it is fast enough not to be irritating but still keeps some of that floppy nostalgia. I don't know about you but emulators with instant loading times always strike me as so ... not real ;-)
+
+Anyway feel free to improve and share.
 
 ### *Bug's*
 
