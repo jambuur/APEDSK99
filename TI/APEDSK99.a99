@@ -11,6 +11,8 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
+ADEBUG	EQU	>5FBE			pulling my hair out generic debug data address
+*
 CALLBF	EQU	>5FD6			xDSK data: DSK number (1-3); DOAD name (10 characters) or File info (16 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
@@ -3441,13 +3443,13 @@ H9902	BL	@VDPR2B			get next two digits
 	DEC	R6			decrease word counter
 	JNE	H9902			next pair
 *
-ARST2	BL      @VDPR2B                 get next two bytes
+	BL      @VDPR2B                 get next two bytes
 	SRL     R0,8                    move ")" into LSB
 	CI      R0,>00B6                is it a ")"?
 	JNE     ACLERR                  no, return with error set
 *
 	CI	R4,10			DSR OR RST CALL?
-	JHE	DSRRST			yes, continue with that
+	JEQ	DSRRST			yes, continue with that
 *
 	LI	R6,>0300		
 	MOVB	R6,@ACOMND		MDSK command to Arduino
@@ -3465,13 +3467,13 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	MOV	@>002C(R9),R8		ptr to next basic token
 	AI	R8,6			skip "<CALL>("
 	BL	@VDPR2B			get next two bytes in R0
-	MOV	R4,@>5EE0
+	CI	R0,>B600		no parameters?
+	JEQ	DSRRST			yes, ARST()
 	CI	R0,>C801		>C8=unquoted string, size=1 char?
-	JEQ	ACLPR2			yes, continue
+	JEQ	ACLPR2			yes, continue for [PU]DSK(), SDSK(), MDSK and LDSK
 	CI	R0,>C708		quoted string, 8 characters?
-	JEQ	ADSR2			yes, DSR CALL
-	INCT	R8			get next two bytes in R0
-	JMP	ARST2			check for ARST() or error
+	JEQ	ADSR2			yes, ADSR()
+	JMP	ACLERR			no valid CALL
 *
 ACLPR2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two bytes
@@ -3496,7 +3498,7 @@ CLLTBL	DATA	PDSK2			CALL PDSK()
 	DATA	MDSK2			CALL CDSK()
 	DATA	SDSK2			CALL SDSK()
 	DATA	LDSK2			CALL FDSK()
-	DATA	ADSR2			CALL ADSR()
+	DATA	ADSR3			CALL ADSR()
 	DATA	ARST2			CALL ARST()
 *
 ACLBAS	CLR	@>0050(R9)		clear error flag		
@@ -3583,7 +3585,7 @@ ADSR3	LI	R6,>0600
 * Subprogram APERST: reset APEDSK99
 * ----------------------------------------------------------------
 *
-ARST3	LI	R6,>0700
+ARST2	LI	R6,>0700
 	MOVB	R6,@ACOMND
 *
 	LI	R8,11
