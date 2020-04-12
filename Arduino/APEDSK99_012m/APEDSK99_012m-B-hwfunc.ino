@@ -4,9 +4,8 @@
 //6us is the minumum stable value for HCT on my TI but your mileage may vary
 inline void NOP() __attribute__((always_inline));
 void NOP() {
-  //uncomment line below for 74LS541
-  //delayMicroseconds(3);
-  //uncomment line below for 74HCT541
+  //try (3) for 74LS541 but only when you experience problems. A good test is to format/verify a DS "floppy" a couple of times.
+  //I only had to change this when initially using a couple of old, used 74LS541's.
   delayMicroseconds(6);  
 }
 
