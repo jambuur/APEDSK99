@@ -17,7 +17,7 @@ A status LED indicates APEDSK99 access as well as showing possible error codes.
 The DSR is very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
 DSR code optimisation has made enough RAM available for handy _TI BASIC_ support and some future enhancements. 
 
-I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' clever BS&T live on.
+I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' cleverness lives on.
 
 ### *How does it work?*
 
@@ -47,7 +47,7 @@ After clamping it for a while the bottom row pins can now be soldered.
 
 The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
-As the 74LS series is getting harder to get, 74HCT replacements for the 74LS541's may be a better bet. Either works fine but there is a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch that you need to adjust. Default is set for the 74HCT series. NB: I haven't tried HCT versions for the 74LS245, 74LS138 and 75HC595's so no guarantees there (should work though).
+As the 74LS series is getting harder to get, 74HCT replacements for the 74LS541's may be a better bet. Either works fine but you might have to tweak a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch. Default is set to 6uS for both the 74LS and 74HCT series. NB: I haven't tried HCT versions for the 74LS245, 74LS138 and 75HC595's so no guarantees there (should work though).
 
 Another thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB (type B) and the power adapter connectors. Make sure you get the long version.
 
@@ -77,9 +77,9 @@ A ">" indicates that the same LDSK() command will show the next lot of files.
 
 2 further CALL's concern the management of the DSR itself:
 
-- CALL ADSR("*8 character DSR file name*"): loads a DSR file from the root of the SD card and optionally resets APEDSK99. It currently does nothing but returning nicely to TI BASIC; watch this space.
+- CALL ADSR("*8 character DSR file name*"): loads a DSR file from the root of the SD card and resets APEDSK99. 
 
-- CALL ARST(): resets APEDSK99 including reloading the current DSR. It's a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same as power cycling the stack.
+- CALL ARST(): resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same as power cycling the stack.
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
