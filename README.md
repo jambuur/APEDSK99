@@ -77,9 +77,9 @@ A ">" indicates that the same LDSK() command will show the next lot of files.
 
 2 further CALL's concern the management of the DSR itself:
 
-- CALL ADSR("*8 character DSR file name*"): loads a DSR file from the root of the SD card and optionally resets APEDSK99. It currently does nothing but returning nicely to TI BASIC; watch this space.
+- CALL ADSR("*8 character DSR file name*"): loads a DSR file from the root of the SD card and resets APEDSK99. 
 
-- CALL ARST(): resets APEDSK99 including reloading the current DSR. It's a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same as power cycling the stack.
+- CALL ARST(): resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same as power cycling the stack.
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
