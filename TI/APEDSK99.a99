@@ -11,8 +11,6 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
-ADEBUG	EQU	>5FBE			pulling my hair out generic debug data address
-*
 CALLBF	EQU	>5FD6			xDSK data: DSK number (1-3); DOAD name (10 characters) or File info (16 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
@@ -3585,8 +3583,8 @@ ARST3	LI	R6,>0700
 	JMP	ACLBAS
 *
 *-----------------------------------------
-* The remaining bytes (~>5DE0 to >5FD5) all contain >00
-* >5FD6 - >5FE7 is DSKx / DOAD name / file name storage for TI BASIC CALL's
+* The remaining bytes (~>5E60 to >5FD5) all contain >00 
+* >5FD6 - >5FE7 is DSKx / DOAD name / DSR name storage for TI BASIC CALL's
 * >5FE8	is the Arduino Command Register (TI BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers
