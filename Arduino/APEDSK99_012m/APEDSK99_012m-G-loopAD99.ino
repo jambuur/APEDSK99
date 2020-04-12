@@ -168,10 +168,11 @@
             mDSR[12] = '\0';                                                                //terminate filename                                                                             
             if ( lDSR(mDSR) == 1 ) {                                                        //load DSR and if unsuccessful ...
               Wbyte(CALLBF + 2, 0xFF);                                                      //... return error code
-            }
-            noExec();
-          }
-          break;
+              noExec();
+              break;
+            }     
+          }                                                                                 //fall through to reset    
+          
           
           case 7:
           {
