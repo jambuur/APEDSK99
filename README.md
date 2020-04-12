@@ -5,7 +5,7 @@ APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4
 
 ![KiCAD 3D view](img/APEDSK99trio.jpg)
 
-Like the TI itself, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day and it can be put together by anybody with basic electronics skills.
+Like the TI, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day and it can be put together by anybody with basic electronics equipment and skills.
 
 The TI <-> shield interface is the familiar design, with 74LS541 buffers for address/control lines and a bi-directional 74LS245 buffer for the databus. An 8Kx8 RAM stores the DSR code. CRU is emulated through 2 memory mapped addresses, simplifying shield design. 
 A binary DSR file is loaded into RAM by the Arduino at powerup / reset. 
@@ -14,8 +14,8 @@ The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the T
 
 A status LED indicates APEDSK99 access as well as showing possible error codes.
 
-The DSR is very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
-DSR code optimisation has made enough RAM available for handy _TI BASIC_ support and some future enhancements. 
+The DSR is still very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
+DSR code optimisation has made enough RAM available for handy _TI BASIC_ support and possible future enhancements. 
 
 I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' cleverness lives on.
 
@@ -31,14 +31,14 @@ When the TI issues a disk controller command by writing to the FD1771 registers,
 
 ### *Construction*
 
-Putting the APEDSK99 shield together is straightforward and no problem for anybody with basic electronic skills. The 74LS541's and the slimline RAM are probably not stock items at your local electronics store but can be easily obtained online.
+Putting the APEDSK99 shield together is straightforward. The 74LS541's and the slimline RAM are probably not stock items at your local electronics store but can be easily obtained online.
 
 The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)). 
 
 The only thing that needs a little bit of attention is mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/140888520037?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649):
 - The bottom row of pins need to be [bent 90 degrees downwards and the top row slightly bent upwards](img/APEDSK99conn.jpg)
 - [Rough up](img/APEDSK99spaper.jpg) the bottom side of the connector housing and the PCB area it will sit on (between PCB edge and white line)
-- Clean the 2 surfaces with isopropyl and [apply dots of superglue](img/APEDSK99sglue.jpg) across the length of 1 roughed up area
+- Clean the 2 surfaces with isopropyl and [apply dots of superglue](img/APEDSK99sglue.jpg) across the length of 1 area
 - Line up the bottom connector pins with the row of PCB holes marked 1-43 and press the connector firmly on the PCB, making sure all connector pins stick through to the soldering side. 
 
 After clamping it for a while the bottom row pins can now be soldered. 
@@ -63,13 +63,13 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 
-- CALL PDSK( [1-3] ): sets the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 write access to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
+- CALL PDSK( [1-3] ): sets the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
 
 - CALL UDSK( [1-3] ): removes the "tab"
 
 - CALL MDSK( [1-3] ,"*8 character DOAD name*"): maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if necessary.
 
-- CALL SDSK( [1-3] ): shows the current DOAD mapping, Protect/Unprotect status and # of free sectors for the relevant DSKx
+- CALL SDSK( [1-3] ): shows the current DOAD mapping, Protect/Unprotect status and # of free sectors
 
 - CALL LDSK( [1-3] ): list the files on a DOAD (I always thought that was a really nice feature the C64 had), 
 their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. 
@@ -78,7 +78,7 @@ A ">" indicates that the same LDSK() command will show the next lot of files.
 2 further CALL's concern the management of the DSR itself:
 
 - CALL ADSR("*8 character DSR file name*"): loads a DSR file from the /DSR folder on the SD card and resets APEDSK99. 
-DSR files need to have 8 characters (no spaces this time) and a .DSR extension.
+DSR filenames need to have 8 characters (no spaces this time) and a .DSR extension.
 
 - CALL ARST(): resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
@@ -114,11 +114,11 @@ The LED can flash in the following intricate error patterns:
 
 ### *QA*
 
-Writing software is a hobby, not my profession. No doubt some of you gurus would write half the code, doubling the functionality while you're at it. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
+Writing software is a hobby, not my profession. No doubt some gurus would achieve the same functionality with half the code. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
 
-The Arduino SD library is not the fastest option, there are alternatives available that would speed up DSKx access quite a bit. But I have decided to stay with the standard option; it is fast enough not to be irritating but still keeps some of that floppy nostalgia. I don't know about you but emulators with instant loading times always strike me as so ... not real ;-)
+The Arduino SD library is not the fastest option, there are alternatives available that would speed up DSKx access a bit. But I have decided to stay with the standard option; it is fast enough not to be irritating but still keeps some of that floppy nostalgia. I don't know about you but emulators with instant loading times always strike me as so ... not real ;-)
 
-Anyway feel free to improve and share.
+Anyway feel free to improve and share!
 
 ### *Bug's*
 
