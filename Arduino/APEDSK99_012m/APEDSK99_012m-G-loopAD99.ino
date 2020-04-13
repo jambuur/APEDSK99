@@ -173,11 +173,31 @@
             }     
           }                                                                                 //fall through to reset    
           
-          
           case 7:
           {
             TIgo();                                                                         //release TI
             APEDSK99rst();                                                                  //reset APEDSK99
+          }
+          break;
+
+          case 8:
+          {
+            dis_cbus();
+            rtc.begin(); 
+
+            if ( rtc.isrunning() ) {
+       
+  
+            
+            
+            } else {
+               Wbyte(CALLBF + 2, 0xFF);
+            }
+            
+            rtcEnd();
+
+            ena_cbus();
+            noExec();
           }
           break;
           

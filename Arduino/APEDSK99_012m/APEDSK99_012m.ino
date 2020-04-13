@@ -40,6 +40,10 @@
 //watchdog timer handling for reset/load DSR
 #include <avr/wdt.h>
 
+#include <Wire.h> 
+#include "RTClib.h" 
+RTC_DS1307 rtc; 
+ 
 //-DSR generic--------------------------------------------------------------------------------- Definitions
 //faster digitalRead / digitalWrite definitions
 #define portOfPin(P)\

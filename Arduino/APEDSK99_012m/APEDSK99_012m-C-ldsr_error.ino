@@ -25,6 +25,13 @@ void APEDSK99rst (void) {
   while(1) {}                                           //self-destruct in 15ms
 }
 
+void rtcEnd( void ) {
+  //TWCR = _BV(TWEN) | _BV( TWSTO );                 
+  //TWCR = _BV( TWSTO );  
+  TWCR = bit(TWEN) | bit(TWSTO);                      //no interrupts, Set Stop(release bus)
+  TWCR = bit(TWSTO);                                  //no interrupts, Set Stop(release bus), disable TWI interface
+}
+
 //flash error code:
 //  flash            : SPI / SD Card fault/not ready
 //  flash-flash      : can't read DSR binary image (/APEDSK99.DSR)

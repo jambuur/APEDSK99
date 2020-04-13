@@ -92,10 +92,30 @@ SUB14	DATA	SUB15
 	BYTE	>04
 	TEXT	'ADSR'			APEDSK99 load DSR
 	EVEN
-SUB15	DATA	>0000
+SUB15	DATA	SUB16
 	DATA	ARST
 	BYTE	>04
 	TEXT	'ARST'			APEDSK99 Reset
+	EVEN
+SUB16	DATA	SUB17
+	DATA	GRTC
+	BYTE	>04
+	TEXT	'GRTC'	
+	EVEN
+SUB17	DATA	SUB18
+	DATA	SRTC
+	BYTE	>04
+	TEXT	'SRTC'	
+	EVEN
+SUB18	DATA	SUB19
+	DATA	CKON
+	BYTE	>04
+	TEXT	'CKON'
+	EVEN
+SUB19	DATA	>0000
+	DATA	CKOF
+	BYTE	>04
+	TEXT	'CKOF'
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3579,8 +3599,15 @@ NXTPRP	LI	R2,735
 ARST3	LI	R6,>0700
 	MOVB	R6,@ACOMND
 *
-	LI	R8,11
+QCLK	LI	R8,11
 	JMP	ACLBAS
+*-----------------------------------------------------------------
+* RTC Subprograms
+* ----------------------------------------------------------------
+GRTC	DATA 	>1000
+SRTC	DATA 	>1000
+CKON	DATA 	>1000
+CKOF	JMP	QCLK
 *
 *-----------------------------------------
 * The remaining bytes (~>5E60 to >5FD5) all contain >00 
