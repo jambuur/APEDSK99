@@ -7,7 +7,7 @@
         if (ANcmd) {                                                                        //new command?
           ALcmd = ACcmd;                                                                    //yes; remember new command for next compare
           cDSK = Rbyte(CALLBF);                                                             //read target DSKx
-          if ( ACcmd != 3 && ACcmd != 6) {                                                  //clear CALL buffer except for MDSK() and ADSR()
+          if ( ACcmd != 3 && ACcmd != 6 && ACcmd !=8 ) {                                    //clear CALL buffer but not for MDSK(), ADSR() and SRTC()
             for ( byte ii=2; ii < 18; ii++) {                                               //fill CALL() buffer with " "
               Wbyte(CALLBF + ii, 0x20 + TIBias);
             }
@@ -180,26 +180,64 @@
           }
           break;
 
-          case 8:
+          case 8:                                                                           //SRTC(): set RTC clock
           {
-            dis_cbus();
-            rtc.begin(); 
-
-            if ( rtc.isrunning() ) {
-       
-  
-            
-            
-            } else {
-               Wbyte(CALLBF + 2, 0xFF);
+            char dRTC[13] = "";
+            dRTC[12] = '\0';                                                                //terminate string
+            for ( byte ii = 2; ii < 14; ii++ ) {                                            //check if supplied chars are between "0" - "9"
+              dRTC[ii - 2] = Rbyte(CALLBF + ii);
+              if ( dRTC[ii - 2] < 48 || dRTC[ii - 2] > 57 ) {                               //no
+                Wbyte(CALLBF + 2, 0xFF);                                                    //store error code
+                break;                                                                      //break out loop
+              } 
             }
-            
-            rtcEnd();
+            if ( Rbyte(CALLBF + 2) != 0xFF ) {                                              //still good to go?
+              byte cASC = dRTC[2];
+              dRTC[2] = '\0';
+              byte Month = atoi(&dRTC[0]);
+              dRTC[2] = cASC;
+              cASC = dRTC[4];
+              dRTC[4] = '\0';
+              byte Day = atoi(&dRTC[2]);
+              dRTC[4] = cASC;
+              cASC = dRTC[8];
+              dRTC[8] = '\0';
+              unsigned int Year = atoi(&dRTC[4]);
+              dRTC[8] = cASC; 
+              cASC = dRTC[10];
+              dRTC[10] = '\0';
+              byte Hour = atoi(&dRTC[8]);
+              dRTC[10] = cASC;
+              cASC = dRTC[12];
+              dRTC[12] = '\0';
+              byte Minute = atoi(&dRTC[10]);
+              dRTC[12] = cASC;
 
-            ena_cbus();
-            noExec();
+              dis_cbus();
+              rtc.begin(); 
+              boolean eRTC = false;
+              if ( rtc.isrunning() ) {
+                rtc.adjust( DateTime(Year, Month, Day, Hour, Minute, 0) );
+              } else {
+                eRTC = true;                                                                  //flag RTC error (can't write to RAM with bus disabled)
+              }
+              rtcEnd();
+              ena_cbus();
+              if ( eRTC ) {
+                 Wbyte(CALLBF + 2, 0xF0);                                                     //flag CALL error
+              }
+            } else {
+              Wbyte(CALLBF + 2, 0xFF);                                                        //flag CALL error
+              noExec();
+            }
           }
           break;
+
+          default:                                                                          //catch-all safety
+          {
+            noExec();
+          }
+          
           
         }//end ACcmd switch
       }//end APEDSK99 commands

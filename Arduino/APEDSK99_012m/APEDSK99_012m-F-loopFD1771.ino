@@ -122,6 +122,11 @@ void loop() {
           }
           break;
 
+          default:                                              //catch-all safety
+          {
+            noExec();
+          }
+
         } //end R/W switch
       } //end else R/W commands
     } else {  //check out APEDSK99 commands
