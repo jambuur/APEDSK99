@@ -173,14 +173,14 @@
             }     
           }                                                                                 //fall through to reset    
           
-          case 7:
+          case 7:                                                                           //ARST(): reset APEDSK99
           {
             TIgo();                                                                         //release TI
             APEDSK99rst();                                                                  //reset APEDSK99
           }
           break;
 
-          case 8:                                                                           //SRTC(): set RTC clock
+          case 8:                                                                           //SRTC(): set RTC date/time
           {
             char dRTC[13] = "";
             dRTC[12] = '\0';                                                                //terminate string
@@ -224,7 +224,7 @@
               rtcEnd();                                                                     //stop I2C comms
               ena_cbus();                                                                   //enable RAM control bus
               if ( eRTC ) {
-                 Wbyte(CALLBF + 2, 0xF0);                                                   //flag RTC error
+                Wbyte(CALLBF + 2, 0xFF);                                                    //flag RTC error
               }
             } else {
               Wbyte(CALLBF + 2, 0xFF);                                                      //flag CALL error
@@ -232,6 +232,22 @@
             noExec();                                                                       //either way we're done  
           }
           break;
+
+          case 9:                                                                           //GRTC(): Get RTC date/time
+          {
+            noExec();
+          }
+          break;
+
+          case 11:                                                                          //CKON: display interrupt clock
+          {
+            noExec();
+          }
+
+          case 13:                                                                          //CKOF: stop interrupt clock
+          {
+            noExec();
+          }
 
           default:                                                                          //catch-all safety
           {

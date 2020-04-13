@@ -3425,15 +3425,15 @@ LDSK	LI	R4,8			Show Files jump table entry
 	JMP	ACLPRP			generic prep
 ARST	LI	R4,10			reset APEDSK99
 	JMP	ACLPRP			generic prep
-ADSR	LI	R4,12			load DSR
+GRTC	LI	R4,12			Get RTC date/time
 	JMP	ACLPRP			generic prep
-GRTC	LI	R4,14			Get RTC date/time
+CKON	LI	R4,14			interrupt clock display oN
 	JMP	ACLPRP			generic prep
-SRTC	LI	R4,16			Set RTC date/time
+CKOF	LI	R4,16			interrupt clock display oFf
 	JMP	ACLPRP			generic prep
-CKON	LI	R4,18			interrupt clock display oN
+ADSR	LI	R4,18			load DSR
 	JMP	ACLPRP			generic prep
-CKOF	LI	R4,20			interrupt clock display oFf
+SRTC	LI	R4,20			Set RTC date/time
 	JMP	ACLPRP			generic prep
 *
 *-----------------------------------------------------------------
@@ -3476,9 +3476,9 @@ H9902	BL	@VDPR2B			get next two digits
 *
 	LI	R8,23			prep MDSK CALL length ...
 	LI	R6,>0300		... and command
-	CI	R4,12			ADSR()?
+	CI	R4,18			ADSR()?
 	JEQ	H9907
-	CI	R4,16			SRTC()?
+	CI	R4,20			SRTC()?
 	JNE	H9908			no, continue with MDSK()
 *		
 	AI	R6,>0100		adjust for SRTC command ...
@@ -3489,7 +3489,7 @@ H9907	SLA	R6,1			adjust for ADSR and SRTC command ...
 *	
 H9908	MOVB	R6,@ACOMND		MDSK command to Arduino
 *
-	CB	@K012,@CALLBF+2		check Arduino MDSK return code
+	CB	@K012,@CALLBF+2		check Arduino MDSK / ADSR / SRTC return code
 	JEQ	ACLERR			>FF, DOAD / DSR doesn't exist; return with error
 	JMP	ACLBAS			all is well, return without error
 *			
@@ -3502,11 +3502,11 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	AI	R8,6			skip "<CALL>("
 	BL	@VDPR2B			get next two bytes in R0
 	CI	R0,>B600		no parameters?
-	JEQ	ARST2			yes, ARST(), GRTC(), CKON() and CKOF()
+	JEQ	AGCC			yes, ARST(), GRTC(), CKON() and CKOF()
 	CI	R0,>C801		>C8=unquoted string, size=1 char?
 	JEQ	ACLPR2			yes, continue for [PU]DSK, SDSK, MDSK and LDSK
 	CI	R0,>C708		quoted string, 8 characters?
-	JEQ	ADSR2			yes, ADSR()
+	JEQ	AGCC			yes, ADSR()
 	CI	R0,>C70C		quoted string, 12 characters?
 	JNE	ACLERR			no valid CALL			
 	LI	R6,6			yes; adjust # of words to copy from CALL buffer
@@ -3527,7 +3527,7 @@ H9901	JEQ	ACLERR			DSK0 not valid, return with error
 	SWPB	R0			drive # back in MSB
 *
 	MOV	R0,@CALLBF		save DSKx
-ARST2	MOV	@CLLTBL(R4),R4
+	MOV	@CLLTBL(R4),R4
 	B	*R4
 *
 CLLTBL	DATA	PDSK2			CALL PDSK()
@@ -3535,7 +3535,6 @@ CLLTBL	DATA	PDSK2			CALL PDSK()
 	DATA	MDSK2			CALL CDSK()
 	DATA	SDSK2			CALL SDSK()
 	DATA	LDSK2			CALL FDSK()
-	DATA	ARST3			CALL ARST()
 *
 ACLBAS	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
@@ -3611,8 +3610,12 @@ NXTPRP	LI	R2,735
 * Subprogram APERST: reset APEDSK99
 * ----------------------------------------------------------------
 *
-ARST3	LI	R6,>0700
-	MOVB	R6,@ACOMND
+AGCC	AI	R4,-3
+	SWPB	R4
+	MOVB	R4,@ACOMND
+*
+	CB	@K012,@CALLBF+2
+	JEQ	ACLERR			>FF; report error
 *
 QCLK	LI	R8,11
 	JMP	ACLBAS
