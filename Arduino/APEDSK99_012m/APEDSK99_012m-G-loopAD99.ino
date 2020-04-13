@@ -192,13 +192,13 @@
               } 
             }
             if ( Rbyte(CALLBF + 2) != 0xFF ) {                                              //still good to go?
-              byte cASC = dRTC[2];
-              dRTC[2] = '\0';
-              byte Month = atoi(&dRTC[0]);
-              dRTC[2] = cASC;
-              cASC = dRTC[4];
+              byte cASC = dRTC[2];                                                          //yes; save 1st char of MM ...
+              dRTC[2] = '\0';                                                               //... and write string delimiter for DD ...
+              byte Day = atoi(&dRTC[0]);                                                    //... convert DD to number ...
+              dRTC[2] = cASC;                                                               //... and restore 1st MM char
+              cASC = dRTC[4];                                                               //same for MM, YYYY, HH and MM
               dRTC[4] = '\0';
-              byte Day = atoi(&dRTC[2]);
+              byte Month = atoi(&dRTC[2]);
               dRTC[4] = cASC;
               cASC = dRTC[8];
               dRTC[8] = '\0';
@@ -213,23 +213,23 @@
               byte Minute = atoi(&dRTC[10]);
               dRTC[12] = cASC;
 
-              dis_cbus();
-              rtc.begin(); 
-              boolean eRTC = false;
-              if ( rtc.isrunning() ) {
-                rtc.adjust( DateTime(Year, Month, Day, Hour, Minute, 0) );
+              dis_cbus();                                                                   //RTC I2C bus uses DS and LATCH so disable RAM control
+              rtc.begin();                                                                  //start I2C RTC comms
+              boolean eRTC = false;                                                         //RTC health flag
+              if ( rtc.isrunning() ) {                                                      //if RTC is running ...
+                rtc.adjust( DateTime(Year, Month, Day, Hour, Minute, 0) );                  //... adjust it
               } else {
-                eRTC = true;                                                                  //flag RTC error (can't write to RAM with bus disabled)
+                eRTC = true;                                                                //flag RTC error (can't write to RAM with bus disabled)
               }
-              rtcEnd();
-              ena_cbus();
+              rtcEnd();                                                                     //stop I2C comms
+              ena_cbus();                                                                   //enable RAM control bus
               if ( eRTC ) {
-                 Wbyte(CALLBF + 2, 0xF0);                                                     //flag CALL error
+                 Wbyte(CALLBF + 2, 0xF0);                                                   //flag RTC error
               }
             } else {
-              Wbyte(CALLBF + 2, 0xFF);                                                        //flag CALL error
-              noExec();
+              Wbyte(CALLBF + 2, 0xFF);                                                      //flag CALL error
             }
+            noExec();                                                                       //either way we're done  
           }
           break;
 
@@ -237,7 +237,6 @@
           {
             noExec();
           }
-          
           
         }//end ACcmd switch
       }//end APEDSK99 commands
