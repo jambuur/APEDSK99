@@ -102,20 +102,10 @@ SUB16	DATA	SUB17
 	BYTE	>04
 	TEXT	'GRTC'	
 	EVEN
-SUB17	DATA	SUB18
+SUB17	DATA	>0000
 	DATA	SRTC
 	BYTE	>04
 	TEXT	'SRTC'	
-	EVEN
-SUB18	DATA	SUB19
-	DATA	CKON
-	BYTE	>04
-	TEXT	'CKON'
-	EVEN
-SUB19	DATA	>0000
-	DATA	CKOF
-	BYTE	>04
-	TEXT	'CKOF'
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3427,13 +3417,9 @@ ARST	LI	R4,10			reset APEDSK99
 	JMP	ACLPRP			generic prep
 GRTC	LI	R4,12			Get RTC date/time
 	JMP	ACLPRP			generic prep
-CKON	LI	R4,14			interrupt clock display oN
+ADSR	LI	R4,14			load DSR
 	JMP	ACLPRP			generic prep
-CKOF	LI	R4,16			interrupt clock display oFf
-	JMP	ACLPRP			generic prep
-ADSR	LI	R4,18			load DSR
-	JMP	ACLPRP			generic prep
-SRTC	LI	R4,20			Set RTC date/time
+SRTC	LI	R4,16			Set RTC date/time
 	JMP	ACLPRP			generic prep
 *
 *-----------------------------------------------------------------
@@ -3476,9 +3462,9 @@ H9902	BL	@VDPR2B			get next two digits
 *
 	LI	R8,23			prep MDSK CALL length ...
 	LI	R6,>0300		... and command
-	CI	R4,18			ADSR()?
+	CI	R4,14			ADSR()?
 	JEQ	H9907
-	CI	R4,20			SRTC()?
+	CI	R4,16			SRTC()?
 	JNE	H9908			no, continue with MDSK()
 *		
 	AI	R6,>0100		adjust for SRTC command ...
@@ -3502,11 +3488,11 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	AI	R8,6			skip "<CALL>("
 	BL	@VDPR2B			get next two bytes in R0
 	CI	R0,>B600		no parameters?
-	JEQ	AGCC			yes, ARST(), GRTC(), CKON() and CKOF()
+	JEQ	AG2			yes, ARST() and GRTC()
 	CI	R0,>C801		>C8=unquoted string, size=1 char?
 	JEQ	ACLPR2			yes, continue for [PU]DSK, SDSK, MDSK and LDSK
 	CI	R0,>C708		quoted string, 8 characters?
-	JEQ	AGCC			yes, ADSR()
+	JEQ	ADSR2			yes, ADSR()
 	CI	R0,>C70C		quoted string, 12 characters?
 	JNE	ACLERR			no valid CALL			
 	LI	R6,6			yes; adjust # of words to copy from CALL buffer
@@ -3548,16 +3534,17 @@ ACLERR	B	@RTURN1			return to caller (i.e. Basic)
 SDSK2	LI	R6,>0400
 	MOVB	R6,@ACOMND		SDSK command to Arduino
 *
-	LI	R2,721			screen starting position
+	LI	R8,12			current CALL length
+*
+GRTC3	LI	R2,721			screen starting position
 	BL	@VDPWRI			set VDP address
 *
 	LI	R5,CALLBF+2		pointer to drive # and DOAD name
 	LI	R6,16			max 16 characters
-H9903	MOVB	*R5+,@-2(R15)		save drive #,"=",DOAD character,"-",P/U,  in VDP screen table	
+H9903	MOVB	*R5+,@-2(R15)		save SDSK() or GRTC() data in VDP screen table
 	DEC	R6
 	JNE	H9903
-*	
-	LI	R8,12			current CALL length
+*		
 	JMP	ACLBAS
 *-----------------------------------------------------------------
 * Subprogram LDSK: List files on DSKx
@@ -3610,16 +3597,21 @@ NXTPRP	LI	R2,735
 * Subprogram APERST: reset APEDSK99
 * ----------------------------------------------------------------
 *
-AGCC	AI	R4,-3
+AG2	AI	R4,-3
 	SWPB	R4
 	MOVB	R4,@ACOMND
 *
 	CB	@K012,@CALLBF+2
 	JEQ	ACLERR			>FF; report error
 *
-QCLK	LI	R8,11
+	LI	R8,11			current CALL length
+	CI	R4,12			GRTC()?
+	JEQ	GRTC3			yes; display date/time
+*
 	JMP	ACLBAS
 *
+H9909	
+	
 *-----------------------------------------
 * The remaining bytes (~>5E60 to >5FD5) all contain >00 
 * >5FD6 - >5FE7 is DSKx / DOAD name / DSR name storage for TI BASIC CALL's
