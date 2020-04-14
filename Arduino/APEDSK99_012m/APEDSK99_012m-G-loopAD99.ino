@@ -271,7 +271,7 @@
             ena_cbus();                                                                     //enable RAM control bus           
             if ( !eRTC ) {                                                                  //all good?
               for ( byte ii = 2; ii < 19; ii++ ) {                                          //yes; write date/time string to CALLBF
-                Wbyte(CALLBF + ii, fRTC[ii - 2]);
+                Wbyte(CALLBF + ii, fRTC[ii - 2] + TIBias);
               } 
             } else {
               Wbyte(CALLBF + 2, 0xFF);                                                      //no; flag RTC error
