@@ -2,7 +2,7 @@
   This sketch emulates 3 TI99/4a disk drives. Shopping list:
 
   - Arduino Uno
-	- SD shield
+	- SD shield (on-board RTC for TI BASIC RTC support)
 	- APEDSK99 shield (github.com/jambuur/APEDSK99)
 
   The Arduino RAM interface is based on Mario's EEPROM programmer:
