@@ -3536,10 +3536,10 @@ SDSK2	LI	R6,>0400
 *
 	LI	R8,12			current CALL length
 *
-GRTC3	LI	R2,721			screen starting position
+GRTC3	LI	R2,720			screen starting position
 	BL	@VDPWRI			set VDP address
 *
-	LI	R5,CALLBF+2		pointer to drive # and DOAD name
+	LI	R5,CALLBF+2		pointer to drive #, DOAD name or RTC data
 	LI	R6,16			max 16 characters
 H9903	MOVB	*R5+,@-2(R15)		save SDSK() or GRTC() data in VDP screen table
 	DEC	R6

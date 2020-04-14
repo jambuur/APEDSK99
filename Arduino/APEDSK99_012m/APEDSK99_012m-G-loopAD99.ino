@@ -81,8 +81,8 @@
               }
               char dSize[4];                                                                //ASCII store
               sprintf( dSize, "%3d", (tSect * 8) - nOnes );                                 //convert: -> number of free sectors -> string
-              for ( byte ii = 14; ii < 17; ii++ ) {                                         //store ASCII file size in CALL buffer
-                Wbyte(CALLBF + ii, dSize[ii-14] + TIBias);
+              for ( byte ii = 15; ii < 18; ii++ ) {                                         //store ASCII file size in CALL buffer
+                Wbyte(CALLBF + ii, dSize[ii-15] + TIBias);
               }
               strncpy(sDOAD, nDSK[cDSK], 20);                                               //get current DOAD name     
 
@@ -95,7 +95,7 @@
               strncpy(sDOAD, "/DISKS/<NO MAP>.DSK", 20);                                    //... no; indicate not mapped
             }
             
-            Wbyte(CALLBF + 3, '=' + TIBias);                                                //"=" + TI BASIC bias  
+            Wbyte(CALLBF + 2, '=' + TIBias);                                                //"=" + TI BASIC bias  
             for ( byte ii = 4; ii < 12; ii++ ) {                                  
               Wbyte(CALLBF + ii, sDOAD[ii + 3] + TIBias);                                   //store mapping character in CALL buffer
               if ( sDOAD[ii + 3] == 46 ) {                                                  //if it's a "." we're done
