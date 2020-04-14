@@ -75,7 +75,7 @@ The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. 
 A ">" indicates that the same LDSK() command will show the next lot of files.
 
-2 further CALL's manage the optional Real Time Clock (RTC). Datalogger SD shields include a RTC but there are plenty of vanilla SD shields without one. I highly recommend one, very handy to have it for the TI:
+2 further CALL's manage the optional Real Time Clock (RTC). Datalogger SD shields include a RTC but there are plenty of vanilla SD shields without it. I highly recommend one, very handy to have it for the TI:
 
 - CALL SRTC("*DDMMYYYYHHmm*"): sets the RTC
 
