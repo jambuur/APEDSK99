@@ -11,7 +11,7 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
-CALLBF	EQU	>5FD6			xDSK data: DSK number (1-3); DOAD name (10 characters) or File info (16 characters)
+CALLBF	EQU	>5FD6			2-way buffer for TI BASIC CALL's
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRURD	EQU	>5FEC			emulated 8 CRU input bits - NOT USED CURRENTLY
@@ -3605,15 +3605,13 @@ AG2	AI	R4,-3
 	JEQ	ACLERR			>FF; report error
 *
 	LI	R8,11			current CALL length
-	CI	R4,12			GRTC()?
+	CI	R4,9			GRTC()?
 	JEQ	GRTC3			yes; display date/time
 *
 	JMP	ACLBAS
-*
-H9909	
-	
+*	
 *-----------------------------------------
-* The remaining bytes (~>5E60 to >5FD5) all contain >00 
+* The remaining bytes (~>5EA0 to >5FD5) all contain >00 
 * >5FD6 - >5FE7 is DSKx / DOAD name / DSR name storage for TI BASIC CALL's
 * >5FE8	is the Arduino Command Register (TI BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
