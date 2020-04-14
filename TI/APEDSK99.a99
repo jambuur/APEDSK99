@@ -3605,7 +3605,7 @@ AG2	AI	R4,-3
 	JEQ	ACLERR			>FF; report error
 *
 	LI	R8,11			current CALL length
-	CI	R4,9			GRTC()?
+	CI	R4,>0900		GRTC()?
 	JEQ	GRTC3			yes; display date/time
 *
 	JMP	ACLBAS
