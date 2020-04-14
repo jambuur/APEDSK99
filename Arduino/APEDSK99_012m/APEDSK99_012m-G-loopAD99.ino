@@ -182,42 +182,42 @@
 
           case 8:                                                                           //SRTC(): set RTC date/time
           {
-            char dRTC[13] = "";
-            dRTC[12] = '\0';                                                                //terminate string
+            char tRTC[13] = "";                                                             //data To RTC from CALLBF
+            tRTC[12] = '\0';                                                                //terminate string
             for ( byte ii = 2; ii < 14; ii++ ) {                                            //check if supplied chars are between "0" - "9"
-              dRTC[ii - 2] = Rbyte(CALLBF + ii);
-              if ( dRTC[ii - 2] < 48 || dRTC[ii - 2] > 57 ) {                               //no
+              tRTC[ii - 2] = Rbyte(CALLBF + ii);
+              if ( tRTC[ii - 2] < 48 || tRTC[ii - 2] > 57 ) {                               //no
                 Wbyte(CALLBF + 2, 0xFF);                                                    //store error code
                 break;                                                                      //break out loop
               } 
             }
             if ( Rbyte(CALLBF + 2) != 0xFF ) {                                              //still good to go?
-              byte cASC = dRTC[2];                                                          //yes; save 1st char of MM ...
-              dRTC[2] = '\0';                                                               //... and write string delimiter for DD ...
-              byte Day = atoi(&dRTC[0]);                                                    //... convert DD to number ...
-              dRTC[2] = cASC;                                                               //... and restore 1st MM char
-              cASC = dRTC[4];                                                               //same for MM, YYYY, HH and MM
-              dRTC[4] = '\0';
-              byte Month = atoi(&dRTC[2]);
-              dRTC[4] = cASC;
-              cASC = dRTC[8];
-              dRTC[8] = '\0';
-              unsigned int Year = atoi(&dRTC[4]);
-              dRTC[8] = cASC; 
-              cASC = dRTC[10];
-              dRTC[10] = '\0';
-              byte Hour = atoi(&dRTC[8]);
-              dRTC[10] = cASC;
-              cASC = dRTC[12];
-              dRTC[12] = '\0';
-              byte Minute = atoi(&dRTC[10]);
-              dRTC[12] = cASC;
+              byte cASC = tRTC[2];                                                          //yes; save 1st char of MM ...
+              tRTC[2] = '\0';                                                               //... and write string delimiter for DD ...
+              byte Day = atoi(&tRTC[0]);                                                    //... convert DD to number ...
+              tRTC[2] = cASC;                                                               //... and restore 1st MM char
+              cASC = tRTC[4];                                                               //same for MM, YYYY, HH and MM
+              tRTC[4] = '\0';
+              byte Month = atoi(&tRTC[2]);
+              tRTC[4] = cASC;
+              cASC = tRTC[8];
+              tRTC[8] = '\0';
+              unsigned int Year = atoi(&tRTC[4]);
+              tRTC[8] = cASC; 
+              cASC = tRTC[10];
+              tRTC[10] = '\0';
+              byte Hour = atoi(&tRTC[8]);
+              tRTC[10] = cASC;
+              cASC = tRTC[12];
+              tRTC[12] = '\0';
+              byte Minute = atoi(&tRTC[10]);
+              tRTC[12] = cASC;
 
               dis_cbus();                                                                   //RTC I2C bus uses DS and LATCH so disable RAM control
               rtc.begin();                                                                  //start I2C RTC comms
               boolean eRTC = false;                                                         //RTC health flag
-              if ( rtc.isrunning() ) {                                                      //if RTC is running ...
-                rtc.adjust( DateTime(Year, Month, Day, Hour, Minute, 0) );                  //... adjust it
+              if ( rtc.isrunning() ) {
+                rtc.adjust( DateTime(Year, Month, Day, Hour, Minute, 0) );                  //adjust RTC
               } else {
                 eRTC = true;                                                                //flag RTC error (can't write to RAM with bus disabled)
               }
@@ -235,6 +235,47 @@
 
           case 9:                                                                           //GRTC(): Get RTC date/time
           {
+            char fRTC[17] = "";                                                             //data From RTC to CALLBF
+            char tChar[3] = "";
+            char fChar[5] = "";
+            dis_cbus();                                                                     //RTC I2C bus uses DS and LATCH so disable RAM control
+            rtc.begin();                                                                    //start I2C RTC comms
+            boolean eRTC = false;                                                           //RTC health flag
+            if ( rtc.isrunning() ) {
+              DateTime now = rtc.now();                                                     //get current date/time     
+              sprintf(tChar, "%02d", now.day() );                                           //convert day to ASCII ...
+              strncpy(fRTC, tChar, 2);                                                      //... copy to date/time string ..
+              fRTC[2] = '/';
+              fRTC[3] = '\0';                                                               //... put delimiter for month ...
+              tChar[0] = '\0';                                                              //... reset convert array for next round
+              sprintf(tChar, "%02d", now.month() );                                         //same for MM, YYYY, HH and MM
+              strncat(fRTC, tChar, 2);
+              fRTC[5] = '/';
+              fRTC[6] = '\0';
+              tChar[0] = '\0';
+              sprintf(fChar, "%4d", now.year() ); 
+              strncat(fRTC, fChar, 4);
+              fRTC[10] = ' ';
+              fRTC[11] = '\0';
+              sprintf(tChar, "%02d", now.hour() ); 
+              strncat(fRTC, tChar, 2);
+              fRTC[13] = ':';
+              fRTC[14] = '\0';
+              tChar[0] = '\0';
+              sprintf(tChar, "%02d", now.minute() );
+              strncat(fRTC, tChar, 2);  
+            } else {
+              eRTC = true;                                                                  //flag RTC error (can't write to RAM with bus disabled)
+            }
+            rtcEnd();                                                                       //stop I2C comms
+            ena_cbus();                                                                     //enable RAM control bus           
+            if ( !eRTC ) {                                                                  //all good?
+              for ( byte ii = 2; ii < 19; ii++ ) {                                          //yes; write date/time string to CALLBF
+                Wbyte(CALLBF + ii, fRTC[ii - 2]);
+              } 
+            } else {
+              Wbyte(CALLBF + 2, 0xFF);                                                      //no; flag RTC error
+            }
             noExec();
           }
           break;
