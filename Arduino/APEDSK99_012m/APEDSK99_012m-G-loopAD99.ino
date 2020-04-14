@@ -280,16 +280,6 @@
           }
           break;
 
-          case 11:                                                                          //CKON: display interrupt clock
-          {
-            noExec();
-          }
-
-          case 13:                                                                          //CKOF: stop interrupt clock
-          {
-            noExec();
-          }
-
           default:                                                                          //catch-all safety
           {
             noExec();
