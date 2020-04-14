@@ -77,7 +77,7 @@ A ">" indicates that the same LDSK() command will show the next lot of files.
 
 2 further CALL's manage the optional Real Time Clock (RTC). Datalogger SD shields include a RTC but there are plenty of vanilla SD shields without one. I highly recommend one, very handy to have it for the TI:
 
-- CALL SRTC("DDMMYYYYHHmm"): sets the RTC
+- CALL SRTC("*DDMMYYYYHHmm*"): sets the RTC
 
 - CALL GRTC(): displays the date and time
 
@@ -92,9 +92,8 @@ With the ADSR() and ARST() CALLs, keep in mind you might need to reset the TI if
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
-All CALL's use a simple 2-way 16 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or CALL LOAD/ and call the relevant Arduino routine directly (see "direct call examples" in the documentation).
-
-One thing to keep in mind with _TI EXTENDED BASIC_ is that DSR CALL's don't work from a running program, only from the "command prompt". _TI BASIC_ is not that picky.
+All CALL's use a simple 2-way 16 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
+This lets _TI EXTENDED BASIC_ join the party as it doesn't support DSR CALL's from a running program, unlike _TI BASIC_.
 
 ### *Updating the DSR*
 
