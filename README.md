@@ -141,7 +141,7 @@ Initially I considered using a bigger RAM size for larger and/or concurrent DSR'
 
 This project owes a lot to Thierry Nouspikel's marvelous [TI Tech Pages website](http://www.unige.ch/medecine/nouspikel/ti99/disks.htm) which has a wealth of information on the TI Disk Controller, including a commented disassembly of its DSR ROM.
 
-Another great source of information has been Monthy Schmidt's [excellent book "Technical Drive"](img/MS-Technical Drive.jpg). Monty went on to do great things, check out [SoundForge](https://www.magix.com/us/music/sound-forge/).
+Another great source of information has been Monthy Schmidt's excellent book [Technical Drive](img/MS-Technical Drive.jpg). Monty went on to do great things, check out [SoundForge](https://www.magix.com/us/music/sound-forge/).
 
 The Arduino's serial-to-parallel RAM addressing scheme is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER) by Mario Keller.
 
