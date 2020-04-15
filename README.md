@@ -95,6 +95,8 @@ Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX 
 All CALLs use a simple 2-way 18 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or BASIC's CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
 This lets _TI EXTENDED BASIC_ join the running program party as it only supports DSR CALL's from the "command prompt"
 
+See the CALL's in action at https://youtu.be/MDsME0TLIYE
+
 ### *Updating the DSR*
 
 I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/) and then use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
