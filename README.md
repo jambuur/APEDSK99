@@ -95,7 +95,7 @@ Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX 
 All CALLs use a simple 2-way 18 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or BASIC's CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
 This lets _TI EXTENDED BASIC_ join the running program party as it only supports DSR CALL's from the "command prompt"
 
-See the CALL's in action at https://youtu.be/MDsME0TLIYE
+See the CALLs in action at https://youtu.be/MDsME0TLIYE
 
 ### *Updating the DSR*
 
