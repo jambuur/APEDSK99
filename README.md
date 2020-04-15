@@ -63,30 +63,30 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 
-- CALL PDSK( [1-3] ): [sets](img/PDSK_UDSK.jpg) the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
+- [CALL PDSK( [1-3] )](img/PDSK_UDSK.jpg): sets the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
 
-- CALL UDSK( [1-3] ): removes the "tab"
+- [CALL UDSK( [1-3] )](img/PDSK_UDSK.jpg): removes the "tab"
 
-- CALL MDSK( [1-3] ,"*8 character DOAD name*"): maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if necessary.
+- [CALL MDSK( [1-3] ,"*8 character DOAD name*")](img/SDSK_MDSK.jpg): maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if necessary.
 
-- CALL SDSK( [1-3] ): shows the current DOAD mapping, Protect/Unprotect status and # of free sectors
+- [CALL SDSK( [1-3] )](img/SDSK_MDSK.jpg): shows the current DOAD mapping, Protect/Unprotect status and # of free sectors
 
-- CALL LDSK( [1-3] ): list the files on a DOAD (I always thought that was a really nice feature the C64 had), 
+- [CALL LDSK( [1-3] )](img/LDSK.jpg): list the files on a DOAD (I always thought that was a really nice feature the C64 had), 
 their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. 
 A ">" indicates that the same LDSK() command will show the next lot of files.
 
 2 further CALL's manage the optional Real Time Clock (RTC). Datalogger SD shields include a RTC but there are plenty of vanilla SD shields without it. I highly recommend one, very handy to have it for the TI:
 
-- CALL SRTC("*DDMMYYYYHHmm*"): sets the RTC
+- [CALL SRTC("*DDMMYYYYHHmm*")](img/GRTC_SRTC.jpg): sets the RTC
 
-- CALL GRTC(): displays the date and time
+- [CALL GRTC()](img/GRTC_SRTC.jpg): displays the date and time
 
 2 final CALL's concern the management of the DSR itself:
 
-- CALL ADSR("*8 character DSR file name*"): loads a DSR file from the /DSR folder on the SD card and resets APEDSK99. 
+- [CALL ADSR("*8 character DSR file name*")](img/ADSR.jpg): loads a DSR file from the /DSR folder on the SD card and resets APEDSK99. 
 DSR filenames need to have 8 characters (no spaces this time) and a .DSR extension.
 
-- CALL ARST(): resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
+- [CALL ARST()](img/ARST.jpg): resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
 With the ADSR() and ARST() CALLs, keep in mind you might need to reset the TI if the relevant DSR powerup routines have not been executed previously. 
 
@@ -141,7 +141,7 @@ Initially I considered using a bigger RAM size for larger and/or concurrent DSR'
 
 This project owes a lot to Thierry Nouspikel's marvelous [TI Tech Pages website](http://www.unige.ch/medecine/nouspikel/ti99/disks.htm) which has a wealth of information on the TI Disk Controller, including a commented disassembly of its DSR ROM.
 
-Another great source of information has been Monthy Schmidt's excellent book "Technical Drive". Monty went on to do great things, check out [SoundForge](https://www.magix.com/us/music/sound-forge/).
+Another great source of information has been Monthy Schmidt's excellent book [Technical Drive](img/MS-Technical Drive.jpg). Monty went on to do great things, check out [SoundForge](https://www.magix.com/us/music/sound-forge/).
 
 The Arduino's serial-to-parallel RAM addressing scheme is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER) by Mario Keller.
 
