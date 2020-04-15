@@ -92,7 +92,7 @@ With the ADSR() and ARST() CALLs, keep in mind you might need to reset the TI if
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
-All CALLs use a simple 2-way 16 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or BASIC's CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
+All CALLs use a simple 2-way 18 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or BASIC's CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
 This lets _TI EXTENDED BASIC_ join the running program party as it only supports DSR CALL's from the "command prompt"
 
 ### *Updating the DSR*
