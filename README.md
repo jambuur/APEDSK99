@@ -63,7 +63,7 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 
-- CALL [PDSK( [1-3] )](img/PDSK_UDSK.jpg): sets the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
+- CALL PDSK( [1-3] ): [sets](img/PDSK_UDSK.jpg) the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
 
 - CALL UDSK( [1-3] ): removes the "tab"
 
