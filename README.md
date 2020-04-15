@@ -63,7 +63,7 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 
-- CALL PDSK( [1-3] ): sets the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
+- CALL PDSK( [1-3] ): [sets](img/PDSK_UDSK.jpg) the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
 
 - CALL UDSK( [1-3] ): removes the "tab"
 
@@ -92,8 +92,8 @@ With the ADSR() and ARST() CALLs, keep in mind you might need to reset the TI if
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
 
-All CALL's use a simple 2-way 16 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
-This lets _TI EXTENDED BASIC_ join the party as it doesn't support DSR CALL's from a running program, unlike _TI BASIC_.
+All CALLs use a simple 2-way 16 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or BASIC's CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
+This lets _TI EXTENDED BASIC_ join the running program party as it only supports DSR CALL's from the "command prompt"
 
 ### *Updating the DSR*
 
