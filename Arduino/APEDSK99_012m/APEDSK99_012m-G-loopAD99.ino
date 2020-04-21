@@ -59,6 +59,7 @@
             } else {
               Wbyte(CALLBF + 2, 0xFF);                                                      //no; return error flag
             }
+            noExec();
           }
           break;  
             
