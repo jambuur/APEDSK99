@@ -26,8 +26,6 @@ void APEDSK99rst (void) {
 }
 
 void rtcEnd( void ) {
-  //TWCR = _BV(TWEN) | _BV( TWSTO );                 
-  //TWCR = _BV( TWSTO );  
   TWCR = bit(TWEN) | bit(TWSTO);                      //no interrupts, Set Stop(release bus)
   TWCR = bit(TWSTO);                                  //no interrupts, Set Stop(release bus), disable TWI interface
 }

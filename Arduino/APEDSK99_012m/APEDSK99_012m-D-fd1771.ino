@@ -41,6 +41,7 @@ boolean aDSK[4]   = {false, false, false, false};                               
 char nDSK[4][20]  = {"x", "/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};   //DOAD file names; startup defaults
 byte pDSK[4]      = {0x00, 0x20, 0x20, 0x20};                                                     //DOAD write protect status
 byte cDSK         = 0;                                                                            //current selected DSK
+File SDdir;                                                                                       //file pointer for SD list directory
 
 //various storage and flags for command interpretation and handling
 volatile boolean FD1771   = false;                    //interrupt routine flag: new or continued FD1771 command

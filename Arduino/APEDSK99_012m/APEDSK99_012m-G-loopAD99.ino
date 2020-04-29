@@ -281,6 +281,34 @@
           }
           break;
 
+          case 10:                                                                          //SDIR(): Show DOAD's in /DISKS/ on SD
+          {
+            if ( ANcmd ) {                                                                  //yes; first run of SDIR()?
+              SDdir = SD.open("/DISKS/");                                                   //yes; open directory
+            }
+
+            File nDOAD = SDdir.openNextFile();                                              //get next file
+            if ( nDOAD) {                                                                   //valid?
+              char fName[13];                                                               //yes 
+              strncpy(fName, nDOAD.name(), 12);                                             //copy filename ...
+              for ( byte ii = 2; ii < 14; ii++) {                                           //... and write to buffer
+                Wbyte(CALLBF + ii, fName[ii-2] + TIBias);
+              } 
+              Wbyte(CALLBF + 16, 'S' + TIBias);                                             //"SIDED"
+              if ( nDOAD.size() < 180000 ) {                                                //single (90KB)?
+                Wbyte(CALLBF + 15, '1' + TIBias);                                           //yep -> "1S"
+              } else {      
+                Wbyte(CALLBF + 15, '2' + TIBias);                                           //no -> "2S"
+              }
+              nDOAD.close();                                                                //prep for next file
+            } else {                                                                        //no
+              SDdir.close();
+              Wbyte(CALLBF + 2, 0xF0);                                                      //signal done all files
+              noExec(); 
+            }
+          }
+          break;    
+
           default:                                                                          //catch-all safety
           {
             noExec();
