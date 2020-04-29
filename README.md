@@ -75,6 +75,8 @@ The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
 their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. 
 A ">" indicates that the same LDSK() command will show the next lot of files.
 
+- CALL SDIR(): list the DOAD's in the /DISKS/ directory on the SD card. Output is similar to the SDSK() command, showing single sided (1S) or double sided (2S)
+
 2 further CALL's manage the optional Real Time Clock (RTC). Datalogger SD shields include a RTC but there are plenty of vanilla SD shields without it. I highly recommend one, very handy to have it for the TI:
 
 - [CALL SRTC("*DDMMYYYYHHmm*")](img/GRTC_SRTC.jpg): sets the RTC
