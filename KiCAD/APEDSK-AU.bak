@@ -1063,6 +1063,8 @@ Wire Wire Line
 	5250 7450 5250 6950
 Wire Wire Line
 	5250 6950 5800 6950
+Text Label 5800 6750 2    50   ~ 0
+AD_A0
 Wire Wire Line
 	9000 3250 9150 3250
 Connection ~ 9150 3250
@@ -1126,6 +1128,4 @@ F 3 "" H 7550 3550 50  0000 C CNN
 	1    7550 3550
 	1    0    0    1   
 $EndComp
-Text Label 5800 6750 2    50   ~ 0
-A15
 $EndSCHEMATC
