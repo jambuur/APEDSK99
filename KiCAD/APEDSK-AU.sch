@@ -1099,8 +1099,6 @@ Wire Wire Line
 Wire Wire Line
 	7050 3050 6100 3050
 Wire Wire Line
-	6100 3050 6100 5250
-Wire Wire Line
 	6100 5250 6800 5250
 Wire Wire Line
 	6800 5250 6800 6250
@@ -1128,4 +1126,19 @@ F 3 "" H 7550 3550 50  0000 C CNN
 $EndComp
 Text Label 5800 6750 2    50   ~ 0
 A15
+$Comp
+L Device:R_Small_US R5
+U 1 1 5F4050AD
+P 6100 4150
+F 0 "R5" H 6168 4196 50  0000 L CNN
+F 1 "1K" H 6168 4105 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Vertical" H 6100 4150 50  0001 C CNN
+F 3 "~" H 6100 4150 50  0001 C CNN
+	1    6100 4150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6100 3050 6100 4050
+Wire Wire Line
+	6100 4250 6100 5250
 $EndSCHEMATC
