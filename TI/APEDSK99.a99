@@ -3480,7 +3480,7 @@ H9908	MOVB	R6,@ACOMND		MDSK command to Arduino
 	JMP	ACLBAS			all is well, return without error
 *			
 *----------------------------------------------------------------------------
-* Generic prep and return to TI BASIC for PDSK/UDSK/CDSK/SDSK/FDSK
+* Generic prep and return to TI BASIC for PDSK/UDSK/MDSK/SDSK/LDSK
 *----------------------------------------------------------------------------
 ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
@@ -3513,14 +3513,14 @@ H9901	JEQ	ACLERR			DSK0 not valid, return with error
 	SWPB	R0			drive # back in MSB
 *
 	MOV	R0,@CALLBF		save DSKx
-	MOV	@CLLTBL(R4),R4
-	B	*R4
+	MOV	@CLLTBL(R4),R6		get jump address from table
+	B	*R6			execute next subprogram part
 *
 CLLTBL	DATA	PDSK2			CALL PDSK()
 	DATA	UDSK2			CALL UDSK()
-	DATA	MDSK2			CALL CDSK()
+	DATA	MDSK2			CALL MDSK()
 	DATA	SDSK2			CALL SDSK()
-	DATA	LDSK2			CALL FDSK()
+	DATA	LDSK2			CALL LDSK()
 *
 ACLBAS	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
@@ -3594,7 +3594,7 @@ NXTPRP	LI	R2,735
 	JMP 	ACLBAS
 *
 *-----------------------------------------------------------------
-* Subprogram APERST: reset APEDSK99
+* Subprogram ARST: reset APEDSK99
 * ----------------------------------------------------------------
 *
 AG2	AI	R4,-3
