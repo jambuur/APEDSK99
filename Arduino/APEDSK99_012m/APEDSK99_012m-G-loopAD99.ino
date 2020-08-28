@@ -284,6 +284,7 @@
           case 10:                                                                          //SDIR(): Show DOAD's in /DISKS/ on SD
           {
             if ( ANcmd ) {                                                                  //yes; first run of SDIR()?
+              SDdir.close();                                                                //in case another command was issued when previous SDIR() was still active (multiple screens)
               SDdir = SD.open("/DISKS/");                                                   //yes; open directory
             }
 
