@@ -111,8 +111,9 @@
           case 5:                                                                           //LDSK(): List files on DOAD
           {            
             if ( Rbyte(CALLBF) != cDSK ) {                                                  //different DSKx while ">" for previous DSKx?
-              cDSK = Rbyte(CALLBF);                                                         //yes; read new DSKx
-              ANcmd = true;                                                                 //close possible open DOAD 
+              DSK[cDSK].close();                                                            //close possible open DOAD
+              cDSK = Rbyte(CALLBF);                                                         //yes; read new DSKx ...
+              ANcmd = true;                                                                 //... and do initial prep
             }
       
             if ( aDSK[cDSK] ) { 
