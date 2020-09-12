@@ -1,4 +1,4 @@
-#13/09/2020 IMPORTANT: I am nearly finished with a new version, based on an Ethernet/SD shield. It will have improved BASIC CALL() support and a substantial performance increase. But its most important feature will be BASIC support for loading/saving DOAD files from an FTP server. It will allow you to share updates to any DOAD with your favourite emulator within seconds. Stay tuned!
+# 13/09/2020 UPDATE: I am nearly finished with a new version, based on an Ethernet/SD shield. It will have improved BASIC CALL() support and a substantial performance increase. But its most important feature will be BASIC support for loading/saving DOAD files from an FTP server. It will allow you to share updates to any DOAD with your favourite emulator within seconds. Stay tuned!
 
 # APEDSK99
 ### *Arduino DSKx emulator shield for the TI99/4a*
