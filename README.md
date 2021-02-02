@@ -1,7 +1,9 @@
+# 02/02/2021 - WORK IN PROGRESS, DON'T USE!
+
 # APEDSK99
 ### *Arduino DSKx emulator / 32K / FTP shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Together with a combined Ethernet / SD shield it can load and save Disk-On-A-Disk (DOAD) single and doble sided floppy images on a SD card or FTP server. It includes 32K RAM expansion and provides TI-BASIC date and time via NTP. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
+APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Together with a Ethernet / SD shield it can load and save Disk-On-A-Disk (DOAD) single and double sided floppy images on a SD card or FTP server. It includes 32K RAM expansion and provides TI-BASIC with date and time via NTP. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/APEDSK99trio.jpg)
 
@@ -29,15 +31,15 @@ When the TI issues a disk controller command by writing to the FD1771 registers,
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
-Accessing the 32K RAM expansion is through memory decoding alone, it doesn't use interrupts.
+Accessing the 32K RAM expansion is through memory decoding alone and doesn't use interrupts.
 
-### *Construction*
+### *APEDSK99 Construction*
 
 Putting the APEDSK99 shield together is straightforward. The 74LS541's and the slimline RAM are probably not stock items at your local electronics store but can be easily obtained online.
 
 The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)). 
 
-The only thing that needs a little bit of attention is 1) mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/140888520037?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649):
+The two things that need a little bit of attention is 1) mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/143868496672?hash=item217f3b0b20:g:2cQAAOxyuPtQ~70q):
 - The bottom row of pins need to be [bent 90 degrees downwards and the top row slightly bent upwards](img/APEDSK99conn.jpg)
 - [Rough up](img/APEDSK99spaper.jpg) the bottom side of the connector housing and the PCB area it will sit on (between PCB edge and white line)
 - Clean the 2 surfaces with isopropyl and [apply dots of superglue](img/APEDSK99sglue.jpg) across the length of 1 area
@@ -51,15 +53,18 @@ After clamping it for a while the bottom row pins can now be soldered.
 
 The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
-As the 74LS series is getting harder to get, 74HCT replacements for the 74LS541's may be a better bet. Either works fine but you might have to tweak a delay-dependent parameter (NOP) in the Arduino APEDSK99_012m-B-hwfunc sketch. Default is set to 6uS for both the 74LS and 74HCT series. NB: I haven't tried HCT versions for the 74LS245, 74LS138 and 75HC595's so no guarantees there (should work though).
-
 Another thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB (type B) and the power adapter connectors. Make sure you get the long version.
+
+### *Possible Ethernet / SD shield modifcations*
+Depending on the version of the Ethernet / SD shield some changes may be necessary. SD card access uses D2 for Slave Select (SS) but for some reason this doesn't work reliably.
+Rather than changing the standard libraries I have bent D2 inwards and soldered a short piece of wire to it. This piece of wire emds in a pin that will fit into Arduino D10(
+The original SD card shield (without Ethernet) used pin 10 for Slave Select (SS), but on the com 
 
 ### *DOAD's*
 
 The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
 
-DOAD's need to be stored in the /DISKS/ folder on the SD card.
+DOAD's need to be stored in the /DISKS/ folder on the SD card or on the FTP server.
 
 Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. Single-sided formatting takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. Reverse is also true but the DOAD will still take DD / 180KB of space on the SD (not that it matters with plenty of GB's to spare).
 
@@ -124,26 +129,24 @@ So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 t
 The LED can flash in the following intricate error patterns:
 
 1. *flash*            : SPI / SD Card fault/not ready
-2. *flash-flash*      : can't read DSR binary image (/APEDSK99.DSR)
+2. *flash-flash*      : can't read DSR binary image (/xxxxxxxx.DSR)
 3. *flash-flash-flash*: no valid DSR header (>AA) at DSR RAM >4000
 
 ### *Some predictive Q&A*
 
 Writing software is a hobby, not my profession. No doubt some gurus would achieve the same functionality with half the code. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
 
-The Arduino SD library is not the fastest option, there are alternatives available that would speed up DSKx access a bit. But I have decided to stay with the standard option; it is fast enough not to be irritating but still keeps some of that floppy nostalgia. I don't know about you but emulators with instant loading times always strike me as so ... not real ;-)
-
 Anyway feel free to improve and share!
 
 ### *Bugs*
 
-If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky direct disk access and weird copy protection schemes will likely fail. 
+If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky direct disk access and weird copy protection schemes will likely fail. 
 
 ### *Future*
 
-After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields ... including very useful ones such as Ethernet / WiFi. It would be rather easy to implement a full TCP/IP stack with the generic APEDSK99 DSR routines and some Arduino sketches. Mmmm I guess this would be a nice follow-up project ...
+After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields.
 
-Initially I considered using a bigger RAM size for larger and/or concurrent DSR's. But after optimising  Arduino RAM R/W access I had DSR loading times reduced to ~450ms so switching DSR's based on CALL's would be entirely feasible. I will go with that approach for now. 
+Also, the Arduino has access to the 32K RAM expansion; this provides options for all sorts of fast data sharing between networked devices and the TI.
 
 ### *Acknowledgements*
 
