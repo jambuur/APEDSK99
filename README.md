@@ -3,13 +3,13 @@
 # APEDSK99
 ### *Arduino DSKx emulator / 32K / FTP shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Together with a Ethernet / SD shield it can load and save Disk-On-A-Disk (DOAD) single and double sided floppy images on a SD card or FTP server. It includes 32K RAM expansion and provides TI-BASIC with date and time via NTP. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
+APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Conbined with a Ethernet / SD shield it can load and save Disk-On-A-Disk (DOAD) single and double sided floppy images on a SD card or FTP server. It includes 32K RAM expansion and provides TI-BASIC with date and time via NTP. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/APEDSK99trio.jpg)
 
 Like the TI, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day and it can be put together by anybody with basic electronics equipment and skills.
 
-The TI <-> shield interface is the familiar design, with 74LS541 buffers for address lines and a bi-directional 74LS245 buffer for the databus. An 64Kx8 RAM stores the DSR code and provides the 32K RAM expansion. CRU is emulated through 2 memory mapped addresses, simplifying shield design. 
+The TI <-> shield interface is the familiar design, with 74LS541 buffers for address lines and a bi-directional 74LS245 buffer for the databus. An 64Kx8 RAM stores the DSR code and provides the 32K RAM expansion. CRU is emulated through memory mapped addresses, simplifying shield design. 
 A user-selectable binary DSR file is loaded into RAM by the Arduino at powerup / reset. 
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. As GPIO pins are in rather short supply, Arduino RAM addressing is serial-to-parallel through 74HC595 shift registers. 
@@ -17,7 +17,7 @@ The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the T
 A status LED indicates APEDSK99 access as well as showing possible error codes.
 
 The DSR is still very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
-DSR code optimisation has made enough RAM available for handy _TI BASIC_ support and possible future enhancements. 
+DSR code optimisation made enough RAM available for handy _TI BASIC_ support. 
 
 I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' cleverness lives on.
 
@@ -31,7 +31,7 @@ When the TI issues a disk controller command by writing to the FD1771 registers,
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
-Accessing the 32K RAM expansion is through memory decoding alone and doesn't use interrupts.
+Accessing the 32K RAM expansion is through memory decoding only and doesn't use interrupts.
 
 ### *APEDSK99 Construction*
 
@@ -49,15 +49,16 @@ After clamping it for a while the bottom row pins can now be soldered.
 
 - The top row pins are soldered to the PCB via a [suitable length of standard header](img/APEDSK99connsold.jpg).
 
-... and 2) installing the memory IC. The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slightly wider. I didn't want to go through a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). With your tongue at the right angle as EEVBLOG-Dave would say the IC will fit the smaller hole pattern and leave plenty pin material sticking through for soldering.
+... and 2) installing the memory IC. The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be ever sol slightly wider. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). With your tongue at the right angle as EEVBLOG-Dave would say the IC will fit the smaller hole pattern and leave plenty pin material sticking through for soldering.
 
 The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
 Another thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB (type B) and the power adapter connectors. Make sure you get the long version.
 
 ### *Possible Ethernet / SD shield modifcations*
-Depending on the version of the Ethernet / SD shield some changes may be necessary. SD card access uses D2 for Slave Select (SS) but for some reason this doesn't work reliably.
-Rather than changing the standard libraries I have bent D2 inwards and soldered a short piece of wire to it. This piece of wire emds in a pin that will fit into Arduino D10(
+Depending on the version of the Ethernet / SD shield some changes may be necessary. My version uses D2 for SD card Slave Select (SS) and D10 for Ethernet SS. For some reason SD card access doesn't work reliably. Rather than changing the standard libraries I have:
+- bent D10 inwards and soldered it to D2 -> Ethernet now used D2 for SS which works fine
+bent D10 inwards and soldered a short piece of wire to it. This piece of wire emds in a pin that will fit into Arduino D10(
 The original SD card shield (without Ethernet) used pin 10 for Slave Select (SS), but on the com 
 
 ### *DOAD's*
