@@ -17,7 +17,7 @@ The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the T
 A status LED indicates APEDSK99 access as well as showing possible error codes.
 
 The DSR is still very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
-DSR code optimisation made enough RAM available for handy _TI BASIC_ support. 
+DSR code optimisation made enough RAM available for extensive _TI BASIC_ support. 
 
 I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' cleverness lives on.
 
