@@ -1,0 +1,62 @@
+%SIGNAL
+PIN   5 =  AD_A0 
+PIN   2 =  AD_A13 
+PIN   3 =  AD_A14 
+PIN   4 =  AD_A15 
+PIN  12 =  AD_CE 
+PIN  14 =  AD_WE 
+PIN  15 =  CE_245 
+PIN   7 =  MEMEN 
+PIN   8 =  TI_BUF 
+PIN  13 =  TI_INT 
+PIN   6 =  WE 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+!AD_CE =>
+    AD_A13 & !AD_A14 & !MEMEN
+  # !AD_A13 & AD_A14 & !MEMEN
+  # AD_A13 & AD_A14 & AD_A15 & !MEMEN
+
+AD_CE.oe  =>
+    !TI_BUF
+
+AD_WE =>
+    WE
+
+AD_WE.oe  =>
+    !TI_BUF
+
+!CE_245 =>
+    AD_A13 & !AD_A14 & !MEMEN
+  # !AD_A13 & AD_A14 & !MEMEN
+  # AD_A13 & AD_A14 & AD_A15 & !MEMEN
+
+CE_245.oe  =>
+    !TI_BUF
+
+DSR =>
+    !AD_A13 & AD_A14 & !AD_A15
+
+HIMEM1 =>
+    AD_A13 & !AD_A14 & AD_A15
+
+HIMEM2 =>
+    !AD_A13 & AD_A14 & AD_A15
+
+HIMEM3 =>
+    AD_A13 & AD_A14 & AD_A15
+
+LOWMEM =>
+    AD_A13 & !AD_A14 & !AD_A15
+
+!TI_INT =>
+    !AD_A13 & AD_A14 & !AD_A15 & !MEMEN
+
+TI_INT.oe  =>
+    !TI_BUF
+
+%END

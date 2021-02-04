@@ -5,10 +5,10 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
-Title ""
-Date "lun. 30 mars 2015"
-Rev ""
-Comp ""
+Title "APEDSK99"
+Date "2020-11-21"
+Rev "2"
+Comp "BG"
 Comment1 ""
 Comment2 ""
 Comment3 ""
@@ -49,8 +49,6 @@ Text Label 1350 3300 0    50   ~ 0
 D6
 Text Label 1350 3400 0    50   ~ 0
 D7
-Text Label 1350 3700 0    50   ~ 0
-~MBE
 Text Label 1350 3800 0    50   ~ 0
 ~WE
 Text Label 1350 4500 0    50   ~ 0
@@ -76,7 +74,7 @@ F 3 "~" H 1050 3900 50  0001 C CNN
 	1    1050 3900
 	1    0    0    1   
 $EndComp
-Text Label 4600 2150 0    50   ~ 0
+Text Label 4400 2050 0    50   ~ 0
 DBIN
 $Comp
 L Device:C_Small C2
@@ -125,23 +123,23 @@ $EndComp
 $Comp
 L power:+5V #PWR0102
 U 1 1 5D2D3867
-P 4100 900
-F 0 "#PWR0102" H 4100 750 50  0001 C CNN
-F 1 "+5V" H 4115 1073 50  0000 C CNN
-F 2 "" H 4100 900 50  0001 C CNN
-F 3 "" H 4100 900 50  0001 C CNN
-	1    4100 900 
+P 3900 800
+F 0 "#PWR0102" H 3900 650 50  0001 C CNN
+F 1 "+5V" H 3915 973 50  0000 C CNN
+F 2 "" H 3900 800 50  0001 C CNN
+F 3 "" H 3900 800 50  0001 C CNN
+	1    3900 800 
 	-1   0    0    -1  
 $EndComp
 $Comp
 L Device:C_Small C7
 U 1 1 5D2D386D
-P 4100 3150
-F 0 "C7" V 3871 3150 50  0000 C CNN
-F 1 "100N" V 3962 3150 50  0000 C CNN
-F 2 "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 4100 3150 50  0001 C CNN
-F 3 "~" H 4100 3150 50  0001 C CNN
-	1    4100 3150
+P 4400 2950
+F 0 "C7" V 4171 2950 50  0000 C CNN
+F 1 "100N" V 4262 2950 50  0000 C CNN
+F 2 "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 4400 2950 50  0001 C CNN
+F 3 "~" H 4400 2950 50  0001 C CNN
+	1    4400 2950
 	0    1    1    0   
 $EndComp
 $Comp
@@ -169,12 +167,12 @@ $EndComp
 $Comp
 L Device:C_Small C4
 U 1 1 5D2D387F
-P 6050 5950
-F 0 "C4" V 5821 5950 50  0000 C CNN
-F 1 "100N" V 5912 5950 50  0000 C CNN
-F 2 "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 6050 5950 50  0001 C CNN
-F 3 "~" H 6050 5950 50  0001 C CNN
-	1    6050 5950
+P 6100 5350
+F 0 "C4" V 5871 5350 50  0000 C CNN
+F 1 "100N" V 5962 5350 50  0000 C CNN
+F 2 "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 6100 5350 50  0001 C CNN
+F 3 "~" H 6100 5350 50  0001 C CNN
+	1    6100 5350
 	0    1    1    0   
 $EndComp
 $Comp
@@ -202,24 +200,13 @@ $EndComp
 $Comp
 L power:GND #PWR0105
 U 1 1 5D2D3891
-P 5800 5950
-F 0 "#PWR0105" H 5800 5700 50  0001 C CNN
-F 1 "GND" H 5805 5777 50  0000 C CNN
-F 2 "" H 5800 5950 50  0001 C CNN
-F 3 "" H 5800 5950 50  0001 C CNN
-	1    5800 5950
+P 5850 5350
+F 0 "#PWR0105" H 5850 5100 50  0001 C CNN
+F 1 "GND" H 5855 5177 50  0000 C CNN
+F 2 "" H 5850 5350 50  0001 C CNN
+F 3 "" H 5850 5350 50  0001 C CNN
+	1    5850 5350
 	1    0    0    1   
-$EndComp
-$Comp
-L power:GND #PWR0106
-U 1 1 5D2D3897
-P 4350 4800
-F 0 "#PWR0106" H 4350 4550 50  0001 C CNN
-F 1 "GND" H 4355 4627 50  0000 C CNN
-F 2 "" H 4350 4800 50  0001 C CNN
-F 3 "" H 4350 4800 50  0001 C CNN
-	1    4350 4800
-	1    0    0    -1  
 $EndComp
 $Comp
 L power:GND #PWR0107
@@ -248,87 +235,48 @@ Text Label 1950 4200 2    50   ~ 0
 A9
 Text Label 1950 4300 2    50   ~ 0
 A8
-Text Label 2000 6000 2    50   ~ 0
-A7
-Text Label 2000 6100 2    50   ~ 0
-A6
-Text Label 2000 6200 2    50   ~ 0
-A5
-Text Label 2000 6300 2    50   ~ 0
-A4
-Text Label 2000 6400 2    50   ~ 0
-A3
-Text Label 3600 1250 2    50   ~ 0
+Text Label 3400 1150 2    50   ~ 0
 D7
-Text Label 3600 1350 2    50   ~ 0
+Text Label 3400 1250 2    50   ~ 0
 D6
-Text Label 3600 1450 2    50   ~ 0
+Text Label 3400 1350 2    50   ~ 0
 D5
-Text Label 3600 1550 2    50   ~ 0
+Text Label 3400 1450 2    50   ~ 0
 D4
-Text Label 3600 1650 2    50   ~ 0
+Text Label 3400 1550 2    50   ~ 0
 D3
-Text Label 3600 1750 2    50   ~ 0
+Text Label 3400 1650 2    50   ~ 0
 D2
-Text Label 3600 1850 2    50   ~ 0
+Text Label 3400 1750 2    50   ~ 0
 D1
-Text Label 3600 1950 2    50   ~ 0
+Text Label 3400 1850 2    50   ~ 0
 D0
-$Comp
-L power:GND #PWR0108
-U 1 1 5D2D38B8
-P 5650 6350
-F 0 "#PWR0108" H 5650 6100 50  0001 C CNN
-F 1 "GND" H 5655 6177 50  0000 C CNN
-F 2 "" H 5650 6350 50  0001 C CNN
-F 3 "" H 5650 6350 50  0001 C CNN
-	1    5650 6350
-	1    0    0    -1  
-$EndComp
-Text Label 4600 1250 0    50   ~ 0
+Text Label 4400 1150 0    50   ~ 0
 AD_D0
-Text Label 4600 1350 0    50   ~ 0
+Text Label 4400 1250 0    50   ~ 0
 AD_D1
-Text Label 4600 1450 0    50   ~ 0
+Text Label 4400 1350 0    50   ~ 0
 AD_D2
-Text Label 4600 1550 0    50   ~ 0
+Text Label 4400 1450 0    50   ~ 0
 AD_D3
-Text Label 4600 1650 0    50   ~ 0
+Text Label 4400 1550 0    50   ~ 0
 AD_D4
-Text Label 4600 1750 0    50   ~ 0
+Text Label 4400 1650 0    50   ~ 0
 AD_D5
-Text Label 4600 1850 0    50   ~ 0
+Text Label 4400 1750 0    50   ~ 0
 AD_D6
-Text Label 4600 1950 0    50   ~ 0
+Text Label 4400 1850 0    50   ~ 0
 AD_D7
-Text Label 3000 6000 0    50   ~ 0
-AD_A8
-Text Label 3000 6100 0    50   ~ 0
-AD_A9
-Text Label 3000 6300 0    50   ~ 0
-AD_A11
-Text Label 3000 6400 0    50   ~ 0
-AD_A12
-Text Label 3000 6200 0    50   ~ 0
-AD_A10
-Text Label 1800 6500 2    50   ~ 0
-~MBE
-Text Label 2000 6700 2    50   ~ 0
-~WE
-Text Label 3000 6600 0    50   ~ 0
+Text Label 5150 4350 0    50   ~ 0
 ~AD_CE
-Text Label 3000 6700 0    50   ~ 0
-~AD_WE
-Text Label 4850 4300 0    50   ~ 0
-~AD_CE
-Text Label 4850 4400 0    50   ~ 0
+Text Label 5150 4250 0    50   ~ 0
 ~AD_WE
 Wire Wire Line
 	1950 4500 1950 4600
 Wire Wire Line
 	2000 6900 2000 7000
 Wire Wire Line
-	5800 5950 5950 5950
+	5850 5350 6000 5350
 Wire Wire Line
 	850  3700 850  3800
 Wire Wire Line
@@ -338,12 +286,7 @@ Wire Wire Line
 Connection ~ 850  3900
 Connection ~ 850  3800
 Wire Wire Line
-	5800 6250 5800 6350
-Connection ~ 5800 6350
-Wire Wire Line
-	5800 6350 5800 6450
-Wire Wire Line
-	4850 4500 5100 4500
+	5150 4450 5400 4450
 Text Label 2950 4300 0    50   ~ 0
 AD_A7
 Text Label 2950 4200 0    50   ~ 0
@@ -358,36 +301,32 @@ Text Label 2950 3800 0    50   ~ 0
 AD_A2
 Text Label 2950 3700 0    50   ~ 0
 AD_A1
-Text Label 3850 3400 2    50   ~ 0
+Text Label 4150 3400 2    50   ~ 0
 AD_A0
-Text Label 3850 3500 2    50   ~ 0
+Text Label 4150 3500 2    50   ~ 0
 AD_A1
-Text Label 3850 3600 2    50   ~ 0
+Text Label 4150 3600 2    50   ~ 0
 AD_A2
-Text Label 3850 3700 2    50   ~ 0
+Text Label 4150 3700 2    50   ~ 0
 AD_A3
-Text Label 3850 3800 2    50   ~ 0
+Text Label 4150 3800 2    50   ~ 0
 AD_A4
-Text Label 3850 3900 2    50   ~ 0
+Text Label 4150 3900 2    50   ~ 0
 AD_A5
-Text Label 3850 4000 2    50   ~ 0
+Text Label 4150 4000 2    50   ~ 0
 AD_A6
-Text Label 3850 4100 2    50   ~ 0
+Text Label 4150 4100 2    50   ~ 0
 AD_A7
-Text Label 3850 4200 2    50   ~ 0
+Text Label 4150 4200 2    50   ~ 0
 AD_A8
-Text Label 3850 4300 2    50   ~ 0
+Text Label 4150 4300 2    50   ~ 0
 AD_A9
-Text Label 3850 4400 2    50   ~ 0
+Text Label 4150 4400 2    50   ~ 0
 AD_A10
-Text Label 3850 4500 2    50   ~ 0
+Text Label 4150 4500 2    50   ~ 0
 AD_A11
-Text Label 3850 4600 2    50   ~ 0
+Text Label 4150 4600 2    50   ~ 0
 AD_A12
-Text Label 5800 6850 2    50   ~ 0
-~AD_CE
-Text Label 5800 6950 2    50   ~ 0
-~AD_WE
 Text Label 7350 4150 2    50   ~ 0
 AD_D7
 Text Label 7350 4050 2    50   ~ 0
@@ -406,44 +345,44 @@ Text Label 7350 3150 2    50   ~ 0
 AD_D0
 Text Label 8150 3550 0    50   ~ 0
 ~TIBUF
-Text Label 4850 3400 0    50   ~ 0
+Text Label 5150 3200 0    50   ~ 0
 AD_D0
-Text Label 4850 3500 0    50   ~ 0
+Text Label 5150 3300 0    50   ~ 0
 AD_D1
-Text Label 4850 3600 0    50   ~ 0
+Text Label 5150 3400 0    50   ~ 0
 AD_D2
-Text Label 4850 3700 0    50   ~ 0
+Text Label 5150 3500 0    50   ~ 0
 AD_D3
-Text Label 4850 3800 0    50   ~ 0
+Text Label 5150 3600 0    50   ~ 0
 AD_D4
-Text Label 4850 3900 0    50   ~ 0
+Text Label 5150 3700 0    50   ~ 0
 AD_D5
-Text Label 4850 4000 0    50   ~ 0
+Text Label 5150 3800 0    50   ~ 0
 AD_D6
-Text Label 4850 4100 0    50   ~ 0
+Text Label 5150 3900 0    50   ~ 0
 AD_D7
 Text Label 2950 3600 0    50   ~ 0
 AD_A0
 $Comp
 L 74xx:74LS245 U1
 U 1 1 5D2D391A
-P 4100 1750
-F 0 "U1" H 4100 1550 50  0000 C CNB
-F 1 "74LS245" H 4100 1450 50  0000 C CNB
-F 2 "Package_DIP:DIP-20_W7.62mm" H 4100 1750 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS245" H 4100 1750 50  0001 C CNN
-	1    4100 1750
+P 3900 1650
+F 0 "U1" H 3900 1450 50  0000 C CNB
+F 1 "74LS245" H 3900 1350 50  0000 C CNB
+F 2 "Package_DIP:DIP-20_W7.62mm" H 3900 1650 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn74LS245" H 3900 1650 50  0001 C CNN
+	1    3900 1650
 	-1   0    0    -1  
 $EndComp
 $Comp
 L Device:C_Small C1
 U 1 1 5D2D3920
-P 3900 950
-F 0 "C1" V 3671 950 50  0000 C CNN
-F 1 "100N" V 3762 950 50  0000 C CNN
-F 2 "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 3900 950 50  0001 C CNN
-F 3 "~" H 3900 950 50  0001 C CNN
-	1    3900 950 
+P 3700 850
+F 0 "C1" V 3471 850 50  0000 C CNN
+F 1 "100N" V 3562 850 50  0000 C CNN
+F 2 "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 3700 850 50  0001 C CNN
+F 3 "~" H 3700 850 50  0001 C CNN
+	1    3700 850 
 	0    -1   1    0   
 $EndComp
 Text Label 8150 3450 0    50   ~ 0
@@ -534,41 +473,9 @@ Wire Bus Line
 Wire Wire Line
 	3600 6350 4000 6350
 Wire Bus Line
-	4800 5300 3850 5300
-Wire Bus Line
-	4800 5300 4800 6450
-Wire Bus Line
-	3850 4200 3850 5300
-Wire Bus Line
-	4550 2000 4850 2000
-Wire Bus Line
-	4550 1250 4550 2000
-Wire Bus Line
-	4850 2000 4850 4100
-Wire Bus Line
-	2950 2350 2950 3250
-Wire Bus Line
-	3850 3250 2950 3250
-Wire Bus Line
-	3850 3250 3850 4100
-Connection ~ 2950 3250
-Wire Bus Line
-	2950 3250 2950 4300
-Wire Bus Line
-	3000 5300 3850 5300
-Wire Bus Line
-	3000 5300 3000 6400
-Connection ~ 3850 5300
-Wire Wire Line
-	2850 2500 3450 2500
-Wire Wire Line
-	3450 2500 3450 6050
-Wire Wire Line
-	3450 6050 4000 6050
+	4350 1150 4350 1900
 Text Label 7350 3350 2    50   ~ 0
 ~TI_INT
-Wire Wire Line
-	4850 4200 5300 4200
 Text Label 1950 4550 2    50   ~ 0
 ~TIBUF
 Text Label 2000 6950 2    50   ~ 0
@@ -664,17 +571,10 @@ F 3 "" H 9150 3250 50  0001 C CNN
 	1    9150 3250
 	-1   0    0    -1  
 $EndComp
-Text Label 6250 3450 2    50   ~ 0
-READY
 NoConn ~ 4800 6950
-NoConn ~ 4800 6750
-NoConn ~ 4800 6650
-NoConn ~ 4800 6550
 NoConn ~ 850  2900
 NoConn ~ 850  3000
-NoConn ~ 850  3400
 NoConn ~ 1350 2900
-NoConn ~ 1350 3500
 NoConn ~ 1350 3900
 NoConn ~ 1350 4000
 NoConn ~ 850  4400
@@ -683,16 +583,14 @@ NoConn ~ 850  5000
 NoConn ~ 1350 4900
 NoConn ~ 1350 5000
 Wire Wire Line
-	5650 6350 5800 6350
-Wire Wire Line
-	4000 950  4100 950 
-Connection ~ 4100 950 
+	3800 850  3900 850 
+Connection ~ 3900 850 
 Text Label 2050 2200 2    50   ~ 0
 ~AR_BUF
 Text Label 4000 6650 2    50   ~ 0
 ~AR_BUF
 Wire Wire Line
-	4100 900  4100 950 
+	3900 800  3900 850 
 Wire Wire Line
 	2450 1300 2450 1350
 Wire Wire Line
@@ -711,16 +609,16 @@ Wire Wire Line
 $Comp
 L power:+5V #PWR0116
 U 1 1 5D2D3A09
-P 6300 5950
-F 0 "#PWR0116" H 6300 5800 50  0001 C CNN
-F 1 "+5V" H 6315 6123 50  0000 C CNN
-F 2 "" H 6300 5950 50  0001 C CNN
-F 3 "" H 6300 5950 50  0001 C CNN
-	1    6300 5950
+P 6350 5350
+F 0 "#PWR0116" H 6350 5200 50  0001 C CNN
+F 1 "+5V" H 6365 5523 50  0000 C CNN
+F 2 "" H 6350 5350 50  0001 C CNN
+F 3 "" H 6350 5350 50  0001 C CNN
+	1    6350 5350
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	6150 5950 6300 5950
+	6200 5350 6350 5350
 $Comp
 L power:GND #PWR0117
 U 1 1 5D2D3A10
@@ -767,27 +665,15 @@ F 3 "http://www.ti.com/lit/ds/symlink/sn74hc595.pdf" H 4400 6450 50  0001 C CNN
 	1    4400 6450
 	1    0    0    -1  
 $EndComp
-Connection ~ 6300 5950
-$Comp
-L 74xx:74LS138 U4
-U 1 1 5D2D3A2A
-P 6300 6550
-F 0 "U4" H 6250 6600 50  0000 C CNB
-F 1 "74LS138" H 6250 6500 50  0000 C CNB
-F 2 "Package_DIP:DIP-16_W7.62mm" H 6300 6550 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS138" H 6300 6550 50  0001 C CNN
-	1    6300 6550
-	1    0    0    -1  
-$EndComp
 $Comp
 L power:GND #PWR0119
 U 1 1 5D2D3A30
-P 6300 7250
-F 0 "#PWR0119" H 6300 7000 50  0001 C CNN
-F 1 "GND" H 6305 7077 50  0000 C CNN
-F 2 "" H 6300 7250 50  0001 C CNN
-F 3 "" H 6300 7250 50  0001 C CNN
-	1    6300 7250
+P 6350 6850
+F 0 "#PWR0119" H 6350 6600 50  0001 C CNN
+F 1 "GND" H 6355 6677 50  0000 C CNN
+F 2 "" H 6350 6850 50  0001 C CNN
+F 3 "" H 6350 6850 50  0001 C CNN
+	1    6350 6850
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -804,31 +690,18 @@ $EndComp
 Wire Wire Line
 	1650 1900 2050 1900
 $Comp
-L Memory_RAM:6264ALP_DIP32_SSOP32 U7
-U 1 1 5D2D3A3D
-P 4350 4200
-F 0 "U7" H 4350 4750 50  0000 C CNB
-F 1 "HM65764" V 4350 4250 50  0000 C CNB
-F 2 "Package_DIP:DIP-28_W7.62mm" H 4350 4200 50  0001 C CNN
-F 3 "http://www.futurlec.com/Datasheet/Memory/628128.pdf" H 4350 4200 50  0001 C CNN
-	1    4350 4200
-	1    0    0    -1  
-$EndComp
-$Comp
 L power:GND #PWR0121
 U 1 1 5D2D3A43
-P 3650 950
-F 0 "#PWR0121" H 3650 700 50  0001 C CNN
-F 1 "GND" H 3655 777 50  0000 C CNN
-F 2 "" H 3650 950 50  0001 C CNN
-F 3 "" H 3650 950 50  0001 C CNN
-	1    3650 950 
+P 3450 850
+F 0 "#PWR0121" H 3450 600 50  0001 C CNN
+F 1 "GND" H 3455 677 50  0000 C CNN
+F 2 "" H 3450 850 50  0001 C CNN
+F 3 "" H 3450 850 50  0001 C CNN
+	1    3450 850 
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	3650 950  3800 950 
-Wire Wire Line
-	3850 3150 4000 3150
+	3450 850  3600 850 
 $Comp
 L power:GND #PWR0123
 U 1 1 5D2D3A51
@@ -861,19 +734,14 @@ Connection ~ 4400 5850
 $Comp
 L power:+5V #PWR0126
 U 1 1 5D2D3A67
-P 4350 3100
-F 0 "#PWR0126" H 4350 2950 50  0001 C CNN
-F 1 "+5V" H 4365 3273 50  0000 C CNN
-F 2 "" H 4350 3100 50  0001 C CNN
-F 3 "" H 4350 3100 50  0001 C CNN
-	1    4350 3100
+P 4650 2900
+F 0 "#PWR0126" H 4650 2750 50  0001 C CNN
+F 1 "+5V" H 4665 3073 50  0000 C CNN
+F 2 "" H 4650 2900 50  0001 C CNN
+F 3 "" H 4650 2900 50  0001 C CNN
+	1    4650 2900
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	4200 3150 4350 3150
-Wire Wire Line
-	4350 3200 4350 3150
-Connection ~ 4350 3150
 $Comp
 L 74xx:74LS541 U2
 U 1 1 5D2D3A70
@@ -911,27 +779,15 @@ F 3 "" H 2500 5700 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	2400 5700 2500 5700
-Connection ~ 2500 5700
-$Comp
-L power:GND #PWR0129
-U 1 1 5D2D3A85
-P 2500 7300
-F 0 "#PWR0129" H 2500 7050 50  0001 C CNN
-F 1 "GND" H 2505 7127 50  0000 C CNN
-F 2 "" H 2500 7300 50  0001 C CNN
-F 3 "" H 2500 7300 50  0001 C CNN
-	1    2500 7300
-	1    0    0    -1  
-$EndComp
 $Comp
 L power:GND #PWR0130
 U 1 1 5D2D3A8B
-P 4100 2550
-F 0 "#PWR0130" H 4100 2300 50  0001 C CNN
-F 1 "GND" H 4105 2377 50  0000 C CNN
-F 2 "" H 4100 2550 50  0001 C CNN
-F 3 "" H 4100 2550 50  0001 C CNN
-	1    4100 2550
+P 3900 2450
+F 0 "#PWR0130" H 3900 2200 50  0001 C CNN
+F 1 "GND" H 3905 2277 50  0000 C CNN
+F 2 "" H 3900 2450 50  0001 C CNN
+F 3 "" H 3900 2450 50  0001 C CNN
+	1    3900 2450
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -949,13 +805,6 @@ Connection ~ 2450 3300
 Wire Wire Line
 	8150 4050 8150 3950
 Connection ~ 8150 3950
-NoConn ~ 6800 6350
-NoConn ~ 6800 6450
-NoConn ~ 6800 6550
-NoConn ~ 6800 6650
-NoConn ~ 6800 6750
-NoConn ~ 6800 6850
-NoConn ~ 6800 6950
 NoConn ~ 7350 4250
 NoConn ~ 7350 4350
 NoConn ~ 7350 4450
@@ -968,19 +817,6 @@ NoConn ~ 8150 4250
 NoConn ~ 8150 4350
 NoConn ~ 8150 4450
 NoConn ~ 8150 3850
-$Comp
-L power:GND #PWR0122
-U 1 1 5D430C04
-P 3850 3150
-F 0 "#PWR0122" H 3850 2900 50  0001 C CNN
-F 1 "GND" H 3855 2977 50  0000 C CNN
-F 2 "" H 3850 3150 50  0001 C CNN
-F 3 "" H 3850 3150 50  0001 C CNN
-	1    3850 3150
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
-	4350 3100 4350 3150
 $Comp
 L power:GND #PWR0124
 U 1 1 5D43B0F4
@@ -995,27 +831,16 @@ $EndComp
 $Comp
 L power:GND #PWR0109
 U 1 1 5D43C698
-P 5100 4550
-F 0 "#PWR0109" H 5100 4300 50  0001 C CNN
-F 1 "GND" H 5105 4377 50  0000 C CNN
-F 2 "" H 5100 4550 50  0001 C CNN
-F 3 "" H 5100 4550 50  0001 C CNN
-	1    5100 4550
+P 5400 4500
+F 0 "#PWR0109" H 5400 4250 50  0001 C CNN
+F 1 "GND" H 5405 4327 50  0000 C CNN
+F 2 "" H 5400 4500 50  0001 C CNN
+F 3 "" H 5400 4500 50  0001 C CNN
+	1    5400 4500
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5100 4500 5100 4550
-$Comp
-L power:+5V #PWR0113
-U 1 1 5D2D3974
-P 5300 4200
-F 0 "#PWR0113" H 5300 4050 50  0001 C CNN
-F 1 "+5V" H 5300 4350 50  0000 C CNN
-F 2 "" H 5300 4200 50  0001 C CNN
-F 3 "" H 5300 4200 50  0001 C CNN
-	1    5300 4200
-	1    0    0    -1  
-$EndComp
+	5400 4450 5400 4500
 Text Label 850  4100 2    50   ~ 0
 A15
 Text Label 1350 4300 0    50   ~ 0
@@ -1040,64 +865,15 @@ Text Label 850  4700 2    50   ~ 0
 A4
 Text Label 1350 4600 0    50   ~ 0
 A3
-NoConn ~ 850  3500
-NoConn ~ 1350 3600
-NoConn ~ 1350 4100
-Wire Wire Line
-	3000 6600 3450 6600
-Wire Wire Line
-	3450 6600 3450 7400
-Wire Wire Line
-	3450 7400 5200 7400
-Wire Wire Line
-	5200 7400 5200 6850
-Wire Wire Line
-	5200 6850 5800 6850
-Wire Wire Line
-	3000 6700 3400 6700
-Wire Wire Line
-	3400 6700 3400 7450
-Wire Wire Line
-	3400 7450 5250 7450
-Wire Wire Line
-	5250 7450 5250 6950
-Wire Wire Line
-	5250 6950 5800 6950
 Wire Wire Line
 	9000 3250 9150 3250
 Connection ~ 9150 3250
 Wire Wire Line
 	9150 3250 9300 3250
 Wire Wire Line
-	2000 6500 2000 6600
-Wire Wire Line
-	2000 6500 1800 6500
-Connection ~ 2000 6500
-Text Label 3000 6500 0    50   ~ 0
-CE_245
-Text Label 4600 2250 0    50   ~ 0
-CE_245
-Wire Wire Line
-	6900 3450 7350 3450
-$Comp
-L Device:D_Schottky_Small D2
-U 1 1 5E37422E
-P 6800 3450
-F 0 "D2" H 6800 3655 50  0000 C CNN
-F 1 "1N4148" H 6800 3564 50  0000 C CNN
-F 2 "Diode_THT:D_A-405_P5.08mm_Vertical_AnodeUp" V 6800 3450 50  0001 C CNN
-F 3 "~" V 6800 3450 50  0001 C CNN
-	1    6800 3450
-	-1   0    0    -1  
-$EndComp
-Wire Wire Line
-	6600 3450 6700 3450
-Wire Wire Line
 	7350 3350 7050 3350
 Wire Wire Line
 	7050 3350 7050 3050
-Wire Wire Line
-	6800 5250 6800 6250
 $Comp
 L Connector_Generic:Conn_01x10 P3
 U 1 1 56D721E0
@@ -1120,8 +896,6 @@ F 3 "" H 7550 3550 50  0000 C CNN
 	1    7550 3550
 	1    0    0    1   
 $EndComp
-Text Label 5800 6750 2    50   ~ 0
-A15
 $Comp
 L Device:R_Small_US R5
 U 1 1 5F4050AD
@@ -1136,7 +910,243 @@ $EndComp
 Wire Wire Line
 	5850 3050 5850 4050
 Wire Wire Line
-	5850 4250 5850 5250
+	5850 3050 7050 3050
+Text Label 1350 3500 0    50   ~ 0
+~MEMEN
+Text Label 1350 3600 0    50   ~ 0
+A1
+Text Label 1350 4100 0    50   ~ 0
+A2
+Text Label 850  3500 2    50   ~ 0
+A0
+NoConn ~ 850  3400
+Text Label 4800 6550 0    50   ~ 0
+AD_A13
+Text Label 4800 6650 0    50   ~ 0
+AD_A14
+Text Label 4800 6750 0    50   ~ 0
+AD_A15
+Wire Wire Line
+	6350 5450 6350 5350
+Connection ~ 6350 5350
+$Comp
+L power:GND #PWR0108
+U 1 1 5F7F8BBE
+P 5400 5650
+F 0 "#PWR0108" H 5400 5400 50  0001 C CNN
+F 1 "GND" H 5405 5477 50  0000 C CNN
+F 2 "" H 5400 5650 50  0001 C CNN
+F 3 "" H 5400 5650 50  0001 C CNN
+	1    5400 5650
+	1    0    0    1   
+$EndComp
+Text Label 5850 5950 2    50   ~ 0
+AD_A15
+Text Label 5850 5850 2    50   ~ 0
+AD_A14
+Text Label 5850 5750 2    50   ~ 0
+AD_A13
+Text Label 5850 6150 2    50   ~ 0
+~WE
+Text Label 5850 6350 2    50   ~ 0
+~TIBUF
+Text Label 6850 6350 0    50   ~ 0
+~AD_CE
+Wire Wire Line
+	5850 4250 5850 5000
+Wire Bus Line
+	3000 5450 4150 5450
+Wire Bus Line
+	2950 2350 2950 3400
+Wire Wire Line
+	2850 2500 3300 2500
+Wire Wire Line
+	3300 2500 3300 6050
+Wire Wire Line
+	3300 6050 4000 6050
+Text Label 4150 4700 2    50   ~ 0
+AD_A13
+Text Label 4150 4800 2    50   ~ 0
+AD_A14
+Text Label 4150 4900 2    50   ~ 0
+AD_A15
+$Comp
+L power:+5V #PWR0113
+U 1 1 5D2D3974
+P 5500 4150
+F 0 "#PWR0113" H 5500 4000 50  0001 C CNN
+F 1 "+5V" H 5500 4300 50  0000 C CNN
+F 2 "" H 5500 4150 50  0001 C CNN
+F 3 "" H 5500 4150 50  0001 C CNN
+	1    5500 4150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5150 4150 5500 4150
+Text Label 5850 6250 2    50   ~ 0
+~MEMEN
+Wire Bus Line
+	4150 4100 4150 3400
+Wire Bus Line
+	4150 3400 2950 3400
+Connection ~ 2950 3400
+Wire Bus Line
+	2950 3400 2950 4300
+Connection ~ 4150 5450
+Wire Bus Line
+	4150 5450 4800 5450
+Wire Bus Line
+	5150 3900 5150 1900
+Wire Bus Line
+	4350 1900 5150 1900
+NoConn ~ 1350 3700
+Wire Wire Line
+	5400 5650 5400 6450
+Wire Wire Line
+	5850 6450 5400 6450
+Wire Wire Line
+	5850 6550 5400 6550
+Wire Wire Line
+	5400 6550 5400 6450
+Connection ~ 5400 6450
+Text Label 6850 6150 0    50   ~ 0
+~AD_WE
+Text Label 5850 6050 2    50   ~ 0
+AD_A0
+$Comp
+L Logic_Programmable:GAL16V8 U4
+U 1 1 5F7DF69A
+P 6350 6150
+F 0 "U4" H 6350 6350 50  0000 C CNB
+F 1 "GAL16V8" H 6350 6250 50  0000 C CNB
+F 2 "Package_DIP:DIP-20_W7.62mm" H 6350 6150 50  0001 C CNN
+F 3 "" H 6350 6150 50  0001 C CNN
+	1    6350 6150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2500 7300 2500 7400
+$Comp
+L power:GND #PWR0129
+U 1 1 5F7CA982
+P 2500 7400
+F 0 "#PWR0129" H 2500 7150 50  0001 C CNN
+F 1 "GND" H 2505 7227 50  0000 C CNN
+F 2 "" H 2500 7400 50  0001 C CNN
+F 3 "" H 2500 7400 50  0001 C CNN
+	1    2500 7400
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0106
+U 1 1 5F7DD6A2
+P 4650 5100
+F 0 "#PWR0106" H 4650 4850 50  0001 C CNN
+F 1 "GND" H 4655 4927 50  0000 C CNN
+F 2 "" H 4650 5100 50  0001 C CNN
+F 3 "" H 4650 5100 50  0001 C CNN
+	1    4650 5100
+	1    0    0    -1  
+$EndComp
+Wire Bus Line
+	3000 5450 3000 6700
+Wire Bus Line
+	4800 5450 4800 6750
+Wire Wire Line
+	6850 5950 6950 5950
+Wire Wire Line
+	6850 5850 6950 5850
+Wire Wire Line
+	6850 5750 6950 5750
+Wire Wire Line
+	6850 5650 6950 5650
+Wire Wire Line
+	5850 5650 5400 5650
+Connection ~ 5400 5650
+Wire Wire Line
+	4500 2950 4650 2950
+Wire Wire Line
+	4650 2950 4650 3000
+Wire Wire Line
+	4650 2950 4650 2900
+Connection ~ 4650 2950
+NoConn ~ 6950 5950
+NoConn ~ 6950 5850
+NoConn ~ 6950 5750
+NoConn ~ 6950 5650
+NoConn ~ 6600 4350
+Text Label 2000 6700 2    50   ~ 0
+A0
+Text Label 2000 6600 2    50   ~ 0
+A1
+Text Label 2000 6500 2    50   ~ 0
+A2
+Text Label 2000 6400 2    50   ~ 0
+A3
+Text Label 2000 6300 2    50   ~ 0
+A4
+Text Label 2000 6200 2    50   ~ 0
+A5
+Text Label 2000 6100 2    50   ~ 0
+A6
+Text Label 2000 6000 2    50   ~ 0
+A7
+Text Label 3000 6700 0    50   ~ 0
+AD_A15
+Text Label 3000 6600 0    50   ~ 0
+AD_A14
+Text Label 3000 6500 0    50   ~ 0
+AD_A13
+Text Label 3000 6200 0    50   ~ 0
+AD_A10
+Text Label 3000 6400 0    50   ~ 0
+AD_A12
+Text Label 3000 6300 0    50   ~ 0
+AD_A11
+Text Label 3000 6100 0    50   ~ 0
+AD_A9
+Text Label 3000 6000 0    50   ~ 0
+AD_A8
+Wire Bus Line
+	4150 4200 4150 5450
+$Comp
+L Memory_RAM:IS61C512-20M U7
+U 1 1 5F7E3BAD
+P 4650 4000
+F 0 "U7" H 4650 4050 50  0000 C CNB
+F 1 "IS61C512-20M" H 4700 3950 50  0000 C CNB
+F 2 "Package_DIP:DIP-32_W7.62mm" H 4650 4000 50  0001 C CNN
+F 3 "" H 4650 4000 50  0001 C CNN
+	1    4650 4000
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0122
+U 1 1 5D430C04
+P 4150 2950
+F 0 "#PWR0122" H 4150 2700 50  0001 C CNN
+F 1 "GND" H 4155 2777 50  0000 C CNN
+F 2 "" H 4150 2950 50  0001 C CNN
+F 3 "" H 4150 2950 50  0001 C CNN
+	1    4150 2950
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4150 2950 4300 2950
+Text Label 6850 6050 0    50   ~ 0
+CE_245
+Wire Wire Line
+	7200 5000 7200 6250
+Wire Wire Line
+	5850 5000 7200 5000
+Wire Wire Line
+	6850 6250 7200 6250
+Text Label 4400 2150 0    50   ~ 0
+CE_245
+Wire Wire Line
+	6600 3450 7350 3450
+Wire Wire Line
+	6250 3450 6400 3450
 $Comp
 L Device:R_Small_US R6
 U 1 1 5F54C1B7
@@ -1148,10 +1158,6 @@ F 3 "~" H 6500 3450 50  0001 C CNN
 	1    6500 3450
 	0    1    1    0   
 $EndComp
-Wire Wire Line
-	5850 3050 7050 3050
-Wire Wire Line
-	5850 5250 6800 5250
-Wire Wire Line
-	6250 3450 6400 3450
+Text Label 6250 3450 2    50   ~ 0
+READY
 $EndSCHEMATC

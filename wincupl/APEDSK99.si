@@ -1,0 +1,24 @@
+Name     APEDSK99;
+PartNo   12o;
+Date     3/10/2020;
+Revision 01;
+Designer Jochen Buur;
+Company  Burell Group;
+Assembly None;
+Location WLG NZ;
+Device   G16V8;
+
+
+ORDER: AD_A15, AD_A14, AD_A13, AD_A0, MEMEN, TI_BUF, WE, AD_CE, CE_245, AD_WE, TI_INT; 
+
+
+VECTORS:
+0000010ZZZZ
+0000001H***
+0010001****
+0101001****
+0110001****
+1000001**H*
+1010001**H*
+1100001****
+1111000****

@@ -1,0 +1,63 @@
+LISTING FOR LOGIC DESCRIPTION FILE: APEDSK99.pld                     Page 1
+
+CUPL(WM): Universal Compiler for Programmable Logic
+Version 5.0a Serial# 60008009
+Copyright (c) 1983, 1998 Logical Devices, Inc.
+Created Tue Dec 01 21:02:31 2020
+
+  1:Name     APEDSK99 ;
+  2:PartNo   12o ;
+  3:Date     3/10/2020 ;
+  4:Revision 01 ;
+  5:Designer Jochen Buur ;
+  6:Company  Burell Group ;
+  7:Assembly None ;
+  8:Location WLG NZ ;
+  9:Device   G16V8 ;
+ 10:
+ 11:/* input pins */
+ 12:PIN  2 = AD_A13 ;                               /* TMS9900  A0                                          */
+ 13:PIN  3 = AD_A14 ;                               /* TMS9900  A1                                          */
+ 14:PIN  4 = AD_A15 ;                               /* TMS9900  A2                                          */
+ 15:PIN  5 = AD_A0 ;                                /* TMS9900 A15                                          */
+ 16:PIN  6 = WE ;                                   /* TMS9900 WE*                                          */
+ 17:PIN  7 = MEMEN ;                                /* TMS9900 MEMEN*                                               */
+ 18:PIN  8 = TI_BUF ;                               /* Arduino TIBUF (enables 74HCT541's and GAL16V8)       */
+ 19:
+ 20:/* output pins */
+ 21:PIN 12 = AD_CE ;                                /* GAL generated chip select for IS61C512               */
+ 22:PIN 13 = TI_INT ;                               /* GAL generated Arduino interrupt for DSR write        */
+ 23:PIN 14 = AD_WE ;                                /* GAL copy of TMS9900 WE* (aka tri-state buffer)       */
+ 24:PIN 15  = CE_245 ;                              /* GAL generated chip select for 74LS245                        */
+ 25:
+ 26:/* variables */
+ 27:LOWMEM = !AD_A15 & !AD_A14 &  AD_A13 ;  /* 001: >2000 - >3FFF */
+ 28:DSR    = !AD_A15 &  AD_A14 & !AD_A13 ;  /* 010: >4000 - >5FFF */
+ 29:HIMEM1 =  AD_A15 & !AD_A14 &  AD_A13 ;  /* 101: >A000 - >BFFF */
+ 30:HIMEM2 =  AD_A15 &  AD_A14 & !AD_A13 ;  /* 110: >C000 - >DFFF */
+ 31:HIMEM3 =  AD_A15 &  AD_A14 &  AD_A13 ;  /* 111: >E000 - >FFFF */
+ 32:
+ 33:/* equations */
+ 34:!AD_CE, !CE_245 = !MEMEN & LOWMEM #     /* 8KB block lower 32K memory expansion,           74LS245 CE   */
+ 35:                  !MEMEN & DSR    #     /* 8KB DSR space,                                  74LS245 CE   */
+ 36:                  !MEMEN & HIMEM1 #     /* 8KB block 1 higher 32K memory expansion, 74LS245 CE  */ 
+ 37:                  !MEMEN & HIMEM2 #     /* 8KB block 2 higher 32K memory expansion, 74LS245 CE  */
+ 38:                  !MEMEN & HIMEM3 ;     /* 8KB block 3 higher 32K memory expansion, 74LS245 CE  */
+ 39:AD_CE.OE, CE_245.OE  = !TI_BUF ;                /* outputs enabled by TI_BUF (Arduino)  */
+ 40:
+ 41:AD_WE    = WE ;                         /* TMS9900 WE                                   */
+ 42:AD_WE.OE = !TI_BUF ;                            /* output enabled by TI_BUF (Arduino)   */
+ 43:
+ 44:!TI_INT   = !MEMEN & DSR ;                      /* DSR write interrupt generation               */ 
+ 45:TI_INT.OE = !TI_BUF ;                   /* output enabled by TI_BUF (Arduino)   */
+ 46:
+ 47:
+ 48:
+ 49:
+ 50:
+ 51:
+
+
+
+Jedec Fuse Checksum       (3935)
+Jedec Transmit Checksum   (d723)

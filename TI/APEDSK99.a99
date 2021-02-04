@@ -11,6 +11,7 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *====================================
+CALLST  EQU	>5FD4                   CALL() execution status: finished, still active, error
 CALLBF	EQU	>5FD6			2-way buffer for TI BASIC CALL's
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
@@ -24,10 +25,18 @@ WCOMND	EQU	>5FF8			write FD1771 Command register
 WTRACK	EQU	>5FFA			write FD1771 Track register
 WSECTR	EQU	>5FFC			write FD1771 Sector register
 WDATA	EQU	>5FFE			write FD1771 Data register
-
+*
+XML14	EQU	>164E			ROM address for XML >14
+XML16	EQU	>15D6			ROM address for XML >16
+XML5C	EQU	>105C			GROM address for XML >5C 	!CHECK GROM ADDRESS CONTENTS (different GROM 0 versions)
+GPLINT	EQU	>006A			jump to GROM interpreter for SCROLL / HONK
+XMLRTN	EQU	>2244 			jump to GROM interpreter for RTN (after executing XML >14 / >16 routine)
+SCROLL	EQU	>56CD			GROM address for scroll routine
+HONK	EQU	>03D6			GROM address for "bad tone" 	!CHECK GROM ADDRESS CONTENTS (different GROM 0 versions)
+*
 	AORG	>4000
-
-DSRDAT	BYTE	>AA			standard header mark
+*
+	BYTE	>AA			standard header mark
 	BYTE	>02			version 2
 	DATA	>0000			no programs
 	DATA	PWRUP			power-up chain ptr
@@ -36,7 +45,7 @@ DSRDAT	BYTE	>AA			standard header mark
 	DATA	SUB01			subprograms chain ptr
 	DATA	>0000			ISR chain ptr (none)
 	DATA	>0000			
-					
+*					
 SUB01	DATA	SUB02			link to next subprogram
 	DATA	ESUB01			address of that one
 	DATA	>0110			subprogram name: >10 (sector R/W)
@@ -48,10 +57,11 @@ SUB03	DATA	SUB04
 	DATA	>0112			subprogram >12 (file un/protect)
 SUB04	DATA	SUB05			
 	DATA	ESUB04			
-	DATA	>0113			subprogram >13 (file rename)
+NTPFAT	DATA	>0113			subprogram >13 (file rename); doubles as FAT update flag
+RTN5C	DATA	>0000			save GPL return address (needs to be @>4028 for XML >5C!)
 SUB05	DATA	SUB06			
 	DATA	ESUB05			
-	DATA	>0114			subprogram >14 (file direct input)
+	DATA	>0114			subprogram >14 (file direct input)		
 SUB06	DATA	SUB07			
 	DATA	ESUB06			
 	DATA	>0115			subprogram >15 (file direct output)
@@ -62,6 +72,7 @@ SUB08	DATA	SUB09
 	DATA	ESUB08			
 	BYTE	>05			
 	TEXT	'FILES'			same as >16, called from Basic
+*
 SUB09	DATA	SUB10
 	DATA	PDSK
 	BYTE	>04
@@ -77,35 +88,55 @@ SUB11	DATA	SUB12
 	BYTE	>04
 	TEXT	'MDSK'			Map DOAD to DSKx
 	EVEN
-SUB12	DATA	SUB13
-	DATA	SDSK
-	BYTE	>04
-	TEXT	'SDSK'			Show DOAD mapping for DSKx
-	EVEN
-SUB13	DATA 	SUB14
+SUB12	DATA 	SUB13
 	DATA	LDSK
 	BYTE	>04
 	TEXT	'LDSK'			List files on DSKx
 	EVEN
-SUB14	DATA	SUB15
-	DATA	ADSR
+SUB13	DATA	SUB14
+	DATA	RDSK
 	BYTE	>04
-	TEXT	'ADSR'			APEDSK99 load DSR
+	TEXT	'RDSK'			Remove DOAD from SD card
+	EVEN
+SUB14	DATA	SUB15
+	DATA	SDSK
+	BYTE	>04
+	TEXT	'SDSK'			Show DOAD mapping for DSKx
 	EVEN
 SUB15	DATA	SUB16
+	DATA	SDIR
+	BYTE	>04
+	TEXT	'SDIR'			List DOAD files on SD card
+	EVEN
+SUB16	DATA	SUB17
+	DATA	AHLP
+	BYTE	>04
+	TEXT	'AHLP'			APEDSK99 CALL help screen
+	EVEN
+SUB17	DATA	SUB18
+	DATA	TIME
+	BYTE	>04
+	TEXT	'TIME'			NTP date/time display / assign to NTP$
+	EVEN
+SUB18	DATA	SUB19
 	DATA	ARST
 	BYTE	>04
 	TEXT	'ARST'			APEDSK99 Reset
 	EVEN
-SUB16	DATA	SUB17
-	DATA	GRTC
+SUB19	DATA	SUB20
+	DATA	FGET
 	BYTE	>04
-	TEXT	'GRTC'	
+	TEXT	'FGET'			Load DOAD from FTP server
 	EVEN
-SUB17	DATA	>0000
-	DATA	SRTC
+SUB20	DATA	SUB21
+	DATA	FPUT
 	BYTE	>04
-	TEXT	'SRTC'	
+	TEXT	'FPUT'			Save DOAD to FTP server
+	EVEN
+SUB21	DATA	>0000
+	DATA	ADSR
+	BYTE	>04
+	TEXT	'ADSR'			APEDSK99 load DSR
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -345,7 +376,7 @@ H019	CLR	R5			clear flag
 *	DATA	>2800			
 					
 H014	BL	@VDPRD			write to FD = read from VDP buffer
-	LI	R6,255			APEDSK99: 1st of 256 bytes will already be written when command is given
+	LI	R6,256			256 bytes to write
 * APEDSK99: the first byte to be written 
 * needs to be in the data register 
 * before the write command is given
@@ -468,6 +499,9 @@ H036	SRL	R0,8			make it a word
 	MPY	@K003,R0		times # of sectors per track
 	MOV	R1,@>004A(R9)		pass total # of sectors per disk
 	MOVB	@K007,@>004D(R9)	pass # of sectors per track
+*
+	BL	@NTPDT			APEDSK99: update DOAD FAT time/date
+*
 	B	@RTURN1			return
 					
 *	BL	@ERROR2			try again, or error >21
@@ -959,7 +993,10 @@ H079	BLWP	@>005A(R9)		set VDP to read
 	INC	R1			increment destination ptr
 	DEC	R2			# of chars in R2
 	JNE	H079			next
-H077	MOV	@>0056(R9),R1		FDR ptr
+*
+H077	BL	@NTPDT			APEDSK99: update DOAD FAT time/date
+*
+	MOV	@>0056(R9),R1		FDR ptr
 	AI	R1,10			skip filename
 	LI	R2,246			remaining bytes in FDR
 	BLWP	@>005A(R9)		set VDP to write
@@ -1207,7 +1244,10 @@ H108	BL	@VDPR2B			read 2 bytes from VDP at R8 into R0
 	C	R0,R3			is this the one we want?
 	JNE	H108			not yet
 	DECT	R8			yes: point back to it
-H107	BLWP	@>005A(R9)		save R8
+*
+H107	BL	@NTPDT			APEDSK99: update DOAD FAT time/date
+*
+	BLWP	@>005A(R9)		save R8
 	DATA	>0080			
 	BL	@CALSUB			call subroutine
 	DATA	FFSVIB			free file sectors in VIB bitmap
@@ -2159,8 +2199,7 @@ WRITE	BL	@CALSUB			call subroutine
 	CI	R0,>0400		is it input
 	JEQ	H179			yes: return with error illegal opcode
 	BL	@RFDRST			get file status byte from FDR
-	JLT	H189			var
-					
+	JLT	H189			var			
 	BL	@RRNPAB			fix: get rec # from PAB, sect # in R0
 	JL	H190			less that total rec/file
 	BLWP	@>005A(R9)		past eof: expand file
@@ -3403,161 +3442,154 @@ H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 * APEDSK99 CALL subprograms
 *----------------------------------------------------------------------------
 *
-PDSK	CLR	R4			Protect jump table entry
+PDSK	LI	R6,>0200		Protect ACOMND 
 	JMP	ACLPRP			generic prep
-UDSK	LI	R4,2			Unprotect jump table entry
+UDSK	LI	R6,>0400		Unprotect ACOMND 
 	JMP	ACLPRP			generic prep
-MDSK	LI	R4,4			Change DSK jump table entry
+MDSK	LI	R6,>0600		Change DSK ACOMND
 	JMP	ACLPRP			generic prep
-SDSK	LI	R4,6			Show DSK jump table entry
+LDSK	LI	R6,>0800		Show Files on DSKx ACOMND 
 	JMP	ACLPRP			generic prep
-LDSK	LI	R4,8			Show Files jump table entry
+RDSK	LI	R6,>0A00		Remove DOAD from SD card ACOMND 
 	JMP	ACLPRP			generic prep
-ARST	LI	R4,10			reset APEDSK99
+SDSK	LI	R6,>0C00		Show DSKx mapping ACOMND
 	JMP	ACLPRP			generic prep
-GRTC	LI	R4,12			Get RTC date/time
+SDIR	LI	R6,>0E00		Show SD dir ACOMND
 	JMP	ACLPRP			generic prep
-ADSR	LI	R4,14			load DSR
+AHLP	LI	R6,>1000		display APEDSK99 CALL()'s help screen
 	JMP	ACLPRP			generic prep
-SRTC	LI	R4,16			Set RTC date/time
+TIME	LI	R6,>1200		show NTP time and date
+	JMP	ACLPRP			generic prep
+ARST	LI	R6,>1400		reset APEDSK99 ACOMND
+	JMP	ACLPRP			generic prep
+FGET	LI	R6,>1600		get DOAD from FTP server ACOMND
+	JMP	ACLPRP			generic prep
+FPUT	LI	R6,>1800		save DOAD to FTP server ACOMND 
+	JMP	ACLPRP			generic prep
+ADSR	LI	R6,>1A00		load DSR and reset ACOMND
 	JMP	ACLPRP			generic prep
 *
 *-----------------------------------------------------------------
-* Subprogram PDSK/UDSK: set/reset APEDSK99 Protect @VIB >10
+* Subprogram PDSK / UDSK
 * ----------------------------------------------------------------
 *
-PDSK2	LI	R6,>0100		set Protect flag
-	JMP	PUDSK2
-UDSK2	LI	R6,>0200
 PUDSK2	MOVB	R6,@ACOMND		send U/P DSK command to Arduino
 *
-	CB	@K012,@CALLBF+2		check Arduino CDSK return code
-	JEQ	ACLERR			>FF; DSKx not mapped, return with error
-*
-	LI 	R8,12			current CALL length
-	JMP	ACLBAS			return to TI BASIC
+	LI	R8,12			CALL length
+	JMP	ACLBAS			return to TI-BASIC		
 *			
-*-----------------------------------------------------------------
-* Subprogram MDSK/ADSR: map DOAD to DSKx/load DSR (todo)
-* ----------------------------------------------------------------
+*---------------------------------------------------------------------------------------
+* Subprogram MDSK / RDSK / FGET / FPUT / ADSR
+* --------------------------------------------------------------------------------------
 *
 MDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
-	CI	R0,>C708		quoted string, 8 characters?
-	JNE	ACLERR			no, return with error set
-ADSR2	LI	R6,4			4 words / 8 characters from CALL buffer
-SRTC2	INCT	R8			increment pointer
 *
-	LI	R5,CALLBF+2		pointer to DOAD / DSR name		
-H9902	BL	@VDPR2B			get next two digits
-	MOV	R0,*R5+			save two digits
-	INCT	R8			adjust VDP buffer pointer
-	DEC	R6			decrease word counter
-	JNE	H9902			next pair
+RFFA2	AI	R0,>3900		add 2's complement of >C700 =  only keep # of characters
+	JEQ	ACLERR			0 characters / empty string -> * INCORRECT COMMAND
+	CI	R0,8			max 8 characters?
+	JH	ACLERR			no -> * INCORRECT COMMAND
 *
-	BL      @VDPR2B                 get next two bytes
-	SRL     R0,8                    move ")" into LSB
-	CI      R0,>00B6                is it a ")"?
-	JNE     ACLERR                  no, return with error set
+	MOV	R0,R4			save # of characters
+	LI	R5,CALLBF+2		pointer to DOAD / DSR name	
+	INCT	R8			increment pointer
+	MOV	R8,R2			for VDPRD, address must be in R2
+	BL	@VDPRD			set VDP READ address
+H9900	MOVB	@-1026(R15),*R5+	get character and save in CALL buffer
+	DEC	R0			one less to go
+	JNE	H9900	
 *
-	LI	R8,23			prep MDSK CALL length ...
-	LI	R6,>0300		... and command
-	CI	R4,14			ADSR()?
-	JEQ	H9907
-	CI	R4,16			SRTC()?
-	JNE	H9908			no, continue with MDSK()
-*		
-	AI	R6,>0100		adjust for SRTC command ...
-	AI	R8,6			... and CALL length
+	MOVB	@-1026(R15),R0		get next token
 *
-H9907	SLA	R6,1			adjust for ADSR and SRTC command ...
-	AI	R8,-2			... and CALL length
-*	
-H9908	MOVB	R6,@ACOMND		MDSK command to Arduino
+	CI      R0,>B600                is it a ")" ?
+	JNE     ACLERR                  * INCORRECT COMMAND
 *
-	CB	@K012,@CALLBF+2		check Arduino MDSK / ADSR / SRTC return code
-	JEQ	ACLERR			>FF, DOAD / DSR doesn't exist; return with error
-	JMP	ACLBAS			all is well, return without error
+	LI	R8,13			prep RDSK/FGET/FPUT/ADSR CALL length ( CALL_XXXX("") )
+	A	R4,R8			add # of characters in string
+	
+	CI	R6,>0600		MDSK()?
+	JH	H9901			no; jump and execute RDSK/FGET/FPUT/ADSR
+*
+	INCT	R8			adjust MDSK CALL length
+*
+H9901	MOVB	R6,@ACOMND		command to Arduino
+*
+	JMP	ACLBAS			return to TI-BASIC
 *			
 *----------------------------------------------------------------------------
-* Generic prep and return to TI BASIC for PDSK/UDSK/MDSK/SDSK/LDSK
+* Generic prep and return to TI BASIC for APEDSK99 CALL's
 *----------------------------------------------------------------------------
 ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
 	MOV	@>002C(R9),R8		ptr to next basic token
-	AI	R8,6			skip "<CALL>("
+	AI	R8,4			skip length byte and 3 chars of CALL name
+	BL	@VDPR2B			get CALL last char and "(" or "0" in R0
+	SLA	R0,8			only interested in LSB
+	JEQ	SSAA			0 = no parameters? SDSK, SDIR, AHLP, ARST, TIME
+*
+	AI	R8,2			adjust token pointer
 	BL	@VDPR2B			get next two bytes in R0
-	CI	R0,>B600		no parameters?
-	JEQ	AG2			yes, ARST() and GRTC()
 	CI	R0,>C801		>C8=unquoted string, size=1 char?
-	JEQ	ACLPR2			yes, continue for [PU]DSK, SDSK, MDSK and LDSK
-	CI	R0,>C708		quoted string, 8 characters?
-	JEQ	ADSR2			yes, ADSR()
-	CI	R0,>C70C		quoted string, 12 characters?
-	JNE	ACLERR			no valid CALL			
-	LI	R6,6			yes; adjust # of words to copy from CALL buffer
-	JMP	SRTC2			SRTC()
+	JEQ	ACLPR2			yes: PDSK, UDSK, MDSK, LDSK
 *
-ACLPR2	INCT	R8			increment pointer
-	BL	@VDPR2B			get next two bytes
-	SWPB	R0			
+	CI	R0,>C701		>C7=quoted string, minimum 1 character?
+	JHE	RFFA2			yes: RDSK, FGET, FPUT, ADSR 
 *
-	AI	R0,>49D0		add 2's complement of >B630: MSB= >B3 / "," or >B6 / ")", LSB= # of files, 
-	JLT	H9900			>B3
-	JMP	H9901			>B6
-H9900	AI	R0,768			>B3, adjust R0 to positive range
+	JMP	ACLERR			expect the unexpected				
 *
-H9901	JEQ	ACLERR			DSK0 not valid, return with error
-	CI	R0,>0003		only 3 DSK's allowed
-	JH	ACLERR			return with error if more
-	SWPB	R0			drive # back in MSB
+ACLPR2	INCT	R8			continue for PDSK, UDSK, MDSK, LDSK; increment pointer
+	BL	@VDPR2B			get next two bytes		
 *
-	MOV	R0,@CALLBF		save DSKx
-	MOV	@CLLTBL(R4),R6		get jump address from table
-	B	*R6			execute next subprogram part
+	SWPB	R0
+	AI	R0,>49D0		add 2's complement of >B630: MSB = >B3 / "," or >B6 / ")", LSB= # of files 
+	JGT	H9902			>B6
+	AI	R0,768			>B3, adjust R0 to positive range
 *
-CLLTBL	DATA	PDSK2			CALL PDSK()
-	DATA	UDSK2			CALL UDSK()
-	DATA	MDSK2			CALL MDSK()
-	DATA	SDSK2			CALL SDSK()
-	DATA	LDSK2			CALL LDSK()
+H9902	JEQ	ACLERR			DSK0 not valid, * INCORRECT COMMAND
+	CI	R0,3			only 3 DSK's allowed
+	JH	ACLERR			if >3 * INCORRECT COMMAND
 *
-ACLBAS	CLR	@>0050(R9)		clear error flag		
+	SWPB 	R0
+	MOVB	R0,@CALLBF		save DSKx
+*
+	CI 	R6,>0600		MDSK()?
+	JEQ	MDSK2			yep
+	JL	PUDSK2			no; PDSK or UDSK						
+	JMP	LDSK2			must be LDSK
+*
+ACLBAS	CB	@CALLST,@K004		"More" or "AllGood" received from Arduino?	
+	JHE	H9904			yep
+*	
+	LI	R5,GPLINT		GPL routine
+	BL	@GPLXML			
+	DATA	SCROLL			scroll screen
+	LI	R2,738			screen starting position for (error) message
+	BL	@VDPWRI			set VDP address
+	BL	@DISSTS			show error or NTP data
+	LI	R5,GPLINT		GPL routine
+	BL	@GPLXML	
+	DATA	SCROLL			scroll screen
+*
+	CB 	@CALLST,@K007		error?	
+	JL	H9903			yes; let's make some noise
+	B  	@TIME2			no; see if we can assign date/time to NTP$ 
+*
+H9903	LI	R5,GPLINT		GPL routine
+	BL	@GPLXML
+	DATA	HONK			"bad tone"
+*
+H9904	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
-ACLERR	B	@RTURN1			return to caller (i.e. Basic)
+ACLERR	B	@RTURN1			return to caller (i.e. TI-BASIC)
 *
 *-----------------------------------------------------------------
-* Subprogram SDSK: show DOAD mapping
+* Subprogram SDSK / LDSK / SDIR/ AHLP / TIME
 * ----------------------------------------------------------------
 *
-SDSK2	LI	R6,>0400
-	MOVB	R6,@ACOMND		SDSK command to Arduino
-*
-	LI	R8,12			current CALL length
-*
-GRTC3	LI	R2,720			screen starting position
-	BL	@VDPWRI			set VDP address
-*
-	LI	R5,CALLBF+2		pointer to drive #, DOAD name or RTC data
-	LI	R6,16			max 16 characters
-H9903	MOVB	*R5+,@-2(R15)		save SDSK() or GRTC() data in VDP screen table
-	DEC	R6
-	JNE	H9903
-*		
-	JMP	ACLBAS
-*-----------------------------------------------------------------
-* Subprogram LDSK: List files on DSKx
-* ----------------------------------------------------------------
-*
-LDSK2	LI	R6,>0500
-	CB	@ACOMND,R6		next screen?
-	JEQ	LDNXTS			yes
-*
-	MOVB	R6,@ACOMND		FDSK command to Arduino
-*
-	CB	@K012,@CALLBF+2
-	JEQ	ACLERR			>FF; no DOAD mapped -> error
+LDSK2	MOVB	R6,@ACOMND		SDSK/LDSK/SDIR/AHLP/TIME command to Arduino
+	CB	@K002,@CALLST
+	JEQ	QTLSSA			LDSK: >00; no DOAD mapped
 *
 LDNXTS	CLR	R2			clear screen; position 0
 	BL	@VDPWRI
@@ -3568,51 +3600,164 @@ LDNXTS	CLR	R2			clear screen; position 0
 *
 	LI	R2,33			start 2nd screen line; 1st is lost due to TI BASIC scroll
 	BL	@VDPWRI			
+*	
+H9905	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP/TIME return code
+	JEQ	QTLSSA			"More" (>F0); blank "floppy" or done last file / help txt / date, time
 *
-H9904	LI	R5,CALLBF+2		start of file name buffer
-	CB	@K004,*R5		check Arduino LDSK return code
-	JEQ	ACLBAS			>F0; blank "floppy" or done last file
+	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP/TIME output to screen
 *
-	LI	R6,16
-H9905	MOVB	*R5+,@-2(R15)		store file character in VDP screen memory
-	DEC	R6
-	JNE	H9905
-*
-	AI	R2,16
-	CI	R2,673			end of display area?
-	JEQ	NXTPRP			yes; prep for next screen
+	AI	R2,16			next screen position
+	CI	R2,641			end of display area?
+	JEQ	NXTPRP			yes; show "more" symbol
 *
 	MOV	R2,@RDINT		generates interrupt for next file
-	JMP	H9904	
+	JMP	H9905	
 *	
-NXTPRP	LI	R2,735
+NXTPRP	LI	R2,703
 	BL	@VDPWRI
 	LI	R5,>9E00		">", more files to display
 	MOVB	R5,@-2(R15)
 *
-	LI	R8,12			current CALL length
-	JMP 	ACLBAS
+	BL	@CHKKEY
 *
-*-----------------------------------------------------------------
-* Subprogram ARST: reset APEDSK99
-* ----------------------------------------------------------------
+	MOV	R2,@RDINT		generates interrupt for next file
+	JMP	LDNXTS
 *
-AG2	AI	R4,-3
-	SWPB	R4
-	MOVB	R4,@ACOMND
+*-----------------------------------------------------------------------------------------
+* Subprogram ARST / TIME
+* ----------------------------------------------------------------------------------------
 *
-	CB	@K012,@CALLBF+2
-	JEQ	ACLERR			>FF; report error
+SSAA	CI	R6,>1200		TIME() ?	
+	JL	LDSK2			no; SDSK/SDIR/AHLP use LDSK display routine
 *
-	LI	R8,11			current CALL length
-	CI	R4,>0900		GRTC()?
-	JEQ	GRTC3			yes; display date/time
+ARST2	MOVB	R6,@ACOMND		execute ARST() or TIME()
 *
-	JMP	ACLBAS
+QTLSSA	LI	R8,9			current CALL length
+	CI	R6,>0800		LDSK()?
+	JH	H9906			nope; exit with CALL lenght 9 for SDSK/SDIR/AHLP
+	AI	R8,3			yep;  exit with CALL length 12 for LDSK
+*
+H9906	JMP	ACLBAS	
+*
+* Display data, status messages and errors
+*
+DISSTS	LI	R5,CALLBF+2		start of file name buffer
+	LI	R6,16			16 bytes of (error) data to display
+H9907	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
+	DEC	R6
+	JNE	H9907
+	B	*R11
+*
+* Quick key test to display next screen after ">"
+* Keyboard column 0 (= space enter <nc> fctn shift ctrl <nc>)
+* Code copy from Thierry's TI's Tech Pages site
+*
+CHKKEY	MOV	R12,R4 			save R12
+	CLR  	R1                  	test column 0
+     	LI   	R12,>0024           	address for column selection
+H9908  	LDCR 	R1,3               	select column
+	TB	-14			test R12 address >0008
+	JNE	H9909			<SPACE>
+	TB	-13			test R12 address >000A
+	JEQ	H9908			no key; test again
+*
+	MOVB	@K004,@CALLST		signal ENTER to SDIR() command
+	LI	R11,QTLSSA		leave without clearing screen
+*
+H9909	MOV	R4,R12 			restore R12
+	SLA	R4,2			debounce delay
+H9910	DEC	R4			key debounce
+	JNE	H9910			debounce some more
+*
+	B    	*R11               	we got one; return for next screen
+* 		
+* update FAT time/date for current DOAD after DSR Format / Write / Save
+*
+NTPDT	MOVB	@NTPFAT+1,@ACOMND	"DSK NTP date/time update" command to Arduino		
+	B	*R11			return to Format / Close
 *	
+* prep for calling XML >16 and update BASIC variable NTP$		
+*
+VARINF	TEXT	'NTP$'
+TIME2	LI	R4,VARINF		variable name for XML >16 in FAC
+	MOV	R9,R5			get scratchpad start address
+H9911 	MOVB	*R4+,@>004A(R5)		variable name in FAC
+	INC	R5
+	CI	R4,VARINF+4		done all chars?
+	JNE	H9911			
+*
+	LI	R5,>0400		variable length for XML >16 in @>8359
+	MOVB	R5,@>0059(R9)		
+	CLR 	@>0089(R9)	
+*
+	LI	R5,XML16		ROM routine: find NTP$ in VDP symbol table (returns to GPL interpreter)
+	BL	@GPLXML
+	DATA	XMLRTN			GPL "RTN", escaping GPL interpreter
+*
+	CB	@VARINF,@>004A(R9)	found NTP$ in VDP symbol table?
+	JEQ	H9913			no symbol table pointer; back to BASIC
+*
+	BL	@XML14			ROM routine: get NTP$ VDP address and string length (returns through RT)
+	STWP	R9			restore scratchpad pointer
+	AI	R9,-224
+*	
+	MOV	@>0050(R9),R5		get string length
+	CI	R5,16			16 chars?
+	JNE	H9913			no NTP$ assignment for you
+*
+	MOV	@>834E,R2		yes
+	BL	@VDPWRI			set VDP write address
+	LI	R5,CALLBF+2		CALL TIME data still in buffer
+H9912	MOVB	*R5+,R2			read character
+	AI	R2,>A000		remove TI BASIC bias
+	MOVB	R2,@-2(R15)		save to NTP$ value space
+	CI	R5,CALLBF+18		done all 16 chars?
+	JNE	H9912			no; one more
+*
+H9913	B	@H9904			yes; back to BASIC
+*
+* execute GROM or XML routine (SCROLL, "bad sound"/ HONK and XML >16)
+* DSR and GPL interpreter use same workspace (>83E0) so we need to save a few things
+*
+SAVGRA	BSS	2			save current GROM address so we can return to BASIC
+SAVR11	BSS	2			GPL interpreter uses R11
+*
+GPLXML	MOVB	@>9802,@SAVGRA		save current GROM address
+	NOP
+	MOVB	@>9802,@SAVGRA+1
+	DEC	@SAVGRA			GRMWA returns address + 1; decrease for correct address
+*
+	MOVB	*R11+,@>9C02		set GPL routine address
+	NOP
+	MOVB	*R11+,@>9C02
+	MOV	R11,@SAVR11		save final DSR return address
+*
+	LI	R11,GXRTN		DSR return address after GPL routine
+	MOV	R11,@RTN5C		@>4028 is where XML >5C returns to
+*
+	INCT	@>8373			increase stack pointer
+	SWPB	R9			
+	MOVB	@>8373,R9
+	SWPB	R9			complete stack pointer in R9
+	LI	R11,XML5C		GROM pointer to >0F5C (= XML >5C)
+	MOV 	R11,*R9			save GROM pointer on stack
+*
+	B	*R5			execute GROM/ROM routine, return through GPL interpreter
+*
+GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
+	NOP
+	MOVB	@SAVGRA+1,@>9C02
+*
+	STWP	R9			restore scratchpad pointer
+	AI	R9,-224
+*
+	MOV	@SAVR11,R11		restore R11
+	B	*R11			return to instruction after BL @GPLEXEC DATA statement
+*
 *-----------------------------------------
-* The remaining bytes (~>5EA0 to >5FD5) all contain >00 
-* >5FD6 - >5FE7 is DSKx / DOAD name / DSR name storage for TI BASIC CALL's
+* >5FBE - >5FD3: 22 free bytes remaining
+* >5FD4 is the CALL() status byte
+* >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
 * >5FE8	is the Arduino Command Register (TI BASIC CALL support)
 * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
 * Bytes >5FEC to >5FEE map to the CRU emulation registers

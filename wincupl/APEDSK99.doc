@@ -1,0 +1,100 @@
+
+*******************************************************************************
+                                   APEDSK99
+*******************************************************************************
+
+CUPL(WM)        5.0a Serial# 60008009
+Device          g16v8ma  Library DLIB-h-40-8
+Created         Tue Dec 01 21:02:31 2020
+Name            APEDSK99 
+Partno          12o 
+Revision        01 
+Date            3/10/2020 
+Designer        Jochen Buur 
+Company         Burell Group 
+Assembly        None 
+Location        WLG NZ 
+
+===============================================================================
+                            Expanded Product Terms
+===============================================================================
+
+!AD_CE =>
+    AD_A13 & !AD_A14 & !MEMEN
+  # !AD_A13 & AD_A14 & !MEMEN
+  # AD_A13 & AD_A14 & AD_A15 & !MEMEN
+
+AD_CE.oe  =>
+    !TI_BUF
+
+AD_WE =>
+    WE
+
+AD_WE.oe  =>
+    !TI_BUF
+
+!CE_245 =>
+    AD_A13 & !AD_A14 & !MEMEN
+  # !AD_A13 & AD_A14 & !MEMEN
+  # AD_A13 & AD_A14 & AD_A15 & !MEMEN
+
+CE_245.oe  =>
+    !TI_BUF
+
+DSR =>
+    !AD_A13 & AD_A14 & !AD_A15
+
+HIMEM1 =>
+    AD_A13 & !AD_A14 & AD_A15
+
+HIMEM2 =>
+    !AD_A13 & AD_A14 & AD_A15
+
+HIMEM3 =>
+    AD_A13 & AD_A14 & AD_A15
+
+LOWMEM =>
+    AD_A13 & !AD_A14 & !AD_A15
+
+!TI_INT =>
+    !AD_A13 & AD_A14 & !AD_A15 & !MEMEN
+
+TI_INT.oe  =>
+    !TI_BUF
+
+
+===============================================================================
+                                 Symbol Table
+===============================================================================
+
+Pin Variable                                    Pterms   Max     Min    
+Pol   Name              Ext     Pin     Type     Used   Pterms  Level   
+--- --------            ---     ---     ----    ------  ------  -----   
+
+    AD_A0                       5        V        -       -       -     
+    AD_A13                      2        V        -       -       -     
+    AD_A14                      3        V        -       -       -     
+    AD_A15                      4        V        -       -       -     
+    AD_CE                       12       V        3       7       1     
+    AD_CE               oe      12       X        1       1       1     
+    AD_WE                       14       V        1       7       1     
+    AD_WE               oe      14       X        1       1       1     
+    CE_245                      15       V        3       7       1     
+    CE_245              oe      15       X        1       1       1     
+    DSR                         0        I        1       -       -     
+    HIMEM1                      0        I        1       -       -     
+    HIMEM2                      0        I        1       -       -     
+    HIMEM3                      0        I        1       -       -     
+    LOWMEM                      0        I        1       -       -     
+    MEMEN                       7        V        -       -       -     
+    TI_BUF                      8        V        -       -       -     
+    TI_INT                      13       V        1       7       1     
+    TI_INT              oe      13       X        1       1       1     
+    WE                          6        V        -       -       -     
+
+
+LEGEND    D : default variable         F : field      G : group
+          I : intermediate variable    N : node       M : extended node
+          U : undefined                V : variable   X : extended variable
+          T : function
+
