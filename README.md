@@ -1,5 +1,3 @@
-# 02/02/2021 - WORK IN PROGRESS, DON'T USE!
-
 # APEDSK99
 ### *Arduino DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
