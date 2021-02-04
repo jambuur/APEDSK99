@@ -70,6 +70,8 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's CALL AHLP; it shows the following help screen:
 
+![KiCAD 3D view](img/AHLP.jpg)
+
 CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
 
 CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
