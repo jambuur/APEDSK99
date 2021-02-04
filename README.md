@@ -79,11 +79,11 @@ The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really on
 - CALL SDSK shows the current DSK->DOAD mappings, Protect/Unprotect status and # of free sectors
 - CALL TIME gets the current date and time from your NTP server of choice for display in TI-BASIC. The CONFIG sketch only requires a couple of parameters changed to get it going. If a BASIC variable NTP$ (16 chars) exists prior to the CALL, it will get assigned the NTP data. This command is also handy to check basic network connectivity is available.
 - CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
-- CALL LDSK list the files on a DOAD (I always thought that was a really nice C64 feature), type (P)rogram / (D)isplay / (I)nternal and size in sectors.
+- CALL LDSK list the files on a DOAD including the type (P)rogram / (D)isplay / (I)nternal and size in sectors. I always thought that was a really nice feature the C64 had.
 - CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
 - CALL RDSK removes a DOAD from the SD card. In line with BOFH standards no confirmation is required :-)
 - CALL FGET and CALL FPUT load or save a DOAD from your FTP server of choice. Configuration on the APEDSK99 side is straightforward, with again just a couple of parameters in the CONFIG sketch. The FTP server side can be a bit more involved, especially regarding rights of the relevant FTP user for reading and writing in the /DISKS folder. FTP server logging is your friend here. 
-- CALL ADSR loads a DSR file from / on the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns. ADSR() may require a soft-reset to execute any DSR powerup routines. 
+- CALL ADSR loads a DSR file from / on the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns. ADSR may require a soft-reset to execute any DSR powerup routines. 
 
 SDIR and LDSK may generate multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
 
@@ -92,7 +92,7 @@ Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX 
 All CALLs use a simple 2-way 18 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or BASIC's CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
 This lets _TI EXTENDED BASIC_ join the running program party as it only supports DSR CALL's from the "command prompt"
 
-See the CALLs in action at https://youtu.be/MDsME0TLIYE
+See the CALLs in action at ?
 
 ### *Updating the DSR*
 
@@ -102,13 +102,13 @@ I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://en
 
 You should switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you'll need a second Arduino to restore it. Yes I have been there ... several times.  
 
-Alternatively you could connect _Analog 1_ to _+5V_ with a jumper wire before uploading; this disables the APEDSK99 sideport buffer IC's so you can leave the TI powered on. In fact, if you intend to put APEDSK99 in some sort of case, plan a switch for this. It's not only handy for uploading sketches but also for temporarily circumventing _TI EXTENDED BASIC_'s LOAD feature or preventing unintentional DSR RAM writes (see _**Ignition Sequence**_ below)
+Alternatively you could connect [_Analog 1_ to _+5V_](img/A15V.jpg) with a jumper wire before uploading; this disables the APEDSK99 sideport buffer IC's so you can leave the TI powered on. In fact, if you intend to put APEDSK99 in some sort of case, plan a switch for this. It's not only handy for uploading sketches but also for temporarily circumventing _TI EXTENDED BASIC_'s LOAD feature or preventing unintentional DSR RAM writes (see _**Ignition Sequence**_ below)
 
 ### *Ignition sequence*
 
-Unlike the original TI Disk Controller ROM, the APEDSK99 DSR sits in RAM and is permanently enabled within the TI's address space. Any unintentional write from the TI can potentially corrupt the DSR code. This could happen for instance when you switch the TI on (spurious signals on the sideport) or insert a cartridge.
+Unlike the original TI Disk Controller ROM, the APEDSK99 DSR sits in RAM and is permanently enabled within the TI's address space. Any unintentional write from the TI can potentially corrupt the DSR code. This is likley to happen when you switch the TI on (spurious signals on the sideport).
 
-So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (short glow from the LED) and then soft-reset the TI with FCTN-QUIT.
+So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (short flash from the LED) and then soft-reset the TI with FCTN-QUIT to execute the DSR power-up routines.
 
 ### *Error codes*
 
@@ -126,13 +126,11 @@ Feel free to improve and share!
 
 ### *Bugs*
 
-If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math and weird copy protection schemes will likely fail. 
+If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math or weird copy protection schemes will likely fail. 
 
 ### *Future*
 
-After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields.
-
-Also, the Arduino has full access to the 32K RAM expansion; this provides options for all sorts of fast data sharing between networked devices and the TI.
+After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic interrupt-driven DSR interface to a substantial catalogue of available Arduino shields. Also, the Arduino has full access to the 32K RAM expansion so there is potential for fast data sharing between networked devices and the TI.
 
 ### *Acknowledgements*
 
