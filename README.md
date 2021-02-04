@@ -1,15 +1,15 @@
 # 02/02/2021 - WORK IN PROGRESS, DON'T USE!
 
 # APEDSK99
-### *Arduino DSKx emulator / 32K / FTP shield for the TI99/4a*
+### *Arduino DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Conbined with a Ethernet / SD shield it can load and save Disk-On-A-Disk (DOAD) single and double sided floppy images on a SD card or FTP server. It includes 32K RAM expansion and provides TI-BASIC with date and time via NTP. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
+APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Combined with a Ethernet / SD shield it allows you to load and save Disk-On-A-Disk (DOAD) single and double sided floppy images on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds TI-BASIC access to NTP date and time. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/APEDSK99trio.jpg)
 
-Like the TI, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day and it can be put together by anybody with basic electronics equipment and skills.
+Like the TI, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day and it can be put together by anybody with basic soldering skills.
 
-The TI <-> shield interface is the familiar design, with 74LS541 buffers for address lines and a bi-directional 74LS245 buffer for the databus. An 64Kx8 RAM stores the DSR code and provides the 32K RAM expansion. CRU is emulated through memory mapped addresses, simplifying shield design. 
+The TI<->shield interface is the familiar design, with 74LS541 buffers for address lines and a bi-directional 74LS245 buffer for the databus. An 64Kx8 RAM stores the DSR code and provides the 32K RAM expansion. CRU is emulated through memory mapped addresses, simplifying shield design. 
 A user-selectable binary DSR file is loaded into RAM by the Arduino at powerup / reset. 
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. As GPIO pins are in rather short supply, Arduino RAM addressing is serial-to-parallel through 74HC595 shift registers. 
@@ -17,9 +17,9 @@ The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the T
 A status LED indicates APEDSK99 access as well as showing possible error codes.
 
 The DSR is still very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
-DSR code optimisation made enough RAM available for extensive _TI BASIC_ support. 
+DSR code optimisation made enough RAM available to include some useful _TI BASIC_ CALL routines. 
 
-I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' cleverness lives on.
+I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' blood, sweat and tears lives on.
 
 ### *How does it work?*
 
@@ -31,78 +31,73 @@ When the TI issues a disk controller command by writing to the FD1771 registers,
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
-Accessing the 32K RAM expansion is through memory decoding only and doesn't use interrupts.
-
 ### *APEDSK99 Construction*
 
-Putting the APEDSK99 shield together is straightforward. The 74LS541's and the slimline RAM are probably not stock items at your local electronics store but can be easily obtained online.
+Putting the APEDSK99 shield together is straightforward. 
 
 The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)). 
 
-The two things that need a little bit of attention is 1) mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/143868496672?hash=item217f3b0b20:g:2cQAAOxyuPtQ~70q):
+The two things that need a little bit of attention are 
+
+1) mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/143868496672?hash=item217f3b0b20:g:2cQAAOxyuPtQ~70q):
 - The bottom row of pins need to be [bent 90 degrees downwards and the top row slightly bent upwards](img/APEDSK99conn.jpg)
 - [Rough up](img/APEDSK99spaper.jpg) the bottom side of the connector housing and the PCB area it will sit on (between PCB edge and white line)
-- Clean the 2 surfaces with isopropyl and [apply dots of superglue](img/APEDSK99sglue.jpg) across the length of 1 area
+- Clean the 2 surfaces and [apply dots of superglue](img/APEDSK99sglue.jpg) across the length of 1 area
 - Line up the bottom connector pins with the row of PCB holes marked 1-43 and press the connector firmly on the PCB, making sure all connector pins stick through to the soldering side. 
 
-After clamping it for a while the bottom row pins can now be soldered. 
+After clamping it for a bit to let the glue dry, the bottom row pins can now be soldered. 
 
 - The top row pins are soldered to the PCB via a [suitable length of standard header](img/APEDSK99connsold.jpg).
 
-... and 2) installing the memory IC. The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be ever sol slightly wider. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). With your tongue at the right angle as EEVBLOG-Dave would say the IC will fit the smaller hole pattern and leave plenty pin material sticking through for soldering.
+2) installing the memory IC. The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slimline+. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). Without too much fiddling the IC will fit the smaller hole pattern and leave plenty of pin material sticking through for soldering.
 
 The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
-Another thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB (type B) and the power adapter connectors. Make sure you get the long version.
+One other thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB type B and the power adapter connectors. Make sure you either get the long version. Alternatively you could use an UNO with a micro-USB connector and de-solder its power adapter connector.
+
+### *GAL*
+Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). 
 
 ### *Possible Ethernet / SD shield modifcations*
-Depending on the version of the Ethernet / SD shield some changes may be necessary. My version uses D2 for SD card Slave Select (SS) and D10 for Ethernet SS. For some reason SD card access doesn't work reliably. Rather than changing the standard libraries I have:
-- bent D10 inwards and soldered it to D2 -> Ethernet now used D2 for SS which works fine
-bent D10 inwards and soldered a short piece of wire to it. This piece of wire emds in a pin that will fit into Arduino D10(
-The original SD card shield (without Ethernet) used pin 10 for Slave Select (SS), but on the com 
+Depending on your Ethernet / SD shield version some minor surgery may be necessary. My version has SPI available through a separate 6 pin header only, not at the familiair D11-D14 (why? why?). If this is the case with your shield, you will need to extend the SPI signals to D11-D14 with some extra wiring.
+
+<SPI SS>
 
 ### *DOAD's*
 
-The SD card can be filled with as many DOAD's as you see fit :-) DOAD filenames must follow the MS-DOS 8.3 format and have a  ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's. 
+DOAD's need to be stored in a /DISKS/ folder on the SD card or on a FTP server. DOAD filenames must follow the DOS 8.3 format and have a ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's (see below).
 
-DOAD's need to be stored in the /DISKS/ folder on the SD card or on the FTP server.
-
-Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. Single-sided formatting takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. Reverse is also true but the DOAD will still take DD / 180KB of space on the SD (not that it matters with plenty of GB's to spare).
+Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. Single-sided formatting takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. Reverse is also true but the DOAD will still take DD / 180KB of disk space (not that it matters with likely plenty of SD or FTP GB's to spare).
 
 ### *TI BASIC support*
 
-The DSR contains 5 additional TI BASIC CALL's to manage DOAD's:
+The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's CALL AHLP; it shows the following help screen:
 
-- [CALL PDSK( [1-3] )](img/PDSK_UDSK.jpg): sets the Protected flag at 0x10 in the Volume Information Block, preventing APEDSK99 writing to the DOAD. Although it's the same flag as used by some disk managers, it functions more like a virtual "adhesive tab" (remember those?) 
+CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
 
-- [CALL UDSK( [1-3] )](img/PDSK_UDSK.jpg): removes the "tab"
+CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
 
-- [CALL MDSK( [1-3] ,"*8 character DOAD name*")](img/SDSK_MDSK.jpg): maps DSK[1-3] to a DOAD. The DOAD name must be 8 characters, padded with spaces if necessary.
+CALL SDSK shows the current DSK->DOAD mappings, Protect/Unprotect status and # of free sectors
 
-- [CALL SDSK( [1-3] )](img/SDSK_MDSK.jpg): shows the current DOAD mapping, Protect/Unprotect status and # of free sectors
+CALL LDSK list the files on a DOAD (I always thought that was a really nice C64 feature), type (P)rogram / (D)isplay / (I)nternal and size in sectors. 
 
-- [CALL LDSK( [1-3] )](img/LDSK.jpg): list the files on a DOAD (I always thought that was a really nice feature the C64 had), 
-their type (P)rogram /  (D)isplay / (I)nternal and size in sectors. 
-A ">" indicates that the same LDSK() command will show the next lot of files.
+CALL RDSK removes a DOAD from the SD card. In line with professional standards no confirmation is required :-)
 
-- CALL SDIR(): list the DOAD's in the /DISKS/ directory on the SD card. Output is similar to the SDSK() command, showing single sided (1S) or double sided (2S)
+CALL SDIR list the DOAD's in the /DISKS/ directory on the SD card including single sided (1S) or double sided (2S)
 
-2 further CALL's manage the optional Real Time Clock (RTC). Datalogger SD shields include a RTC but there are plenty of vanilla SD shields without it. I highly recommend one, very handy to have it for the TI:
+CALL ADSR loads a DSR file from / on the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns.
 
-- [CALL SRTC("*DDMMYYYYHHmm*")](img/GRTC_SRTC.jpg): sets the RTC
+CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
-- [CALL GRTC()](img/GRTC_SRTC.jpg): displays the date and time
+With the ADSR() and ARST() CALLs, keep in mind you might need to soft-reset the TI if the relevant DSR powerup routines have not been executed previously. 
 
-2 final CALL's concern the management of the DSR itself:
+CALL FGET and CALL FPUT load or save a DOAD from your FTP server of choice. Configuration on the APEDSK99 side is straightforward, with just a couple of parameters in the CONFIG script. The FTP server side can be a bit more involved, especially regarding rights of the relevant FTP user on reading and writing in the /DISKS folder. FTP server logging is your friend here. Basic network connectivity can be checked with the CALL TIME command (see below).
 
-- [CALL ADSR("*8 character DSR file name*")](img/ADSR.jpg): loads a DSR file from the /DSR folder on the SD card and resets APEDSK99. 
-DSR filenames need to have 8 characters (no spaces this time) and a .DSR extension.
+CALL TIME gets the current date and time from a NTP server and shows that in TI-BASIC. Again the CONFIG script only requires a couple of parameters changed to get it going. If a variable called NTP$ with a length of 16 characters exists prior to the CALL, it will get assigned the NTP data.  
 
-- [CALL ARST()](img/ARST.jpg): resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
+With SDIR and LDSK you could end up with multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
 
-With the ADSR() and ARST() CALLs, keep in mind you might need to reset the TI if the relevant DSR powerup routines have not been executed previously. 
-
-Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name/length etc.
+Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name etc.
 
 All CALLs use a simple 2-way 18 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or BASIC's CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
 This lets _TI EXTENDED BASIC_ join the running program party as it only supports DSR CALL's from the "command prompt"
@@ -137,7 +132,7 @@ The LED can flash in the following intricate error patterns:
 
 Writing software is a hobby, not my profession. No doubt some gurus would achieve the same functionality with half the code. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
 
-Anyway feel free to improve and share!
+Feel free to improve and share!
 
 ### *Bugs*
 
@@ -147,7 +142,7 @@ If a particular program or module behaves nicely by accessing disks solely throu
 
 After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields.
 
-Also, the Arduino has access to the 32K RAM expansion; this provides options for all sorts of fast data sharing between networked devices and the TI.
+Also, the Arduino has full access to the 32K RAM expansion; this provides options for all sorts of fast data sharing between networked devices and the TI.
 
 ### *Acknowledgements*
 
@@ -158,5 +153,3 @@ Another great source of information has been Monty Schmidt's excellent book [Tec
 The Arduino's serial-to-parallel RAM addressing scheme is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER) by Mario Keller.
 
 Last but not least I virtually stumbled across my old friend Frederik "Fred" Kaal who I hadn't seen for 30 years after moving to the other side of the globe. Long live the Web and places such as AtariAge. Fred was a TI wizzard back then and [still very much is](http://ti99-geek.nl). His expert input has been of great help.
-
-
