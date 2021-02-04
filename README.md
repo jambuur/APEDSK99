@@ -29,8 +29,6 @@ When the TI issues a disk controller command by writing to the FD1771 registers,
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
-Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). 
-
 ### *APEDSK99 Construction*
 
 Putting the APEDSK99 shield together is straightforward. 
@@ -57,6 +55,10 @@ One other thing to note is that the Arduino stackable headers seem to come in a 
 Depending on your Ethernet / SD shield version some minor surgery may be necessary. My version has SPI available through a separate 6 pin header only, not at the familiair D11-D14 (why? why?). If this is the case with your shield, you will need to extend the SPI signals to D11-D14 with some extra wiring.
 
 Most Ethernet / SD shields use D4 for the SD CS pin. This also happens to be APEDSK99 D3 (as in databus, not in Arduino digital pin) and this combo function doesn't work. Bend D10 and D4 inwards and connect 2 jumper wires: D10 to D2 (moves Ethernet CS to D2) and D4 to APEDSK99 D10 (moves SD CS to D10). 
+
+### *GAL*
+
+Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). You will need a suitable programmer to program the GAL with the supplied PLD file.
 
 ### *DOAD's*
 
