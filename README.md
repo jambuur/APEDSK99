@@ -124,7 +124,7 @@ Feel free to improve and share!
 
 ### *Bugs*
 
-If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky direct disk access and weird copy protection schemes will likely fail. 
+If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math and weird copy protection schemes will likely fail. 
 
 ### *Future*
 
