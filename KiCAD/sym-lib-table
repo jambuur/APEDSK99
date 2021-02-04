@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name APEDSK-AU-rescue)(type Legacy)(uri ${KIPRJMOD}/APEDSK-AU-rescue.lib)(options "")(descr ""))
+)
