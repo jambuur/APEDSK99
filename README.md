@@ -72,16 +72,16 @@ The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really on
 
 ![KiCAD 3D view](img/AHLP.jpg)
 
--CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
--CALL SDIR list the DOAD's in the /DISKS/ directory on the SD card including single sided (1S) or double sided (2S)
--CALL SDSK shows the current DSK->DOAD mappings, Protect/Unprotect status and # of free sectors
--CALL TIME gets the current date and time from your NTP server of choice for display in TI-BASIC. The CONFIG sketch only requires a couple of parameters changed to get it going. If a BASIC variable NTP$ (16 chars) exists prior to the CALL, it will get assigned the NTP data. This command is also handy to check basic network connectivity is available.
--CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
--CALL LDSK list the files on a DOAD (I always thought that was a really nice C64 feature), type (P)rogram / (D)isplay / (I)nternal and size in sectors.
--CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
--CALL RDSK removes a DOAD from the SD card. In line with BOFH standards no confirmation is required :-)
--CALL FGET and CALL FPUT load or save a DOAD from your FTP server of choice. Configuration on the APEDSK99 side is straightforward, with again just a couple of parameters in the CONFIG sketch. The FTP server side can be a bit more involved, especially regarding rights of the relevant FTP user for reading and writing in the /DISKS folder. FTP server logging is your friend here. 
--CALL ADSR loads a DSR file from / on the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns.
+- CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
+- CALL SDIR list the DOAD's in the /DISKS/ directory on the SD card including single sided (1S) or double sided (2S)
+- CALL SDSK shows the current DSK->DOAD mappings, Protect/Unprotect status and # of free sectors
+- CALL TIME gets the current date and time from your NTP server of choice for display in TI-BASIC. The CONFIG sketch only requires a couple of parameters changed to get it going. If a BASIC variable NTP$ (16 chars) exists prior to the CALL, it will get assigned the NTP data. This command is also handy to check basic network connectivity is available.
+- CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
+- CALL LDSK list the files on a DOAD (I always thought that was a really nice C64 feature), type (P)rogram / (D)isplay / (I)nternal and size in sectors.
+- CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
+- CALL RDSK removes a DOAD from the SD card. In line with BOFH standards no confirmation is required :-)
+- CALL FGET and CALL FPUT load or save a DOAD from your FTP server of choice. Configuration on the APEDSK99 side is straightforward, with again just a couple of parameters in the CONFIG sketch. The FTP server side can be a bit more involved, especially regarding rights of the relevant FTP user for reading and writing in the /DISKS folder. FTP server logging is your friend here. 
+- CALL ADSR loads a DSR file from / on the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns.
 
 ADSR() may require a soft-reset to execute any DSR powerup routines. 
 
