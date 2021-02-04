@@ -47,7 +47,7 @@ The two things that need a little bit of attention are:
 - The top row pins are soldered to the PCB via a [suitable length of standard header](img/APEDSK99connsold.jpg).
 
 #### 2. installing the memory IC. 
-The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slimline+. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). Without too much fiddling the IC will fit the smaller hole pattern and leave plenty of pin material sticking through for soldering.
+The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slimline+. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). Without too much fiddling the IC will fit the smaller hole pattern and leave plenty of pin material sticking through for soldering. This also works with a machined IC socket.
 
 The [Arduino shield sandwich](img/APEDSK99stack.jpg) (UNO - APEDSK99 - SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
