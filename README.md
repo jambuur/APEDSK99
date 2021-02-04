@@ -39,7 +39,7 @@ The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](h
 
 The two things that need a little bit of attention are 
 
-1) mounting the [edge connector](https://www.ebay.com/itm/5pc-Industrial-Card-Edge-Slot-Socket-Connector-22x2P-44P-2-54mm-0-1-3A-240-44/143868496672?hash=item217f3b0b20:g:2cQAAOxyuPtQ~70q):
+1) mounting the [edge connector](img/CONN22x2P44P25401.jpg):
 - The bottom row of pins need to be [bent 90 degrees downwards and the top row slightly bent upwards](img/APEDSK99conn.jpg)
 - [Rough up](img/APEDSK99spaper.jpg) the bottom side of the connector housing and the PCB area it will sit on (between PCB edge and white line)
 - Clean the 2 surfaces and [apply dots of superglue](img/APEDSK99sglue.jpg) across the length of 1 area
