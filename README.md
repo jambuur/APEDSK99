@@ -31,13 +31,15 @@ When the TI issues a disk controller command by writing to the FD1771 registers,
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
+Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). 
+
 ### *APEDSK99 Construction*
 
 Putting the APEDSK99 shield together is straightforward. 
 
 The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)). 
 
-The two things that need a little bit of attention are: 
+The three things that need a little bit of attention are: 
 
 #### 1. mounting the [edge connector](img/CONN22x2P44P25401.jpg)
 - The bottom row of pins need to be [bent 90 degrees downwards and the top row slightly bent upwards](img/APEDSK99conn.jpg)
@@ -53,13 +55,10 @@ The [Arduino shield sandwich](img/SANDWICH.jpg) (UNO - APEDSK99 - ETHERNET/SD) i
 
 One other thing to note is that the Arduino stackable headers seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB type B and the power adapter connectors. Make sure you either get the long version. Alternatively you could use an UNO with a micro-USB connector and de-solder its power adapter connector.
 
-### *GAL*
-Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). 
-
-### *Possible Ethernet / SD shield [modifcations](img/ESHIELDMOD.jpg*
+#### 3. Possible Ethernet / SD shield [modifcations](img/ESHIELDMOD.jpg)
 Depending on your Ethernet / SD shield version some minor surgery may be necessary. My version has SPI available through a separate 6 pin header only, not at the familiair D11-D14 (why? why?). If this is the case with your shield, you will need to extend the SPI signals to D11-D14 with some extra wiring.
 
-<SPI SS>
+Most Ethernet / SD shields use D4 for the SD CS pin. This also happens to be APEDSK99 D3 (as in databus, not in Arduino digital pin) and this combo function doesn't work. Bend D10 and D4 inwards and connect 2 jumper wires: D10 to D2 (moves Ethernet CS to D2) and D4 to APEDSK99 D10 (moves SD CS to D10). 
 
 ### *DOAD's*
 
