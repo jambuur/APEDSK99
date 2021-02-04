@@ -41,20 +41,20 @@ The three things that need a little bit of attention are:
 
 #### 1. mounting the [edge connector](img/CONN22x2P44P25401.jpg)
 - The bottom row of pins need to be [bent 90 degrees downwards and the top row slightly bent upwards](img/APEDSK99conn.jpg)
-- [Rough up](img/APEDSK99spaper.jpg) the bottom side of the connector housing and the PCB area it will sit on (between PCB edge and white line)
-- Clean the 2 surfaces and [apply dots of superglue](img/APEDSK99sglue.jpg) across the length of 1 area
+- [Rough up](img/SPAPER.jpg) the bottom side of the connector housing and the PCB area it will sit on (between PCB edge and white line)
+- Clean the 2 surfaces and [apply dots of superglue](img/GLUE.jpg) across the length of 1 area
 - Line up the bottom connector pins with the row of PCB holes marked 1-43 and press the connector firmly on the PCB, making sure all connector pins stick through to the soldering side. After clamping it for a bit to let the glue dry, the bottom row pins can now be soldered. 
 - The top row pins are soldered to the PCB via a [suitable length of standard header](img/APEDSK99connsold.jpg).
 
 #### 2. installing the RAM IC 
-The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slimline+. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). Without too much fiddling the IC will fit the smaller hole pattern and leave plenty of pin material sticking through for soldering. This also works with a machined IC socket.
+The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slimline+. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). Without too much fiddling the IC will fit the smaller hole pattern and leave plenty of pin material sticking through for soldering. Alternatively, you can also mount the RAM in a (machined) IC socket the same way.
 
 The [Arduino shield sandwich](img/SANDWICH.jpg) (UNO - APEDSK99 - ETHERNET/SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
-One other thing to note is that the Arduino [stackable headers](img/SHEADER.jpg) seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB type B and the power adapter connectors. Make sure you either get the long version. Alternatively you could use an UNO with a micro-USB connector and de-solder its power adapter connector.
+One other thing to note is that the Arduino [stackable headers](img/SHEADER.jpg) seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB type B and the power adapter connectors. Make sure you etiher get the long version or use an UNO with a micro-USB connector and de-solder its power adapter connector. 
 
-#### 3. Possible Ethernet / SD shield [modifcations](img/ESHIELDMOD.jpg)
-Depending on your Ethernet / SD shield version some minor surgery may be necessary. My version has SPI available through a separate 6 pin header only, not at the familiair D11-D14 (why? why?). If this is the case with your shield, you will need to extend the SPI signals to D11-D14 with some extra wiring.
+#### 3. Ethernet / SD shield modifcations
+Depending on your Ethernet / SD shield version some minor surgery may be necessary. My version has SPI available through a separate 6 pin header only, not at the familiair D11-D14 (why? why?). If this is the case with your shield, you will need to extend the SPI signals to D11-D14 with some [extra wiring](img/ESHIELDMOD.jpg).
 
 Most Ethernet / SD shields use D4 for the SD CS pin. This also happens to be APEDSK99 D3 (as in databus, not in Arduino digital pin) and this combo function doesn't work. Bend D10 and D4 inwards and connect [2 jumper wires](img/JUMPER.jpg): D10 to D2 (moves Ethernet CS to D2) and D4 to APEDSK99 D10 (moves SD CS to D10). 
 
