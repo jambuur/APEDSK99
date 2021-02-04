@@ -1,4 +1,4 @@
-# 02/02/2021 - WORK IN PROGRESS, DON'T USE!
+# 30/1/2021: Work In Progress, files section not updated yet!
 
 # APEDSK99
 ### *Arduino DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
@@ -31,8 +31,6 @@ When the TI issues a disk controller command by writing to the FD1771 registers,
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
-Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). 
-
 ### *APEDSK99 Construction*
 
 Putting the APEDSK99 shield together is straightforward. 
@@ -60,6 +58,10 @@ Depending on your Ethernet / SD shield version some minor surgery may be necessa
 
 Most Ethernet / SD shields use D4 for the SD CS pin. This also happens to be APEDSK99 D3 (as in databus, not in Arduino digital pin) and this combo function doesn't work. Bend D10 and D4 inwards and connect 2 jumper wires: D10 to D2 (moves Ethernet CS to D2) and D4 to APEDSK99 D10 (moves SD CS to D10). 
 
+### *GAL*
+
+Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). You will need a suitable programmer to program the GAL with the supplied PLD file.
+
 ### *DOAD's*
 
 DOAD's need to be stored in a /DISKS/ folder on the SD card or on a FTP server. DOAD filenames must follow the DOS 8.3 format and have a ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's (see below).
@@ -70,29 +72,20 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's CALL AHLP; it shows the following help screen:
 
-CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
+![KiCAD 3D view](img/AHLP.jpg)
 
-CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
+- CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
+- CALL SDIR list the DOAD's in the /DISKS/ directory on the SD card including single sided (1S) or double sided (2S)
+- CALL SDSK shows the current DSK->DOAD mappings, Protect/Unprotect status and # of free sectors
+- CALL TIME gets the current date and time from your NTP server of choice for display in TI-BASIC. The CONFIG sketch only requires a couple of parameters changed to get it going. If a BASIC variable NTP$ (16 chars) exists prior to the CALL, it will get assigned the NTP data. This command is also handy to check basic network connectivity is available.
+- CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
+- CALL LDSK list the files on a DOAD (I always thought that was a really nice C64 feature), type (P)rogram / (D)isplay / (I)nternal and size in sectors.
+- CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
+- CALL RDSK removes a DOAD from the SD card. In line with BOFH standards no confirmation is required :-)
+- CALL FGET and CALL FPUT load or save a DOAD from your FTP server of choice. Configuration on the APEDSK99 side is straightforward, with again just a couple of parameters in the CONFIG sketch. The FTP server side can be a bit more involved, especially regarding rights of the relevant FTP user for reading and writing in the /DISKS folder. FTP server logging is your friend here. 
+- CALL ADSR loads a DSR file from / on the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns. ADSR() may require a soft-reset to execute any DSR powerup routines. 
 
-CALL SDSK shows the current DSK->DOAD mappings, Protect/Unprotect status and # of free sectors
-
-CALL LDSK list the files on a DOAD (I always thought that was a really nice C64 feature), type (P)rogram / (D)isplay / (I)nternal and size in sectors. 
-
-CALL RDSK removes a DOAD from the SD card. In line with professional standards no confirmation is required :-)
-
-CALL SDIR list the DOAD's in the /DISKS/ directory on the SD card including single sided (1S) or double sided (2S)
-
-CALL ADSR loads a DSR file from / on the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns.
-
-CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
-
-With the ADSR() and ARST() CALLs, keep in mind you might need to soft-reset the TI if the relevant DSR powerup routines have not been executed previously. 
-
-CALL FGET and CALL FPUT load or save a DOAD from your FTP server of choice. Configuration on the APEDSK99 side is straightforward, with just a couple of parameters in the CONFIG script. The FTP server side can be a bit more involved, especially regarding rights of the relevant FTP user on reading and writing in the /DISKS folder. FTP server logging is your friend here. Basic network connectivity can be checked with the CALL TIME command (see below).
-
-CALL TIME gets the current date and time from a NTP server and shows that in TI-BASIC. Again the CONFIG script only requires a couple of parameters changed to get it going. If a variable called NTP$ with a length of 16 characters exists prior to the CALL, it will get assigned the NTP data.  
-
-With SDIR and LDSK you could end up with multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
+SDIR and LDSK may generate multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
 
 Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name etc.
 
@@ -133,7 +126,7 @@ Feel free to improve and share!
 
 ### *Bugs*
 
-If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky direct disk access and weird copy protection schemes will likely fail. 
+If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math and weird copy protection schemes will likely fail. 
 
 ### *Future*
 
