@@ -56,7 +56,7 @@ One other thing to note is that the Arduino stackable headers seem to come in a 
 ### *GAL*
 Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). 
 
-### *Possible Ethernet / SD shield modifcations*
+### *Possible Ethernet / SD shield [modifcations](img/ESHIELDMOD.jpg*
 Depending on your Ethernet / SD shield version some minor surgery may be necessary. My version has SPI available through a separate 6 pin header only, not at the familiair D11-D14 (why? why?). If this is the case with your shield, you will need to extend the SPI signals to D11-D14 with some extra wiring.
 
 <SPI SS>
