@@ -106,9 +106,9 @@ Alternatively you could connect [_Analog 1_ to _+5V_](img/A15V.jpg) with a jumpe
 
 ### *Ignition sequence*
 
-Unlike the original TI Disk Controller ROM, the APEDSK99 DSR sits in RAM and is permanently enabled within the TI's address space. Any unintentional write from the TI can potentially corrupt the DSR code. This could happen for instance when you switch the TI on (spurious signals on the sideport) or insert a cartridge.
+Unlike the original TI Disk Controller ROM, the APEDSK99 DSR sits in RAM and is permanently enabled within the TI's address space. Any unintentional write from the TI can potentially corrupt the DSR code. This is likley to happen when you switch the TI on (spurious signals on the sideport).
 
-So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (short glow from the LED) and then soft-reset the TI with FCTN-QUIT.
+So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (short flash from the LED) and then soft-reset the TI with FCTN-QUIT to execute the DSR power-up routines.
 
 ### *Error codes*
 
@@ -126,13 +126,11 @@ Feel free to improve and share!
 
 ### *Bugs*
 
-If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math and weird copy protection schemes will likely fail. 
+If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math or weird copy protection schemes will likely fail. 
 
 ### *Future*
 
-After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic DSR interface to a substantial catalogue of available Arduino shields.
-
-Also, the Arduino has full access to the 32K RAM expansion; this provides options for all sorts of fast data sharing between networked devices and the TI.
+After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic interrupt-driven DSR interface to a substantial catalogue of available Arduino shields. Also, the Arduino has full access to the 32K RAM expansion so there is potential for fast data sharing between networked devices and the TI.
 
 ### *Acknowledgements*
 
