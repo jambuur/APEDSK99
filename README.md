@@ -1,7 +1,7 @@
 # APEDSK99
 ### *Arduino DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Combined with a Ethernet / SD shield it allows you to load and save Disk-On-A-Disk (DOAD) single and double sided floppy images on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds TI-BASIC access to NTP date and time. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
+APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Combined with a Ethernet / SD shield it allows you to load and save Disk-On-A-Disk (DOAD) single and double sided floppy images on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to TI-BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/TRIO.jpg)
 
@@ -65,6 +65,8 @@ Memory decoding and interrupt generation is done through a 16V8 GAL. It was my f
 DOAD's need to be stored in a /DISKS/ folder on the SD card or on a FTP server. DOAD filenames must follow the DOS 8.3 format and have a ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's (see below).
 
 Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. Single-sided formatting takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. Reverse is also true but the DOAD will still take DD / 180KB of disk space (not that it matters with likely plenty of SD or FTP GB's to spare).
+
+On my setup (a Linux server with VSFTP within the same LAN segment) I get about 20Kbyte upload and 30Kbyte download speed. In practice it means 5-10 seconds between the TI-BASIC FTP CALL and back to the friendly flashing cursor.
 
 ### *TI BASIC support*
 
