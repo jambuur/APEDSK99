@@ -29,7 +29,7 @@ When the TI issues a disk controller command by writing to the FD1771 registers,
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
-### *APEDSK99 Construction*
+### *APEDSK99 construction*
 
 Putting the APEDSK99 shield together is straightforward. 
 
@@ -118,7 +118,7 @@ The LED can flash in the following intricate error patterns:
 2. *flash-flash*      : can't read DSR binary image (/xxxxxxxx.DSR)
 3. *flash-flash-flash*: no valid DSR header (>AA) at DSR RAM >4000
 
-### *Some predictive Q&A*
+### *I know*
 
 Writing software is a hobby, not my profession. No doubt some gurus would achieve the same functionality with half the code. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
 
