@@ -57,7 +57,7 @@ const char CALLhelp[36][16] PROGMEM = {                                         
   { "RDSK(\"1-8C\") = d"  },  { "elete sd doad   " },
   { "FGET(\"1-8C\") = s"  },  { "d doad->ftp     " },
   { "FPUT(\"1-8C\") = f"  },  { "tp->sd doad     " },
-  { "ADSR(\"1-8C\") = l"  },  { "oad dsr&reset   " },
+  { "ADSR(\"8C\")   = l"  },  { "oad dsr&reset   " },
 };
 
 //reset Arduino properly via watchdog timer
