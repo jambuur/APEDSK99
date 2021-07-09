@@ -1,12 +1,12 @@
-IPAddress       IP(10, 0, 0, 96);                                                                 //EthernetShield IP address : CHANGE TO SUIT YOUR NETWORK
-IPAddress       ftpserver(10, 0, 0, 13);                                                          //FTP server IP address     : CHANGE TO SUIT YOUR NETWORK
-//IPAddress       namesServer(8, 8, 8, 8);                                                        //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
-//IPAddress       gateway(10, 10, 10, 1);                                                         //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
-//IPAddress       netmask(255, 255, 255, 0);                                                      //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
+IPAddress       IP(x, x, x, x);                                                                   //EthernetShield IP address : CHANGE TO SUIT YOUR NETWORK
+IPAddress       ftpserver(x.x.x.x);                                                               //FTP server IP address     : CHANGE TO SUIT YOUR NETWORK
+//IPAddress       namesServer(x.x.x.x);                                                           //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
+//IPAddress       gateway(x.x.x.x);                                                               //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
+//IPAddress       netmask(x.x.x.x);                                                               //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 
-char *ntpserver = "10.0.0.13";                                                                    //NTP servername or IP address  : CHANGE TO SUIT YOUR NETWORK 
-char *user = "apedsk99";                                                                          //FTP server username           : CHANGE TO SUIT YOUR NETWORK 
-char *pass = "apedsk99";                                                                          //FTP server password           : CHANGE TO SUIT YOUR NETWORK 
+char *ntpserver = "x.x.x.x";                                                                      //NTP servername or IP address  : CHANGE TO SUIT YOUR NETWORK 
+char *user = "********";                                                                          //FTP server username           : CHANGE TO SUIT YOUR NETWORK 
+char *pass = "********";                                                                          //FTP server password           : CHANGE TO SUIT YOUR NETWORK 
 
 #define TZ 46800                                                                                  //local hours difference with UTC in seconds (hours * 3600)
 
