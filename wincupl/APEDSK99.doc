@@ -5,7 +5,7 @@
 
 CUPL(WM)        5.0a Serial# 60008009
 Device          g16v8ma  Library DLIB-h-40-8
-Created         Tue Dec 01 21:02:31 2020
+Created         Wed Nov 24 11:43:01 2021
 Name            APEDSK99 
 Partno          12o 
 Revision        01 
@@ -42,22 +42,22 @@ CE_245.oe  =>
     !TI_BUF
 
 DSR =>
-    !AD_A13 & AD_A14 & !AD_A15
+    !AD_A13 & AD_A14 & !AD_A15 & !MEMEN
 
 HIMEM1 =>
-    AD_A13 & !AD_A14 & AD_A15
+    AD_A13 & !AD_A14 & AD_A15 & !MEMEN
 
 HIMEM2 =>
-    !AD_A13 & AD_A14 & AD_A15
+    !AD_A13 & AD_A14 & AD_A15 & !MEMEN
 
 HIMEM3 =>
-    AD_A13 & AD_A14 & AD_A15
+    AD_A13 & AD_A14 & AD_A15 & !MEMEN
 
 LOWMEM =>
-    AD_A13 & !AD_A14 & !AD_A15
+    AD_A13 & !AD_A14 & !AD_A15 & !MEMEN
 
 !TI_INT =>
-    !AD_A13 & AD_A14 & !AD_A15 & !MEMEN
+    AD_A0 & !AD_A13 & AD_A14 & !AD_A15 & !MEMEN & !WE
 
 TI_INT.oe  =>
     !TI_BUF
