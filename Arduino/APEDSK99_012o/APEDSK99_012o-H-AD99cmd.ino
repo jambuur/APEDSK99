@@ -314,6 +314,9 @@
               }  
             }
             EtherStop();                                                                                    //stop Ethernet client
+            //---
+            CALLstatus( AllGood );                                                                          //----IF THIS LINE IS COMMENTED OUT, TIME WILL PRINT DATE/TIME BY DEFAULT
+            //---
             noExec(); 
           }
           break;
