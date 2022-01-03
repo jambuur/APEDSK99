@@ -1,12 +1,12 @@
-IPAddress       IP(x, x, x, x);                                                                   //EthernetShield IP address : CHANGE TO SUIT YOUR NETWORK
-IPAddress       ftpserver(x,x,x,x);                                                               //FTP server IP address     : CHANGE TO SUIT YOUR NETWORK
+IPAddress       IP(192, 168, 1, 1);                                                                   //EthernetShield IP address : CHANGE TO SUIT YOUR NETWORK
+IPAddress       ftpserver(192, 168, 1, 100);                                                               //FTP server IP address     : CHANGE TO SUIT YOUR NETWORK
 //IPAddress       namesServer((x,x,x,x);                                                           //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 //IPAddress       gateway(x,x,x,x);                                                               //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 //IPAddress       netmask(x,x,x,x);                                                               //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 
-char *ntpserver = "x,x,x,x";                                                                      //NTP servername or IP address  : CHANGE TO SUIT YOUR NETWORK 
-char *user = "********";                                                                          //FTP server username           : CHANGE TO SUIT YOUR NETWORK 
-char *pass = "********";                                                                          //FTP server password           : CHANGE TO SUIT YOUR NETWORK 
+char *ntpserver = "192.168.1.100";                                                                      //NTP servername or IP address  : CHANGE TO SUIT YOUR NETWORK 
+char *user = "xxxxxxxx";                                                                          //FTP server username           : CHANGE TO SUIT YOUR NETWORK 
+char *pass = "xxxxxxxx";                                                                          //FTP server password           : CHANGE TO SUIT YOUR NETWORK 
 
 #define TZ 46800                                                                                  //local hours difference with UTC in seconds (hours * 3600)
 
