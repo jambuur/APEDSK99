@@ -3571,14 +3571,18 @@ ACLBAS	CB	@CALLST,@K004		"More" or "AllGood" received from Arduino?
 	DATA	SCROLL			scroll screen
 *
 	CB 	@CALLST,@K007		error?	
-	JL	H9903			yes; let's make some noise
-	B  	@TIME2			no; see if we can assign date/time to NTP$ 
+	JH	H9904			no; we can exit 
 *
-H9903	LI	R5,GPLINT		GPL routine
+H9903	LI	R5,GPLINT		yes: let's make some noise
 	BL	@GPLXML
-	DATA	HONK			"bad tone"
+	DATA	HONK			GPL routine"bad tone"
+	JMP	H9914
 *
-H9904	CLR	@>0050(R9)		clear error flag		
+H9904	CI	R6,>1200		TIME() ?
+	JNE	H9914			no, end the party
+	B  	@TIME2			yes; see if we can assign date/time to NTP$ 
+*
+H9914	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
 ACLERR	B	@RTURN1			return to caller (i.e. TI-BASIC)
@@ -3587,7 +3591,7 @@ ACLERR	B	@RTURN1			return to caller (i.e. TI-BASIC)
 * Subprogram SDSK / LDSK / SDIR/ AHLP / TIME
 * ----------------------------------------------------------------
 *
-LDSK2	MOVB	R6,@ACOMND		SDSK/LDSK/SDIR/AHLP/TIME command to Arduino
+LDSK2	MOVB	R6,@ACOMND		SDSK/LDSK/SDIR/AHLP command to Arduino
 	CB	@K002,@CALLST
 	JEQ	QTLSSA			LDSK: >00; no DOAD mapped
 *
@@ -3602,7 +3606,7 @@ LDNXTS	CLR	R2			clear screen; position 0
 	BL	@VDPWRI			
 *	
 H9905	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP/TIME return code
-	JEQ	QTLSSA			"More" (>F0); blank "floppy" or done last file / help txt / date, time
+	JEQ	QTLSSA			"More" (>F0); blank "floppy" or done last file / help txt
 *
 	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP/TIME output to screen
 *
@@ -3714,7 +3718,7 @@ H9912	MOVB	*R5+,R2			read character
 	CI	R5,CALLBF+18		done all 16 chars?
 	JNE	H9912			no; one more
 *
-H9913	B	@H9904			yes; back to BASIC
+H9913	B	@H9914			yes; back to BASIC
 *
 * execute GROM or XML routine (SCROLL, "bad sound"/ HONK and XML >16)
 * DSR and GPL interpreter use same workspace (>83E0) so we need to save a few things
@@ -3755,7 +3759,7 @@ GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
 	B	*R11			return to instruction after BL @GPLEXEC DATA statement
 *
 *-----------------------------------------
-* >5FBE - >5FD3: 22 free bytes remaining
+* >5FC6 - >5FD3: 14 free bytes remaining
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
 * >5FE8	is the Arduino Command Register (TI BASIC CALL support)
