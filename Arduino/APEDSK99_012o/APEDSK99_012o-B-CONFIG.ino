@@ -4,9 +4,9 @@ IPAddress       ftpserver(192,168,1,100);                                       
 //IPAddress       gateway(x,x,x,x);                                                               //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 //IPAddress       netmask(x,x,x,x);                                                               //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 
-char *ntpserver = "192.168.1.100";                                                                      //NTP servername or IP address  : CHANGE TO SUIT YOUR NETWORK 
-char *user = "xxxxxxxx";                                                                          //FTP server username           : CHANGE TO SUIT YOUR NETWORK 
-char *pass = "xxxxxxxx";                                                                          //FTP server password           : CHANGE TO SUIT YOUR NETWORK 
+const char *ntpserver = "192.168.1.100";                                                                      //NTP servername or IP address  : CHANGE TO SUIT YOUR NETWORK 
+const char *user = "xxxxxxxx";                                                                          //FTP server username           : CHANGE TO SUIT YOUR NETWORK 
+const char *pass = "xxxxxxxx";                                                                          //FTP server password           : CHANGE TO SUIT YOUR NETWORK 
 
 #define TZ 46800                                                                                  //local hours difference with UTC in seconds (hours * 3600)
 
