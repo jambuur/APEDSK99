@@ -176,8 +176,8 @@ byte getNTPdt( void ) {
 }
 
 void writeFATts( void ) {                                                                             //update FAT MODIFY time/date
-  
-  if ( getNTPdt != FNTPConnect ) {                                                                    //if valid NTP time ...
+  byte chkNTPdt = getNTPdt();
+  if ( chkNTPdt != FNTPConnect ) {                                                                    //if valid NTP time ...
     DSK[currentDSK].timestamp(T_WRITE, TimeDateNum[4],                                                //... update FAT data
                                        TimeDateNum[3],
                                        TimeDateNum[2],
