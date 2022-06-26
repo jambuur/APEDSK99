@@ -1,7 +1,7 @@
 //NOTE: IPAddress uses a comma "," for the address definition instead of the familiair dot "." !
 IPAddress       IP(192,168,1,1);                                                                   //EthernetShield IP address : CHANGE TO SUIT YOUR NETWORK
 IPAddress       ftpserver(192,168,1,100);                                                               //FTP server IP address     : CHANGE TO SUIT YOUR NETWORK
-//IPAddress       namesServer((x,x,x,x);                                                           //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
+//IPAddress       namesServer(x,x,x,x);                                                           //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 //IPAddress       gateway(x,x,x,x);                                                               //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 //IPAddress       netmask(x,x,x,x);                                                               //not required if on same subnet as FTP server; otherwise CHANGE TO SUIT YOUR NETWORK
 
