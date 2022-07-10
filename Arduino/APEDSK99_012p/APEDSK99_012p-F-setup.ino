@@ -56,7 +56,7 @@ void setup() {
   //direct interrupt register access for speed
   EICRA |= B00000010;                                                   //sense falling edge on INT0 pin
 
-  //74LS138 interrupt: TI WE*, MBE* and A15 -> O0 output
+  //GAL interrupt: TI WE*, MBE* and A15 -> O0 output
   //a write to DSR space (aka CRU, FD1771 registers; 
   //or sector/track Read through R6 counter in RAM, see DSR source)
   pinAsInput(TI_INT);                                                   //from Ethernet SS to detecting TI Interrupts 
