@@ -259,12 +259,9 @@
               for ( byte ii = 2; ii < 14; ii++ ) {                                                          //... and write to buffer
                 write_DSRAM( CALLBF + ii, DOADfilename[ii-2] + TIBias );
               } 
+              DSK[currentDSK].seek( 0x12 );                                                                 //byte >12 in VIB stores # of sides (>01 or >02)
+              write_DSRAM( CALLBF + 15, DSK[currentDSK].read() + (48 + TIBias) );                           //change to ASCII and add TI screen bias
               write_DSRAM( CALLBF + 16, 'S' + TIBias );                                                     //"SIDED"
-              if ( DSK[currentDSK].size() < 180000 ) {                                                      //single (90KB)?
-                write_DSRAM( CALLBF + 15, '1' + TIBias );                                                   //yep -> "1S"
-              } else {      
-                write_DSRAM( CALLBF + 15, '2' + TIBias );                                                   //no -> "2S"
-              }
               DSK[currentDSK].close();                                                                      //prep for next file
             } else {                                                                                        //... no
               SDdir.close();

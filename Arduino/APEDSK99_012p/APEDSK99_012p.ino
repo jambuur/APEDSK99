@@ -1,3 +1,5 @@
+#include <EEPROM.h>
+
 /* APEDISK99
   This sketch emulates 3 TI99/4a DS/SD disk drives, including the ability to load and save Disk-On-A-Disk (DOAD) files via the FTP protocol
   
