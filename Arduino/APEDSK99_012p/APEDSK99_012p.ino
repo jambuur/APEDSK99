@@ -33,8 +33,8 @@
   https://github.com/greiman/SdFat
 
   $Author: Jochen Buur $
-  $Date: April 2019-December 2020 $
-  $Revision: 0.12o $
+  $Date: June 2022 $
+  $Revision: 0.12p $
   
   This software is freeware and can be modified, re-used or thrown away without any restrictions.
   Use this code at your own risk.

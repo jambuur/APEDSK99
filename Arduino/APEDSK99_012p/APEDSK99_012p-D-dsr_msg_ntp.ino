@@ -40,7 +40,7 @@ const char CALLerror[5][17] PROGMEM = {                                         
 
 //help messages in FLASH memory
 const char CALLhelp[36][17] PROGMEM = {                                                               //CALL() help text
-  { "    APEDSK99 CAL"      },  { "L commands      " },
+  { "    APEDSK99 v0."      },  { "12p CALLs       " },
   { "    ------------"      },  { "----------      " },
   { "AHLP = this help"      },  { " screen         " },
   { "ARST = soft rese"      },  { "t apedsk99      " },
