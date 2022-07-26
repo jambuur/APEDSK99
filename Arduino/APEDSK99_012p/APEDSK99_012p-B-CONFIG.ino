@@ -8,7 +8,7 @@ IPAddress       ftpserver(x,x,x,x);                                             
 //IPAddress       netmask(x,x,x,x);                                                              //not required if on same subnet as FTP server
 
 //CHANGE TO SUIT YOUR NETWORK
-const char *ntpserver = "x,x,x,x";                                                              //NTP servername or IP address
+const char *ntpserver = "x.x.x.x";                                                              //NTP servername or IP address
 const char *user = "xxxxxxxx";                                                                  //FTP server username
 const char *pass = "xxxxxxxx";                                                                  //FTP server password
 
