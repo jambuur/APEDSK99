@@ -1,10 +1,10 @@
 //DSKx file pointers
-File DSK[4];                                                                                          //file pointers to DOAD's
+File DSK[3];                                                                                          //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available 
-boolean activeDSK[4]  = {false, false, false, false};                                                 //DSKx active flag
-char nameDSK[4][20]   = {"x", "/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};   //DOAD file names; startup defaults
-byte protectDSK[4]    = {0x00, 0x20, 0x20, 0x20};                                                     //DOAD write protect status
+boolean activeDSK[3]  = {false, false, false};                                                        //DSKx active flag
+char nameDSK[3][20]   = {"/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};        //DOAD file names; startup defaults
+byte protectDSK[3]    = {0x20, 0x20, 0x20};                                                           //DOAD write protect status
 byte currentDSK       = 0;                                                                            //current selected DSK
 File SDdir;                                                                                           //file pointer for SD directory listing
 byte gii              = 0;                                                                            //global counter (remember value in between successive calls of same APEDSK99 command)
