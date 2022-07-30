@@ -5,7 +5,7 @@
 
         if ( newA99cmd = (currentA99cmd != lastA99cmd) ) {                                                  //new or continue previous APEDSK99 command?
           lastA99cmd = currentA99cmd;                                                                       //new; remember new command for next compare
-          currentDSK = read_DSRAM( CALLBF ) - 1;                                                            //read target DSKx
+          currentDSK = read_DSRAM( CALLBF );                                                                //read target DSKx
           CALLstatus( AllGood );                                                                            //start with clean execution slate
         }
         
@@ -51,10 +51,11 @@
             strncat( DOADfilename, ".DSK", 4 );                                                             //add file extenstion to filename
             strncat( DOADfullpath, DOADfilename, ++ii + 4 );                                                //add filename to path                                                                                                               
              
-            boolean existDOAD = SD.open( DOADfullpath, FILE_READ);                                          //"does DOAD exist" flag
+            boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
             byte protectDOAD;                                                                               //Protected flag
-            if ( existDOAD ) {                                                                              //does DOAD exist?
-              DSK[currentDSK].seek(0x10);                                                                   //yes; byte 0x10 in Volume Information Block stores status
+            if ( existDOAD ) {                                                                              //does DOAD exist?>
+              DSK[currentDSK] = SD.open( DOADfullpath, FILE_READ);                                          //yes; open DOAD file
+              DSK[currentDSK].seek(0x10);                                                                   //byte 0x10 in Volume Information Block stores status
               protectDOAD = DSK[currentDSK].read();                                                         //store Protected flag
             }
  
@@ -181,6 +182,8 @@
  
             if ( gii < 6 ) {                                                                                //3 rows, 1 row is 2x16char fields                
               if ( !(gii & B00000001) ) {                                                                   //if field == even we need to display mapping, otherwise time/date
+
+                currentDSK++;                                                                               //next DSK
                 if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD?
 
                   DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_READ );
@@ -235,7 +238,6 @@
                 } 
               }
               gii++;                                                                                        //next screen field
-              currentDSK++;                                                                                 //next DSK
             } else { 
               CALLstatus( More );                                                                           //processed DSK[1-3]
               noExec();                                                                         
@@ -302,7 +304,7 @@
               }
               CALLstatus( NTPStamp );                                                                       //done with a one-liner 
             } else if ( currentA99cmd == 19 ) {                                                             //DSR DSK NTP update (format, write / save file)                                                                           
-              currentDSK = ( (read_DSRAM( CRUWRI) >> 1) - 1 ) & B00000011;                                  //determine selected disk in DSR command   
+              currentDSK = ( read_DSRAM( CRUWRI ) >> 1 ) & B00000011;                                       //determine selected disk in DSR command   
               if ( protectDSK[currentDSK] != 0x50 ) {                                                       //DSK protected?
                 DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_WRITE );
                 writeFATts();                                                                               //no; update DOAD FAT date/time

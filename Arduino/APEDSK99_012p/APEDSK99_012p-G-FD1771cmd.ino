@@ -76,7 +76,7 @@ void loop() {
         //***** FD1771 R/W commands: prep
         
         if ( newFD1771cmd ) {                                                           //new command prep?
-          currentDSK = ( (read_DSRAM( CRUWRI ) >> 1) - 1 ) & B00000011;                 //yes; determine selected disk
+          currentDSK = ( read_DSRAM( CRUWRI ) >> 1) & B00000011;                        //yes; determine selected disk
           if ( activeDSK[currentDSK] ) {                                                //is selected disk available?
             write_DSRAM( RSTAT, NOERROR );                                              //yes; reset possible "Not Ready" bit in Status Register
             if ( currentFD1771cmd == 0xE0 || currentFD1771cmd == 0xF0 ) {               //R/W whole track?
@@ -86,8 +86,10 @@ void loop() {
             DOADbyteidx = calcDOADidx();                                                //calc absolute DOAD byte index
             DSK[currentDSK].seek( DOADbyteidx );                                        //set to first absolute DOAD byte for R/W
           } else {
+            if ( currentDSK != 0 ) {                                                    //ignore DSK0; either DSK1, DSK2 or DSK3 is not available
               write_DSRAM( RSTAT, NOTREADY );                                           //set "Not Ready" bit in Status Register
               currentFD1771cmd = FDINT;                                                 //exit 
+            }
           }
         }
         
