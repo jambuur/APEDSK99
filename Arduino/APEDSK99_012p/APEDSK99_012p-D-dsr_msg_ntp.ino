@@ -18,8 +18,8 @@ byte gii              = 0;                                                      
 #define Protected       3
 #define DSRNotFound     4
 #define NTPStamp        99
-#define More            0xF0
-#define AllGood         0xFF
+#define More            0x55
+#define AllGood         0xAA
 
 #define CALLBF          0x5FD6                                                                        //CALL() buffer (data exchange)
 #define TIBias          0x60                                                                          //TI BASIC screen bias
@@ -40,7 +40,7 @@ const char CALLerror[5][17] PROGMEM = {                                         
 
 //help messages in FLASH memory
 const char CALLhelp[36][17] PROGMEM = {                                                               //CALL() help text
-  { "    APEDSK99 v0."      },  { "12p CALLs       " },
+  { "    APEDSK99 v0."      },  { "12q CALLs       " },
   { "    ------------"      },  { "----------      " },
   { "AHLP = this help"      },  { " screen         " },
   { "ARST = soft rese"      },  { "t apedsk99      " },
@@ -73,7 +73,7 @@ void APEDSK99reset ( void ) {
 //  flash-flash-flash : no valid DSR header (0xAA) at DSR RAM 0x0000)
 void Flasher( byte errorcode ) {                                                                      //error routine: stuck in code flashing loop until reset
   //"no APEDSK99 for you"
-  digitalHigh(TI_READY);                                                                              //vanilla TI console
+  TIstop();                                                                                           //vanilla TI console
   
   while ( true ) { 
     for ( byte flash = 0; flash < errorcode; flash++ ) {

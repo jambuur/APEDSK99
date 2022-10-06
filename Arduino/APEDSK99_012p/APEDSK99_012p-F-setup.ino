@@ -1,7 +1,7 @@
 void setup() {
   
   TIstop();                                                             //put TI on hold and enable 74HC595 shift registers
-
+  
   pinAsOutput(ETHSD_SS);                                                //initialise shield SS pin
   digitalHigh(ETHSD_SS);                                                //without this SPI subsystem won't work
   
@@ -48,19 +48,20 @@ void setup() {
     }
   }
   
-  //"initialize FD1771":
+  //"initialize FD1771"
   FD1771reset();                                                        //"Restore" command
   noExec();                                                             //"no command" as default
   
   //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
   //direct interrupt register access for speed
   EICRA |= B00000010;                                                   //sense falling edge on INT0 pin
-
+  EIMSK |= B00000001;                                                   //enable INT0
+  
   //GAL interrupt: TI WE*, MBE* and A15 -> O0 output
   //a write to DSR space (aka CRU, FD1771 registers; 
   //or sector/track Read through R6 counter in RAM, see DSR source)
-  pinAsInput(TI_INT);                                                   //from Ethernet SS to detecting TI Interrupts 
+  pinAsInputPullUp(TI_INT);                                             //from Ethernet SS to detecting TI Interrupts 
 
   TIgo();                                                               //TI: take it away
-
+  
 } //end of setup()

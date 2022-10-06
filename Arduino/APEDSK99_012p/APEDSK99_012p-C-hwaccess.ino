@@ -111,24 +111,23 @@ void write_DSRAM( unsigned int address, byte data ) {
   databus_input();                                                                                          //set databus to (default) input state
 } 
 
+//disable TI I/O, enable Arduino shift registers and control bus
+//INLINE: need for speed in ISR
+inline void TIstop() __attribute__((always_inline));
+void TIstop( void ) {
+  pinAsInput(TI_BUFFERS);                                                                                   //disables 74HCT541 address buffers (TI sees >FF and waits)
+  pinAsOutput(AR_BUF);                                                                                      //enables 74HC595 shift registers
+  enable_controlbus();                                                                                      //Arduino in control of RAM
+} 
+
 //enable TI I/O, disable Arduino shift registers and control bus
 //INLINE: need for speed
 inline void TIgo() __attribute__((always_inline));
 void TIgo( void ) {
   disable_controlbus();                                                                                     //cease Arduino RAM control
-  pinAsOutput(TI_BUFFERS);                                                                                  //enable 74LS541's 
-  EIFR = bit (INTF0);                                                                                       //clear flag for interrupt 0 
-  EIMSK |= B00000001;                                                                                       //enable INT0
-  pinAsInput(TI_READY);                                                                                     //switch to HIGH: disables 74HC595's and wakes up TI
+  pinAsInputPullUp(AR_BUF);                                                                                       //disables 74HC595 shift registers
+  digitalHigh(AR_BUF);
+  pinAsOutput(TI_BUFFERS);                                                                                  //enables 74HCT541 address buffers (TI sees !FF and continues)
 }
 
-//disable TI I/O, enable Arduino shift registers and control bus
-//INLINE: need for speed in ISR
-inline void TIstop() __attribute__((always_inline));
-void TIstop( void ) {
-  EIMSK &= B11111110;                                                                                       //disable INT0
-  pinAsOutput(TI_READY);                                                                                    //bring READY line LOW (halt TI)
-  NOP();                                                                                                    //long live the Logic Analyzer
-  pinAsInput(TI_BUFFERS);                                                                                   //disables 74LS541's    
-  enable_controlbus();                                                                                      //Arduino in control of RAM
-}
+ 

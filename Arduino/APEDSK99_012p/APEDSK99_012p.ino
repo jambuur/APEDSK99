@@ -110,7 +110,7 @@ NTP ntp(udp);
 #define WE  16	                                                              //PC2
 
 //IO lines for TI99/4a control
-#define TI_READY       3                                                      //PD0; TI READY line + enable/disable 74HC595 shift registers
+#define AR_BUF         3                                                      //PD0; enable/disable 74HC595 shift registers
 #define TI_INT      	 2                                                      //PD2; GAL16V8 interrupt (DSR write & A15); shared with Ethernet CS (ETH_CS) 
 #define TI_BUFFERS    15                                                      //PC1; 74LS541 buffers enable/disable
 
