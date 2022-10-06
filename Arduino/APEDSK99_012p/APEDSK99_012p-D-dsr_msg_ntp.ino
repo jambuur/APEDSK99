@@ -18,8 +18,8 @@ byte gii              = 0;                                                      
 #define Protected       3
 #define DSRNotFound     4
 #define NTPStamp        99
-#define More            0x55
-#define AllGood         0xAA
+#define More            0xF0
+#define AllGood         0xFF
 
 #define CALLBF          0x5FD6                                                                        //CALL() buffer (data exchange)
 #define TIBias          0x60                                                                          //TI BASIC screen bias

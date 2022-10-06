@@ -60,7 +60,7 @@ void setup() {
   //GAL interrupt: TI WE*, MBE* and A15 -> O0 output
   //a write to DSR space (aka CRU, FD1771 registers; 
   //or sector/track Read through R6 counter in RAM, see DSR source)
-  pinAsInputPullUp(TI_INT);                                             //from Ethernet SS to detecting TI Interrupts 
+  pinAsInput(TI_INT);                                             //from Ethernet SS to detecting TI Interrupts 
 
   TIgo();                                                               //TI: take it away
   
