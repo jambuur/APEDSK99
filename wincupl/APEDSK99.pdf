@@ -1,11 +1,11 @@
-{COMPONENT C:\USERS\JOCHEN\DOCUMENTS\GITHUB\APEDSK99\WINCUPL\APEDSK99.SYM
+{COMPONENT C:\WINCUPL\WINCUPL\APEDSK99.SYM
 
  {ENVIRONMENT
   {PDIFvrev 3.00}
   {Program "CUPL(WM) Version 5.0a"}
   {DBtype "Schematic"}
   {DBvrev 1.01}
-  {DBtime "Wed Nov 24 11:43:01 2021 "}
+  {DBtime "Thu Oct 27 19:44:17 2022 "}
   {DBunit "MIL"}
   {DBgrid 10}
   {Lyrstr "WIRES" 1 "BUS" 1 "GATE" 2 "IEEE" 2 "PINFUN" 3 "PINNUM" 1 
@@ -100,7 +100,7 @@
    {T "CE_245" 280 80}
    [Ly "DEVICE"]
    [Tj "CT"]
-   {T "G16V8MA" 210 -10}
+   {T "G16V8MS" 210 -10}
   }
 
   {ATR
@@ -111,7 +111,7 @@
    {EX
     [Ly "ATTR2"]
     [Ts 12][Tj "CT"][Tr 0][Tm "N"]
-    {At PLD C:\USERS\JOCHEN\DOCUMENTS\GITHUB\APEDSK99\WINCUPL\APEDSK99 210 160}
+    {At PLD C:\WINCUPL\WINCUPL\APEDSK99 210 160}
    }
   }
  }

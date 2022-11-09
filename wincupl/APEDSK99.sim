@@ -54,7 +54,7 @@ LOWMEM =>
     AD_A13 & !AD_A14 & !AD_A15 & !MEMEN
 
 !TI_INT =>
-    AD_A0 & !AD_A13 & AD_A14 & !AD_A15 & !MEMEN & !WE
+    !AD_A0 & !AD_A13 & AD_A14 & !AD_A15 & !MEMEN & !WE
 
 TI_INT.oe  =>
     !TI_BUF

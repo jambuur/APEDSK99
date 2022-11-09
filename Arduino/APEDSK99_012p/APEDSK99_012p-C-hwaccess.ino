@@ -104,30 +104,31 @@ void write_DSRAM( unsigned int address, byte data ) {
   set_addressbus(address);                                                                                  //set address bus
   databus_output();                                                                                         //set databus for writing  
   write_databus(data);                                                                                      //set data bus value
-  digitalLow(WE);                                                                                           //enable write
   digitalLow(CE);                                                                                           //enable RAM chip select
-  digitalHigh(CE);                                                                                          //disable RAM chip select
+  digitalLow(WE);                                                                                           //enable write
+  NOP();                                                                                                    //let databus stabilise
   digitalHigh(WE);                                                                                          //disable write
-  databus_input();                                                                                          //set databus to (default) input state
+  digitalHigh(CE);                                                                                          //disable RAM chip select
+  databus_input();                                                                                          //set databus to (default) input state 
 } 
 
 //disable TI I/O, enable Arduino shift registers and control bus
-//INLINE: need for speed in ISR
+//INLINE: need for speed
 inline void TIstop() __attribute__((always_inline));
-void TIstop( void ) {
-  pinAsInput(TI_BUFFERS);                                                                                   //disables 74HCT541 address buffers (TI sees >FF and waits)
-  pinAsOutput(AR_BUF);                                                                                      //enables 74HC595 shift registers
+void TIstop( void ) {   
+  IAQ();                                                                                                    //wait for TI to finish IAQ cycle
+  digitalLow(TI_READY);                                                                                     //halts TI and enables 74HC595 shift registers
+  digitalHigh(TI_BUFFERS);                                                                                  //disables 74HCT541 address buffers and GAL outputs
   enable_controlbus();                                                                                      //Arduino in control of RAM
-} 
+  NOP();                                                                                                    //wait for bus to settle
+}
 
 //enable TI I/O, disable Arduino shift registers and control bus
 //INLINE: need for speed
 inline void TIgo() __attribute__((always_inline));
 void TIgo( void ) {
-  disable_controlbus();                                                                                     //cease Arduino RAM control
-  pinAsInputPullUp(AR_BUF);                                                                                       //disables 74HC595 shift registers
-  digitalHigh(AR_BUF);
-  pinAsOutput(TI_BUFFERS);                                                                                  //enables 74HCT541 address buffers (TI sees !FF and continues)
-}
-
- 
+  disable_controlbus();                                                                                     //cease Arduino RAM control  
+  NOP();                                                                                                    //wait for bus to settle
+  digitalLow(TI_BUFFERS);                                                                                   //enables 74HCT541 address buffers and GAL outputs  
+  digitalHigh(TI_READY);                                                                                    //disables 74HC595 shift registers and wakes up TI                                                                     
+} 

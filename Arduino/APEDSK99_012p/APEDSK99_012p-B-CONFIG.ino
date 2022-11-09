@@ -1,16 +1,16 @@
 //NOTE: IPAddress uses a comma "," for the address definition instead of the familiair dot "." !
 
 //CHANGE TO SUIT YOUR NETWORK
-IPAddress       IP(192.168.1.2);                                                                  //EthernetShield IP address : 
-IPAddress       ftpserver(192.168.1.3);                                                           //FTP server IP address
+IPAddress       IP(x,x,x,x);                                                                  //EthernetShield IP address : 
+IPAddress       ftpserver(x,x,x,x);                                                           //FTP server IP address
 //IPAddress       namesServer(x,x,x,x);                                                           //not required if on same subnet as FTP server
 //IPAddress       gateway(x,x,x,x);                                                               //not required if on same subnet as FTP server
 //IPAddress       netmask(x,x,x,x);                                                               //not required if on same subnet as FTP server
 
 //CHANGE TO SUIT YOUR NETWORK
-const char *ntpserver = "192.168.1.3";                                                            //NTP servername or IP address
-const char *user = "secret";                                                                      //FTP server username
-const char *pass = "secret";                                                                      //FTP server password
+const char *ntpserver = "x.x.x.x";                                                            //NTP servername or IP address
+const char *user = "********";                                                                      //FTP server username
+const char *pass = "********";                                                                      //FTP server password
 
 //UNCOMMENT RELEVANT LINE TO SUIT YOUR TIMEZONE
 //local hours difference with UTC in seconds (hours * 3600); 
@@ -109,16 +109,23 @@ const char *pass = "secret";                                                    
 //#define TZ 43200          //Coordinated Universal Time+12, Etc/GMT-12
 //#define TZ 43200          //Fiji, Marshall Islands, Pacific/Fiji
 //#define TZ 43200          //Magadan, Asia/Magadan
-#define TZ 43200          //Auckland, Wellington, Pacific/Auckland
+//#define TZ 43200          //Auckland, Wellington, Pacific/Auckland - WINTER
+#define TZ 43200+3600     //Auckland, Wellington, Pacific/Auckland - SUMMER
 //#define TZ 46800          //Nuku'alofa, Pacific/Tongatapu
 //#define TZ 46800          //Samoa, Pacific/Apia
 
 //ONLY CHANGE WHEN YOU EXPERIENCE PROBLEMS WITH DEFAULT SETTING
-//short delay function to let bus/signals settle. 
-//6us is the minumum stable value for HCT on my TI but your mileage may vary
+//Short delay function to let bus/signals settle. 
+//Probably not necessary in most cases but conservative timing ensures most consoles work with APEDSK99 "out of the box"
+//A good test is to format/verify a DS "floppy" a couple of times; if that works, you're good. 
 inline void NOP() __attribute__((always_inline));
 void NOP(){
-  //try (3) for 74LS541 instead of the HCT versions but only when you experience problems. A good test is to format/verify a DS "floppy" a couple of times.
-  //If that works, you're good. I only had to change this when initially using a couple of vague 74LS541's.
   delayMicroseconds(6);  
+}
+
+//ONLY CHANGE WHEN YOU EXPERIENCE PROBLEMS WITH DEFAULT SETTING
+//Short delay function to let TI finish the Instruction Acquisition (IAQ) cycle before READY is made inactive
+inline void IAQ() __attribute__((always_inline));
+void IAQ(){
+  delayMicroseconds(4);  
 }

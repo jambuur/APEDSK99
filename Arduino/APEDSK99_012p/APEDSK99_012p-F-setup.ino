@@ -1,7 +1,10 @@
 void setup() {
   
-  TIstop();                                                             //put TI on hold and enable 74HC595 shift registers
-  
+  pinAsOutput(TI_BUFFERS);                                              //enable* or disable 74HCT541 address buffers and GAL outputs
+  pinAsOutput(TI_READY);                                                //halt TI by making READY low; this enables the 74HC595 shift registers (and vice versa)
+
+  TIstop();                                                             //halt TI, enable 74HC595 shift registers and give Arduino RAM control
+
   pinAsOutput(ETHSD_SS);                                                //initialise shield SS pin
   digitalHigh(ETHSD_SS);                                                //without this SPI subsystem won't work
   
@@ -10,9 +13,9 @@ void setup() {
   }
 
   //74HC595 shift register control
-  pinAsOutput(DS);
-  pinAsOutput(LATCH);
   pinAsOutput(CLOCK);
+  pinAsOutput(LATCH);
+  pinAsOutput(DS);
  
   //read DSR binary from SD and write into DSR RAM
   if ( EEPROM.read(EEPROMDSR) == 0xFF ) {                               //invalid DSR (i.e. virgin Uno EEPROM or invalid DSR filename)?
@@ -51,16 +54,11 @@ void setup() {
   //"initialize FD1771"
   FD1771reset();                                                        //"Restore" command
   noExec();                                                             //"no command" as default
-  
-  //enable TI interrupts (MBE*, WE* and A15 -> 74LS138 O0)
-  //direct interrupt register access for speed
-  EICRA |= B00000010;                                                   //sense falling edge on INT0 pin
-  EIMSK |= B00000001;                                                   //enable INT0
-  
-  //GAL interrupt: TI WE*, MBE* and A15 -> O0 output
-  //a write to DSR space (aka CRU, FD1771 registers; 
-  //or sector/track Read through R6 counter in RAM, see DSR source)
-  pinAsInput(TI_INT);                                             //from Ethernet SS to detecting TI Interrupts 
+    
+  //GAL flag: A0-A2, A15(=0,MSB), MEMEN* and WE* -> IO7(pin 13)
+  //signals a write to DSR space (aka CRU, FD1771 registers) ... 
+  //... or read sector/track with R6 counter in RAM; see DSR source)
+  pinAsInputPullUp(TI_INT);                                             //from Ethernet SS to detecting TI Interrupts 
 
   TIgo();                                                               //TI: take it away
   

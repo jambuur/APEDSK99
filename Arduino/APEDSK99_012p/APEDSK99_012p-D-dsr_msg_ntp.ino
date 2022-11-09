@@ -8,6 +8,7 @@ byte protectDSK[4]    = {0x00, 0x20, 0x20, 0x20};                               
 byte currentDSK       = 0;                                                                            //current selected DSK
 File SDdir;                                                                                           //file pointer for SD directory listing
 byte gii              = 0;                                                                            //global counter (remember value in between successive calls of same APEDSK99 command)
+int ggii              = 0;
 
 //various storage and flags for command interpretation and handling
 

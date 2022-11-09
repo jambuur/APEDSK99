@@ -31,8 +31,8 @@
   https://github.com/greiman/SdFat
 
   $Author: Jochen Buur $
-  $Date: June 2022 $
-  $Revision: 0.12p $
+  $Date: November 2022 $
+  $Revision: 0.12q $
   
   This software is freeware and can be modified, re-used or thrown away without any restrictions.
   Use this code at your own risk.
@@ -110,9 +110,9 @@ NTP ntp(udp);
 #define WE  16	                                                              //PC2
 
 //IO lines for TI99/4a control
-#define AR_BUF         3                                                      //PD0; enable/disable 74HC595 shift registers
+#define TI_READY       3                                                      //PD0; manage READY and enable/disable 74HC595 shift registers
 #define TI_INT      	 2                                                      //PD2; GAL16V8 interrupt (DSR write & A15); shared with Ethernet CS (ETH_CS) 
-#define TI_BUFFERS    15                                                      //PC1; 74LS541 buffers enable/disable
+#define TI_BUFFERS    15                                                      //PC1; 74HCT541 buffers and GAL output bufers enable/disable
 
 //error blinking parameters
 #define LED_ON       500                                                      //on

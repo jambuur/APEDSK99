@@ -6,7 +6,7 @@ Designer Jochen Buur ;
 Company  Burell Group ;
 Assembly None ;
 Location WLG NZ ;
-Device   G16V8A ;
+Device   G16V8MS ;
 
 
 /* input pins */
@@ -20,7 +20,7 @@ PIN  8 = TI_BUF ;					/* Arduino TIBUF (enables 74HCT541's and GAL16V8)	*/
 
 /* output pins */
 PIN 12 = AD_CE ;					/* GAL generated chip select for IS61C512 		*/
-PIN 13 = TI_INT ;					/* GAL generated Arduino interrupt for DSR write	*/
+PIN 13 = TI_INT ;					/* GAL generated Arduino flag for DSR write	*/
 PIN 14 = AD_WE ;					/* GAL copy of TMS9900 WE* (aka tri-state buffer)	*/
 PIN 15	= CE_245 ;					/* GAL generated chip select for 74LS245			*/
 
@@ -39,7 +39,7 @@ CE_245.OE = !TI_BUF ;
 AD_WE    = WE ;
 AD_WE.OE = !TI_BUF ;					/* WE* from TMS9900						*/
 
-!TI_INT  = DSR & !WE & AD_A0 ;			/* write to DSR Arduino interrupt  			*/
+!TI_INT  = DSR & !WE & !AD_A0 ;			/* write to DSR Arduino interrupt  			*/
 TI_INT.OE = !TI_BUF ; 
 
 
