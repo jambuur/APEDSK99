@@ -10,7 +10,6 @@ File SDdir;                                                                     
 byte gii              = 0;                                                                            //global counter (remember value in between successive calls of same APEDSK99 command)
 
 //various storage and flags for command interpretation and handling
-
 #define CALLST          0x5FD4                                                                        //CALL() execution status                                                        
 #define DOADNotMapped   0
 #define DOADNotFound    1
@@ -30,7 +29,7 @@ unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                               
 char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
 
 //error messages in FLASH memory
-const char CALLerror[5][17] PROGMEM = {                                                               //CALL() error messages
+const char CALLerror[5][16] PROGMEM = {                                                               //CALL() error messages
   { "* DSK not mapped" },
   { "* DSK not found " }, 
   { "* no FTP or NTP " },
@@ -39,7 +38,7 @@ const char CALLerror[5][17] PROGMEM = {                                         
 };
 
 //help messages in FLASH memory
-const char CALLhelp[36][17] PROGMEM = {                                                               //CALL() help text
+const char CALLhelp[36][16] PROGMEM = {                                                               //CALL() help text
   { "    APEDSK99 v0."      },  { "12q CALLs       " },
   { "    ------------"      },  { "----------      " },
   { "AHLP = this help"      },  { " screen         " },
