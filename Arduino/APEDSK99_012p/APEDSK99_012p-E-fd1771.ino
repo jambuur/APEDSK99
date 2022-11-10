@@ -40,7 +40,7 @@ boolean newA99cmd           = false;                                            
 unsigned long DOADbyteidx   = 0;                                                                      //absolute DOAD byte index
 unsigned int sectorbyteidx  = 0;                                                                      //R/W sector/byte index counter
 byte sectoridx              = 0;                                                                      //R/W sector counter
-boolean currentStepDir      = HIGH;                                                                   //current step direction, step in(wards) towards track 39 by default
+boolean currentStepDir      = HIGH;                                                                   //current step direction, step in(wards) towards highest track # by default
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec( void ) {
@@ -87,7 +87,7 @@ void RWsector( boolean RW ) {
     {
       if ( sectorbyteidx < NRBYSECT ) {                                                               //have we done all 256 bytes yet? ...
         if ( RW ) {                                                                                   //no; read sector?
-          write_DSRAM( RDATA, DSK[currentDSK].read() );                                               //yes -> supply next byte
+          write_DSRAM( RDATA, DSK[currentDSK].read() );                                           //yes -> supply next byte
         } else {
           DSK[currentDSK].write( read_DSRAM(WDATA) );                                                 //no -> write next byte to DOAD
         }
