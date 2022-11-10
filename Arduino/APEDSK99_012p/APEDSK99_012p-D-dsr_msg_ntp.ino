@@ -72,7 +72,8 @@ void APEDSK99reset ( void ) {
 //  flash-flash-flash : no valid DSR header (0xAA) at DSR RAM 0x0000)
 void Flasher( byte errorcode ) {                                                                      //error routine: stuck in code flashing loop until reset
   //"no APEDSK99 for you"
-  TIstop();                                                                                           //vanilla TI console
+  TIstop();                                                                                           //stop TI ...
+  digitalHigh(TI_READY);                                                                              //... but let user enjoy vanilla console
   
   while ( true ) { 
     for ( byte flash = 0; flash < errorcode; flash++ ) {
