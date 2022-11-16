@@ -1,0 +1,5 @@
+There are different GROM 0 versions used for the various consoles,
+depending on which one you have you will need to uncomment the
+proper source code entry. 
+
+See entries for XML >5C and "Bad Tone"/ HONK.

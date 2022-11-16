@@ -28,11 +28,22 @@ WDATA	EQU	>5FFE			write FD1771 Data register
 *
 XML14	EQU	>164E			ROM address for XML >14
 XML16	EQU	>15D6			ROM address for XML >16
-XML5C	EQU	>105C			GROM address for XML >5C 	!CHECK GROM ADDRESS CONTENTS (different GROM 0 versions)
+*
+*!!! CHECK GROM ADDRESS CONTENTS, NEEDS TO BE >0F5C; UNCOMMENT RELEVANT LINE (different GROM 0 versions)
+*
+*XML5C	EQU	>1039			GROM address for XML >5C; GROM v2.2 consoles
+*XML5C	EQU	>1058			GROM address for XML >5C; GROM - Heiner Martin version
+XML5C	EQU	>105C			GROM address for XML >5C; GROM - different pointers to character blocks
+*
 GPLINT	EQU	>006A			jump to GROM interpreter for SCROLL / HONK
 XMLRTN	EQU	>2244 			jump to GROM interpreter for RTN (after executing XML >14 / >16 routine)
 SCROLL	EQU	>56CD			GROM address for scroll routine
-HONK	EQU	>03D6			GROM address for "bad tone" 	!CHECK GROM ADDRESS CONTENTS (different GROM 0 versions)
+*
+*!!! CHECK GROM ADDRESS CONTENTS, NEEDS TO BE >BF58; UNCOMMENT RELEVANT LINE (different GROM 0 versions)
+*
+*HONK	EQU	>03AF			GROM address for "bad tone"; GROM v2.2 consoles
+*HONK	EQU	>03D3			GROM address for "bad tone"; GROM - Heiner Martin version
+HONK	EQU	>03D6			GROM address for "bad tone"; GROM - different pointers to character blocks
 *
 	AORG	>4000
 *
