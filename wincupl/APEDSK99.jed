@@ -1,7 +1,7 @@
 
 CUPL(WM)        5.0a  Serial# 60008009
 Device          g16v8ms  Library DLIB-h-40-11
-Created         Thu Oct 27 19:44:17 2022
+Created         Thu Nov 17 11:28:56 2022
 Name            APEDSK99 
 Partno          12o 
 Revision        01 
@@ -43,4 +43,4 @@ Location        WLG NZ
 *V0007 X1010100XNXLHHLXXXXN
 *V0008 X0110100XNXLHHLXXXXN
 *V0009 X1111000XNXLHLLXXXXN
-*20F1
+*20FA
