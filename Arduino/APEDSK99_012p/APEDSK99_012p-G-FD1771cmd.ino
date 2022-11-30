@@ -1,6 +1,6 @@
 void loop() {
  
-  //check if flag* has set by GAL. This used to be an interrupt-driven approach until I realised that Arduino interrupt response is painfully slow. 
+  //check if TI_INT* has set by GAL. This used to be an interrupt-driven approach until I realised that Arduino interrupt response is painfully slow. 
   //Syncing with the TI became problematic. The polling alternative takes 400ns to respond, compared to ~2.2uS for the interrupt.
 
   noInterrupts();                                                                     //critical code section: "do not disturb" and ...
@@ -83,7 +83,8 @@ void loop() {
       //***** FD1771 R/W commands: prep
       
       if ( newFD1771cmd ) {                                                           //new command prep?
-        currentDSK = ( read_DSRAM( CRUWRI ) >> 1) & B00000011;                        //yes; determine selected disk
+        currentDSK = ( read_DSRAM( CRUWRI ) >> 1) & B00000011;                        //yes; determine selected disk 
+        currentDSK--;                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes
         if ( activeDSK[currentDSK] ) {                                                //is selected disk available?
           write_DSRAM( RSTAT, NOERROR );                                              //yes; reset possible "Not Ready" bit in Status Register
           if ( currentFD1771cmd == 0xE0 || currentFD1771cmd == 0xF0 ) {               //R/W whole track?
@@ -93,10 +94,8 @@ void loop() {
           DOADbyteidx = calcDOADidx();                                                //calc absolute DOAD byte index
           DSK[currentDSK].seek( DOADbyteidx );                                        //set to first absolute DOAD byte for R/W
         } else {
-          if ( currentDSK != 0 ) {                                                    //ignore DSK0; either DSK1, DSK2 or DSK3 is not available
-            write_DSRAM( RSTAT, NOTREADY );                                           //set "Not Ready" bit in Status Register
-            currentFD1771cmd = FDINT;                                                 //exit 
-          }
+          write_DSRAM( RSTAT, NOTREADY );                                             //set "Not Ready" bit in Status Register
+          currentFD1771cmd = FDINT;                                                   //exit 
         }
       }
       

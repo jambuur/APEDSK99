@@ -6,6 +6,7 @@
       if ( newA99cmd = (currentA99cmd != lastA99cmd) ) {                                                  //new or continue previous APEDSK99 command?
         lastA99cmd = currentA99cmd;                                                                       //new; remember new command for next compare
         currentDSK = read_DSRAM( CALLBF );                                                                //read target DSKx
+        currentDSK--;                                                                                     //DSK1-3 -> DSK0-2 to reduce array sizes
         CALLstatus( AllGood );                                                                            //start with clean execution slate
       }
       
@@ -40,7 +41,7 @@
           byte ii;
           for ( ii = 0; ii < 8; ii++ ) {                                                                  //max 8 characters for MSDOS filename
             byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                    //read character from APEDSK99 CALL buffer
-            if ( cc != 0x80 ) {                                                                            //if (" " + TIBias), the filename is < 8 characters ...
+            if ( cc != 0x80 ) {                                                                           //if (" " + TIBias), the filename is < 8 characters ...
                 DOADfilename[ii] = cc;                                                                    //add next character to FTP filename
             } else {                                                                      
               break;                                                                                      // ... and we need to get out
@@ -71,7 +72,8 @@
           } else if ( currentA99cmd == 10 ) {                                                             //RDSK() ?                                                                                     
             if ( existDOAD ) {                                                                            //does DOAD exist? ...
               if ( protectDOAD == 0x20 ) {                                                                //yes; is DOAD unProtected? ...
-                for ( byte ii= 1; ii < 4; ii++ ) {
+//                for ( byte ii= 1; ii < 4; ii++ ) {
+                for ( byte ii= 0; ii < 3; ii++ ) {
                   if ( strcmp(DOADfullpath, nameDSK[ii]) == 0 ) {                                         //is DOAD currently mapped?
                     activeDSK[ii] = false;                                                                //yes; flag DSKx non-active
                   }
@@ -173,7 +175,7 @@
         case 12:                                                                                          //SDSK()  
         {
           if ( newA99cmd ) {
-            currentDSK = 0;                                                                               //first run make sure we start with DSK1 (see ++ below)
+            currentDSK = 0;                                                                               //first run make sure we start with DSK1
             gii = 0;                                                                                      //keep track when to display SDISK info (1 row = 2x 16 char fields
           }
           
@@ -182,8 +184,6 @@
 
           if ( gii < 6 ) {                                                                                //3 rows, 1 row is 2x16char fields                
             if ( !(gii & B00000001) ) {                                                                   //if field == even we need to display mapping, otherwise time/date
-
-              currentDSK++;                                                                               //next DSK
               if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD?
 
                 DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_READ );
@@ -217,7 +217,7 @@
                 strncpy( DOADfullpath, "/DISKS/<NO MAP>.DSK", 20 );                                       //... no; indicate not mapped
               }
           
-              write_DSRAM( CALLBF + 2, '0' + currentDSK + TIBias );                                       //DSK# + TI BASIC bias
+              write_DSRAM( CALLBF + 2, '1' + currentDSK + TIBias );                                       //DSK# + TI BASIC bias
               write_DSRAM( CALLBF + 3, '=' + TIBias );                                            
               for ( byte ii = 4; ii < 12; ii++ ) {                                  
                 write_DSRAM( CALLBF + ii, DOADfullpath[ii + 3] + TIBias );                                //store mapping character in CALL buffer
@@ -236,6 +236,9 @@
                 write_DSRAM( CALLBF+15, TimeDateASC[14] + TIBias);                                        //only space to display last 2 year digits
                 write_DSRAM( CALLBF+16, TimeDateASC[15] + TIBias); 
               } 
+              if ( currentDSK < 2 ) {                                                                     //must stay within 0-2 for noExec() to properly close current open DSK[]
+                currentDSK++;                                                                             //next DSK  
+              }
             }
             gii++;                                                                                        //next screen field
           } else { 
@@ -252,17 +255,17 @@
             SDdir = SD.open( "/DISKS/" );                                                                 //yes; open directory
           }        
 
-          DSK[currentDSK] = SDdir.openNextFile();                                                         //get next file
-          if ( DSK[currentDSK] && read_DSRAM(CALLST) ==  AllGood ) {                                      //valid file AND !ENTER from DSR?
+          File NextFile = SDdir.openNextFile();                                                           //get next file
+          if ( NextFile && read_DSRAM(CALLST) ==  AllGood ) {                                             //valid file AND !ENTER from DSR?
             char DOADfilename[13] = "\0";                                                                 //"clear" array for shorter filenames not displaying leftover parts
-            DSK[currentDSK].getName( DOADfilename, 13 );                                                  //copy filename ... 
+            NextFile.getName( DOADfilename, 13 );                                                         //copy filename ... 
             for ( byte ii = 2; ii < 14; ii++ ) {                                                          //... and write to buffer
               write_DSRAM( CALLBF + ii, DOADfilename[ii-2] + TIBias );
             } 
-            DSK[currentDSK].seek( 0x12 );                                                                 //byte >12 in VIB stores # of sides (>01 or >02)
-            write_DSRAM( CALLBF + 15, DSK[currentDSK].read() + (48 + TIBias) );                           //change to ASCII and add TI screen bias
+            NextFile.seek( 0x12 );                                                                        //byte >12 in VIB stores # of sides (>01 or >02)
+            write_DSRAM( CALLBF + 15, NextFile.read() + (48 + TIBias) );                                  //change to ASCII and add TI screen bias
             write_DSRAM( CALLBF + 16, 'S' + TIBias );                                                     //"SIDED"
-            DSK[currentDSK].close();                                                                      //prep for next file
+            NextFile.close();                                                                             //prep for next file
           } else {                                                                                        //... no
             SDdir.close();
             CALLstatus( More );                                                                           //done all files
@@ -270,6 +273,7 @@
           }
         }
         break;    
+
 
         case 16:                                                                                          //AHLP()
         {
@@ -305,6 +309,7 @@
             CALLstatus( NTPStamp );                                                                       //done with a one-liner 
           } else if ( currentA99cmd == 19 ) {                                                             //DSR DSK NTP update (format, write / save file)                                                                           
             currentDSK = ( read_DSRAM( CRUWRI ) >> 1 ) & B00000011;                                       //determine selected disk in DSR command   
+            currentDSK--;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes
             if ( protectDSK[currentDSK] != 0x50 ) {                                                       //DSK protected?
               DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_WRITE );
               writeFATts();                                                                               //no; update DOAD FAT date/time

@@ -1,10 +1,10 @@
 //DSKx file pointers
-File DSK[4];                                                                                          //file pointers to DOAD's
+File DSK[3];                                                                                          //file pointers to DOAD's
 
 //flags for "drives" (aka DOAD files) available 
-boolean activeDSK[4]  = {false, false, false, false};                                                 //DSKx active flag
-char nameDSK[4][20]   = {"x", "/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};   //DOAD file names; startup defaults
-byte protectDSK[4]    = {0x00, 0x20, 0x20, 0x20};                                                     //DOAD write protect status
+boolean activeDSK[3]  = {false, false, false};                                                        //DSKx active flag
+char nameDSK[3][20]   = {"/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};        //DOAD file names; startup defaults
+byte protectDSK[3]    = {0x20, 0x20, 0x20};                                                           //DOAD write protect status
 byte currentDSK       = 0;                                                                            //current selected DSK
 File SDdir;                                                                                           //file pointer for SD directory listing
 byte gii              = 0;                                                                            //global counter (remember value in between successive calls of same APEDSK99 command)
@@ -40,23 +40,23 @@ const char CALLerror[5][16] PROGMEM = {                                         
 //help messages in FLASH memory
 const char CALLhelp[36][16] PROGMEM = {                                                               //CALL() help text
   { "    APEDSK99 v0."   }, { "12q CALLs       " },
-  { "    ------------"   }, { "----------      " },
-  { "AHLP = this help"   }, { " screen         " },
-  { "ARST = soft rese"   }, { "t apedsk99      " },
-  { "SDIR = show doad"   }, { "s on sd card    " },
-  { "SDSK = show dsk["   }, { "1-3] mapping    " },
-  { "TIME = get ntp d"   }, { "ate/time (NTP$) " },
-  { "-               "   }, { "                " },
+  { "----------------"   }, { "--------------- " },
+  { "AHLP    = this h"   }, { "elp screen      " },
+  { "ARST    = soft r"   }, { "eset apedsk99   " },
+  { "SDIR    = show d"   }, { "oads on sd card " },
+  { "SDSK    = show d"   }, { "sk[1-3] mapping " },
+  { "TIME    = ntp da"   }, { "te/time (NTP$)  " },
   { "PDSK(#) = protec"   }, { "t dsk#          " },     
   { "UDSK(#) = remove"   }, { " dsk# protect   " },
   { "LDSK(#) = list f"   }, { "iles on dsk#    " },
   { "-               "   }, { "                " },
   { "MDSK(#,\"1-8C\") =" }, { " map dsk#->doad " },
-  { "-               "   }, { "                " }, 
-  { "RDSK(\"1-8C\") = d" }, { "elete sd doad   " },
-  { "FGET(\"1-8C\") = s" }, { "d doad->ftp     " },
-  { "FPUT(\"1-8C\") = f" }, { "tp->sd doad     " },
-  { "ADSR(\"8C\")   = l" }, { "oad dsr&reset   " },
+  { "RDSK(\"1-8C\")   =" }, { " delete sd doad " },
+  { "FGET(\"1-8C\")   =" }, { " sd doad->ftp   " },
+  { "FPUT(\"1-8C\")   =" }, { " ftp->sd doad   " },
+  { "ADSR(\"8C\")     =" }, { " load dsr&reset " },
+  { "-               "   }, { "                " },
+  { "error flash: 1=s"   }, { "d, 2=dsr, 3=ram " },
 };
 
 //reset Arduino properly via watchdog timer
@@ -88,11 +88,11 @@ void Flasher( byte errorcode ) {                                                
 }
 
 //transfer relevant error message from FLASH memory to CALL buffer 
-void CALLstatus( byte errorcode ) {
-  write_DSRAM( CALLST, errorcode );                                                                   //update CALL status
-  if ( errorcode < 99  ) {                                                                            //99, 0xF0 and 0xFF are non-error conditions 
+void CALLstatus( byte scode ) {
+  write_DSRAM( CALLST, scode );                                                                       //update CALL status
+  if ( scode < 99  ) {                                                                                //error? 
     for ( byte ii = 2; ii < 18; ii++ ) {
-      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[errorcode][ii-2] ) + TIBias );              //copy message to CALL buffer
+      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii-2] ) + TIBias );                  //copy error message to CALL buffer
     }
   }
 }

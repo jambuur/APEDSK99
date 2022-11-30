@@ -41,7 +41,7 @@ void setup() {
   }
 
   //initialise DSKx Active and Protect flags
-  for ( byte ii = 1; ii < 4; ii++ ) {
+  for ( byte ii = 0; ii < 3; ii++ ) {
     if ( SD.exists( nameDSK[ii] ) ) {                                   //does DOAD x exist?
       activeDSK[ii] = true;                                             //yes; flag active
       DSK[ii] = SD.open( nameDSK[ii], FILE_READ );                      //open DOAD file to check write protect y/n
@@ -49,7 +49,7 @@ void setup() {
       protectDSK[ii] = DSK[ii].read();                                  //0x50 || "P" means disk is write protected 
       DSK[ii].close();                                                  //close current SD DOAD file
     }
-  }
+  } 
   
   //"initialize FD1771"
   FD1771reset();                                                        //"Restore" command

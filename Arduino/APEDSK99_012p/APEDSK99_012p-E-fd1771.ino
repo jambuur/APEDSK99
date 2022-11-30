@@ -17,7 +17,7 @@
 
 //CRU emulation bytes + FD1771 registers
 #define CRURD   0x5FEC                                                                                //emulated 8 CRU input bits,      >5FEC in TI99/4a DSR memory block; not currently used 
-#define CRUWRI  0x5FEE                                                                                //emulated 8 CRU output bits,     >5FEE in TI99/4a DSR memory block; B00001111: DSK3 (0x06), DSK2 (0x04), DSK1 (0x02), side 0/1
+#define CRUWRI  0x5FEE                                                                                //emulated 8 CRU output bits,     >5FEE in TI99/4a DSR memory block;
 #define RSTAT   0x5FF0                                                                                //read FD1771 Status register,    >5FF0 in TI99/4a DSR memory block
 #define RTRACK  0x5FF2                                                                                //read FD1771 Track register,     >5FF2 in TI99/4a DSR memory block
 #define RSECTR  0x5FF4                                                                                //read FD1771 Sector register,    >55F4 in TI99/4a DSR memory block
@@ -30,7 +30,6 @@
 #define READ    1                                                                                     //read sector flag
 #define WRITE   0                                                                                     //write sector flag
 
-volatile boolean FD1771     = false;                                                                  //interrupt routine flag: new or continued FD1771 command
 byte currentFD1771cmd       = 0;                                                                      //current FD1771 command
 byte lastFD1771cmd          = 0;                                                                      //last FD1771 command
 boolean newFD1771cmd        = false;                                                                  //flag new FD1771 command
@@ -87,7 +86,7 @@ void RWsector( boolean RW ) {
     {
       if ( sectorbyteidx < NRBYSECT ) {                                                               //have we done all 256 bytes yet? ...
         if ( RW ) {                                                                                   //no; read sector?
-          write_DSRAM( RDATA, DSK[currentDSK].read() );                                           //yes -> supply next byte
+          write_DSRAM( RDATA, DSK[currentDSK].read() );                                               //yes -> supply next byte
         } else {
           DSK[currentDSK].write( read_DSRAM(WDATA) );                                                 //no -> write next byte to DOAD
         }
