@@ -72,7 +72,6 @@
           } else if ( currentA99cmd == 10 ) {                                                             //RDSK() ?                                                                                     
             if ( existDOAD ) {                                                                            //does DOAD exist? ...
               if ( protectDOAD == 0x20 ) {                                                                //yes; is DOAD unProtected? ...
-//                for ( byte ii= 1; ii < 4; ii++ ) {
                 for ( byte ii= 0; ii < 3; ii++ ) {
                   if ( strcmp(DOADfullpath, nameDSK[ii]) == 0 ) {                                         //is DOAD currently mapped?
                     activeDSK[ii] = false;                                                                //yes; flag DSKx non-active
