@@ -6,7 +6,9 @@
       if ( newA99cmd = (currentA99cmd != lastA99cmd) ) {                                                  //new or continue previous APEDSK99 command?
         lastA99cmd = currentA99cmd;                                                                       //new; remember new command for next compare
         currentDSK = read_DSRAM( CALLBF );                                                                //read target DSKx
-        currentDSK--;                                                                                     //DSK1-3 -> DSK0-2 to reduce array sizes
+        if ( currentDSK > 0 ) {
+          currentDSK--;                                                                                   //DSK1-3 -> DSK0-2 to reduce array sizes
+        }
         CALLstatus( AllGood );                                                                            //start with clean execution slate
       }
       
@@ -39,6 +41,7 @@
           char DOADfullpath[20] = "/DISKS/\0";                                                            //complete path + filename
           char DOADfilename[13];                                                                          //just the filename for the FTP server
           byte ii;
+          File tFile;                                                                                     //temporary file pointer
           for ( ii = 0; ii < 8; ii++ ) {                                                                  //max 8 characters for MSDOS filename
             byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                    //read character from APEDSK99 CALL buffer
             if ( cc != 0x80 ) {                                                                           //if (" " + TIBias), the filename is < 8 characters ...
@@ -55,9 +58,10 @@
           boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
           byte protectDOAD;                                                                               //Protected flag
           if ( existDOAD ) {                                                                              //does DOAD exist?>
-            DSK[currentDSK] = SD.open( DOADfullpath, FILE_READ);                                          //yes; open DOAD file
-            DSK[currentDSK].seek(0x10);                                                                   //byte 0x10 in Volume Information Block stores status
-            protectDOAD = DSK[currentDSK].read();                                                         //store Protected flag
+            tFile = SD.open( DOADfullpath, FILE_READ);                                                    //yes; open DOAD file
+            tFile.seek(0x10);                                                                             //byte 0x10 in Volume Information Block stores status
+            protectDOAD = tFile.read();                                                                   //store Protected flag
+            tFile.seek(0);                                                                                //go to start of file in case of FPUT
           }
 
           if ( currentA99cmd == 6 ) {                                                                     //MDSK() ?
@@ -76,7 +80,6 @@
                   if ( strcmp(DOADfullpath, nameDSK[ii]) == 0 ) {                                         //is DOAD currently mapped?
                     activeDSK[ii] = false;                                                                //yes; flag DSKx non-active
                   }
-                  DSK[currentDSK].close();
                   SD.remove( DOADfullpath );                                                              //yes; delete DOAD from SD card
                 }
               } else {
@@ -96,8 +99,7 @@
             
             if ( currentA99cmd == 24 ) {                                                                  //FPUT()?
               if ( existDOAD ) {                                                                          //yep; does DOAD exist ...
-                DSK[currentDSK].seek(0);                                                                  //yes; go to start of file (we were at 0x10)
-                ftp.store( DOADfilename, DSK[currentDSK] );                                               //yep; send DOAD to ftp server
+                ftp.store( DOADfilename, tFile );                                                         //yep; send DOAD to ftp server
               } else {
                 CALLstatus( DOADNotFound );                                                               //no; report error to CALL()
               }
@@ -105,21 +107,23 @@
               if ( existDOAD && protectDOAD == 0x50) {                                                    //yep; is existing DOAD Protected?
                 CALLstatus( Protected );                                                                  //yes; report error to CALL()
               } else {
-                DSK[currentDSK] = SD.open( "/_FT", FILE_WRITE );                                          //no; open temporary FTP file
-                ftp.retrieve( DOADfilename, DSK[currentDSK] );                                            //get DOAD from FTP server
-                if ( DSK[currentDSK].size() != 0 ) {                                                      //size > 0 = transfer successful? ...
+                tFile.close();                                                                            //close current DOAD
+                tFile = SD.open( "/_FT", FILE_WRITE );                                                    //open temporary FTP file
+                ftp.retrieve( DOADfilename, tFile );                                                      //get DOAD from FTP server
+                if ( tFile.size() != 0 ) {                                                                //size > 0 = transfer successful? ...
                   if ( existDOAD ) {                                                                      //yes; does DOAD already exist?
                     SD.remove( DOADfullpath );                                                            //yes -> delete
                   }
-                  DSK[currentDSK].rename( DOADfullpath );                                                 //rename temp FTP file to proper DOAD
+                  tFile.rename( DOADfullpath );                                                           //rename temp FTP file to proper DOAD
                 } else {
-                  DSK[currentDSK].remove();                                                               //... no; remove tmp FTP file
+                  tFile.remove();                                                                         //... no; remove tmp FTP file
                   CALLstatus( DOADNotFound );                                                             //report transfer error (check ownership/group/rights on FTP server)
                 }
               }
             }
+            EtherStop();                                                                                  //stop Ethernet client
           }                                                             
-          EtherStop();                                                                                    //stop Ethernet client
+          tFile.close();                                                                                  //close possibly still open temporary file
           noExec();                                                                                       //we're done
         }
         break;
@@ -254,17 +258,17 @@
             SDdir = SD.open( "/DISKS/" );                                                                 //yes; open directory
           }        
 
-          File NextFile = SDdir.openNextFile();                                                           //get next file
-          if ( NextFile && read_DSRAM(CALLST) ==  AllGood ) {                                             //valid file AND !ENTER from DSR?
+          File tFile = SDdir.openNextFile();                                                              //get next file
+          if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                                //valid file AND !ENTER from DSR?
             char DOADfilename[13] = "\0";                                                                 //"clear" array for shorter filenames not displaying leftover parts
-            NextFile.getName( DOADfilename, 13 );                                                         //copy filename ... 
+            tFile.getName( DOADfilename, 13 );                                                            //copy filename ... 
             for ( byte ii = 2; ii < 14; ii++ ) {                                                          //... and write to buffer
               write_DSRAM( CALLBF + ii, DOADfilename[ii-2] + TIBias );
             } 
-            NextFile.seek( 0x12 );                                                                        //byte >12 in VIB stores # of sides (>01 or >02)
-            write_DSRAM( CALLBF + 15, NextFile.read() + (48 + TIBias) );                                  //change to ASCII and add TI screen bias
+            tFile.seek( 0x12 );                                                                           //byte >12 in VIB stores # of sides (>01 or >02)
+            write_DSRAM( CALLBF + 15, tFile.read() + (48 + TIBias) );                                     //change to ASCII and add TI screen bias
             write_DSRAM( CALLBF + 16, 'S' + TIBias );                                                     //"SIDED"
-            NextFile.close();                                                                             //prep for next file
+            tFile.close();                                                                                //prep for next file
           } else {                                                                                        //... no
             SDdir.close();
             CALLstatus( More );                                                                           //done all files
