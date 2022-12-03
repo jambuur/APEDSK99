@@ -23,9 +23,9 @@
             } else {
               protectDSK[currentDSK] = 0x20;                                                              //Unprotect DSKx
             }
-            DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_WRITE);                                  //open DOAD file to change write protect status 
-            DSK[currentDSK].seek(0x10);                                                                   //byte 0x10 in Volume Information Block stores Protected status 
-            DSK[currentDSK].write( protectDSK[currentDSK] );                                              //update Protect status
+            DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE);                                             //open DOAD file to change write protect status 
+            DSKx.seek(0x10);                                                                              //byte 0x10 in Volume Information Block stores Protected status 
+            DSKx.write( protectDSK[currentDSK] );                                                         //update Protect status
           } else {
             CALLstatus( DOADNotMapped );                                                                  //... no; set error flag
           }
@@ -41,7 +41,6 @@
           char DOADfullpath[20] = "/DISKS/\0";                                                            //complete path + filename
           char DOADfilename[13];                                                                          //just the filename for the FTP server
           byte ii;
-          File tFile;                                                                                     //temporary file pointer
           for ( ii = 0; ii < 8; ii++ ) {                                                                  //max 8 characters for MSDOS filename
             byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                    //read character from APEDSK99 CALL buffer
             if ( cc != 0x80 ) {                                                                           //if (" " + TIBias), the filename is < 8 characters ...
@@ -58,10 +57,9 @@
           boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
           byte protectDOAD;                                                                               //Protected flag
           if ( existDOAD ) {                                                                              //does DOAD exist?>
-            tFile = SD.open( DOADfullpath, FILE_READ);                                                    //yes; open DOAD file
-            tFile.seek(0x10);                                                                             //byte 0x10 in Volume Information Block stores status
-            protectDOAD = tFile.read();                                                                   //store Protected flag
-            tFile.seek(0);                                                                                //go to start of file in case of FPUT
+            DSKx = SD.open( DOADfullpath, FILE_READ);                                                     //yes; open DOAD file
+            DSKx.seek(0x10);                                                                              //byte 0x10 in Volume Information Block stores status
+            protectDOAD = DSKx.read();                                                                    //store Protected flag
           }
 
           if ( currentA99cmd == 6 ) {                                                                     //MDSK() ?
@@ -99,7 +97,8 @@
             
             if ( currentA99cmd == 24 ) {                                                                  //FPUT()?
               if ( existDOAD ) {                                                                          //yep; does DOAD exist ...
-                ftp.store( DOADfilename, tFile );                                                         //yep; send DOAD to ftp server
+                DSKx.seek(0);                                                                             //go to start of file (we were at 0x10)
+                ftp.store( DOADfilename, DSKx );                                                          //yep; send DOAD to ftp server
               } else {
                 CALLstatus( DOADNotFound );                                                               //no; report error to CALL()
               }
@@ -107,23 +106,21 @@
               if ( existDOAD && protectDOAD == 0x50) {                                                    //yep; is existing DOAD Protected?
                 CALLstatus( Protected );                                                                  //yes; report error to CALL()
               } else {
-                tFile.close();                                                                            //close current DOAD
-                tFile = SD.open( "/_FT", FILE_WRITE );                                                    //open temporary FTP file
-                ftp.retrieve( DOADfilename, tFile );                                                      //get DOAD from FTP server
-                if ( tFile.size() != 0 ) {                                                                //size > 0 = transfer successful? ...
+                DSKx.close();                                                                             //DOAD exists so is currently open. Need to close ...
+                DSKx = SD.open( "/_FT", FILE_WRITE );                                                     //... as we are opening a temporary FTP file
+                ftp.retrieve( DOADfilename, DSKx );                                                       //get DOAD from FTP server
+                if ( DSKx.size() != 0 ) {                                                                 //size > 0 = transfer successful? ...
                   if ( existDOAD ) {                                                                      //yes; does DOAD already exist?
                     SD.remove( DOADfullpath );                                                            //yes -> delete
                   }
-                  tFile.rename( DOADfullpath );                                                           //rename temp FTP file to proper DOAD
-                } else {
-                  tFile.remove();                                                                         //... no; remove tmp FTP file
+                  DSKx.rename( DOADfullpath );                                                            //rename temp FTP file to proper DOAD
+                } else {     
                   CALLstatus( DOADNotFound );                                                             //report transfer error (check ownership/group/rights on FTP server)
                 }
-              }
-            }
+              }    
+            }   
             EtherStop();                                                                                  //stop Ethernet client
-          }                                                             
-          tFile.close();                                                                                  //close possibly still open temporary file
+          }                                          
           noExec();                                                                                       //we're done
         }
         break;
@@ -134,20 +131,20 @@
                
           if ( activeDSK[currentDSK] ) { 
             if ( newA99cmd ) {                                                                            //yes; first run of LDSK()?
-              DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_READ );                                //yes; prep DOAD
-              DSK[currentDSK].seek( NRBYSECT );                                                           //2nd sector contains the File Descriptor Records (FDR)
+              DSKx = SD.open( nameDSK[currentDSK], FILE_READ );                                           //yes; prep DOAD
+              DSKx.seek( NRBYSECT );                                                                      //2nd sector contains the File Descriptor Records (FDR)
             }
     
-            unsigned long FDR = ( DSK[currentDSK].read() << 8 ) + DSK[currentDSK].read();                 //16bits FDR pointer  
+            unsigned long FDR = ( DSKx.read() << 8 ) + DSKx.read();                                       //16bits FDR pointer  
             if ( FDR != 0 && read_DSRAM(CALLST) ==  AllGood ) {                                           // !0x0000( = no more files) AND !ENTER from DSR?             
-              unsigned int currentPosition = DSK[currentDSK].position();                                  //remember next FDR pointer
-              DSK[currentDSK].seek( FDR * NRBYSECT );                                                     //locate FDR within DOAD
+              unsigned int currentPosition = DSKx.position();                                             //remember next FDR pointer
+              DSKx.seek( FDR * NRBYSECT );                                                                //locate FDR within DOAD
               for ( byte ii=2; ii < 12; ii++ ) {                                  
-               write_DSRAM( CALLBF + ii, DSK[currentDSK].read() + TIBias );                               //read/save filename characters in CALL buffer
+               write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                          //read/save filename characters in CALL buffer
               }                 
                         
-              DSK[currentDSK].seek( DSK[currentDSK].position() + 2 );                                     //locate File Status Flags
-              byte filetype = DSK[currentDSK].read();               
+              DSKx.seek( DSKx.position() + 2 );                                                           //locate File Status Flags
+              byte filetype = DSKx.read();               
               if ( filetype & B00000001 ) {
                 write_DSRAM( CALLBF + 13, 'P' + TIBias );                                                 //"PROGRAM"
               } else if ( filetype & B00000010 ) {
@@ -157,13 +154,13 @@
               }
 
               char filesize[4];                                                                           //ASCII store
-              DSK[currentDSK].seek( DSK[currentDSK].position() + 1 );                                     //locate total # of sectors
-              sprintf( filesize, "%3u", (DSK[currentDSK].read() << 8) + (DSK[currentDSK].read() + 1) );   //convert number to string
+              DSKx.seek( DSKx.position() + 1 );                                                           //locate total # of sectors
+              sprintf( filesize, "%3u", (DSKx.read() << 8) + (DSKx.read() + 1) );                         //convert number to string
               for ( byte ii = 14; ii < 17; ii++ ) {                                                       //store ASCII file size in CALL buffer
                 write_DSRAM( CALLBF + ii, filesize[ii-14] + TIBias );
               }
                                 
-              DSK[currentDSK].seek( currentPosition );                                                    //locate next FDR
+              DSKx.seek( currentPosition );                                                               //locate next FDR
             } else {                                       
               CALLstatus( More );                                                                         //blank "floppy" or processed all FDR's
               noExec();                                                                   
@@ -189,16 +186,16 @@
             if ( !(gii & B00000001) ) {                                                                   //if field == even we need to display mapping, otherwise time/date
               if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD?
 
-                DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_READ );
+                DSKx = SD.open( nameDSK[currentDSK], FILE_READ );
                                                             
                 unsigned int countOnes = 0;               
                   
-                DSK[currentDSK].seek( 0x12 );                                                             //# of formatted sides
-                byte maxbitmap = DSK[currentDSK].read() * 45;                                             //# of Sector Bitmap bytes to process for SD or DS
-                DSK[currentDSK].seek( 0x38 );                                                             //1st Sector Bitmap byte for side 0
+                DSKx.seek( 0x12 );                                                                        //# of formatted sides
+                byte maxbitmap = DSKx.read() * 45;                                                        //# of Sector Bitmap bytes to process for SD or DS
+                DSKx.seek( 0x38 );                                                                        //1st Sector Bitmap byte for side 0
                  
                 for ( byte ii = 0; ii < maxbitmap -1 ; ii++ ) {                                           //sum all set bits (=sectors used) for all Sector Bitmap bytes
-                  byte bitmap = DSK[currentDSK].read();
+                  byte bitmap = DSKx.read();
                   for ( byte jj = 0; jj < 8; jj++ ) {                                       
                     countOnes += ( bitmap >> jj ) & 0x01;                                                 //"on the One you hear what I'm sayin'"
                   }
@@ -314,7 +311,7 @@
             currentDSK = ( read_DSRAM( CRUWRI ) >> 1 ) & B00000011;                                       //determine selected disk in DSR command   
             currentDSK--;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes
             if ( protectDSK[currentDSK] != 0x50 ) {                                                       //DSK protected?
-              DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_WRITE );
+              DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );
               writeFATts();                                                                               //no; update DOAD FAT date/time
             }  
           }

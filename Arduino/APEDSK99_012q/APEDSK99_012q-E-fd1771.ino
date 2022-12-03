@@ -43,7 +43,7 @@ boolean currentStepDir      = HIGH;                                             
 
 //no further command execution (prevent seek/step commands to be executed multiple times)
 void noExec( void ) {
-  DSK[currentDSK].close();                                                                            //close current SD DOAD file
+  DSKx.close();                                                                                       //close current SD DOAD file
   write_DSRAM(WCOMND, FDINT);                                                                         //"force interrupt" command (aka no further execution)
   currentFD1771cmd            = FDINT;                                                                //"" ""
   lastFD1771cmd               = currentFD1771cmd;                                                     //reset new FD1771 command prep
@@ -86,9 +86,9 @@ void RWsector( boolean RW ) {
     {
       if ( sectorbyteidx < NRBYSECT ) {                                                               //have we done all 256 bytes yet? ...
         if ( RW ) {                                                                                   //no; read sector?
-          write_DSRAM( RDATA, DSK[currentDSK].read() );                                               //yes -> supply next byte
+          write_DSRAM( RDATA, DSKx.read() );                                                          //yes -> supply next byte
         } else {
-          DSK[currentDSK].write( read_DSRAM(WDATA) );                                                 //no -> write next byte to DOAD
+          DSKx.write( read_DSRAM(WDATA) );                                                            //no -> write next byte to DOAD
         }
         sectorbyteidx++;                                                                              //increase sector byte counter
       } else {
@@ -107,9 +107,9 @@ void RWsector( boolean RW ) {
         write_DSRAM( WSECTR, sectoridx );                                                             //sync Sector Registers
         write_DSRAM( RSECTR, sectoridx );                                                             //""
         if ( RW ) {                                                                                   //do we need to read a sector?
-          write_DSRAM( RDATA, DSK[currentDSK].read() );                                               //yes -> supply next byte
+          write_DSRAM( RDATA, DSKx.read() );                                                          //yes -> supply next byte
         } else {
-          DSK[currentDSK].write( read_DSRAM(WDATA) );                                                 //no -> next byte to DOAD
+          DSKx.write( read_DSRAM(WDATA) );                                                            //no -> next byte to DOAD
         } 
         sectorbyteidx = 0;                                                                            //adjust sector byte counter
       } else {

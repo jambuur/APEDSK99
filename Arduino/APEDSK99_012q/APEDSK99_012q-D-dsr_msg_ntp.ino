@@ -1,12 +1,12 @@
 //DSKx file pointers
-File DSK[3];                                                                                          //file pointers to DOAD's
+File DSKx;                                                                                            //file pointer to current open DOAD
+File SDdir;                                                                                           //file pointer for SD directory listing
 
 //flags for "drives" (aka DOAD files) available 
 boolean activeDSK[3]  = {false, false, false};                                                        //DSKx active flag
 char nameDSK[3][20]   = {"/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};        //DOAD file names; startup defaults
 byte protectDSK[3]    = {0x20, 0x20, 0x20};                                                           //DOAD write protect status
 byte currentDSK       = 0;                                                                            //current selected DSK
-File SDdir;                                                                                           //file pointer for SD directory listing
 byte gii              = 0;                                                                            //global counter (remember value in between successive calls of same APEDSK99 command)
 
 //various storage and flags for command interpretation and handling
@@ -178,7 +178,7 @@ byte getNTPdt( void ) {
 void writeFATts( void ) {                                                                             //update FAT MODIFY time/date
   byte chkNTPdt = getNTPdt();
   if ( chkNTPdt != FNTPConnect ) {                                                                    //if valid NTP time ...
-    DSK[currentDSK].timestamp(T_WRITE, TimeDateNum[4],                                                //... update FAT data
+    DSKx.timestamp(T_WRITE, TimeDateNum[4],                                                           //... update FAT data
                                        TimeDateNum[3],
                                        TimeDateNum[2],
                                        TimeDateNum[0],
@@ -191,7 +191,7 @@ byte readFATts( void ) {                                                        
   dir_t DIR;
   TimeDateASC[0] = '\0';
   
-  if ( DSK[currentDSK].dirEntry(&DIR) ) {                                                             //only read FAT time/date if valid directory entry                 
+  if ( DSKx.dirEntry(&DIR) ) {                                                                        //only read FAT time/date if valid directory entry                 
     TimeDateNum[4] = (int)FAT_YEAR  (DIR.lastWriteDate);                                              //store FAT date and time in global array   
     TimeDateNum[3] = (int)FAT_MONTH (DIR.lastWriteDate);
     TimeDateNum[2] = (int)FAT_DAY   (DIR.lastWriteDate);

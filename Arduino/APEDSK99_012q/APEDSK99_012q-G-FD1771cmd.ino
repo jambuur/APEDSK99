@@ -90,9 +90,9 @@ void loop() {
           if ( currentFD1771cmd == 0xE0 || currentFD1771cmd == 0xF0 ) {               //R/W whole track?
             write_DSRAM( WSECTR, 0x00 );                                              //yes; start from sector 0
           }
-          DSK[currentDSK] = SD.open( nameDSK[currentDSK], FILE_WRITE );               //open SD DOAD file
+          DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );                          //open SD DOAD file
           DOADbyteidx = calcDOADidx();                                                //calc absolute DOAD byte index
-          DSK[currentDSK].seek( DOADbyteidx );                                        //set to first absolute DOAD byte for R/W
+          DSKx.seek( DOADbyteidx );                                                   //set to first absolute DOAD byte for R/W
         } else {
           write_DSRAM( RSTAT, NOTREADY );                                             //set "Not Ready" bit in Status Register
           currentFD1771cmd = FDINT;                                                   //exit 
