@@ -15,9 +15,15 @@ void loop() {
 
   //the FD1771 "Force Interrupt" command is used to stop further command execution
   if ( currentFD1771cmd != FDINT ) {                                                  //do we need to exec some FD1771 command? 
+
+    write_DSRAM( tii++, currentFD1771cmd );
     
     if ( newFD1771cmd = ( currentFD1771cmd != lastFD1771cmd ) ) {                     //new or continue previous FD1771 command?
       lastFD1771cmd = currentFD1771cmd;                                               //new; remember new command for next compare
+      currentDSK = ( read_DSRAM( CRUWRI ) >> 1) & B00000011;                          //determine selected disk 
+      currentDSK--;                                                                   //DSK1-3 -> DSK0-2 to reduce array sizes
+      NRSECTS  = read_DSRAM( DSKprm + (currentDSK * 6) + 2 );                         //# sectors/track
+      NRTRACKS = read_DSRAM( DSKprm + (currentDSK * 6) + 3 );                         //# tracks/side
     }
 
     //***** FD1771 Seek / Step
@@ -75,6 +81,7 @@ void loop() {
       } //end switch FCcmd
       write_DSRAM( WTRACK, currentTrack );                                            //update Track Register
       write_DSRAM( RTRACK, currentTrack );                                            //sync Track Registers
+
       noExec();                                                                       //prevent multiple step/seek execution                                        
 
     // end FCcmd < 0x80
@@ -83,8 +90,6 @@ void loop() {
       //***** FD1771 R/W commands: prep
       
       if ( newFD1771cmd ) {                                                           //new command prep?
-        currentDSK = ( read_DSRAM( CRUWRI ) >> 1) & B00000011;                        //yes; determine selected disk 
-        currentDSK--;                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes
         if ( activeDSK[currentDSK] ) {                                                //is selected disk available?
           write_DSRAM( RSTAT, NOERROR );                                              //yes; reset possible "Not Ready" bit in Status Register
           if ( currentFD1771cmd == 0xE0 || currentFD1771cmd == 0xF0 ) {               //R/W whole track?

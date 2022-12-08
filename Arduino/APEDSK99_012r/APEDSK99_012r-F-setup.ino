@@ -40,13 +40,15 @@ void setup() {
     Flasher( 3 );                                                       //loading DSR unsuccessful -> flash error 3
   }
 
-  //initialise DSKx Active and Protect flags
+  //initialise DSKx Active / Protect flags and save key parameters
   for ( byte ii = 0; ii < 3; ii++ ) {
     if ( SD.exists( nameDSK[ii] ) ) {                                   //does DOAD x exist?
-      activeDSK[ii] = true;                                             //yes; flag active
-      DSKx = SD.open( nameDSK[ii], FILE_READ );                         //open DOAD file to check write protect y/n
-      DSKx.seek( 0x10 );                                                //byte 0x10 in Volume Information Block stores Protected status
-      protectDSK[ii] = DSKx.read();                                     //0x50 || "P" means disk is write protected 
+      DSKx = SD.open( nameDSK[ii], FILE_READ );                         //yes; open DOAD file to check various parameters
+      if ( !getDSKparms( ii ) ) {                                       //check DOAD size and if OK store DSK parameters
+        activeDSK[ii] = true;                                           //flag active
+        DSKx.seek( 0x10 );                                              //byte 0x10 in Volume Information Block stores Protected status
+        protectDSK[ii] = DSKx.read();                                   //0x50 || "P" means disk is write protected        
+      }
       DSKx.close();                                                     //close current SD DOAD file
     }
   } 

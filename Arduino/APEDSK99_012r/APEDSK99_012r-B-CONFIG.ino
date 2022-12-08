@@ -1,16 +1,16 @@
 //NOTE: IPAddress uses a comma "," for the address definition instead of the familiair dot "." !
 
 //CHANGE TO SUIT YOUR NETWORK
-IPAddress       IP(x,x,x,x);                                                                  //EthernetShield IP address : 
-IPAddress       ftpserver(x,x,x,x);                                                           //FTP server IP address
+IPAddress       IP(10,0,0,73);                                                                  //EthernetShield IP address : 
+IPAddress       ftpserver(10,0,0,13);                                                           //FTP server IP address
 //IPAddress       namesServer(x,x,x,x);                                                           //not required if on same subnet as FTP server
 //IPAddress       gateway(x,x,x,x);                                                               //not required if on same subnet as FTP server
 //IPAddress       netmask(x,x,x,x);                                                               //not required if on same subnet as FTP server
 
 //CHANGE TO SUIT YOUR NETWORK
-const char *ntpserver = "x.x.x.x";                                                            //NTP servername or IP address
-const char *user = "********";                                                                      //FTP server username
-const char *pass = "********";                                                                      //FTP server password
+const char *ntpserver = "10.0.0.13";                                                            //NTP servername or IP address
+const char *user = "apedsk99";                                                                      //FTP server username
+const char *pass = "apedsk99";                                                                      //FTP server password
 
 //UNCOMMENT RELEVANT LINE TO SUIT YOUR TIMEZONE
 //local hours difference with UTC in seconds (hours * 3600); 

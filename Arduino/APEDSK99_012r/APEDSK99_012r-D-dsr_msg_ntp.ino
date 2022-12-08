@@ -7,15 +7,16 @@ boolean activeDSK[3]  = {false, false, false};                                  
 char nameDSK[3][20]   = {"/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};        //DOAD file names; startup defaults
 byte protectDSK[3]    = {0x20, 0x20, 0x20};                                                           //DOAD write protect status
 byte currentDSK       = 0;                                                                            //current selected DSK
-byte gii              = 0;                                                                            //global counter (remember value in between successive calls of same APEDSK99 command)
 
 //various storage and flags for command interpretation and handling
+#define DSKprm          0x5FC2                                                                        //per DSKx: Mbyte #sectors, Lbyte #sectors, #sectors/track, #tracks, #sides
 #define CALLST          0x5FD4                                                                        //CALL() execution status                                                        
 #define DOADNotMapped   0
 #define DOADNotFound    1
 #define FNTPConnect     2
 #define Protected       3
 #define DSRNotFound     4
+#define DOADTooBig      5
 #define NTPStamp        99
 #define More            0xF0
 #define AllGood         0xFF
@@ -24,17 +25,22 @@ byte gii              = 0;                                                      
 #define TIBias          0x60                                                                          //TI BASIC screen bias
 #define EEPROMDSR       499                                                                           //EEPROM starting address for storing DSR filename (including \0)
 
+//global counter (remember value in between successive calls of same APEDSK99 command)
+byte gii              = 0;
+unsigned int tii      = 0x2000;
+
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
 char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
 
 //error messages in FLASH memory
-const char CALLerror[5][16] PROGMEM = {                                                               //CALL() error messages
+const char CALLerror[6][16] PROGMEM = {                                                               //CALL() error messages
   { "* DSK not mapped" },
   { "* DSK not found " }, 
   { "* no FTP or NTP " },
   { "* DSK protected " },
   { "* DSR not found " },
+  { "* DSK size error" },
 };
 
 //help messages in FLASH memory
@@ -85,6 +91,28 @@ void Flasher( byte errorcode ) {                                                
     }
     delay(LED_REPEAT);                                                                                //allow human error interpretation
   }
+}
+
+boolean getDSKparms( byte cDSK ) {
+  unsigned long cPos  = DSKx.position();                                                              //save current file position
+  unsigned int  cPrms = DSKprm + (cDSK * 6);                                                          //point to the right memory space for DSKx
+  boolean  tooBig = false;                                                                            //we don't support >360KB DOAD's 
+
+  DSKx.seek( 0x0A );                                                                                  //start with total #sectors
+  byte Mbyte = DSKx.read();
+  byte Lbyte = DSKx.read();
+  if ( int( (Mbyte * 256) + Lbyte ) > 1440 ) {                                                                                                        
+    tooBig = true;                                                                                    //"* DSK too large"
+  } else {
+    write_DSRAM( cPrms++, Mbyte );                                                                    //save Mbyte ...
+    write_DSRAM( cPrms++, Lbyte );                                                                    //... and Lbyte
+    write_DSRAM( cPrms++, DSKx.read() );                                                              //#sectors / track
+    DSKx.seek( 0x11 );                                                                                //skip to ...
+    write_DSRAM( cPrms++, DSKx.read() );                                                              //... #tracks ...
+    write_DSRAM( cPrms  , DSKx.read() );                                                              //... and #sides
+  }
+  DSKx.seek( cPos );                                                                                  //return to initial file position
+  return tooBig;
 }
 
 //transfer relevant error message from FLASH memory to CALL buffer 

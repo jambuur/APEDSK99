@@ -8,9 +8,9 @@
 #define FDINT 0xD0
 
 //"disk" characteristics
-#define NRTRACKS   40                                                                                 //# tracks/side
-#define NRSECTS     9                                                                                 //# sectors/track
 #define NRBYSECT  256                                                                                 //# bytes/sector
+byte NRTRACKS = 40;                                                                                   //default #tracks/side
+byte NRSECTS  =  9;                                                                                   //default #sectors/track
 
 #define ACOMND  0x5FE8                                                                                //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define RDINT   0x5FEA                                                                                //R6 counter value to generate interrupt in read sector / track commands (see DSR source)
@@ -70,7 +70,7 @@ void FD1771reset( void ) {
 
 //calculate and return absolute DOAD byte index for R/W commands
 unsigned long calcDOADidx ( void ) {
-  unsigned long byteidx = ( read_DSRAM(CRUWRI) & B00000001 ) * NRTRACKS;                              //add side 0 tracks (0x28) if on side 1
+  unsigned long byteidx = ( read_DSRAM(CRUWRI) & B00000001 ) * NRTRACKS;                              //add side 0 tracks (max 80) if on side 1
                 byteidx += read_DSRAM( WTRACK );                                                      //add current track #
                 byteidx *= NRSECTS;                                                                   //convert to # of sectors
                 byteidx += read_DSRAM( WSECTR );                                                      //add current sector #
@@ -102,7 +102,7 @@ void RWsector( boolean RW ) {
     case 0xB0:  
     case 0xF0: 
     { 
-      if ( sectoridx < (NRSECTS - 1) ) {                                                              //last sector (8)?
+      if ( sectoridx < (NRSECTS - 1) ) {                                                              //last sector (8 or 17)?
         sectoridx++;                                                                                  //no; increase Sector #
         write_DSRAM( WSECTR, sectoridx );                                                             //sync Sector Registers
         write_DSRAM( RSECTR, sectoridx );                                                             //""

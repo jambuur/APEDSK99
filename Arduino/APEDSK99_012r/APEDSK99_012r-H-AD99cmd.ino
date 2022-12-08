@@ -56,7 +56,7 @@
            
           boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
           byte protectDOAD;                                                                               //Protected flag
-          if ( existDOAD ) {                                                                              //does DOAD exist?>
+          if ( existDOAD ) {                                                                              //does DOAD exist?
             DSKx = SD.open( DOADfullpath, FILE_READ);                                                     //yes; open DOAD file
             DSKx.seek(0x10);                                                                              //byte 0x10 in Volume Information Block stores status
             protectDOAD = DSKx.read();                                                                    //store Protected flag
@@ -64,9 +64,13 @@
 
           if ( currentA99cmd == 6 ) {                                                                     //MDSK() ?
             if ( existDOAD ) {                                                                            //does DOAD exist? ...
-              strncpy( nameDSK[currentDSK], DOADfullpath, ii + 11 );                                      //yes; assign to requested DSKx   
-              activeDSK[currentDSK] = true;                                                               //flag as active
-              protectDSK[currentDSK] = protectDOAD;                                                       //set Protected status: 0x50 || "P", 0x20 || " "
+              if ( !getDSKparms( currentDSK ) ) {                                                         //check DOAD size and if OK store DSK parameters 
+                strncpy( nameDSK[currentDSK], DOADfullpath, ii + 11 );                                    //we're good; assign to requested DSKx   
+                activeDSK[currentDSK] = true;                                                             //flag as active
+                protectDSK[currentDSK] = protectDOAD;                                                     //set Protected status: 0x50 || "P", 0x20 || " "
+              } else {
+                CALLstatus( DOADTooBig );                                                                 //... flag error ...
+              }           
             } else {
               CALLstatus( DOADNotFound );                                                                 //... no; return error flag
             }
@@ -186,25 +190,26 @@
             if ( !(gii & B00000001) ) {                                                                   //if field == even we need to display mapping, otherwise time/date
               if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD?
 
-                DSKx = SD.open( nameDSK[currentDSK], FILE_READ );
-                                                            
-                unsigned int countOnes = 0;               
-                  
-                DSKx.seek( 0x12 );                                                                        //# of formatted sides
-                byte maxbitmap = DSKx.read() * 45;                                                        //# of Sector Bitmap bytes to process for SD or DS
-                DSKx.seek( 0x38 );                                                                        //1st Sector Bitmap byte for side 0
-                 
-                for ( byte ii = 0; ii < maxbitmap -1 ; ii++ ) {                                           //sum all set bits (=sectors used) for all Sector Bitmap bytes
+                byte maxbitmap = int( 
+                                      ( read_DSRAM(DSKprm + (currentDSK * 5)) * 256) +
+                                      ( read_DSRAM(DSKprm + ((currentDSK * 5) + 1)) ) ) / 8;              //yes; determine size of the bitmap to scan (1, 2 or 4 * 45 bytes)                              
+
+                DSKx = SD.open( nameDSK[currentDSK], FILE_READ );          
+                DSKx.seek( 0x38 );                                                                        //1st Sector Bitmap byte
+              
+                unsigned int countOnes = 0;   
+                
+                for ( byte ii = 0; ii < maxbitmap - 1; ii++ ) {                                           //sum all set bits (=sectors used) for all Sector Bitmap bytes
                   byte bitmap = DSKx.read();
                   for ( byte jj = 0; jj < 8; jj++ ) {                                       
                     countOnes += ( bitmap >> jj ) & 0x01;                                                 //"on the One you hear what I'm sayin'"
                   }
                 }
-
-                char freesectors[4];                                                                      //ASCII store
-                sprintf( freesectors, "%3u", (maxbitmap * 8) - countOnes );                               //convert number of free sectors to string
-                for ( byte ii = 15; ii < 18; ii++ ) {                                                     //store ASCII file size in CALL buffer
-                  write_DSRAM( CALLBF + ii, freesectors[ii-15] + TIBias );
+      
+                char freesectors[5];                                                                      //ASCII store
+                sprintf( freesectors, "%4u", (maxbitmap * 8) - countOnes );                               //convert number of free sectors to string
+                for ( byte ii = 14; ii < 18; ii++ ) {                                                     //store ASCII file size in CALL buffer
+                  write_DSRAM( CALLBF + ii, freesectors[ii-14] + TIBias );
                 }
                 strncpy( DOADfullpath, nameDSK[currentDSK], 20 );                                         //get current DOAD name     
 
