@@ -191,8 +191,8 @@
               if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD?
 
                 byte maxbitmap = int( 
-                                      ( read_DSRAM(DSKprm + (currentDSK * 5)) * 256) +
-                                      ( read_DSRAM(DSKprm + ((currentDSK * 5) + 1)) ) ) / 8;              //yes; determine size of the bitmap to scan (1, 2 or 4 * 45 bytes)                              
+                                      ( read_DSRAM(DSKprm + ( currentDSK * 6)) * 256) +
+                                      ( read_DSRAM(DSKprm + ((currentDSK * 6) + 1)) ) ) / 8;              //yes; determine size of the bitmap to scan (1, 2 or 4 * 45 bytes)                              
 
                 DSKx = SD.open( nameDSK[currentDSK], FILE_READ );          
                 DSKx.seek( 0x38 );                                                                        //1st Sector Bitmap byte

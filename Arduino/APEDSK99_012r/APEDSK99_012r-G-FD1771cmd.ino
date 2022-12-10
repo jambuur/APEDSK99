@@ -15,95 +15,36 @@ void loop() {
 
   //the FD1771 "Force Interrupt" command is used to stop further command execution
   if ( currentFD1771cmd != FDINT ) {                                                  //do we need to exec some FD1771 command? 
-
-    write_DSRAM( tii++, currentFD1771cmd );
-    
     if ( newFD1771cmd = ( currentFD1771cmd != lastFD1771cmd ) ) {                     //new or continue previous FD1771 command?
       lastFD1771cmd = currentFD1771cmd;                                               //new; remember new command for next compare
       currentDSK = ( read_DSRAM( CRUWRI ) >> 1) & B00000011;                          //determine selected disk 
       currentDSK--;                                                                   //DSK1-3 -> DSK0-2 to reduce array sizes
-      NRSECTS  = read_DSRAM( DSKprm + (currentDSK * 6) + 2 );                         //# sectors/track
-      NRTRACKS = read_DSRAM( DSKprm + (currentDSK * 6) + 3 );                         //# tracks/side
-    }
 
-    //***** FD1771 Seek / Step
-
-    if ( currentFD1771cmd < 0x80 ) {                                                  //step/seek commands? ...
-
-      byte currentTrack = read_DSRAM( WTRACK );                                       //read current Track #
-      byte newTrack     = read_DSRAM( WDATA );                                        //read new Track # (Seek)
-
-      switch(currentFD1771cmd) {
-       
-        case 0x00:                                                                    //Restore            
-        { 
-          currentTrack = 0;                                                           //reset cTrack so Track Registers will be cleared after switch{}
-          FD1771reset();
+      if ( activeDSK[currentDSK] ) {                                                  //is selected disk available ...
+        write_DSRAM( RSTAT, NOERROR );                                                //yes; reset possible "Not Ready" bit in Status Register
+        if ( currentFD1771cmd == 0xE0 || currentFD1771cmd == 0xF0 ) {                 //R/W whole track?
+          write_DSRAM( WSECTR, 0x00 );                                                //yes; start from sector 0
         }
-        break;
 
-        case 0x10:                                                                    //Seek
-        {
-          currentTrack   = newTrack;                                                  //prepare to update Track Register
-          currentStepDir = ( newTrack > currentTrack );                               //set direction: HIGH = track #++, LOW = track #--
-        } 
-        break;
-          
-        case 0x20:                                                                    //Step
-        case 0x30:                                                                    //Step+T
-        {
-          if ( currentStepDir == LOW ) {
-            currentFD1771cmd = 0x70;                                                  //execute Step-Out+T
-          } else {
-            currentFD1771cmd = 0x50;                                                  //execute Step-In+T
-          }
-        }
-        case 0x40:                                                                    //Step-In
-        case 0x50:                                                                    //Step-In+T
-        {
-          if ( currentTrack < NRTRACKS ) {                                            //any tracks left to step to?
-            currentTrack++;                                                           //yes; increase Track #
-            currentStepDir = HIGH;                                                    //set stepping direction towards last track 
-          }
-        }
-        break;
+        DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );                            //open SD DOAD file
+        TNSECTS  = read_DSRAM( DSKprm + (currentDSK * 6) ) * 256 +                    //total #sectors for this DSK
+                   read_DSRAM( DSKprm + ((currentDSK * 6) + 1) );
+        NRSECTS  = read_DSRAM( DSKprm + ((currentDSK * 6) + 2) );                     //#sectors/track      
+        DOADbyteidx  = read_DSRAM(WSECTR) * 256;                                      //calc absolute DOAD sector index
+        DOADbyteidx += read_DSRAM(WSECTR + 1);
 
-        case 0x60:                                                                    //Step-Out
-        case 0x70:                                                                    //Step-Out+T
-        {
-          if ( currentTrack > 0 ) {                                                   //any tracks left to step to?
-            currentTrack--;                                                           //yes; decrease Track #
-            currentStepDir = LOW;                                                     //set stepping direction towards track 0
-          }
-        }
-        break;
-          
-      } //end switch FCcmd
-      write_DSRAM( WTRACK, currentTrack );                                            //update Track Register
-      write_DSRAM( RTRACK, currentTrack );                                            //sync Track Registers
-
-      noExec();                                                                       //prevent multiple step/seek execution                                        
-
-    // end FCcmd < 0x80
-    } else {                                                                          //... no; read/write commands
-      
-      //***** FD1771 R/W commands: prep
-      
-      if ( newFD1771cmd ) {                                                           //new command prep?
-        if ( activeDSK[currentDSK] ) {                                                //is selected disk available?
-          write_DSRAM( RSTAT, NOERROR );                                              //yes; reset possible "Not Ready" bit in Status Register
-          if ( currentFD1771cmd == 0xE0 || currentFD1771cmd == 0xF0 ) {               //R/W whole track?
-            write_DSRAM( WSECTR, 0x00 );                                              //yes; start from sector 0
-          }
-          DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );                          //open SD DOAD file
-          DOADbyteidx = calcDOADidx();                                                //calc absolute DOAD byte index
-          DSKx.seek( DOADbyteidx );                                                   //set to first absolute DOAD byte for R/W
+        if ( DOADbyteidx < long(TNSECTS) ) {                                          //#sector within current DSK size?
+          DOADbyteidx *= NRBYSECT;                                                    //yes;set to first absolute DOAD byte for R/W      
+          DSKx.seek( DOADbyteidx );                                                   //seek byte index       
         } else {
-          write_DSRAM( RSTAT, NOTREADY );                                             //set "Not Ready" bit in Status Register
-          currentFD1771cmd = FDINT;                                                   //exit 
+          write_DSRAM( RSTAT, NOTREADY );                                             //no; set "Not Ready" bit in Status Register
+          currentFD1771cmd = FDINT;                                                   //exit
         }
+      } else {
+        write_DSRAM( RSTAT, NOTREADY );                                               //... no; set "Not Ready" bit in Status Register
+        currentFD1771cmd = FDINT;                                                     //exit 
       }
-      
+    }
       //***** FD1771 R/W commands
       
       switch ( currentFD1771cmd ) {
@@ -140,6 +81,6 @@ void loop() {
           noExec();
         }
 
-      } //end R/W switch
+    //  } //end R/W switch
     } //end else R/W commands
   } else {                                                                            //no FD1771 stuff to execute, check out APEDSK99 commands

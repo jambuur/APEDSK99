@@ -27,7 +27,6 @@ byte currentDSK       = 0;                                                      
 
 //global counter (remember value in between successive calls of same APEDSK99 command)
 byte gii              = 0;
-unsigned int tii      = 0x2000;
 
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
@@ -45,7 +44,7 @@ const char CALLerror[6][16] PROGMEM = {                                         
 
 //help messages in FLASH memory
 const char CALLhelp[36][16] PROGMEM = {                                                               //CALL() help text
-  { "    APEDSK99 v0."   }, { "12q CALLs       " },
+  { "    APEDSK99 v0."   }, { "12r CALLs       " },
   { "----------------"   }, { "--------------- " },
   { "AHLP    = this h"   }, { "elp screen      " },
   { "ARST    = soft r"   }, { "eset apedsk99   " },

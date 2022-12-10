@@ -225,62 +225,14 @@ K001	DATA	>0404
 *
 SECRW1	MOVB	@K002,@>0050(R9)	APEDSK99: no error
 	BL	@SELDRV			select drive
-	BL	@LASTRK			point to # of last track
-	CLR	R0			
-	MOVB	@-1026(R15),R0		get # of last track accessed
-
-	CI	R0,>5000		APEDSK99: max 80 tracks
-	JL	H002			APEDSK99: last track within range
-	BL	@SKTRK0			seek track 0
-	CLR	R0			APEDSK99: none of this inverting databus rubbish
-H002	MOVB	R0,@WTRACK		place last track or >00 in track register
-	MOV	@>004A(R9),R1		sector #
-	SZCB	@K006,@CRUWRI		APEDSK99: side 0 
 *
+	MOV	@>004A(R9),R1		sector #
 	CI	R1,>05A0		APEDSK99: max 1440 (DS/DD/40T or DS/SD/80T)?
-	JL	H007
+	JL	H005			JB
 	BL	@ERROR1			APEDSK99: no -> "device error"
 	DATA 	>0600	
-*
-H007	MOVB	@>004C(R9),R6		APEDSK99: get drive #
-	SRL	R6,8			APEDSK99: 1-3 in LSByte
-	DEC     R6			APEDSK99: 0-2
-	LI	R0,6			
-	MPY	R0,R6			APEDSK99: index to DSKx parameters in R7
-*
-	CB 	@DSKPRM+4(R7),@K006	APEDSK99: check #sides
-	JEQ	H006			APEDSK99: single sided
-*
-	MOV	@DSKPRM(R7),R6		APEDSK99: get total #sectors for this DSK
-	SRL	R6,1			APEDSK99: / 2
-	C	R1,R6			APEDSK99: on which side is it?
-	JL	H004			APEDSK99: side 1
-*
-	S	R6,R1			APEDSK99: sector# on side 2 in R1
-	SOCB	@K006,@CRUWRI		APEDSK99: side 1
-	JMP	H006
-*
-H004	CI	R1,>0001		is it sector 0 or 1?
-	JH	H006			no
-	BL	@SKTRK0			yes: seek track 0
-*
-H006	CLR	R0			
-	DIV	@DSKPRM+2(R7), R0	APEDSK99: R0=track #, R1=sector #
-*
-H005	SWPB	R0			
-	BL	@VDPWRI			set VDP to write
-	MOVB	R0,@-2(R15)		save # of last track accessed
-	MOVB	R0,@WDATA		pass to data register
-	SWPB	R1			
-	MOVB	R1,@WSECTR		pass new sector # to sector register
-	CB	R0,@RTRACK		new track # same as current?
-	JEQ 	H013			APEDSK99: yes (don't need READ ID to check side)
-	BL	@SNDCMD			send command
-	DATA	>1E00			APEDSK99: seek
-	JMP	H013			APEDSK99: don't need READ ID to check side
-*
-H003	BL	@ERROR1			error 7
-	DATA	>0700			
+
+H005	MOV	R1,@WSECTR		JB
 *
 H013	MOV	@>004E(R9),R2		data buffer address
 	MOVB	@>004D(R9),R0		read or write ?
@@ -295,8 +247,9 @@ H016	MOVB	@RDATA,R0		get 1 byte from FDC
 	MOVB	R0,@-2(R15)		save it to VDP
 	DEC	@RDINT			APEDSK99: interrupt Arduino for read operation
 	JNE	H016			next byte
-H019	CLR	R5			clear flag
-	B	@RTURN1			return
+*
+H019	B	@RTURN1			return
+
 *	
 H014	BL	@VDPRD			write to FD = read from VDP buffer
 	LI	R6,256			256 bytes to write
@@ -307,10 +260,12 @@ H014	BL	@VDPRD			write to FD = read from VDP buffer
 	MOVB	R0,@WDATA		APEDSK99: write first byte to data register
 	BL	@SNDCMD			send command
 	DATA	>A800			APEDSK99: write sector
+*
 H024	MOVB	@-1026(R15),R0		get a byte from data buffer
 	MOVB	R0,@WDATA		pass it to data register
 	DEC	R6			
 	JNE	H024			next byte
+*
 	BL	@WTCPT1			APEDSK99: check for Write Protect
 	SLA	R0,2			APEDSK99: WP bit in Carry
 	JOC	ERROR3			write protect: error 34
@@ -326,9 +281,9 @@ ERROR3	BL	@ERROR1			error 34 (Write Protect)
 FMTDSK	CLR	@>004A(R9)		called by subprogram >11
 *					
 H027	SZCB	@K004,@>004C(R9)	clear DSR version flags
+	MOVB	@K002,@>0050(R9)	no error
 *
 	BL	@SELDRV			select drive
-	BL	@SKTRK0			seek track 0
 *
 	MOVB	@>004D(R9),R0		APEDSK99: get # of tracks
 	CB	@>0051(R9),@K005	APEDSK99: double sided?
@@ -338,8 +293,10 @@ H027	SZCB	@K004,@>004C(R9)	clear DSR version flags
 *
 H036	SRL	R0,8			APEDSK99: make it a byte
 	LI	R6,9			APEDSK99: start with single density
-	CB	@>8350,@K005		APEDSK99: double density required?
+	MOVB	@>0050(R9),@>A000
+	CB	@>0050(R9),@K005	APEDSK99: double density required?
 	JNE	H037			APEDSK99: no, leave R6 alone
+	BLWP	@>0000
 	SLA	R6,1			APEDSK99: yes, R6*2
 *		
 H037	MPY	R6,R0			APEDSK99: #sectors/track * #tracks
@@ -351,7 +308,6 @@ H037	MPY	R6,R0			APEDSK99: #sectors/track * #tracks
 H038	MOV	R1,@>004A(R9)		pass total # of sectors per disk
 	SWPB 	R6
 	MOVB 	R6,@>004D(R9)		APEDSK99: pass # of sectors per track
-*	MOVB	@K007,@>004D(R9)	pass # of sectors per track
 *
 	BL	@NTPDT			APEDSK99: update DOAD FAT time/date
 *
@@ -374,37 +330,21 @@ ERROR4	BL	@ERROR1			exit with error code 6, reseting all drives
 SELDRV	MOV	R11,R7			select a drive
 	MOV	@>0058(R9),R2
 	AI	R2,-10			point to drive info
-	BL	@VDPRD			set VDP to read
-	MOVB	@-1026(R15),R0		get # of last drive accessed
-	CLR	R5			clear flag
-	CB	R0,@>004C(R9)		same as the one to be formatted?
-	JEQ	H055			yes
-	SETO	R5			no: set flag
 H055	CLR	R0			
 	MOVB	@>004C(R9),R0		get drive #
 	JEQ	H056			can't be >00: error #7
-	BL	@VDPWRI			set VDP to write, address in R2
-	MOVB	R0,@-2(R15)		modify last drive accessed
-	SWPB	R0			
-	CI	R0,>0003			
+	CI	R0,>0300			
 	JH	H056			drive number can't be higher than 3: error #7
+	BL	@VDPWRI			set VDP to write, address in R2
+	MOVB	R0,@-2(R15)		modify last drive accessed		
 *
-H057	SWPB	R0			APEDSK99: drive # back in MSB
-	SLA	R0,1			APEDSK99: bit 0 is side select, 1-3 is drive #
+H057	SLA	R0,1			APEDSK99: bit 0 is side select, 1-3 is drive #
 	MOVB	R0,@CRUWRI		APEDSK99: select drive
 H058	B	*R7			
 *					
 H056	BL	@ERROR1			exit with error #7
 	DATA	>0700			
 *					
-SKTRK0	MOV	R11,R8			seek track 0
-	BL	@SNDCMD
-	DATA	>0A00			APEDSK99: send Restore command
-	BL	@LASTRK			set VDP to read last track #
-	BL	@VDPWRI			set VDP to write at same address
-	MOVB	@K012,@-2(R15)		set last track # as >FF for this drive
-	B	*R8			
-*
 RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK99: reset all drives including side
 	MOVB	@K013,@WCOMND		send Force Interrupt with no interrupt flag set
 	MOV	@>0058(R9),R2		ptr to VIB buffer
@@ -457,12 +397,8 @@ H069	SWPB	R2
 	B	*R11			
 *					
 K002	BYTE	>00			
-K006	BYTE	>01			
-*K003	BYTE	>00			sectors per track
-K007	BYTE	>09			
-	BYTE	>00			
+K007	BYTE	>09						
 K004	BYTE	>F0			
-K012	DATA	>FFFF			
 K005	BYTE	2
 DSDRVS	BYTE	>0F			APEDSK99: deselect all drives + side (reset CRUWRI bits 7,6,5 and 4)			
 *
@@ -3431,7 +3367,7 @@ GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
 	B	*R11			return to instruction after BL @GPLEXEC DATA statement
 *
 *-----------------------------------------
-* >5FC6 - >5FD3: 14 free bytes remaining
+* >5xxx - >5FC2: xxx free bytes remaining
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
 * >5FE8	is the Arduino Command Register (TI BASIC CALL support)
