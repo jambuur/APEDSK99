@@ -45,42 +45,41 @@ void loop() {
         currentFD1771cmd = FDINT;                                                     //exit 
       }
     }
-      //***** FD1771 R/W commands
-      
-      switch ( currentFD1771cmd ) {
+ 
+    //***** FD1771 R/W commands
+    
+    switch ( currentFD1771cmd ) {
 
-        case 0xD0:
-        {
-          noExec();
+      case 0xD0:
+      {
+        noExec();
+      }
+      break;
+
+      case 0x80:                                                                    //read sector
+//        case 0x90:                                                                    //read multiple sectors
+//        case 0xE0:                                                                    //read track    
+      {
+        RWsector( READ );
+      }
+      break;
+
+      case 0xA0:                                                                    //write sector
+//        case 0xB0:                                                                    //write multiple sectors
+//        case 0xF0:                                                                    //write track
+      {
+        if ( protectDSK[currentDSK] != 0x50 ) {                                     //is DOAD write protected?
+          RWsector( WRITE );                                                        //no; go ahead and write
+        } else {
+          write_DSRAM( RSTAT, PROTECTED );                                          //yes; set "Write Protect" bit in Status Register
+          noExec();                                                                 //exit      
         }
-        break;
+      }
+      break;
 
-        case 0x80:                                                                    //read sector
-        case 0x90:                                                                    //read multiple sectors
-        case 0xE0:                                                                    //read track    
-        {
-          RWsector( READ );
-        }
-        break;
-
-        case 0xA0:                                                                    //write sector
-        case 0xB0:                                                                    //write multiple sectors
-        case 0xF0:                                                                    //write track
-        {
-          if ( protectDSK[currentDSK] != 0x50 ) {                                     //is DOAD write protected?
-            RWsector( WRITE );                                                        //no; go ahead and write
-          } else {
-            write_DSRAM( RSTAT, PROTECTED );                                          //yes; set "Write Protect" bit in Status Register
-            noExec();                                                                 //exit      
-          }
-        }
-        break;
-
-        default:                                                                      //catch-all safety
-        {
-          noExec();
-        }
-
-    //  } //end R/W switch
+      default:                                                                      //catch-all safety
+      {
+        noExec();
+      }
     } //end else R/W commands
   } else {                                                                            //no FD1771 stuff to execute, check out APEDSK99 commands

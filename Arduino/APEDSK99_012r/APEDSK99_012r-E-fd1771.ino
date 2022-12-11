@@ -9,11 +9,11 @@
 
 //"disk" characteristics
 #define NRBYSECT  256                                                                                 //#bytes/sector
-byte NRSECTS         =  9;                                                                            //#sectors/track
+byte NRSECTS         =  9;                                                                            //#sectors/track (safe SD default)
 unsigned int TNSECTS =  0;                                                                            //#sectors/DSK
 
 #define ACOMND  0x5FE8                                                                                //APEDSK99-specific Command Register (TI BASIC CALL support)
-#define RDINT   0x5FEA                                                                                //R6 counter value to generate interrupt in read sector / track commands (see DSR source)
+#define RDINT   0x5FEA                                                                                //R6 counter value to generate interrupt in read sector command (see DSR source)
 
 //CRU emulation bytes + FD1771 registers
 #define CRUWRI  0x5FEE                                                                                //emulated 8 CRU output bits,     >5FEE in TI99/4a DSR memory block;
@@ -48,7 +48,6 @@ void noExec( void ) {
   currentDSK                  = 0;                                                                    //reset active DSKx
   DOADbyteidx                 = 0;                                                                    //clear absolute DOAD byte index
   sectorbyteidx               = 0;                                                                    //clear byte index counter
-  sectoridx                   = 0;                                                                    //clear sector counter
 }
 
 //clear various FD1771 registers (for powerup and Restore command)

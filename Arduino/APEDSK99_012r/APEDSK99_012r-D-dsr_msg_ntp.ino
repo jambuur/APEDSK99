@@ -61,7 +61,7 @@ const char CALLhelp[36][16] PROGMEM = {                                         
   { "FPUT(\"1-8C\")   =" }, { " ftp->sd doad   " },
   { "ADSR(\"8C\")     =" }, { " load dsr&reset " },
   { "-               "   }, { "                " },
-  { "error flash: 1=s"   }, { "d, 2=dsr, 3=ram " },
+  { "error flash: 1=S"   }, { "D, 2=DSR, 3=RAM " },
 };
 
 //reset Arduino properly via watchdog timer
