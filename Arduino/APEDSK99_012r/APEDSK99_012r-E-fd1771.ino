@@ -10,7 +10,7 @@
 //"disk" characteristics
 #define NRBYSECT  256                                                                                 //#bytes/sector
 byte NRSECTS         =  9;                                                                            //#sectors/track (safe SD default)
-unsigned int TNSECTS =  0;                                                                            //#sectors/DSK
+unsigned int TNSECTS =  0;                                                                            //#sectors/DSK (max 1440)
 
 #define ACOMND  0x5FE8                                                                                //APEDSK99-specific Command Register (TI BASIC CALL support)
 #define RDINT   0x5FEA                                                                                //R6 counter value to generate interrupt in read sector command (see DSR source)
@@ -32,11 +32,10 @@ boolean newFD1771cmd        = false;                                            
 byte currentA99cmd          = 0;                                                                      //current APEDSK99 command
 byte lastA99cmd             = 0;                                                                      //last APEDSK99 command
 boolean newA99cmd           = false;                                                                  //flag new APEDSK99 command
-unsigned long DOADbyteidx   = 0;                                                                      //absolute DOAD byte index
+unsigned long DOADidx       = 0;                                                                      //absolute DOAD sector or byte index
 unsigned int sectorbyteidx  = 0;                                                                      //R/W sector/byte index counter
-byte sectoridx              = 0;                                                                      //R/W sector counter
 
-//no further command execution (prevent seek/step commands to be executed multiple times)
+//no further command execution 
 void noExec( void ) {
   DSKx.close();                                                                                       //close current SD DOAD file
   write_DSRAM(WCOMND, FDINT);                                                                         //"force interrupt" command (aka no further execution)
@@ -46,7 +45,7 @@ void noExec( void ) {
   currentA99cmd               = 0;                                                                    //reset APEDSK99 command
   lastA99cmd                  = currentA99cmd;                                                        //reset new APEDSK99 command prep
   currentDSK                  = 0;                                                                    //reset active DSKx
-  DOADbyteidx                 = 0;                                                                    //clear absolute DOAD byte index
+  DOADidx                     = 0;                                                                    //clear absolute DOAD byte index
   sectorbyteidx               = 0;                                                                    //clear byte index counter
 }
 
@@ -54,8 +53,8 @@ void noExec( void ) {
 void FD1771reset( void ) {
   write_DSRAM( RSTAT,  NOERROR );                                                                     //clear Status Register
   write_DSRAM( RDATA,  0 );                                                                           //clear Read Data register
-  write_DSRAM( WSECTR, 0 );                                                                           //clear Write Sector register
-  write_DSRAM( WSECTR + 1, 0 );                                                                       //clear Write Sector register
+  write_DSRAM( WSECTR, 0 );                                                                           //clear MSB Write Sector register
+  write_DSRAM( WSECTR + 1, 0 );                                                                       //clear LSB Write Sector register
   write_DSRAM( WDATA,  0 );                                                                           //clear Write Data register
 }
 
@@ -77,6 +76,5 @@ void RWsector( boolean RW ) {
       }
     }
     break;
-
   }
 }

@@ -1,7 +1,7 @@
 //NOTE: IPAddress uses a comma "," for the address definition instead of the familiair dot "." !
 
 //CHANGE TO SUIT YOUR NETWORK
-IPAddress       IP(10,0,0,73);                                                                  //EthernetShield IP address : 
+IPAddress       IP(10,0,0,73);                                                                  //EthernetShield IP address 
 IPAddress       ftpserver(10,0,0,13);                                                           //FTP server IP address
 //IPAddress       namesServer(x,x,x,x);                                                           //not required if on same subnet as FTP server
 //IPAddress       gateway(x,x,x,x);                                                               //not required if on same subnet as FTP server
@@ -14,7 +14,7 @@ const char *pass = "apedsk99";                                                  
 
 //UNCOMMENT RELEVANT LINE TO SUIT YOUR TIMEZONE
 //local hours difference with UTC in seconds (hours * 3600); 
-//does not consider DST; adjust for DST by adding or substracting (hours * 3600) ie. 46300 - 3600
+//does not consider DST; adjust for DST by adding or substracting (hours * 3600), see Auckland/Wellington below
 
 //#define TZ -43200         //International Date Line West, Etc/GMT+12
 //#define TZ -39600         //Coordinated Universal Time-11, Etc/GMT+11
@@ -117,7 +117,7 @@ const char *pass = "apedsk99";                                                  
 //ONLY CHANGE WHEN YOU EXPERIENCE PROBLEMS WITH DEFAULT SETTING
 //Short delay function to let bus/signals settle. 
 //Probably not necessary in most cases but conservative timing ensures most consoles work with APEDSK99 "out of the box"
-//A good test is to format/verify a DS "floppy" a couple of times; if that works, you're good. 
+//A good test is to format/verify a DS/DD "floppy" a couple of times; if that works, you're good. 
 inline void NOP() __attribute__((always_inline));
 void NOP(){
   delayMicroseconds(6);  

@@ -1,5 +1,6 @@
 /* APEDISK99
-  This sketch emulates 3 TI99/4a DS/SD disk drives, including the ability to load and save Disk-On-A-Disk (DOAD) files via the FTP protocol
+  This sketch emulates 3 TI99/4a DS/DD/80tracks disk drives, including the ability to load and save Disk-On-A-Disk (DOAD) files 
+  via the FTP protocol. It also provides TI (EXTENDED) BASIC access to NTP date/time information.
   
   Shopping list:
   - Arduino Uno
@@ -32,7 +33,7 @@
 
   $Author: Jochen Buur $
   $Date: November 2022 $
-  $Revision: 0.12q $
+  $Revision: 0.12r $
   
   This software is freeware and can be modified, re-used or thrown away without any restrictions.
   Use this code at your own risk.
@@ -111,8 +112,8 @@ NTP ntp(udp);
 
 //IO lines for TI99/4a control
 #define TI_READY       3                                                      //PD0; manage READY and enable/disable 74HC595 shift registers
-#define TI_INT      	 2                                                      //PD2; GAL16V8 interrupt (DSR write & A15); shared with Ethernet CS (ETH_CS) 
-#define TI_BUFFERS    15                                                      //PC1; 74HCT541 buffers and GAL output bufers enable/disable
+#define TI_INT      	 2                                                      //PD2; GAL16V8 flag (DSR write & A15); shared with Ethernet CS (ETH_CS) 
+#define TI_BUFFERS    15                                                      //PC1; 74HCT541 and GAL output bufers enable/disable
 
 //error blinking parameters
 #define LED_ON       500                                                      //on

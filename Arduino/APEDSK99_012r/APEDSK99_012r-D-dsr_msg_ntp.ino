@@ -8,8 +8,8 @@ char nameDSK[3][20]   = {"/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_
 byte protectDSK[3]    = {0x20, 0x20, 0x20};                                                           //DOAD write protect status
 byte currentDSK       = 0;                                                                            //current selected DSK
 
-//various storage and flags for command interpretation and handling
-#define DSKprm          0x5FC2                                                                        //per DSKx: Mbyte #sectors, Lbyte #sectors, #sectors/track, #tracks, #sides
+//command status and error handling
+#define DSKprm          0x5FC2                                                                        //per DSKx: Mbyte/Lbyte #sectors, #sectors/track, #tracks, #sides
 #define CALLST          0x5FD4                                                                        //CALL() execution status                                                        
 #define DOADNotMapped   0
 #define DOADNotFound    1
@@ -88,22 +88,23 @@ void Flasher( byte errorcode ) {                                                
       digitalHigh(CE);                                                                                //turn it off
       delay(LED_OFF);                                                                                 //LED is off for a bit
     }
-    delay(LED_REPEAT);                                                                                //allow human error interpretation
+    delay(LED_REPEAT);                                                                                //allow human interpretation
   }
 }
 
+//per DSKx: Mbyte/Lbyte #sectors, #sectors/track, #tracks, #sides
 boolean getDSKparms( byte cDSK ) {
   unsigned long cPos  = DSKx.position();                                                              //save current file position
-  unsigned int  cPrms = DSKprm + (cDSK * 6);                                                          //point to the right memory space for DSKx
+  unsigned int  cPrms = DSKprm + (cDSK * 6);                                                          //point to right memory location for DSKx
   boolean  tooBig = false;                                                                            //we don't support >360KB DOAD's 
 
   DSKx.seek( 0x0A );                                                                                  //start with total #sectors
   byte Mbyte = DSKx.read();
   byte Lbyte = DSKx.read();
-  if ( int( (Mbyte * 256) + Lbyte ) > 1440 ) {                                                                                                        
-    tooBig = true;                                                                                    //"* DSK too large"
+  if ( int( (Mbyte * 256) + Lbyte ) > 1440 ) {                                                        //more than 1440 AU's (sectors)?                                                
+    tooBig = true;                                                                                    //yes -> "* DSK too large"
   } else {
-    write_DSRAM( cPrms++, Mbyte );                                                                    //save Mbyte ...
+    write_DSRAM( cPrms++, Mbyte );                                                                    //save #sectors Mbyte ...
     write_DSRAM( cPrms++, Lbyte );                                                                    //... and Lbyte
     write_DSRAM( cPrms++, DSKx.read() );                                                              //#sectors / track
     DSKx.seek( 0x11 );                                                                                //skip to ...
@@ -117,9 +118,9 @@ boolean getDSKparms( byte cDSK ) {
 //transfer relevant error message from FLASH memory to CALL buffer 
 void CALLstatus( byte scode ) {
   write_DSRAM( CALLST, scode );                                                                       //update CALL status
-  if ( scode < 99  ) {                                                                                //error? 
-    for ( byte ii = 2; ii < 18; ii++ ) {
-      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii-2] ) + TIBias );                  //copy error message to CALL buffer
+  if ( scode < 99  ) {                                                                                //is it an actual error? 
+    for ( byte ii = 2; ii < 18; ii++ ) {                                                              //yes; copy error message to CALL buffer
+      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii-2] ) + TIBias );
     }
   }
 }
