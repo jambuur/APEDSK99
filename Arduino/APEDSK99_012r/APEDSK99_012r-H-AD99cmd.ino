@@ -144,7 +144,7 @@
               unsigned int currentPosition = DSKx.position();                                             //remember next FDR pointer
               DSKx.seek( FDR * NRBYSECT );                                                                //locate FDR within DOAD
               for ( byte ii=2; ii < 12; ii++ ) {                                  
-               write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                          //read/save filename characters in CALL buffer
+                write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                         //read/save filename characters in CALL buffer
               }                 
                         
               DSKx.seek( DSKx.position() + 2 );                                                           //locate File Status Flags
@@ -156,7 +156,6 @@
               } else {
                 write_DSRAM( CALLBF + 13, 'D' + TIBias );                                                 //"DISPLAY"
               }
-
               char filesize[4];                                                                           //ASCII store
               DSKx.seek( DSKx.position() + 1 );                                                           //locate total # of sectors
               sprintf( filesize, "%3u", (DSKx.read() << 8) + (DSKx.read() + 1) );                         //convert number to string
@@ -264,12 +263,23 @@
           if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                                //valid file AND !ENTER from DSR?
             char DOADfilename[13] = "\0";                                                                 //"clear" array for shorter filenames not displaying leftover parts
             tFile.getName( DOADfilename, 13 );                                                            //copy filename ... 
-            for ( byte ii = 2; ii < 14; ii++ ) {                                                          //... and write to buffer
-              write_DSRAM( CALLBF + ii, DOADfilename[ii-2] + TIBias );
-            } 
-            tFile.seek( 0x12 );                                                                           //byte >12 in VIB stores # of sides (>01 or >02)
-            write_DSRAM( CALLBF + 15, tFile.read() + (48 + TIBias) );                                     //change to ASCII and add TI screen bias
-            write_DSRAM( CALLBF + 16, 'S' + TIBias );                                                     //"SIDED"
+            for ( byte ii = 2; ii < 10; ii++ ) {                                                          //... and write to buffer
+              if ( DOADfilename[ii-2] != '.' ) {
+                write_DSRAM( CALLBF + ii, DOADfilename[ii-2] + TIBias );
+              } else {
+                break;
+              }    
+            }  
+            tFile.seek( 0x12 );                                                                           //byte >12 in VIB stores #sides (>01 or >02)
+            write_DSRAM( CALLBF + 11, tFile.read() + (48 + TIBias) );                                     //#sides; change to ASCII and add TI screen bias
+            write_DSRAM( CALLBF + 12, '/' + TIBias );                                                     //divider
+            write_DSRAM( CALLBF + 13, ('S' - ((tFile.read() >> 1) * 15)) + TIBias);                       //byte >13 in VIB stores density (>01/SD or >02/DD)
+            write_DSRAM( CALLBF + 14, '/' + TIBias );                                                     //divider 
+            tFile.seek( 0x11 );                                                                           //byte >11 in VIB stores #tracks
+            char tracks[3];                                                                               //ASCII store
+            sprintf( tracks, "%2u", tFile.read() );                                                       //convert #tracks to string
+            write_DSRAM( CALLBF + 15, tracks[0] + TIBias );
+            write_DSRAM( CALLBF + 16, tracks[1] + TIBias );
             tFile.close();                                                                                //prep for next file
           } else {                                                                                        //... no
             SDdir.close();
@@ -278,7 +288,6 @@
           }
         }
         break;    
-
 
         case 16:                                                                                          //AHLP()
         {
@@ -370,7 +379,6 @@
   
   //***** End of command processing, wait for next GAL interrupt (TI write to DSR space)
 
-//  interrupts();
   TIgo();                                                                                                 //TI, the floor is yours
  
 } //end loop() 
