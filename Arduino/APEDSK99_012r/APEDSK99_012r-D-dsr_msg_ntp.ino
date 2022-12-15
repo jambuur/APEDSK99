@@ -9,8 +9,8 @@ byte protectDSK[3]    = {0x20, 0x20, 0x20};                                     
 byte currentDSK       = 0;                                                                            //current selected DSK
 
 //command status and error handling
-#define DSKprm          0x5FC2                                                                        //per DSKx: Mbyte/Lbyte #sectors, #sectors/track, #tracks, #sides
-#define CALLST          0x5FD4                                                                        //CALL() execution status                                                        
+#define DSKprm          0x5FB4                                                                        //per DSKx: Mbyte/Lbyte #sectors, #sectors/track, #tracks, #sides
+#define CALLST          0x5FC6                                                                        //CALL() execution status                                                        
 #define DOADNotMapped   0
 #define DOADNotFound    1
 #define FNTPConnect     2
@@ -21,7 +21,7 @@ byte currentDSK       = 0;                                                      
 #define More            0xF0
 #define AllGood         0xFF
 
-#define CALLBF          0x5FD6                                                                        //CALL() buffer (data exchange)
+#define CALLBF          0x5FC8                                                                        //CALL() buffer (data exchange)
 #define TIBias          0x60                                                                          //TI BASIC screen bias
 #define EEPROMDSR       499                                                                           //EEPROM starting address for storing DSR filename (including \0)
 
@@ -43,25 +43,25 @@ const char CALLerror[6][16] PROGMEM = {                                         
 };
 
 //help messages in FLASH memory
-const char CALLhelp[36][16] PROGMEM = {                                                               //CALL() help text
-  { "    APEDSK99 v0."   }, { "12r CALLs       " },
-  { "----------------"   }, { "--------------- " },
-  { "AHLP    = this h"   }, { "elp screen      " },
-  { "ARST    = soft r"   }, { "eset apedsk99   " },
-  { "SDIR    = show d"   }, { "oads on sd card " },
-  { "SDSK    = show d"   }, { "sk[1-3] mapping " },
-  { "TIME    = ntp da"   }, { "te/time (NTP$)  " },
-  { "PDSK(#) = protec"   }, { "t dsk#          " },     
-  { "UDSK(#) = remove"   }, { " dsk# protect   " },
-  { "LDSK(#) = list f"   }, { "iles on dsk#    " },
-  { "-               "   }, { "                " },
-  { "MDSK(#,\"1-8C\") =" }, { " map dsk#->doad " },
-  { "RDSK(\"1-8C\")   =" }, { " delete sd doad " },
-  { "FGET(\"1-8C\")   =" }, { " sd doad->ftp   " },
-  { "FPUT(\"1-8C\")   =" }, { " ftp->sd doad   " },
-  { "ADSR(\"8C\")     =" }, { " load dsr&reset " },
-  { "-               "   }, { "                " },
-  { "error flash: 1=S"   }, { "D, 2=DSR, 3=RAM " },
+const char CALLhelp[18][32] PROGMEM = {                                                               //CALL() help text
+  { "     APEDSK99 v0.12r CALLs      " },
+  { "------------------------------- " },
+  { "AHLP    = this help screen      " },
+  { "ARST    = soft reset apedsk99   " },
+  { "SDIR    = show doads on sd card " },
+  { "SDSK    = show dsk[1-3] mapping " },
+  { "TIME    = ntp date/time (NTP$)  " },
+  { "PDSK(#) = protect dsk#          " },     
+  { "UDSK(#) = remove dsk# protect   " },
+  { "LDSK(#) = list files on dsk#    " },
+  { "-                               " },
+  { "MDSK(#,\"1-8C\") = map dsk#->doad " },
+  { "RDSK(\"1-8C\")   = delete sd doad " },
+  { "FGET(\"1-8C\")   = sd doad->ftp   " },
+  { "FPUT(\"1-8C\")   = ftp->sd doad   " },
+  { "ADSR(\"8C\")     = load dsr&reset " },
+  { "-                               " },
+  { "error flash: 1=SD, 2=DSR, 3=RAM " },
 };
 
 //reset Arduino properly via watchdog timer
@@ -119,8 +119,9 @@ boolean getDSKparms( byte cDSK ) {
 void CALLstatus( byte scode ) {
   write_DSRAM( CALLST, scode );                                                                       //update CALL status
   if ( scode < 99  ) {                                                                                //is it an actual error? 
-    for ( byte ii = 2; ii < 18; ii++ ) {                                                              //yes; copy error message to CALL buffer
-      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii-2] ) + TIBias );
+    clrCALLbuffer();
+    for ( byte ii = 0; ii < 16; ii++ ) {                                                              //yes; copy error message to CALL buffer
+      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii] ) + TIBias );
     }
   }
 }
@@ -128,7 +129,7 @@ void CALLstatus( byte scode ) {
 //fill CALL() buffer with " " for clean parameter-passing without left-over crap 
 //i.e. shorter DOAD name following a longer one
 void clrCALLbuffer( void ) {
-  for ( byte ii = 2; ii < 18; ii++ ) {       
+  for ( byte ii = 0; ii < 32; ii++ ) {       
     write_DSRAM( CALLBF + ii, 0x20 + TIBias );                                                        //clear CALL buffer
   }
 }

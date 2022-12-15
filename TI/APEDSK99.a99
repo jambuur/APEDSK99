@@ -13,9 +13,9 @@
 *
 * v12r: support for Double Density / 80 tracks (max 1440 AU's)
 *================================================================================================================
-DSKPRM	EQU     >5FC2                   per DSKx: Mbyte #sectors, Lbyte #sectors, #sectors/track, #tracks, #sides
-CALLST  EQU	>5FD4                   CALL() execution status: finished, still active, error
-CALLBF	EQU	>5FD6			2-way buffer for TI BASIC CALL's
+DSKPRM	EQU     >5FB4                   per DSKx: Mbyte #sectors, Lbyte #sectors, #sectors/track, #tracks, #sides
+CALLST  EQU	>5FC6                   CALL() execution status: finished, still active, error
+CALLBF	EQU	>5FC8			2-way buffer for TI BASIC CALL's (1 screen line, 32 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
 RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
 CRUWRI	EQU	>5FEE			emulated 8 CRU output bits
@@ -3214,7 +3214,7 @@ H9905	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP/TIME return code
 *
 	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP/TIME output to screen
 *
-	AI	R2,16			next screen position
+	AI	R2,32			next screen position
 	CI	R2,641			end of display area?
 	JEQ	NXTPRP			yes; show "more" symbol
 *
@@ -3249,8 +3249,8 @@ H9906	JMP	ACLBAS
 *
 * Display data, status messages and errors
 *
-DISSTS	LI	R5,CALLBF+2		start of file name buffer
-	LI	R6,16			16 bytes of (error) data to display
+DISSTS	LI	R5,CALLBF		start of file name buffer
+	LI	R6,32			32 bytes / 1 screen row of data to display
 H9907	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
 	DEC	R6
 	JNE	H9907
@@ -3315,11 +3315,11 @@ H9911 	MOVB	*R4+,@>004A(R5)		variable name in FAC
 *
 	MOV	@>834E,R2		yes
 	BL	@VDPWRI			set VDP write address
-	LI	R5,CALLBF+2		CALL TIME data still in buffer
+	LI	R5,CALLBF		CALL TIME data still in buffer
 H9912	MOVB	*R5+,R2			read character
 	AI	R2,>A000		remove TI BASIC bias
 	MOVB	R2,@-2(R15)		save to NTP$ value space
-	CI	R5,CALLBF+18		done all 16 chars?
+	CI	R5,CALLBF+16		done all 16 chars?
 	JNE	H9912			no; one more
 *
 H9913	B	@H9914			yes; back to BASIC
@@ -3363,7 +3363,7 @@ GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
 	B	*R11			return to instruction after BL @GPLEXEC DATA statement
 *
 *----------------------------------------------------------------------------------
-* >5EA2 - >5FC1: 287 free bytes remaining
+* >5EA2 - >5FB3: 274 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's

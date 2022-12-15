@@ -131,39 +131,68 @@
 
         case 8:                                                                                           //LDSK()
         {            
-          clrCALLbuffer();                                                                                //clear CALL buffer (longer / shorter filenames)
-               
-          if ( activeDSK[currentDSK] ) { 
-            if ( newA99cmd ) {                                                                            //yes; first run of LDSK()?
+          if ( activeDSK[currentDSK] ) {                                                                  //mapped DSK?
+
+            unsigned long FDR;                                                                            //FDR pointer
+            unsigned int currentPosition;                                                                 //next FDR pointer
+            if ( newA99cmd ) {                                                                            //first run of LDSK()?
               DSKx = SD.open( nameDSK[currentDSK], FILE_READ );                                           //yes; prep DOAD
               DSKx.seek( NRBYSECT );                                                                      //2nd sector contains the File Descriptor Records (FDR)
+              FDR = ( DSKx.read() << 8 ) + DSKx.read();                                                   //read initial 16bits FDR pointer  
+              gii = 0;                                                                                    //keep track when to display what LDISK info (1 row = 2x 16 char fields)        
             }
-    
-            unsigned long FDR = ( DSKx.read() << 8 ) + DSKx.read();                                       //16bits FDR pointer  
-            if ( FDR != 0 && read_DSRAM(CALLST) ==  AllGood ) {                                           // !0x0000( = no more files) AND !ENTER from DSR?             
-              unsigned int currentPosition = DSKx.position();                                             //remember next FDR pointer
-              DSKx.seek( FDR * NRBYSECT );                                                                //locate FDR within DOAD
-              for ( byte ii=2; ii < 12; ii++ ) {                                  
-                write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                         //read/save filename characters in CALL buffer
-              }                 
-                        
-              DSKx.seek( DSKx.position() + 2 );                                                           //locate File Status Flags
-              byte filetype = DSKx.read();               
-              if ( filetype & B00000001 ) {
-                write_DSRAM( CALLBF + 13, 'P' + TIBias );                                                 //"PROGRAM"
-              } else if ( filetype & B00000010 ) {
-                write_DSRAM( CALLBF + 13, 'I' + TIBias );                                                 //"INTERNAL"
-              } else {
-                write_DSRAM( CALLBF + 13, 'D' + TIBias );                                                 //"DISPLAY"
-              }
-              char filesize[4];                                                                           //ASCII store
-              DSKx.seek( DSKx.position() + 1 );                                                           //locate total # of sectors
-              sprintf( filesize, "%3u", (DSKx.read() << 8) + (DSKx.read() + 1) );                         //convert number to string
-              for ( byte ii = 14; ii < 17; ii++ ) {                                                       //store ASCII file size in CALL buffer
-                write_DSRAM( CALLBF + ii, filesize[ii-14] + TIBias );
-              }
-                                
-              DSKx.seek( currentPosition );                                                               //locate next FDR
+
+            if ( FDR != 0 && read_DSRAM(CALLST) ==  AllGood ) {                                           // !0x0000( = no more files) AND !ENTER from DSR?
+      
+              clrCALLbuffer();                                                                            //clear CALL buffer (longer / shorter filenames)       
+              if ( !(gii & B00000001) ) {                                                                 //left most 16 characters
+
+                currentPosition = DSKx.position();                                                        //remember next FDR pointer
+                DSKx.seek( FDR * NRBYSECT );                                                              //locate FDR within DOAD
+                for ( byte ii=2; ii < 12; ii++ ) {                                  
+                  write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                       //read/save filename characters in CALL buffer
+                }               
+
+                char filesize[5];                                                                         //ASCII store
+                DSKx.seek( DSKx.position() + 3 );                                                         //locate total # of sectors
+                sprintf( filesize, "%4u", (DSKx.read() << 8) + (DSKx.read() + 1) );                       //convert number to string
+                for ( byte ii = 13; ii < 17; ii++ ) {                                                     //store ASCII file size in CALL buffer
+                  write_DSRAM( CALLBF + ii, filesize[ii-13] + TIBias );
+                }                
+                gii++;                                                                                    //set flag for ...
+              } else {                                                                                    //... right most 16 characters
+
+                char filetype[13];                                                                        //ASCII store
+                DSKx.seek( DSKx.position() - 3 );                                                         //byte >0C: file type
+                byte ftype = DSKx.read();
+                if ( ftype == 0x01 ) {
+                  strncat( filetype, "PROGRAM    \0", 11);
+                } else { 
+                  if ( (ftype && B00000011) == 0x00 ) {
+                    strncat( filetype, "DIS/\0", 5);
+                  } else {
+                   strncat( filetype, "INT/\0", 5);
+                  }
+                  if ( (ftype && B10000000) ) {
+                    strncat( filetype, "VAR\0", 4); 
+                  } else {
+                    strncat( filetype, "FIX\0", 4); 
+                  }
+                  DSKx.seek( DSKx.position() + 5 );                                                           //byte >11: record length
+                  char rlength[4];
+                  sprintf( rlength, "%3u", DSKx.read() );
+                }
+                if ( ftype && B00001000 ) {
+                  strncat( filetype, "P\0", 2);
+                } else {
+                  strncat( filetype, "U\0", 2);
+                }
+                for ( byte ii = 2; ii < 15; ii++ ) {                                                          //store ASCII file size in CALL buffer
+                  write_DSRAM( CALLBF + ii, filetype[ii-15] + TIBias );
+                }  
+                DSKx.seek( currentPosition );                                                                 //locate next FDR
+                FDR = ( DSKx.read() << 8 ) + DSKx.read();                                                     //read next 16bits FDR pointer  
+              } 
             } else {                                       
               CALLstatus( More );                                                                         //blank "floppy" or processed all FDR's
               noExec();                                                                   
@@ -185,71 +214,70 @@
           char DOADfullpath[20];
           clrCALLbuffer();                                                                                //clear CALL buffer (second part of row is blank)
 
-          if ( gii < 6 ) {                                                                                //3 rows, 1 row is 2x16char fields                
-            if ( !(gii & B00000001) ) {                                                                   //if field == even we need to display mapping, otherwise time/date
-              if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD?
+          if ( gii < 3 ) {                                                                                //3 rows               
+            if ( activeDSK[currentDSK] ) {                                                                //is the requested disk mapped to a DOAD ...
 
-                byte maxbitmap = int( 
-                                      ( read_DSRAM(DSKprm + ( currentDSK * 6)) * 256) +
-                                      ( read_DSRAM(DSKprm + ((currentDSK * 6) + 1)) ) ) / 8;              //yes; determine size of the bitmap to scan (1, 2 or 4 * 45 bytes)                              
-
-                DSKx = SD.open( nameDSK[currentDSK], FILE_READ );          
-                DSKx.seek( 0x38 );                                                                        //1st Sector Bitmap byte
-              
-                unsigned int countOnes = 0;   
-                
-                for ( byte ii = 0; ii < maxbitmap - 1; ii++ ) {                                           //sum all set bits (=sectors used) for all Sector Bitmap bytes
-                  byte bitmap = DSKx.read();
-                  for ( byte jj = 0; jj < 8; jj++ ) {                                       
-                    countOnes += ( bitmap >> jj ) & 0x01;                                                 //"on the One you hear what I'm sayin'"
-                  }
-                }
-      
-                char freesectors[5];                                                                      //ASCII store
-                sprintf( freesectors, "%4u", (maxbitmap * 8) - countOnes );                               //convert number of free sectors to string
-                for ( byte ii = 14; ii < 18; ii++ ) {                                                     //store ASCII file size in CALL buffer
-                  write_DSRAM( CALLBF + ii, freesectors[ii-14] + TIBias );
-                }
-                strncpy( DOADfullpath, nameDSK[currentDSK], 20 );                                         //get current DOAD name     
-
-                if ( protectDSK[currentDSK] == 0x50 ) {
-                write_DSRAM( CALLBF + 13, 'P' + TIBias );                                                 //indicate DOAD is Protected or ...
-                } else {
-                  write_DSRAM( CALLBF + 13, 'U' + TIBias );                                               //... Unprotected
-                }
-              } else {
-                strncpy( DOADfullpath, "/DISKS/<NO MAP>.DSK", 20 );                                       //... no; indicate not mapped
-              }
+              strncpy( DOADfullpath, nameDSK[currentDSK], 20 );                                           //yes; get current DOAD name  
+              write_DSRAM( CALLBF    , '1' + currentDSK + TIBias );                                       //DSK# + TI BASIC bias
+              write_DSRAM( CALLBF + 1, '=' + TIBias );                                            
           
-              write_DSRAM( CALLBF + 2, '1' + currentDSK + TIBias );                                       //DSK# + TI BASIC bias
-              write_DSRAM( CALLBF + 3, '=' + TIBias );                                            
-              for ( byte ii = 4; ii < 12; ii++ ) {                                  
-                write_DSRAM( CALLBF + ii, DOADfullpath[ii + 3] + TIBias );                                //store mapping character in CALL buffer
-                if ( DOADfullpath[ii + 3] == 46 ) {                                                       //if it's a "." we're done
-                  write_DSRAM( CALLBF + ii, ' ' + TIBias );                                               //replace "." with " "
-                  break;
-                }
-              } 
-            } else {                                                                                      //uneven field, display FAT MODIFIED time and date
-              if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD?
-                readFATts();                                                                              //yes; read FAT time/date
-                converTD();                                                                               //convert to string
-                for ( byte ii = 3; ii < 15; ii++ ) {
-                  write_DSRAM( CALLBF+ii, TimeDateASC[ii-3] + TIBias );                                   //write string to CALL buffer for display without year
-                }
-                write_DSRAM( CALLBF+15, TimeDateASC[14] + TIBias);                                        //only space to display last 2 year digits
-                write_DSRAM( CALLBF+16, TimeDateASC[15] + TIBias); 
-              } 
-              if ( currentDSK < 2 ) {                                                                     //must stay within 0-2 for noExec() to properly close current open DSK[]
-                currentDSK++;                                                                             //next DSK  
+              if ( protectDSK[currentDSK] == 0x50 ) {
+                write_DSRAM( CALLBF + 11, 'P' + TIBias );                                                 //indicate DOAD is Protected or ...
+              } else {
+                write_DSRAM( CALLBF + 11, 'U' + TIBias );                                                 //... Unprotected
               }
+
+              byte maxbitmap = int( 
+                                    ( read_DSRAM(DSKprm + ( currentDSK * 6)) * 256) +
+                                    ( read_DSRAM(DSKprm + ((currentDSK * 6) + 1)) ) ) / 8;                //determine size of the bitmap to scan (1, 2 or 4 * 45 bytes)                              
+
+              DSKx = SD.open( nameDSK[currentDSK], FILE_READ );          
+              DSKx.seek( 0x38 );                                                                          //1st Sector Bitmap byte
+            
+              unsigned int countOnes = 0;   
+              
+              for ( byte ii = 0; ii < maxbitmap - 1; ii++ ) {                                             //sum all set bits (=sectors used) for all Sector Bitmap bytes
+                byte bitmap = DSKx.read();
+                for ( byte jj = 0; jj < 8; jj++ ) {                                       
+                  countOnes += ( bitmap >> jj ) & 0x01;                                                   //"on the One you hear what I'm sayin'"
+                }
+              }
+    
+              char freesectors[5];                                                                        //ASCII store
+              sprintf( freesectors, "%4u", (maxbitmap * 8) - countOnes );                                 //convert number of free sectors to string
+              for ( byte ii = 12; ii < 16; ii++ ) {                                                       //store ASCII file size in CALL buffer
+                write_DSRAM( CALLBF + ii, freesectors[ii-12] + TIBias );
+              }
+ 
+              readFATts();                                                                                //read FAT time/date
+              converTD();                                                                                 //convert to string
+              for ( byte ii = 17; ii < 29; ii++ ) {
+                write_DSRAM( CALLBF + ii, TimeDateASC[ii-17] + TIBias );                                  //write string to CALL buffer for display without year
+              }
+              write_DSRAM( CALLBF+29, TimeDateASC[14] + TIBias);                                          //only space to display last 2 year digits
+              write_DSRAM( CALLBF+30, TimeDateASC[15] + TIBias);  
+ 
+            } else {
+              strncpy( DOADfullpath, "/DISKS/<NO MAP>.DSK", 20 );                                         //... no; indicate not mapped
             }
-            gii++;                                                                                        //next screen field
+
+            for ( byte ii = 2; ii < 10; ii++ ) {                                  
+              write_DSRAM( CALLBF + (ii), DOADfullpath[ii + 5] + TIBias );                                //store mapping characters in CALL buffer
+              if ( DOADfullpath[ii + 6] == 46 ) {                                                         //if it's a "." we're done
+                break;
+              }
+            } 
+ 
+            if ( currentDSK < 2 ) {                                                                       //must stay within 0-2 for noExec() to properly close current open DSK[]
+            currentDSK++;                                                                                 //next DSK  
+            }
+            gii++;                                                                                        //next screen row
+  
           } else { 
             CALLstatus( More );                                                                           //processed DSK[1-3]
             noExec();                                                                         
-          }      
-        }                                                            
+          }
+        }                                                                 
         break;       
 
         case 14:                                                                                          //SDIR(): Show DOAD's in /DISKS/ on SD
@@ -263,7 +291,7 @@
           if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                                //valid file AND !ENTER from DSR?
             char DOADfilename[13] = "\0";                                                                 //"clear" array for shorter filenames not displaying leftover parts
             tFile.getName( DOADfilename, 13 );                                                            //copy filename ... 
-            for ( byte ii = 2; ii < 10; ii++ ) {                                                          //... and write to buffer
+            for ( byte ii = 0; ii < 10; ii++ ) {                                                          //... and write to buffer
               if ( DOADfilename[ii-2] != '.' ) {
                 write_DSRAM( CALLBF + ii, DOADfilename[ii-2] + TIBias );
               } else {
@@ -295,9 +323,9 @@
             gii = 0;
           }
 
-          if ( gii < 36 ) {                                                                               //34x 16char arrays
-            for ( byte ii = 2; ii < 18; ii++ ) {
-              write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLhelp[gii][ii-2] ) + TIBias );                 //read character array from PROGMEM and write to CALL buffer
+          if ( gii < 18 ) {                                                                               //18x 32char arrays
+            for ( byte ii = 0; ii < 32; ii++ ) {
+              write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLhelp[gii][ii] ) + TIBias );                   //read character array from PROGMEM and write to CALL buffer
             }
             gii++;                                                                                        //next
           } else {
@@ -317,8 +345,8 @@
             CALLstatus( FNTPConnect );                                                                    //no; report error
           } else if ( currentA99cmd == 18 ) {                                                             //TIME()
             converTD();                                                                                   //get full time/date string         
-            for ( byte ii = 2; ii < 18; ii++ ) {
-              write_DSRAM( CALLBF + ii, TimeDateASC[ii-2] + TIBias );                                     //copy string to CALL buffer                                   
+            for ( byte ii = 0; ii < 16; ii++ ) {
+              write_DSRAM( CALLBF + ii, TimeDateASC[ii] + TIBias );                                       //copy string to CALL buffer                                   
             }
             CALLstatus( NTPStamp );                                                                       //done with a one-liner 
           } else if ( currentA99cmd == 19 ) {                                                             //DSR DSK NTP update (format, write / save file)                                                                           
