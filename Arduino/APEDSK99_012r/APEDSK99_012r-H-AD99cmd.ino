@@ -136,85 +136,74 @@
             if ( newA99cmd ) {                                                                            //first run of LDSK()?
               DSKx = SD.open( nameDSK[currentDSK], FILE_READ );                                           //yes; prep DOAD
               DSKx.seek( NRBYSECT );                                                                      //2nd sector contains the File Descriptor Records (FDR)  
-              gii = 0;       
             }
                       
             unsigned int FDR = ( DSKx.read() << 8 ) + DSKx.read();                                        //read 16bits FDR pointer
             if ( FDR != 0 && read_DSRAM(CALLST) ==  AllGood ) {                                           // !0x0000( = no more files) AND !ENTER from DSR?
       
-              clrCALLbuffer();                                                                            //clear CALL buffer for next entry to display
+            clrCALLbuffer();                                                                              //clear CALL buffer for next entry to display
 
-              unsigned int currentPosition = DSKx.position();                                             //remember next FDR pointer
-              DSKx.seek( long(FDR * NRBYSECT) );                                                          //locate FDR within DOAD
-              for ( byte ii=0; ii < 10; ii++ ) {                                  
-                write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                         //read/save filename characters in CALL buffer
-              }               
+            unsigned int currentPosition = DSKx.position();                                               //remember next FDR pointer
+            DSKx.seek( long(FDR * NRBYSECT) );                                                            //locate FDR within DOAD
+            for ( byte ii=0; ii < 10; ii++ ) {                                  
+              write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                           //read/save filename characters in CALL buffer
+            }               
 
-              char filetype[16];
-              char tfile[6];
-              
-              DSKx.seek( DSKx.position() + 2 );                                                           //byte >0C: file type 
-              byte ftype = DSKx.read();
-              boolean protect = ftype && 0x08;
-              ftype &= 0x83;
-              if ( ftype == 0 ) {
-                strncpy( filetype, "D/F\0", 4);
-              } else if ( ftype == 2 ) {
-                strncpy( filetype, "I/F\0", 4);
-              } else if ( ftype == 128 ) {
-                strncpy( filetype, "D/V\0", 4);
-              } else if ( ftype == 130 ) {
-                strncpy( filetype, "I/V\0", 4);
-              } else if ( ftype == 1 ) {
-                strncpy( filetype, "PRG\0", 4);
-              } else {
-                strncpy( filetype, " ? \0", 4);
-              }
+            char filetype[16];                                                                            //ASCII store for display                                                      
+            char tfile[6];                                                                                //temporary ASCII store
+            
+            DSKx.seek( DSKx.position() + 2 );                                                             //byte >0C: file type 
+            byte ftype = DSKx.read();
+            boolean protect = (ftype & 0x08) != 0;                                                        //bit 4 set means file is protected
+            ftype &= 0x83;                                                                                //strip protection indication
+            if ( ftype == 0 ) {                                                                           //0x00 is DISPLAY
+              strncpy( filetype, "D/F\0", 4);
+            } else if ( ftype == 2 ) {                                                                    //0x02 is INTERNAL
+              strncpy( filetype, "I/F\0", 4);             
+            } else if ( ftype == 128 ) {                                                                  //0x80 is VARIABLE
+              strncpy( filetype, "D/V\0", 4);
+            } else if ( ftype == 130 ) {
+              strncpy( filetype, "I/V\0", 4);
+            } else if ( ftype == 1 ) {                                                                    //0x01 is PROGRAM
+              strncpy( filetype, "PRG\0", 4);
+            } else {
+              strncpy( filetype, " ? \0", 4);                                                             //expect the unexpected
+            }
 
-              DSKx.seek( DSKx.position() + 4 );                                                           //byte >11: record length
-              sprintf( tfile, "%3u", DSKx.read() );
-              if ( ftype != 1 ) {
-                strncat( filetype, tfile, 3);
-              } else {
-                strncat( filetype, "   ", 3);
-              }
-              strncat( filetype, " \0", 2);
-
-              DSKx.seek( DSKx.position() - 4 );                                                           //bytes >0E, >0F: #sectors
-              unsigned int tsectors = (DSKx.read() * 256) + (DSKx.read() + 1);
-              sprintf( tfile, "%3u", tsectors);
+            DSKx.seek( DSKx.position() + 4 );                                                             //byte >11: record length
+            sprintf( tfile, "%3u", DSKx.read() );                                                         //format record length to 3char ASCII
+            if ( ftype != 1 ) {                                                                           //not applicable for PROGRAM files -> spaces
               strncat( filetype, tfile, 3);
-              strncat( filetype, " \0", 2);          
-              sprintf( tfile, "%5lu", long(tsectors * 256) );
-              strncat( filetype, tfile, 6);
-              filetype[16] = '\0';
+            } else {
+              strncat( filetype, "   ", 3);
+            }
+            strncat( filetype, " \0", 2);
 
-              if ( protect == true ) {
-                write_DSRAM( CALLBF + 28, 'P' + TIBias);
-              }
+            DSKx.seek( DSKx.position() - 4 );                                                             //bytes >0E, >0F: #sectors
+            unsigned int tsectors = (DSKx.read() * 256) + (DSKx.read() + 1);
+            sprintf( tfile, "%3u", tsectors);                                                             //format #sectors to 3char ASCII
+            strncat( filetype, tfile, 3);
+            strncat( filetype, " \0", 2);          
+            sprintf( tfile, "%5lu", long(tsectors * 256) );                                               //format #bytes to 5char ASCII (do we need 6?)
+            strncat( filetype, tfile, 6);
+            filetype[16] = '\0';
 
-              for ( byte ii=11; ii < 27; ii++ ) {                                  
-                write_DSRAM( CALLBF + ii, filetype[ii-11] + TIBias );                                     //read/save filename characters in CALL buffer
-              }  
-                          
- /*             
-              if ( (ftype && B00000011) == 0x01 ) { 
-                write_DSRAM( CALLBF + 11, 'P' + TIBias );
-                write_DSRAM( CALLBF + 12, 'R' + TIBias );
-                write_DSRAM( CALLBF + 13, 'G' + TIBias );
-              } else {
-                write_DSRAM( CALLBF + 11, 'D' + TIBias );
-                write_DSRAM( CALLBF + 12, '_' + TIBias );
-                write_DSRAM( CALLBF + 13, 'I' + TIBias ); 
-              }
-*/
-              DSKx.seek( currentPosition );                                                               //locate next FDR
+            for ( byte ii=11; ii < 27; ii++ ) {                                  
+              write_DSRAM( CALLBF + ii, filetype[ii-11] + TIBias );                                       //save file characteristics in CALL buffer for display
+            }    
+
+           if ( protect == true ) {                                                                       //indicate if file is protected 
+              write_DSRAM( CALLBF + 28, 'P' + TIBias);
+            }
+                                   
+            DSKx.seek( currentPosition );                                                                 //locate next FDR
+            
           } else {                                       
-            CALLstatus( More );                                                                         //blank "floppy" or processed all FDR's
+            CALLstatus( More );                                                                           //blank "floppy" or processed all FDR's
             noExec();                                                                   
           }          
         } else {
-          CALLstatus( DOADNotMapped );                                                                  //error; DSKx not mapped to a DOAD
+          CALLstatus( DOADNotMapped );                                                                    //error; DSKx not mapped to a DOAD
           noExec();
         }
       }
@@ -301,6 +290,7 @@
           clrCALLbuffer();                                                                                //clear CALL buffer
           if ( newA99cmd ) {                                                                              //first run of SDIR()?
             SDdir = SD.open( "/DISKS/" );                                                                 //yes; open directory
+            gii = 0;
           }        
 
           File tFile = SDdir.openNextFile();                                                              //get next file
@@ -374,9 +364,7 @@
             }  
           }
           EtherStop();                                                                                    //stop Ethernet client
-          //---
-          CALLstatus( AllGood );                                                                          //----IF THIS LINE IS COMMENTED OUT, TIME WILL PRINT DATE/TIME BY DEFAULT
-          //---
+          CALLstatus( AllGood );
           noExec(); 
         }
         break;
