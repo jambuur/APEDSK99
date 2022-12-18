@@ -40,7 +40,7 @@
         case 34:                                                                                          //FPUT()                                                                        
         {
           char DOADfullpath[20] = "/DISKS/\0";                                                            //complete path + filename
-          char DOADfilename[13];                                                                          //just the filename for the FTP server
+          char DOADfilename[13] = "\0";                                                                   //just the filename for the FTP server
           byte ii;
           for ( ii = 0; ii < 8; ii++ ) {                                                                  //max 8 characters for MSDOS filename
             byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                    //read character from APEDSK99 CALL buffer
