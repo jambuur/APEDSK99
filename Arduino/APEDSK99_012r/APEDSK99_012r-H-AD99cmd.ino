@@ -180,8 +180,8 @@
               write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                           //read/save filename characters in CALL buffer
             }               
 
-            char filetype[16];                                                                            //ASCII store for display                                                      
-            char tfile[6];                                                                                //temporary ASCII store
+            char filetype[16] = "\0";                                                                     //ASCII store for display                                                      
+            char tfile[6] = "\0";                                                                         //temporary ASCII store
             
             DSKx.seek( DSKx.position() + 2 );                                                             //byte >0C: file type 
             byte ftype = DSKx.read();
@@ -276,7 +276,7 @@
                 }
               }
     
-              char freesectors[5];                                                                        //ASCII store
+              char freesectors[5] = "\0";                                                                 //ASCII store
               sprintf( freesectors, "%4u", (maxbitmap * 8) - countOnes );                                 //convert number of free sectors to string
               for ( byte ii = 12; ii < 16; ii++ ) {                                                       //store ASCII file size in CALL buffer
                 write_DSRAM( CALLBF + ii, freesectors[ii-12] + TIBias );
@@ -326,7 +326,7 @@
 
           File tFile = SDdir.openNextFile();                                                              //get next file
           if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                                //valid file AND !ENTER from DSR?
-            char DOADfilename[13];                                                                        //ASCII store
+            char DOADfilename[13] = "\0";                                                                 //ASCII store
             tFile.getName( DOADfilename, 13 );                                                            //copy filename ... 
             for ( byte ii = 0; ii < 8 ; ii++ ) {                                                          //... and write to buffer
               if ( DOADfilename[ii] != '.' ) {
@@ -413,7 +413,7 @@
         
         case 35:                                                                                          //ADSR()
         {                                                                                 
-          char DSRtoload[13];                                                                             //filename new DSR
+          char DSRtoload[13] = "\0";                                                                      //filename new DSR
           char DSRcurrent[13] = "\0";                                                                     //filename current DSR in EEPROM
           for ( byte ii = 2; ii < 10; ii++ ) {                                                            //read file name from CALL buffer
             DSRtoload[ii - 2] = read_DSRAM( CALLBF + ii );                                                //get new DSR from CALL buffer
