@@ -11,14 +11,14 @@
         }
         CALLstatus( AllGood );                                                                            //start with clean execution slate
       }
-      
+
       switch ( currentA99cmd ) {
         
-        case  2:                                                                                          //PDSK()    
-        case  4:                                                                                          //UDSK()
+        case  1:                                                                                          //PDSK: set DSK protection    
+        case  2:                                                                                          //UDSK: reset DSK protection
         {
           if ( activeDSK[currentDSK] ) {                                                                  //is the requested disk mapped to a DOAD? ...
-            if ( currentA99cmd == 2 ) {                                                                   //yes; PDSK?
+            if ( currentA99cmd == 1 ) {                                                                   //yes; PDSK?
               protectDSK[currentDSK] = 0x50;                                                              //Protect DSKx
             } else {
               protectDSK[currentDSK] = 0x20;                                                              //Unprotect DSKx
@@ -33,10 +33,11 @@
         }
         break;      
     
-        case  6:                                                                                          //MDSK()
-        case 10:                                                                                          //RDSK()
-        case 22:                                                                                          //FGET()
-        case 24:                                                                                          //FPUT()                                                                        
+        case 16:                                                                                          //MDSK()
+        case 17:                                                                                          //NDSK()
+        case 32:                                                                                          //RDSK()
+        case 33:                                                                                          //FGET()
+        case 34:                                                                                          //FPUT()                                                                        
         {
           char DOADfullpath[20] = "/DISKS/\0";                                                            //complete path + filename
           char DOADfilename[13];                                                                          //just the filename for the FTP server
@@ -48,7 +49,8 @@
             } else {                                                                      
               break;                                                                                      // ... and we need to get out
             }
-          }                                                                              
+          }          
+                                                                              
           clrCALLbuffer();                                                                                //clear CALL buffer
           DOADfilename[ii] = '\0';                                                                        //terminate FTP filename
           strncat( DOADfilename, ".DSK", 4 );                                                             //add file extenstion to filename
@@ -62,7 +64,7 @@
             protectDOAD = DSKx.read();                                                                    //store Protected flag
           }
 
-          if ( currentA99cmd == 6 ) {                                                                     //MDSK() ?
+          if ( currentA99cmd == 16 ) {                                                                    //MDSK: map a DOAD to DSK1-3
             if ( existDOAD ) {                                                                            //does DOAD exist? ...
               if ( !getDSKparms( currentDSK ) ) {                                                         //check DOAD size and if OK store DSK parameters 
                 strncpy( nameDSK[currentDSK], DOADfullpath, ii + 11 );                                    //we're good; assign to requested DSKx   
@@ -75,7 +77,36 @@
               CALLstatus( DOADNotFound );                                                                 //... no; return error flag
             }
 
-          } else if ( currentA99cmd == 10 ) {                                                             //RDSK() ?                                                                                     
+          } else if ( currentA99cmd == 17 ) {                                                             //NDSK: rename a mapped DOAD
+              if ( !existDOAD ) {                                                                         //does DOAD exist? ...
+                if ( activeDSK[currentDSK] ) {                                                            //is the requested disk mapped to a DOAD? ...   
+                  if ( protectDSK[currentDSK] == 0x20 ) {                                                 //is DOAD unProtected? ...
+                    DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );                                    //yes; safe to rename
+                    DSKx.seek ( 0x00 );                                                                   //go to start of file
+                    for ( byte ii = 7; ii < 15; ii++ ) {                                                  //write new (max 8 characters) DSK name ...
+                      if ( DOADfullpath[ii] != '.' ) {
+                         DSKx.write( DOADfullpath[ii] );
+                      } else {
+                        break;
+                      }
+                    }
+                    while ( DSKx.position() < 0x0A ) {                                                    //... and fill rest (max 10 characters) with spaces
+                      DSKx.write( 0x20 );
+                    }                  
+                    DSKx.flush();                                                                         //make sure changes are saved to SD ...
+                    DSKx.rename( DOADfullpath );                                                          //... before renaming the file
+                    activeDSK[currentDSK] = false;                                                        //flag as inactive to lose old mapping
+                  } else {
+                    CALLstatus( Protected );                                                              //... no; can't rename a protected DOAD
+                  }
+                } else {
+                  CALLstatus( DOADNotMapped );                                                            //... no; can't rename a non-mapped DOAD
+                }
+              } else {
+              CALLstatus( DOADexists );                                                                   //... yes; can't rename to an existing filename
+            }
+              
+          } else if ( currentA99cmd == 32 ) {                                                             //RDSK() ?                                                                                     
             if ( existDOAD ) {                                                                            //does DOAD exist? ...
               if ( protectDOAD == 0x20 ) {                                                                //yes; is DOAD unProtected? ...
                 for ( byte ii= 0; ii < 3; ii++ ) {
@@ -99,14 +130,14 @@
               currentA99cmd = 0;                                                                          //... and cancel further command execution
             }
             
-            if ( currentA99cmd == 24 ) {                                                                  //FPUT()?
+            if ( currentA99cmd == 34 ) {                                                                  //FPUT()?
               if ( existDOAD ) {                                                                          //yep; does DOAD exist ...
                 DSKx.seek(0);                                                                             //go to start of file (we were at 0x10)
                 ftp.store( DOADfilename, DSKx );                                                          //yep; send DOAD to ftp server
               } else {
                 CALLstatus( DOADNotFound );                                                               //no; report error to CALL()
               }
-            } else if ( currentA99cmd == 22 ) {                                                           //FGET()?
+            } else if ( currentA99cmd == 33 ) {                                                           //FGET()?
               if ( existDOAD && protectDOAD == 0x50) {                                                    //yep; is existing DOAD Protected?
                 CALLstatus( Protected );                                                                  //yes; report error to CALL()
               } else {
@@ -129,7 +160,7 @@
         }
         break;
 
-        case 8:                                                                                           //LDSK()
+        case 3:                                                                                           //LDSK()
         {            
           if ( activeDSK[currentDSK] ) {                                                                  //mapped DSK?
            
@@ -209,7 +240,7 @@
       }
       break;
 
-        case 12:                                                                                          //SDSK()  
+        case 48:                                                                                          //SDSK()  
         {
           if ( newA99cmd ) {
             currentDSK = 0;                                                                               //first run make sure we start with DSK1
@@ -217,7 +248,7 @@
           }
           
           char DOADfullpath[20];
-          clrCALLbuffer();                                                                                //clear CALL buffer (second part of row is blank)
+          clrCALLbuffer();                                                                                //clear CALL buffer
 
           if ( gii < 3 ) {                                                                                //3 rows               
             if ( activeDSK[currentDSK] ) {                                                                //is the requested disk mapped to a DOAD ...                              
@@ -285,7 +316,7 @@
         }                                                                 
         break;       
 
-        case 14:                                                                                          //SDIR(): Show DOAD's in /DISKS/ on SD
+        case 49:                                                                                          //SDIR(): Show DOAD's in /DISKS/ on SD
         {
           clrCALLbuffer();                                                                                //clear CALL buffer
           if ( newA99cmd ) {                                                                              //first run of SDIR()?
@@ -295,15 +326,20 @@
 
           File tFile = SDdir.openNextFile();                                                              //get next file
           if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                                //valid file AND !ENTER from DSR?
-            char DOADfilename[13] = "\0";                                                                 //"clear" array for shorter filenames not displaying leftover parts
+            char DOADfilename[13];// = "\0";                                                                 //"clear" array for shorter filenames not displaying leftover parts
             tFile.getName( DOADfilename, 13 );                                                            //copy filename ... 
             for ( byte ii = 0; ii < 10; ii++ ) {                                                          //... and write to buffer
-              if ( DOADfilename[ii-2] != '.' ) {
-                write_DSRAM( CALLBF + ii, DOADfilename[ii-2] + TIBias );
+              if ( DOADfilename[ii] != '.' ) {
+                write_DSRAM( CALLBF + ii, DOADfilename[ii] + TIBias );
               } else {
                 break;
               }    
             }  
+
+            for ( byte ii=18; ii < 28; ii++ ) {                                  
+              write_DSRAM( CALLBF + ii, tFile.read() + TIBias );                                          //read/save DSK name characters in CALL buffer
+            }               
+            
             tFile.seek( 0x12 );                                                                           //byte >12 in VIB stores #sides (>01 or >02)
             write_DSRAM( CALLBF + 11, tFile.read() + (48 + TIBias) );                                     //#sides; change to ASCII and add TI screen bias
             write_DSRAM( CALLBF + 12, '/' + TIBias );                                                     //divider
@@ -314,6 +350,7 @@
             sprintf( tracks, "%2u", tFile.read() );                                                       //convert #tracks to string
             write_DSRAM( CALLBF + 15, tracks[0] + TIBias );
             write_DSRAM( CALLBF + 16, tracks[1] + TIBias );
+            
             tFile.close();                                                                                //prep for next file
           } else {                                                                                        //... no
             SDdir.close();
@@ -323,7 +360,7 @@
         }
         break;    
 
-        case 16:                                                                                          //AHLP()
+        case 50:                                                                                          //AHLP()
         {
           if ( newA99cmd ) {                                                                              //first run make sure we start with 1st message
             gii = 0;
@@ -341,7 +378,7 @@
         }
         break;
 
-        case 18:                                                                                          //TIME()
+        case 52:                                                                                          //TIME()
         case 19:                                                                                          //DSR: update FAT DSK date/time
         {
           clrCALLbuffer();                                                                                //clear CALL buffer
@@ -349,7 +386,7 @@
           
           if ( getNTPdt() == FNTPConnect ) {                                                              //check if NTP is available
             CALLstatus( FNTPConnect );                                                                    //no; report error
-          } else if ( currentA99cmd == 18 ) {                                                             //TIME()
+          } else if ( currentA99cmd == 52 ) {                                                             //TIME()
             converTD();                                                                                   //get full time/date string         
             for ( byte ii = 0; ii < 16; ii++ ) {
               write_DSRAM( CALLBF + ii, TimeDateASC[ii] + TIBias );                                       //copy string to CALL buffer                                   
@@ -369,7 +406,7 @@
         }
         break;
         
-        case 26:                                                                                          //ADSR()
+        case 35:                                                                                          //ADSR()
         {                                                                                 
           char DSRtoload[13];                                                                             //filename new DSR
           char DSRcurrent[13] = "\0";                                                                     //filename current DSR in EEPROM
@@ -387,13 +424,13 @@
             if ( strcmp(DSRcurrent, DSRtoload) != 0) {                                                    //compare to new DSR; same?
               EEPROM.put( EEPROMDSR, DSRtoload );                                                         //no; write new DSR to EEPROM
             }
-            currentA99cmd = 20;                                                                           //valid DSR file; fall through to reset to activate
+            currentA99cmd = 51;                                                                           //valid DSR file; fall through to reset to activate
           }
         }
 
-        case 20:                                                                                          //ARST(): reset current DSR    
+        case 51:                                                                                          //ARST(): reset current DSR    
         { 
-          if ( currentA99cmd == 20 ) {                                                                    //seems double-up but is needed for ADSR fall-through
+          if ( currentA99cmd == 51 ) {                                                                    //seems double-up but is needed for ADSR fall-through
             TIgo();                                                                                       //release TI
             APEDSK99reset();                                                                              //reset APEDSK99
           }

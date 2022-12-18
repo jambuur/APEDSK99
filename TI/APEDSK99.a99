@@ -145,10 +145,15 @@ SUB20	DATA	SUB21
 	BYTE	>04
 	TEXT	'FPUT'			Save DOAD to FTP server
 	EVEN
-SUB21	DATA	>0000
+SUB21	DATA	SUB22
 	DATA	ADSR
 	BYTE	>04
 	TEXT	'ADSR'			APEDSK99 load DSR
+	EVEN
+SUB22	DATA	>0000
+	DATA 	NDSK
+	BYTE	>04
+	TEXT	'NDSK'
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3045,32 +3050,37 @@ H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 *----------------------------------------------------------------------------
 * APEDSK99 CALL subprograms
 *----------------------------------------------------------------------------
-*
-PDSK	LI	R6,>0200		Protect ACOMND 
+* parameter is single digit -> 0x00
+PDSK	LI	R6,>0100		Protect ACOMND 
 	JMP	ACLPRP			generic prep
-UDSK	LI	R6,>0400		Unprotect ACOMND 
+UDSK	LI	R6,>0200		Unprotect ACOMND 
 	JMP	ACLPRP			generic prep
-MDSK	LI	R6,>0600		Change DSK ACOMND
+LDSK	LI	R6,>0300		Show Files on DSKx ACOMND 
 	JMP	ACLPRP			generic prep
-LDSK	LI	R6,>0800		Show Files on DSKx ACOMND 
+* parameters are single digit + character string -> 1x00; ! >1300 IS RESERVED (BL NTPDT+1) ! 
+MDSK	LI	R6,>1000		Change DSK ACOMND
 	JMP	ACLPRP			generic prep
-RDSK	LI	R6,>0A00		Remove DOAD from SD card ACOMND 
+NDSK	LI	R6,>1100		create new blank SS/SD DOAD image
+	JMP	ACLPRP
+* parameter is a charachter string -> 2x00
+RDSK	LI	R6,>2000		Remove DOAD from SD card ACOMND 
 	JMP	ACLPRP			generic prep
-SDSK	LI	R6,>0C00		Show DSKx mapping ACOMND
+FGET	LI	R6,>2100		get DOAD from FTP server ACOMND
 	JMP	ACLPRP			generic prep
-SDIR	LI	R6,>0E00		Show SD dir ACOMND
+FPUT	LI	R6,>2200		save DOAD to FTP server ACOMND 
 	JMP	ACLPRP			generic prep
-AHLP	LI	R6,>1000		display APEDSK99 CALL()'s help screen
+ADSR	LI	R6,>2300		load DSR and reset ACOMND
 	JMP	ACLPRP			generic prep
-TIME	LI	R6,>1200		show NTP time and date
+* no parameters	->3x00
+SDSK	LI	R6,>3000		Show DSKx mapping ACOMND
 	JMP	ACLPRP			generic prep
-ARST	LI	R6,>1400		reset APEDSK99 ACOMND
+SDIR	LI	R6,>3100		Show SD dir ACOMND
 	JMP	ACLPRP			generic prep
-FGET	LI	R6,>1600		get DOAD from FTP server ACOMND
+AHLP	LI	R6,>3200		display APEDSK99 CALL()'s help screen
 	JMP	ACLPRP			generic prep
-FPUT	LI	R6,>1800		save DOAD to FTP server ACOMND 
+ARST	LI	R6,>3300		reset APEDSK99 ACOMND
 	JMP	ACLPRP			generic prep
-ADSR	LI	R6,>1A00		load DSR and reset ACOMND
+TIME	LI	R6,>3400		show NTP time and date
 	JMP	ACLPRP			generic prep
 *
 *-----------------------------------------------------------------
@@ -3086,10 +3096,10 @@ PUDSK2	MOVB	R6,@ACOMND		send U/P DSK command to Arduino
 * Subprogram MDSK / RDSK / FGET / FPUT / ADSR
 * --------------------------------------------------------------------------------------
 *
-MDSK2	INCT	R8			increment pointer
+MNDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
 *
-RFFA2	AI	R0,>3900		add 2's complement of >C700 =  only keep # of characters
+QTDSTR	AI	R0,>3900		add 2's complement of >C700 =  only keep # of characters
 	JEQ	ACLERR			0 characters / empty string -> * INCORRECT COMMAND
 	CI	R0,8			max 8 characters?
 	JH	ACLERR			no -> * INCORRECT COMMAND
@@ -3111,10 +3121,9 @@ H9900	MOVB	@-1026(R15),*R5+	get character and save in CALL buffer
 	LI	R8,13			prep RDSK/FGET/FPUT/ADSR CALL length ( CALL_XXXX("") )
 	A	R4,R8			add # of characters in string
 	
-	CI	R6,>0600		MDSK()?
+	CI	R6,>1100		MDSK() and NDSK?
 	JH	H9901			no; jump and execute RDSK/FGET/FPUT/ADSR
-*
-	INCT	R8			adjust MDSK CALL length
+	INCT	R8			adjust MDSK() and NDSK() CALL length
 *
 H9901	MOVB	R6,@ACOMND		command to Arduino
 *
@@ -3129,19 +3138,19 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	AI	R8,4			skip length byte and 3 chars of CALL name
 	BL	@VDPR2B			get CALL last char and "(" or "0" in R0
 	SLA	R0,8			only interested in LSB
-	JEQ	SSAA			0 = no parameters? SDSK, SDIR, AHLP, ARST, TIME
+	JEQ	NOPARM			0 = no parameters? SDSK, SDIR, AHLP, ARST, TIME
 *
 	AI	R8,2			adjust token pointer
 	BL	@VDPR2B			get next two bytes in R0
 	CI	R0,>C801		>C8=unquoted string, size=1 char?
-	JEQ	ACLPR2			yes: PDSK, UDSK, MDSK, LDSK
+	JEQ	UQTSTR			yes: PDSK, UDSK, LDSK, MDSK, NDSK
 *
 	CI	R0,>C701		>C7=quoted string, minimum 1 character?
-	JHE	RFFA2			yes: RDSK, FGET, FPUT, ADSR 
+	JHE	QTDSTR			yes: RDSK, FGET, FPUT, ADSR
 *
 	JMP	ACLERR			expect the unexpected				
 *
-ACLPR2	INCT	R8			continue for PDSK, UDSK, MDSK, LDSK; increment pointer
+UQTSTR	INCT	R8			continue for PDSK, UDSK, LDSK, MDSK, NDSK; increment pointer
 	BL	@VDPR2B			get next two bytes		
 *
 	SWPB	R0
@@ -3156,33 +3165,34 @@ H9902	JEQ	ACLERR			DSK0 not valid, * INCORRECT COMMAND
 	SWPB 	R0
 	MOVB	R0,@CALLBF		save DSKx
 *
-	CI 	R6,>0600		MDSK()?
-	JEQ	MDSK2			yep
-	JL	PUDSK2			no; PDSK or UDSK						
+	CI 	R6,>0200		PDSK() and UDSK()?
+	JLE	PUDSK2			yep
+	CI	R6,>1000		MDSK() and NDSK()?
+	JHE	MNDSK2			follow MDSK's lead			
 	JMP	LDSK2			must be LDSK
 *
 ACLBAS	CB	@CALLST,@K004		"More" or "AllGood" received from Arduino?	
 	JHE	H9904			yep
 *	
-	LI	R5,GPLINT		GPL routine
+	LI	R5,GPLINT		no; GPL routine
 	BL	@GPLXML			
 	DATA	SCROLL			scroll screen
 	LI	R2,738			screen starting position for (error) message
 	BL	@VDPWRI			set VDP address
-	BL	@DISSTS			show error or NTP data
+	BL	@DISSTS			show (error) message
 	LI	R5,GPLINT		GPL routine
 	BL	@GPLXML	
 	DATA	SCROLL			scroll screen
 *
-	CB 	@CALLST,@K007		error?	
-	JH	H9904			no; we can exit 
+	CB	@CALLST,@K007		error?
+	JH	H9904			no; be silent	
 *
 H9903	LI	R5,GPLINT		yes: let's make some noise
 	BL	@GPLXML
 	DATA	HONK			GPL routine"bad tone"
 	JMP	H9914
 *
-H9904	CI	R6,>1200		TIME() ?
+H9904	CI	R6,>3400		TIME() ?
 	JNE	H9914			no, end the party
 	B  	@TIME2			yes; see if we can assign date/time to NTP$ 
 *
@@ -3195,7 +3205,7 @@ ACLERR	B	@RTURN1			return to caller (i.e. TI-BASIC)
 * Subprogram SDSK / LDSK / SDIR/ AHLP / TIME
 * ----------------------------------------------------------------
 *
-LDSK2	MOVB	R6,@ACOMND		SDSK/LDSK/SDIR/AHLP command to Arduino
+LDSK2	MOVB	R6,@ACOMND		LDSK/SDSK/SDIR/AHLP command to Arduino
 	CB	@K002,@CALLST
 	JEQ	QTLSSA			LDSK: >00; no DOAD mapped
 *
@@ -3209,10 +3219,10 @@ LDNXTS	CLR	R2			clear screen; position 0
 	LI	R2,33			start 2nd screen line; 1st is lost due to TI BASIC scroll
 	BL	@VDPWRI			
 *	
-H9905	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP/TIME return code
+H9905	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP return code
 	JEQ	QTLSSA			"More" (>F0); blank "floppy" or done last file / help txt
 *
-	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP/TIME output to screen
+	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP output to screen
 *
 	AI	R2,32			next screen position
 	CI	R2,641			end of display area?
@@ -3235,13 +3245,15 @@ NXTPRP	LI	R2,703
 * Subprogram ARST / TIME
 * ----------------------------------------------------------------------------------------
 *
-SSAA	CI	R6,>1200		TIME() ?	
+NOPARM	CI	R6,>3000		catch PDSK/UDSK/LDSK/MDSK/NDSK/RDSK/FGET/FPUT/ADSR without parameters -> error
+	JL	ACLERR
+	CI	R6,>3300		ARST() or TIME() ?	
 	JL	LDSK2			no; SDSK/SDIR/AHLP use LDSK display routine
 *
 ARST2	MOVB	R6,@ACOMND		execute ARST() or TIME()
 *
 QTLSSA	LI	R8,9			current CALL length
-	CI	R6,>0800		LDSK()?
+	CI	R6,>0300		LDSK()?
 	JH	H9906			nope; exit with CALL lenght 9 for SDSK/SDIR/AHLP
 	AI	R8,3			yep;  exit with CALL length 12 for LDSK
 *
@@ -3363,7 +3375,7 @@ GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
 	B	*R11			return to instruction after BL @GPLEXEC DATA statement
 *
 *----------------------------------------------------------------------------------
-* >5EA2 - >5FB3: 274 free bytes remaining
+* >5EBC - >5FB3: 247 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's

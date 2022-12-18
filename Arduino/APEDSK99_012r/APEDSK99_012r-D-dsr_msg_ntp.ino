@@ -17,6 +17,7 @@ byte currentDSK       = 0;                                                      
 #define Protected       3
 #define DSRNotFound     4
 #define DOADTooBig      5
+#define DOADexists      6
 #define NTPStamp        99
 #define More            0xF0
 #define AllGood         0xFF
@@ -33,13 +34,14 @@ unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                               
 char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
 
 //error messages in FLASH memory
-const char CALLerror[6][16] PROGMEM = {                                                               //CALL() error messages
+const char CALLerror[7][16] PROGMEM = {                                                               //CALL() error messages
   { "* DSK not mapped" },
   { "* DSK not found " }, 
   { "* no FTP or NTP " },
   { "* DSK protected " },
   { "* DSR not found " },
   { "* DSK size error" },
+  { "* DSK exists    " },
 };
 
 //help messages in FLASH memory
