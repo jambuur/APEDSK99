@@ -326,9 +326,9 @@
 
           File tFile = SDdir.openNextFile();                                                              //get next file
           if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                                //valid file AND !ENTER from DSR?
-            char DOADfilename[13];// = "\0";                                                                 //"clear" array for shorter filenames not displaying leftover parts
+            char DOADfilename[13];                                                                        //ASCII store
             tFile.getName( DOADfilename, 13 );                                                            //copy filename ... 
-            for ( byte ii = 0; ii < 10; ii++ ) {                                                          //... and write to buffer
+            for ( byte ii = 0; ii < 8 ; ii++ ) {                                                          //... and write to buffer
               if ( DOADfilename[ii] != '.' ) {
                 write_DSRAM( CALLBF + ii, DOADfilename[ii] + TIBias );
               } else {
@@ -336,21 +336,26 @@
               }    
             }  
 
-            for ( byte ii=18; ii < 28; ii++ ) {                                  
+            for ( byte ii=21; ii < 31; ii++ ) {                                  
               write_DSRAM( CALLBF + ii, tFile.read() + TIBias );                                          //read/save DSK name characters in CALL buffer
             }               
             
             tFile.seek( 0x12 );                                                                           //byte >12 in VIB stores #sides (>01 or >02)
-            write_DSRAM( CALLBF + 11, tFile.read() + (48 + TIBias) );                                     //#sides; change to ASCII and add TI screen bias
-            write_DSRAM( CALLBF + 12, '/' + TIBias );                                                     //divider
-            write_DSRAM( CALLBF + 13, ('S' - ((tFile.read() >> 1) * 15)) + TIBias);                       //byte >13 in VIB stores density (>01/SD or >02/DD)
-            write_DSRAM( CALLBF + 14, '/' + TIBias );                                                     //divider 
+            write_DSRAM( CALLBF +  9, tFile.read() == 0x01 ? 'S' + TIBias : 'D' + TIBias  );              //#sides; change to ASCII and add TI screen bias
+            write_DSRAM( CALLBF + 10, 'S' + TIBias );                                                     //sides indicator
+            write_DSRAM( CALLBF + 11, '/' + TIBias );                                                     //divider 
+            write_DSRAM( CALLBF + 12, tFile.read() == 0x01 ? 'S' + TIBias : 'D' + TIBias);                //byte >13 in VIB stores density (>01/SD or >02/DD)
+            write_DSRAM( CALLBF + 13, 'D' + TIBias );                                                     //density indicator
+            write_DSRAM( CALLBF + 14, '/' + TIBias );                                                     //divider          
             tFile.seek( 0x11 );                                                                           //byte >11 in VIB stores #tracks
             char tracks[3];                                                                               //ASCII store
             sprintf( tracks, "%2u", tFile.read() );                                                       //convert #tracks to string
             write_DSRAM( CALLBF + 15, tracks[0] + TIBias );
             write_DSRAM( CALLBF + 16, tracks[1] + TIBias );
-            
+            write_DSRAM( CALLBF + 17, 'T' + TIBias );                                                     //tracks indicator
+            write_DSRAM( CALLBF + 18, 'R' + TIBias );                                                     //""
+            write_DSRAM( CALLBF + 19, 'K' + TIBias );                                                     //""
+              
             tFile.close();                                                                                //prep for next file
           } else {                                                                                        //... no
             SDdir.close();
