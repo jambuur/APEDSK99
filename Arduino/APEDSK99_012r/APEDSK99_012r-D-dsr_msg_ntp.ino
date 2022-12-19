@@ -46,8 +46,7 @@ const char CALLerror[7][16] PROGMEM = {                                         
 
 //help messages in FLASH memory
 const char CALLhelp[18][32] PROGMEM = {                                                               //CALL() help text
-  { "     APEDSK99 v0.12r CALLs      " },
-  { "------------------------------- " },
+  { "-----APEDSK99 v0.12r CALLs------" },
   { "AHLP   =this help screen        " },
   { "ARST   =soft reset apedsk99     " },
   { "SDIR   =show doads on sd card   " },
@@ -63,7 +62,8 @@ const char CALLhelp[18][32] PROGMEM = {                                         
   { "FGET(\"1-8C\")  =ftp srv->sd doad" },
   { "FPUT(\"1-8C\")  =sd doad->ftp srv" },
   { "ADSR(\"8C\")    =load dsr&reset  " },
-  { "error flashing:1=sd,2=dsr,3=ram  " },
+  { "-                               " }
+  { "error flash: 1=SD, 2=DSR, 3=RAM " },
 };
 
 //reset Arduino properly via watchdog timer
