@@ -1,7 +1,7 @@
 //NOTE: IPAddress uses a comma "," for the address definition instead of the familiair dot "." !
 
 //CHANGE TO SUIT YOUR NETWORK
-IPAddress       IP(10,0,0,73);                                                                  //EthernetShield IP address 
+IPAddress       IP(10,0,0,99);                                                                  //EthernetShield IP address : 
 IPAddress       ftpserver(10,0,0,13);                                                           //FTP server IP address
 //IPAddress       namesServer(x,x,x,x);                                                           //not required if on same subnet as FTP server
 //IPAddress       gateway(x,x,x,x);                                                               //not required if on same subnet as FTP server

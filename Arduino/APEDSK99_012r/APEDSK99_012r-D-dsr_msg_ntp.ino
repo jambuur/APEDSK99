@@ -4,6 +4,7 @@ File SDdir;                                                                     
 
 //flags for "drives" (aka DOAD files) available 
 boolean activeDSK[3]  = {false, false, false};                                                        //DSKx active flag
+char DSKfolder[8]     = "/DISKS/\0";                                                                  //root folder name
 char nameDSK[3][20]   = {"/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};        //DOAD file names; startup defaults
 byte protectDSK[3]    = {0x20, 0x20, 0x20};                                                           //DOAD write protect status
 byte currentDSK       = 0;                                                                            //current selected DSK
@@ -18,6 +19,7 @@ byte currentDSK       = 0;                                                      
 #define DSRNotFound     4
 #define DOADTooBig      5
 #define DOADexists      6
+#define DIRNotFound     7
 #define NTPStamp        99
 #define More            0xF0
 #define AllGood         0xFF
@@ -34,7 +36,7 @@ unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                               
 char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
 
 //error messages in FLASH memory
-const char CALLerror[7][16] PROGMEM = {                                                               //CALL() error messages
+const char CALLerror[8][16] PROGMEM = {                                                               //CALL() error messages
   { "* DSK not mapped" },
   { "* DSK not found " }, 
   { "* no FTP or NTP " },
@@ -42,28 +44,30 @@ const char CALLerror[7][16] PROGMEM = {                                         
   { "* DSR not found " },
   { "* DSK size error" },
   { "* DSK exists    " },
+  { "* /DIR not found" },
 };
 
 //help messages in FLASH memory
-const char CALLhelp[18][32] PROGMEM = {                                                               //CALL() help text
-  { "-----APEDSK99 v0.12r CALLs------" },
-  { "AHLP   =this help screen        " },
-  { "ARST   =soft reset apedsk99     " },
-  { "SDIR   =show doads on sd card   " },
-  { "SDSK   =show dsk[1-3] mapping   " },
-  { "TIME   =ntp date/time (NTP$)    " },
-  { "PDSK(#)=protect dsk#            " },     
-  { "UDSK(#)=remove dsk# protect     " },
-  { "LDSK(#)=list files on dsk#      " },
-  { "-                               " },
+const char CALLhelp[19][32] PROGMEM = {                                                               //CALL() help text
+  { "-----APEDSK99 v0.12r CALLs-----" },
+  { "AHLP   =this help screen       " },
+  { "ARST   =soft reset apedsk99    " },
+  { "SDIR   =show doads on sd card  " },
+  { "SDSK   =show dsk[1-3] mapping  " },
+  { "TIME   =ntp date/time (NTP$)   " },
+  { "LDSK(#)=list files on dsk#     " },
+  { "PDSK(#)=protect dsk#           " },     
+  { "UDSK(#)=remove dsk# protect    " },
+  { "-                              " },
   { "MDSK(#,\"1-8C\")=map dsk#->doad  " },
   { "NDSK(#,\"1-8C\")=rename map'd DSK" },
-  { "RDSK(\"1-8C\")  =delete sd doad  " },
+  { "ADSR(\"8C\")    =load dsr&reset  " },
   { "FGET(\"1-8C\")  =ftp srv->sd doad" },
   { "FPUT(\"1-8C\")  =sd doad->ftp srv" },
-  { "ADSR(\"8C\")    =load dsr&reset  " },
-  { "-                               " }
-  { "error flash: 1=SD, 2=DSR, 3=RAM " },
+  { "NDIR(\"1-8C\")  =change /folder  " },
+  { "RDSK(\"1-8C\")  =delete sd doad  " },
+  { "-                              " },
+  { "error flash: 1=SD, 2=DSR, 3=RAM" },
 };
 
 //reset Arduino properly via watchdog timer

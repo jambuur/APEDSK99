@@ -95,71 +95,76 @@ SUB10	DATA	SUB11
 	BYTE	>04
 	TEXT	'UDSK'			Un-protect DSKx (remove adhesive tab)
 	EVEN
-SUB11	DATA	SUB12
-	DATA	MDSK
-	BYTE	>04
-	TEXT	'MDSK'			Map DOAD to DSKx
-	EVEN
-SUB12	DATA 	SUB13
+SUB11	DATA 	SUB12
 	DATA	LDSK
 	BYTE	>04
 	TEXT	'LDSK'			List files on DSKx
 	EVEN
+SUB12	DATA	SUB13
+	DATA	MDSK
+	BYTE	>04
+	TEXT	'MDSK'			Map DOAD to DSKx
+	EVEN
 SUB13	DATA	SUB14
+	DATA 	NDSK
+	BYTE	>04
+	TEXT	'NDSK'
+	EVEN
+SUB14	DATA	SUB15
 	DATA	RDSK
 	BYTE	>04
 	TEXT	'RDSK'			Remove DOAD from SD card
 	EVEN
-SUB14	DATA	SUB15
-	DATA	SDSK
-	BYTE	>04
-	TEXT	'SDSK'			Show DOAD mapping for DSKx
-	EVEN
 SUB15	DATA	SUB16
-	DATA	SDIR
-	BYTE	>04
-	TEXT	'SDIR'			List DOAD files on SD card
-	EVEN
-SUB16	DATA	SUB17
-	DATA	AHLP
-	BYTE	>04
-	TEXT	'AHLP'			APEDSK99 CALL help screen
-	EVEN
-SUB17	DATA	SUB18
-	DATA	TIME
-	BYTE	>04
-	TEXT	'TIME'			NTP date/time display / assign to NTP$
-	EVEN
-SUB18	DATA	SUB19
-	DATA	ARST
-	BYTE	>04
-	TEXT	'ARST'			APEDSK99 Reset
-	EVEN
-SUB19	DATA	SUB20
 	DATA	FGET
 	BYTE	>04
 	TEXT	'FGET'			Load DOAD from FTP server
 	EVEN
-SUB20	DATA	SUB21
+SUB16	DATA	SUB17
 	DATA	FPUT
 	BYTE	>04
 	TEXT	'FPUT'			Save DOAD to FTP server
 	EVEN
-SUB21	DATA	SUB22
+SUB17	DATA	SUB18
 	DATA	ADSR
 	BYTE	>04
 	TEXT	'ADSR'			APEDSK99 load DSR
 	EVEN
-SUB22	DATA	>0000
-	DATA 	NDSK
+SUB18	DATA	SUB19
+	DATA	NDIR
 	BYTE	>04
-	TEXT	'NDSK'
+	TEXT	'NDIR'
+	EVEN
+SUB19	DATA	SUB20
+	DATA	SDSK
+	BYTE	>04
+	TEXT	'SDSK'			Show DOAD mapping for DSKx
+	EVEN
+SUB20	DATA	SUB21
+	DATA	SDIR
+	BYTE	>04
+	TEXT	'SDIR'			List DOAD files on SD card
+	EVEN
+SUB21	DATA	SUB22
+	DATA	AHLP
+	BYTE	>04
+	TEXT	'AHLP'			APEDSK99 CALL help screen
+	EVEN
+SUB22	DATA	SUB23
+	DATA	ARST
+	BYTE	>04
+	TEXT	'ARST'			APEDSK99 Reset
+	EVEN
+SUB23	DATA	>0000
+	DATA	TIME
+	BYTE	>04
+	TEXT	'TIME'			NTP date/time display / assign to NTP$
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
 	DATA	EPWRUP			address of power-up routine
 	DATA	>0000			no name
-					
+*					
 DSR01	DATA	DSR02			DSR chain
 	DATA	EDSR01			address of DSR
 	BYTE	>03			name size
@@ -3071,6 +3076,8 @@ FPUT	LI	R6,>2200		save DOAD to FTP server ACOMND
 	JMP	ACLPRP			generic prep
 ADSR	LI	R6,>2300		load DSR and reset ACOMND
 	JMP	ACLPRP			generic prep
+NDIR	LI	R6,>2400		change root folder
+	JMP	ACLPRP			generic prep
 * no parameters	->3x00
 SDSK	LI	R6,>3000		Show DSKx mapping ACOMND
 	JMP	ACLPRP			generic prep
@@ -3099,7 +3106,9 @@ PUDSK2	MOVB	R6,@ACOMND		send U/P DSK command to Arduino
 MNDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
 *
-QTDSTR	AI	R0,>3900		add 2's complement of >C700 =  only keep # of characters
+QTDSTR	CI	R6,>1000		only RDSK/FGET/FPUT/ADSR?
+	JL	ACLERR			no -> sneaky PDSK/UDSK don't belong here
+	AI	R0,>3900		add 2's complement of >C700 =  only keep # of characters
 	JEQ	ACLERR			0 characters / empty string -> * INCORRECT COMMAND
 	CI	R0,8			max 8 characters?
 	JH	ACLERR			no -> * INCORRECT COMMAND
@@ -3146,11 +3155,13 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	JEQ	UQTSTR			yes: PDSK, UDSK, LDSK, MDSK, NDSK
 *
 	CI	R0,>C701		>C7=quoted string, minimum 1 character?
-	JHE	QTDSTR			yes: RDSK, FGET, FPUT, ADSR
+	JHE	QTDSTR			yes: RDSK, FGET, FPUT, ADSR, NDIR
 *
 	JMP	ACLERR			expect the unexpected				
 *
-UQTSTR	INCT	R8			continue for PDSK, UDSK, LDSK, MDSK, NDSK; increment pointer
+UQTSTR	CI	R6,>2000		only PDSK/UDSK/LDSK/MDSK/NDSK?
+	JHE	ACLERR			no -> sneaky RDSK etc commands don't belong here
+	INCT	R8			continue for PDSK, UDSK, LDSK, MDSK, NDSK; increment pointer
 	BL	@VDPR2B			get next two bytes		
 *
 	SWPB	R0
@@ -3167,9 +3178,9 @@ H9902	JEQ	ACLERR			DSK0 not valid, * INCORRECT COMMAND
 *
 	CI 	R6,>0200		PDSK() and UDSK()?
 	JLE	PUDSK2			yep
-	CI	R6,>1000		MDSK() and NDSK()?
-	JHE	MNDSK2			follow MDSK's lead			
-	JMP	LDSK2			must be LDSK
+	CI	R6,>0300		LDSK()?
+	JEQ	LDSK2			yep
+	JMP	MNDSK2			must be MDSK() or NDSK()	
 *
 ACLBAS	CB	@CALLST,@K004		"More" or "AllGood" received from Arduino?	
 	JHE	H9904			yep
@@ -3225,7 +3236,7 @@ H9905	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP return code
 	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP output to screen
 *
 	AI	R2,32			next screen position
-	CI	R2,641			end of display area?
+	CI	R2,673			end of display area?
 	JEQ	NXTPRP			yes; show "more" symbol
 *
 	MOV	R2,@RDINT		generates interrupt for next file
@@ -3375,7 +3386,7 @@ GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
 	B	*R11			return to instruction after BL @GPLEXEC DATA statement
 *
 *----------------------------------------------------------------------------------
-* >5EBC - >5FB3: 247 free bytes remaining
+* >5EBC - >5FB3: 219 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's

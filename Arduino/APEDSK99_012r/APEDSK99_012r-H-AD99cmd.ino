@@ -39,23 +39,25 @@
         case 33:                                                                                          //FGET()
         case 34:                                                                                          //FPUT()                                                                        
         {
-          char DOADfullpath[20] = "/DISKS/\0";                                                            //complete path + filename
+          char DOADfullpath[20] = "\0";                                                                   //complete path + filename
           char DOADfilename[13] = "\0";                                                                   //just the filename for the FTP server
+          strncpy( DOADfullpath, DSKfolder, 7 );                                                          //save current folder selection
+          
           byte ii;
           for ( ii = 0; ii < 8; ii++ ) {                                                                  //max 8 characters for MSDOS filename
             byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                    //read character from APEDSK99 CALL buffer
             if ( cc != 0x80 ) {                                                                           //if (" " + TIBias), the filename is < 8 characters ...
-                DOADfilename[ii] = cc;                                                                    //add next character to FTP filename
+              DOADfilename[ii] = cc;                                                                      //add next character to filename
             } else {                                                                      
               break;                                                                                      // ... and we need to get out
             }
-          }          
-                                                                              
+          }                                                                           
+
           clrCALLbuffer();                                                                                //clear CALL buffer
-          DOADfilename[ii] = '\0';                                                                        //terminate FTP filename
+          DOADfilename[ii] = '\0';                                                                        //properly terminate filename
           strncat( DOADfilename, ".DSK", 4 );                                                             //add file extenstion to filename
           strncat( DOADfullpath, DOADfilename, ++ii + 4 );                                                //add filename to path                                                                                                               
-           
+        
           boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
           byte protectDOAD;                                                                               //Protected flag
           if ( existDOAD ) {                                                                              //does DOAD exist?
@@ -155,7 +157,7 @@
               }    
             }   
             EtherStop();                                                                                  //stop Ethernet client
-          }                                          
+          }                                        
           noExec();                                                                                       //we're done
         }
         break;
@@ -252,7 +254,7 @@
 
           if ( gii < 3 ) {                                                                                //3 rows               
             if ( activeDSK[currentDSK] ) {                                                                //is the requested disk mapped to a DOAD ...                              
- 
+
               strncpy( DOADfullpath, nameDSK[currentDSK], 20 );                                           //yes; get current DOAD name           
               if ( protectDSK[currentDSK] == 0x50 ) {
                 write_DSRAM( CALLBF + 11, 'P' + TIBias );                                                 //indicate DOAD is Protected or ...
@@ -320,7 +322,7 @@
         {
           clrCALLbuffer();                                                                                //clear CALL buffer
           if ( newA99cmd ) {                                                                              //first run of SDIR()?
-            SDdir = SD.open( "/DISKS/" );                                                                 //yes; open directory
+            SDdir = SD.open( DSKfolder );                                                                 //yes; open directory
             gii = 0;
           }        
 
@@ -371,7 +373,7 @@
             gii = 0;
           }
 
-          if ( gii < 18 ) {                                                                               //18x 32char arrays
+          if ( gii < 19 ) {                                                                               //18x 32char arrays
             for ( byte ii = 0; ii < 32; ii++ ) {
               write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLhelp[gii][ii] ) + TIBias );                   //read character array from PROGMEM and write to CALL buffer
             }
@@ -432,6 +434,25 @@
             currentA99cmd = 51;                                                                           //valid DSR file; fall through to reset to activate
           }
         }
+
+        case 36:                                                                                          //NDIR()
+        {
+          char newfolder[8] = "/\0";
+          for ( byte ii = 1; ii < 7; ii++ ) {
+            newfolder[ii] = read_DSRAM( CALLBF + ii );
+          }
+          newfolder[7] = '\0';
+
+          if ( SD.exists( newfolder ) ) {
+            DSKfolder[0] = '\0';
+            strncpy( DSKfolder, newfolder, 7 );
+            DSKfolder[7] = '\0';
+          } else {
+            CALLstatus( DIRNotFound );
+          }
+          noExec;
+        }
+        break;
 
         case 51:                                                                                          //ARST(): reset current DSR    
         { 

@@ -42,7 +42,7 @@ void setup() {
 
   //initialise DSKx Active / Protect flags and save key parameters
   for ( byte ii = 0; ii < 3; ii++ ) {
-    if ( SD.exists( nameDSK[ii] ) ) {                                   //does DOAD x exist?
+    if ( SD.exists( nameDSK[ii] ) ) {                                   //does DOAD exist?
       DSKx = SD.open( nameDSK[ii], FILE_READ );                         //yes; open DOAD file to check various parameters
       if ( !getDSKparms( ii ) ) {                                       //check DOAD size and if OK store DSK parameters
         activeDSK[ii] = true;                                           //flag active
