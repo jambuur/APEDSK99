@@ -12,15 +12,16 @@ byte currentDSK       = 0;                                                      
 //command status and error handling
 #define DSKprm          0x5FB4                                                                        //per DSKx: Mbyte/Lbyte #sectors, #sectors/track, #tracks, #sides
 #define CALLST          0x5FC6                                                                        //CALL() execution status                                                        
-#define DOADNotMapped   0
-#define DOADNotFound    1
-#define FNTPConnect     2
-#define Protected       3
-#define DSRNotFound     4
-#define DOADTooBig      5
-#define DOADexists      6
-#define DIRNotFound     7
-#define NTPStamp        99
+#define DOADNotMapped     0
+#define DOADNotFound      1
+#define FNTPConnect       2
+#define Protected         3
+#define DSRNotFound       4
+#define DOADTooBig        5
+#define DOADexists        6
+#define DIRNotFound       7
+#define NTPStamp         99
+#define DIRchange       100
 #define More            0xF0
 #define AllGood         0xFF
 
@@ -64,8 +65,8 @@ const char CALLhelp[19][32] PROGMEM = {                                         
   { "ADSR(\"8C\")    =load dsr&reset  " },
   { "FGET(\"1-8C\")  =ftp srv->sd doad" },
   { "FPUT(\"1-8C\")  =sd doad->ftp srv" },
-  { "NDIR(\"1-8C\")  =change /folder  " },
   { "RDSK(\"1-8C\")  =delete sd doad  " },
+  { "NDIR(\"1-5C\")  =change /folder  " },
   { "-                              " },
   { "error flash: 1=SD, 2=DSR, 3=RAM" },
 };
@@ -124,7 +125,7 @@ boolean getDSKparms( byte cDSK ) {
 //transfer relevant error message from FLASH memory to CALL buffer 
 void CALLstatus( byte scode ) {
   write_DSRAM( CALLST, scode );                                                                       //update CALL status
-  if ( scode < 99  ) {                                                                                //is it an actual error? 
+  if ( scode < 99  ) {                                                                                //is it an actual error? (if not, no HONK; see DSR source)
     clrCALLbuffer();
     for ( byte ii = 0; ii < 16; ii++ ) {                                                              //yes; copy error message to CALL buffer
       write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii] ) + TIBias );
