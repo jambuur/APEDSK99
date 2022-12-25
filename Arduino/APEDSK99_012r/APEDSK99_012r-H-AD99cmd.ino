@@ -346,7 +346,7 @@
               gii++;                                                                                      //make sure the above is run only once
             } 
 
-            if ( gii = 8 ) {                                                                              //has empty screen row been displayed? ...
+            if ( gii == 8 ) {                                                                              //has empty screen row been displayed? ...
           
               clrCALLbuffer();                                                                            //... yes; clear CALL buffer       
     
@@ -471,28 +471,27 @@
         }
         break;
  
-        case 36:                                                                                          //NDIR()
+        case 36:                                                                                          //NDIR(): change working root folder
         {  
-          char newfolder[8] = "/\0";
-          for ( byte ii = 1; ii < 6; ii++ ) {
+          char newfolder[8] = "/\0";                                                                      //prep with starting "/"
+          for ( byte ii = 1; ii < 6; ii++ ) {                                                             //add CALL characters
             newfolder[ii] = read_DSRAM( CALLBF + (ii + 1) );
           }
-          newfolder[6] = '/';
-          newfolder[7] = '\0';
+          newfolder[6] = '/';                                                                             //add trailing "/"
+          newfolder[7] = '\0';                                                                            //properly terminate string
 
-          if ( SD.exists( newfolder ) ) {
-            DSKfolder[0] = '\0';
-            strncpy( DSKfolder, newfolder, 7 );
-            DSKfolder[7] = '\0';
+          if ( SD.exists( newfolder ) ) {                                                                 //does folder exist? ...
+            DSKfolder[0] = '\0';                                                                          //... yes; prep global folder variable
+            strncpy( DSKfolder, newfolder, 8 );                                                           //copy new folder name
+            DSKfolder[7] = '\0';                                                                          //properly terminate string
           } else {
-            CALLstatus( DIRNotFound );
+            CALLstatus( DIRNotFound );                                                                    //... no; error                                                    
           }
-          clrCALLbuffer();                                                                              //clear CALL buffer
           noExec;
         }
         break;
 
-        case 35:                                                                                          //ADSR()
+        case 35:                                                                                          //ADSR(): load / change default DSR file
         {                                                                                 
           char DSRtoload[13] = "\0";                                                                      //filename new DSR
           char DSRcurrent[13] = "\0";                                                                     //filename current DSR in EEPROM
