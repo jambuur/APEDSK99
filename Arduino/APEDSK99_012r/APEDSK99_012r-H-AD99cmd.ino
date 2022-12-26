@@ -66,10 +66,6 @@
             protectDOAD = DSKx.read();                                                                    //store Protected flag
           }
 
-          for ( byte ii = 0; ii < 20; ii++ ) {
-            write_DSRAM( 0x2000 + ii, DOADfullpath[ii] );
-          }
-
           if ( currentA99cmd == 16 ) {                                                                    //MDSK: map a DOAD to DSK1-3
             if ( existDOAD ) {                                                                            //does DOAD exist? ...
               if ( !getDSKparms( currentDSK ) ) {                                                         //check DOAD size and if OK store DSK parameters 
