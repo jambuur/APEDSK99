@@ -3100,14 +3100,14 @@ PUDSK2	MOVB	R6,@ACOMND		send U/P DSK command to Arduino
 	JMP	ACLBAS			return to TI-BASIC		
 *			
 *---------------------------------------------------------------------------------------
-* Subprogram MDSK / RDSK / FGET / FPUT / ADSR
+* Subprogram MDSK / NDSK / RDSK / FGET / FPUT / ADSR / NDIR
 * --------------------------------------------------------------------------------------
 *
 MNDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
 *
-QTDSTR	CI	R6,>1000		only RDSK/FGET/FPUT/ADSR?
-	JL	ACLERR			no -> sneaky PDSK/UDSK don't belong here
+QTDSTR	CI	R6,>1000		further check on RDSK/FGET/FPUT/ADSR
+	JL	ACLERR			no -> sneaky PDSK/UDSK don't belong here	
 	AI	R0,>3900		add 2's complement of >C700 =  only keep # of characters
 	JEQ	ACLERR			0 characters / empty string -> * INCORRECT COMMAND
 	CI	R0,8			max 8 characters?
@@ -3121,9 +3121,9 @@ QTDSTR	CI	R6,>1000		only RDSK/FGET/FPUT/ADSR?
 H9900	MOVB	@-1026(R15),*R5+	get character and save in CALL buffer
 	DEC	R0			one less to go
 	JNE	H9900	
+	MOVB	@K002,*R5		mark end of string with >00 (only used for <8 characters)
 *
 	MOVB	@-1026(R15),R0		get next token
-*
 	CI      R0,>B600                is it a ")" ?
 	JNE     ACLERR                  * INCORRECT COMMAND
 *
@@ -3143,6 +3143,7 @@ H9901	MOVB	R6,@ACOMND		command to Arduino
 *----------------------------------------------------------------------------
 ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
+*
 	MOV	@>002C(R9),R8		ptr to next basic token
 	AI	R8,4			skip length byte and 3 chars of CALL name
 	BL	@VDPR2B			get CALL last char and "(" or "0" in R0
@@ -3213,7 +3214,7 @@ H9914	CLR	@>0050(R9)		clear error flag
 ACLERR	B	@RTURN1			return to caller (i.e. TI-BASIC)
 *
 *-----------------------------------------------------------------
-* Subprogram SDSK / LDSK / SDIR/ AHLP / TIME
+* Subprogram SDSK / LDSK / SDIR/ AHLP
 * ----------------------------------------------------------------
 *
 LDSK2	MOVB	R6,@ACOMND		LDSK/SDSK/SDIR/AHLP command to Arduino
@@ -3236,7 +3237,7 @@ H9905	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP return code
 	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP output to screen
 *
 	AI	R2,32			next screen position
-	CI	R2,673			end of display area?
+	CI	R2,641			end of display area?
 	JEQ	NXTPRP			yes; show "more" symbol
 *
 	MOV	R2,@RDINT		generates interrupt for next file
@@ -3386,7 +3387,7 @@ GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
 	B	*R11			return to instruction after BL @GPLEXEC DATA statement
 *
 *----------------------------------------------------------------------------------
-* >5EBC - >5FB3: 219 free bytes remaining
+* >5EDC - >5FB3: 216 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's

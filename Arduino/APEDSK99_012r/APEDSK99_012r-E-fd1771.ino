@@ -46,7 +46,7 @@ void noExec( void ) {
   lastA99cmd                  = currentA99cmd;                                                        //reset new APEDSK99 command prep
   currentDSK                  = 0;                                                                    //reset active DSKx
   DOADidx                     = 0;                                                                    //clear absolute DOAD byte index
-  sectorbyteidx               = 0;                                                                    //clear byte index counter
+  sectorbyteidx               = 0;                                                                    //clear byte index counter                                                                       //clear CALL buffer area
 }
 
 //clear various FD1771 registers (for powerup and Restore command)

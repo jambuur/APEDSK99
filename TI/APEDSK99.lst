@@ -4238,16 +4238,16 @@ Asm994a TMS99000 Assembler - v3.010
 3100  5C56 1056         JMP     ACLBAS                  return to TI-BASIC              
 3101            *                       
 3102            *---------------------------------------------------------------------------------------
-3103            * Subprogram MDSK / RDSK / FGET / FPUT / ADSR
+3103            * Subprogram MDSK / NDSK / RDSK / FGET / FPUT / ADSR / NDIR
 3104            * --------------------------------------------------------------------------------------
 3105            *
 3106  5C58 05C8 MNDSK2  INCT    R8                      increment pointer
 3107  5C5A 06A0         BL      @VDPR2B                 get next two digits
 3107  5C5C 4840  
 3108            *
-3109  5C5E 0286 QTDSTR  CI      R6,>1000                only RDSK/FGET/FPUT/ADSR?
+3109  5C5E 0286 QTDSTR  CI      R6,>1000                further check on RDSK/FGET/FPUT/ADSR
 3109  5C60 1000  
-3110  5C62 1A7A         JL      ACLERR                  no -> sneaky PDSK/UDSK don't belong here
+3110  5C62 1A7A         JL      ACLERR                  no -> sneaky PDSK/UDSK don't belong here        
 3111  5C64 0220         AI      R0,>3900                add 2's complement of >C700 =  only keep # of characters
 3111  5C66 3900  
 3112  5C68 1377         JEQ     ACLERR                  0 characters / empty string -> * INCORRECT COMMAND
@@ -4269,31 +4269,31 @@ Asm994a TMS99000 Assembler - v3.010
 3124            *
 3125  5C86 D02F         MOVB    @-1026(R15),R0          get next token
 3125  5C88 FBFE  
-3126            *
-3127  5C8A 0280         CI      R0,>B600                is it a ")" ?
-3127  5C8C B600  
-3128  5C8E 1664         JNE     ACLERR                  * INCORRECT COMMAND
-3129            *
-3130  5C90 0208         LI      R8,13                   prep RDSK/FGET/FPUT/ADSR CALL length ( CALL_XXXX("") )
-3130  5C92 000D  
-3131  5C94 A204         A       R4,R8                   add # of characters in string
-3132                    
-3133  5C96 0286         CI      R6,>1100                MDSK() and NDSK?
-3133  5C98 1100  
-3134  5C9A 1B01         JH      H9901                   no; jump and execute RDSK/FGET/FPUT/ADSR
-3135  5C9C 05C8         INCT    R8                      adjust MDSK() and NDSK() CALL length
-3136            *
-3137  5C9E D806 H9901   MOVB    R6,@ACOMND              command to Arduino
-3137  5CA0 5FE8  
-3138            *
-3139  5CA2 1030         JMP     ACLBAS                  return to TI-BASIC
-3140            *                       
-3141            *----------------------------------------------------------------------------
-3142            * Generic prep and return to TI BASIC for APEDSK99 CALL's
-3143            *----------------------------------------------------------------------------
-3144  5CA4 C1CB ACLPRP  MOV     R11,R7                  save return-to-TI BASIC address
-3145  5CA6 06A0         BL      @PRPFDO                 prepare TI Controller DSR operations
-3145  5CA8 43EE  
+3126  5C8A 0280         CI      R0,>B600                is it a ")" ?
+3126  5C8C B600  
+3127  5C8E 1664         JNE     ACLERR                  * INCORRECT COMMAND
+3128            *
+3129  5C90 0208         LI      R8,13                   prep RDSK/FGET/FPUT/ADSR CALL length ( CALL_XXXX("") )
+3129  5C92 000D  
+3130  5C94 A204         A       R4,R8                   add # of characters in string
+3131                    
+3132  5C96 0286         CI      R6,>1100                MDSK() and NDSK?
+3132  5C98 1100  
+3133  5C9A 1B01         JH      H9901                   no; jump and execute RDSK/FGET/FPUT/ADSR
+3134  5C9C 05C8         INCT    R8                      adjust MDSK() and NDSK() CALL length
+3135            *
+3136  5C9E D806 H9901   MOVB    R6,@ACOMND              command to Arduino
+3136  5CA0 5FE8  
+3137            *
+3138  5CA2 1030         JMP     ACLBAS                  return to TI-BASIC
+3139            *                       
+3140            *----------------------------------------------------------------------------
+3141            * Generic prep and return to TI BASIC for APEDSK99 CALL's
+3142            *----------------------------------------------------------------------------
+3143  5CA4 C1CB ACLPRP  MOV     R11,R7                  save return-to-TI BASIC address
+3144  5CA6 06A0         BL      @PRPFDO                 prepare TI Controller DSR operations
+3144  5CA8 43EE  
+3145            *
 3146  5CAA C229         MOV     @>002C(R9),R8           ptr to next basic token
 3146  5CAC 002C  
 3147  5CAE 0228         AI      R8,4                    skip length byte and 3 chars of CALL name
@@ -4399,7 +4399,7 @@ Asm994a TMS99000 Assembler - v3.010
 3213  5D5A 4340  
 3214            *
 3215            *-----------------------------------------------------------------
-3216            * Subprogram SDSK / LDSK / SDIR/ AHLP / TIME
+3216            * Subprogram SDSK / LDSK / SDIR/ AHLP
 3217            * ----------------------------------------------------------------
 3218            *
 3219  5D5C D806 LDSK2   MOVB    R6,@ACOMND              LDSK/SDSK/SDIR/AHLP command to Arduino
@@ -4434,8 +4434,8 @@ Asm994a TMS99000 Assembler - v3.010
 3237            *
 3238  5D8C 0222         AI      R2,32                   next screen position
 3238  5D8E 0020  
-3239  5D90 0282         CI      R2,673                  end of display area?
-3239  5D92 02A1  
+3239  5D90 0282         CI      R2,641                  end of display area?
+3239  5D92 0281  
 3240  5D94 1303         JEQ     NXTPRP                  yes; show "more" symbol
 3241            *
 3242  5D96 C802         MOV     R2,@RDINT               generates interrupt for next file
@@ -4648,7 +4648,7 @@ Asm994a TMS99000 Assembler - v3.010
 3386  5ED6 045B         B       *R11                    return to instruction after BL @GPLEXEC DATA statement
 3387            *
 3388            *----------------------------------------------------------------------------------
-3389            * >5EBC - >5FB3: 219 free bytes remaining
+3389            * >5EDC - >5FB3: 216 free bytes remaining
 3390            * >5FC2 - >5FD3 is DSK1-3 parameters storage
 3391            * >5FD4 is the CALL() status byte
 3392            * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's

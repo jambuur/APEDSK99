@@ -46,10 +46,10 @@
           byte ii;
           for ( ii = 0; ii < 8; ii++ ) {                                                                  //max 8 characters for MSDOS filename
             byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                    //read character from APEDSK99 CALL buffer
-            if ( cc != 0x80 ) {                                                                           //if (" " + TIBias), the filename is < 8 characters ...
-              DOADfilename[ii] = cc;                                                                      //add next character to filename
+            if ( cc != 0x00 ) {                                                                           //filename < 8 characters (>00 added by DSR)? ...
+              DOADfilename[ii] = cc;                                                                      //... no; add next character to filename
             } else {                                                                      
-              break;                                                                                      // ... and we need to get out
+              break;                                                                                      // ... yes we need to get out
             }
           }                                                                           
 
@@ -64,6 +64,10 @@
             DSKx = SD.open( DOADfullpath, FILE_READ);                                                     //yes; open DOAD file
             DSKx.seek(0x10);                                                                              //byte 0x10 in Volume Information Block stores status
             protectDOAD = DSKx.read();                                                                    //store Protected flag
+          }
+
+          for ( byte ii = 0; ii < 20; ii++ ) {
+            write_DSRAM( 0x2000 + ii, DOADfullpath[ii] );
           }
 
           if ( currentA99cmd == 16 ) {                                                                    //MDSK: map a DOAD to DSK1-3
