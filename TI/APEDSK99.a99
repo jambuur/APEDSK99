@@ -70,6 +70,7 @@ SUB04	DATA	SUB05
 NTPFAT	DATA	>0113			subprogram >13 (file rename); doubles as FAT update flag
 *
 RTN5C	DATA	>0000			save GPL return address (needs to be @>4028 for XML >5C!)
+PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table; change before calling ALOW from assembly
 *
 SUB05	DATA	SUB06			
 	DATA	ESUB05			
@@ -155,10 +156,15 @@ SUB22	DATA	SUB23
 	BYTE	>04
 	TEXT	'ARST'			APEDSK99 Reset
 	EVEN
-SUB23	DATA	>0000
+SUB23	DATA	SUB24
 	DATA	TIME
 	BYTE	>04
 	TEXT	'TIME'			NTP date/time display / assign to NTP$
+	EVEN
+SUB24	DATA	>0000
+	DATA	ALOW
+	BYTE	>04
+	TEXT	'ALOW'
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -3089,6 +3095,8 @@ ARST	LI	R6,>3300		reset APEDSK99 ACOMND
 	JMP	ACLPRP			generic prep
 TIME	LI	R6,>3400		show NTP time and date
 	JMP	ACLPRP			generic prep
+ALOW	LI	R6,>3500		load proper lowercase character set
+	JMP	ACLPRP			generic prep
 *
 *-----------------------------------------------------------------
 * Subprogram PDSK / UDSK
@@ -3265,6 +3273,8 @@ NOPARM	CI	R6,>3000		catch PDSK/UDSK/LDSK/MDSK/NDSK/RDSK/FGET/FPUT/ADSR without p
 ARST2	MOVB	R6,@ACOMND		execute ARST() or TIME()
 *
 QTLSSA	LI	R8,9			current CALL length
+	CI	R6,>3500		ALOW()?
+	JEQ	ALOW2			yes; get some real characters
 	CI	R6,>0300		LDSK()?
 	JH	H9906			nope; exit with CALL lenght 9 for SDSK/SDIR/AHLP
 	AI	R8,3			yep;  exit with CALL length 12 for LDSK
@@ -3279,6 +3289,18 @@ H9907	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
 	DEC	R6
 	JNE	H9907
 	B	*R11
+*
+ALOW2	CB	@INT2FP+2,@CALLST
+	JEQ	H9906			>08; no char definition file found
+*
+	MOV	@PATTBL,R2		get start of <SPACE> pattern table entry (default >0400 for TI BASIC)
+	BL	@VDPWRI			set VPD address
+*			
+H9917	BL	@DISSTS			use existing display routine to write 4 definitions at a time
+	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP/ALOW return code
+	JEQ	H9906			we're done
+	MOV	R2,@RDINT		generates interrupt for next lot
+	JMP	H9917			again
 *
 * Quick key test to display next screen after ">"
 * Keyboard column 0 (= space enter <nc> fctn shift ctrl <nc>)
@@ -3387,7 +3409,7 @@ GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
 	B	*R11			return to instruction after BL @GPLEXEC DATA statement
 *
 *----------------------------------------------------------------------------------
-* >5EDC - >5FB3: 216 free bytes remaining
+* >5F16 - >5FB3: 158 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's

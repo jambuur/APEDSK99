@@ -346,7 +346,7 @@
               gii++;                                                                                      //make sure the above is run only once
             } 
 
-            if ( gii == 8 ) {                                                                              //has empty screen row been displayed? ...
+            if ( gii == 8 ) {                                                                            //has empty screen row been displayed? ...
           
               clrCALLbuffer();                                                                            //... yes; clear CALL buffer       
     
@@ -425,13 +425,41 @@
         }
         break;    
 
+        case 53:                                                                                          //ALOW(): load real lowercase character set
+        { 
+          boolean cFile = true;                                                                           //let's assume SD card contains valid char definition file 
+          if ( newA99cmd ) {   
+            cFile = (DSKx = SD.open( "/tilcchar.bin", FILE_READ) );                                       //first run, try to open it
+            gii = 0;                                                                                      //initialise global counter 
+          }
+
+          if ( cFile ) {                                                                                  //char file successfully opened? ...
+            if ( gii < 23 ) {                                                                             //... yes; more character definition to go? ...
+              DSKx.seek( gii * 32 );                                                                      //... yes; next 32byte chunk from file
+              for ( byte ii = 0; ii < 32; ii++ ) {  
+                write_DSRAM( CALLBF + ii, DSKx.read() );                                                  //DSR display routine to write them to VDP pattern table
+              }
+              gii++;                                                                                      //next lot
+            } else {
+              CALLstatus( More );                                                                         //... no; all done
+              noExec();                                                                                   //end it all
+            }
+          } else {
+            CALLstatus( DEFNotFound );                                                                    //... no; error: can't find || open char definition file
+            noExec();                                                                                     //end it all
+          }
+        }
+        break;   
+
         case 50:                                                                                          //AHLP()
         {
+          
+          clrCALLbuffer();                                                                                //clear CALL buffer
           if ( newA99cmd ) {                                                                              //first run make sure we start with 1st message
             gii = 0;
           }
 
-          if ( gii < 19 ) {                                                                               //18x 32char arrays
+          if ( gii < 26 && read_DSRAM(CALLST) ==  AllGood ) {                                             //18x 32char arrays
             for ( byte ii = 0; ii < 32; ii++ ) {
               write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLhelp[gii][ii] ) + TIBias );                   //read character array from PROGMEM and write to CALL buffer
             }
@@ -490,7 +518,7 @@
           noExec;
         }
         break;
-
+ 
         case 35:                                                                                          //ADSR(): load / change default DSR file
         {                                                                                 
           char DSRtoload[13] = "\0";                                                                      //filename new DSR

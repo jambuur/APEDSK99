@@ -20,8 +20,8 @@ byte currentDSK       = 0;                                                      
 #define DOADTooBig        5
 #define DOADexists        6
 #define DIRNotFound       7
+#define DEFNotFound       8
 #define NTPStamp         99
-#define DIRchange       100
 #define More            0xF0
 #define AllGood         0xFF
 
@@ -37,7 +37,7 @@ unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                               
 char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
 
 //error messages in FLASH memory
-const char CALLerror[8][16] PROGMEM = {                                                               //CALL() error messages
+const char CALLerror[9][16] PROGMEM = {                                                               //CALL() error messages
   { "* DSK not mapped" },
   { "* DSK not found " }, 
   { "* no FTP or NTP " },
@@ -46,27 +46,35 @@ const char CALLerror[8][16] PROGMEM = {                                         
   { "* DSK size error" },
   { "* DSK exists    " },
   { "* /DIR not found" },
+  { "* no char file  " },
 };
 
 //help messages in FLASH memory
-const char CALLhelp[19][32] PROGMEM = {                                                               //CALL() help text
-  { "-----APEDSK99 v0.12r CALLs-----" },
-  { "AHLP   =this help screen       " },
-  { "ARST   =soft reset apedsk99    " },
-  { "SDIR   =show doads on sd card  " },
-  { "SDSK   =show dsk[1-3] mapping  " },
-  { "TIME   =ntp date/time (NTP$)   " },
-  { "LDSK(#)=list files on dsk#     " },
-  { "PDSK(#)=protect dsk#           " },     
-  { "UDSK(#)=remove dsk# protect    " },
+const char CALLhelp[26][32] PROGMEM = {                                                               //CALL() help text
+  { "---APEDSK99 v0.12r CALLs 1/2---" },
+  { "                               " },
+  { "AHLP = this help screen        " },
+  { "ARST = soft reset APEDSK99     " },
+  { "SDIR = show doads on sd card   " },
+  { "SDSK = show DSK[1-3] mapping   " },
+  { "TIME = ntp date/time (NTP$)    " },
   { "-                              " },
-  { "MDSK(#,\"1-8C\")=map dsk#->doad  " },
+  { "LDSK(#) = list files on DSK#   " },
+  { "PDSK(#) = protect DSK#         " },     
+  { "UDSK(#) = remove DSK# protect  " },
+  { "-                              " },
+  { "MDSK(#,\"1-8C\")=map DSK#->doad  " },
   { "NDSK(#,\"1-8C\")=rename map'd DSK" },
-  { "ADSR(\"8C\")    =load dsr&reset  " },
-  { "FGET(\"1-8C\")  =ftp srv->sd doad" },
-  { "FPUT(\"1-8C\")  =sd doad->ftp srv" },
-  { "RDSK(\"1-8C\")  =delete sd doad  " },
-  { "NDIR(\"1-5C\")  =change /folder  " },
+  { "-                              " },
+  { "NDIR(\"1-5C\") = change /DIR     " },
+  { "RDSK(\"1-8C\") = delete sd doad  " },
+  { "FGET(\"1-8C\") = ftp srv->sd doad" },
+  { "FPUT(\"1-8C\") = sd doad->ftp srv" },
+  { "---APEDSK99 v0.12r CALLs 2/2---" }, 
+  { "                               " },
+  { "ALOW = load lower case chars   " },
+  { "-                              " },
+  { "ADSR(\"8C\") = load dsr & reset" },
   { "-                              " },
   { "error flash: 1=SD, 2=DSR, 3=RAM" },
 };
