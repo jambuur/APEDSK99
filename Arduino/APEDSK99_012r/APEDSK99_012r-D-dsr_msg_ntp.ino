@@ -50,10 +50,10 @@ const char CALLerror[9][16] PROGMEM = {                                         
 };
 
 //help messages in FLASH memory
-const char CALLhelp[26][32] PROGMEM = {                                                               //CALL() help text
+const char CALLhelp[28][32] PROGMEM = {                                                               //CALL() help text
   { "---APEDSK99 v0.12r CALLs 1/2---" },
   { "                               " },
-  { "AHLP = this help screen        " },
+  { "AHLP = these help screens      " },
   { "ARST = soft reset APEDSK99     " },
   { "SDIR = show doads on sd card   " },
   { "SDSK = show DSK[1-3] mapping   " },
@@ -70,13 +70,15 @@ const char CALLhelp[26][32] PROGMEM = {                                         
   { "RDSK(\"1-8C\") = delete sd doad  " },
   { "FGET(\"1-8C\") = ftp srv->sd doad" },
   { "FPUT(\"1-8C\") = sd doad->ftp srv" },
-  { "---APEDSK99 v0.12r CALLs 2/2---" }, 
+  { "---APEDSK99 v0.12r CALLs 2/2---" },
   { "                               " },
-  { "ALOW = load lower case chars   " },
+  { "ADSR(\"8C\") = load DSR & reset  " },
+  { "ALOW       = load lwcase char's" },
   { "-                              " },
-  { "ADSR(\"8C\") = load dsr & reset" },
-  { "-                              " },
-  { "error flash: 1=SD, 2=DSR, 3=RAM" },
+  { "error flash codes:             " },
+  { " 1=SD card initialisation fault" },
+  { " 2=can't open DSR file in SD / " },
+  { " 3=no >AA DSR ROM flag at >4000" },
 };
 
 //reset Arduino properly via watchdog timer
