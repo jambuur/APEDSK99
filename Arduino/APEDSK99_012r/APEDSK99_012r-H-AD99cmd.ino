@@ -488,7 +488,7 @@
           }
 
           if ( gii < 28 && read_DSRAM(CALLST) ==  AllGood ) {                                             //18x 32char arrays
-            for ( byte ii = 0; ii < 32; ii++ ) {
+            for ( byte ii = 0; ii < 31; ii++ ) {
               write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLhelp[gii][ii] ) + TIBias );                   //read character array from PROGMEM and write to CALL buffer
             }
             gii++;                                                                                        //next

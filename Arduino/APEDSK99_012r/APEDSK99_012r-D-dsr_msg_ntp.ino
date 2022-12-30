@@ -50,7 +50,7 @@ const char CALLerror[9][16] PROGMEM = {                                         
 };
 
 //help messages in FLASH memory
-const char CALLhelp[28][32] PROGMEM = {                                                               //CALL() help text
+const char CALLhelp[28][31] PROGMEM = {                                                               //CALL() help text
   { "---APEDSK99 v0.12r CALLs 1/2---" },
   { "                               " },
   { "AHLP = these help screens      " },
