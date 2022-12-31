@@ -30,7 +30,7 @@ byte currentDSK       = 0;                                                      
 #define EEPROMDSR       499                                                                           //EEPROM starting address for storing DSR filename (including \0)
 
 //global counter (remember value in between successive calls of same APEDSK99 command)
-byte gii              = 0;
+byte gii = 0;
 
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
