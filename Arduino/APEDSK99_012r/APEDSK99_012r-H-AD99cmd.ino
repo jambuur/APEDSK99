@@ -137,10 +137,6 @@
           DOADfilename[ii] = '\0';                                                                        //properly terminate filename
           strncat( DOADfilename, ".DSK", 4 );                                                             //add file extenstion to filename
           strncat( DOADfullpath, DOADfilename, ++ii + 4 );                                                //add filename to path  
-
-          for ( byte ii = 0; ii < 20; ii++ ) {
-            write_DSRAM( 0x2000 + ii, DOADfullpath[ii] );
-          }
         
           boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
           byte protectDOAD;                                                                               //Protected flag
@@ -289,7 +285,7 @@
             DSKfolder[0] = '\0';                                                                          //... yes; prep global folder variable
             strncpy( DSKfolder, newfolder, 8 );                                                           //copy new folder name
             DSKfolder[7] = '\0';                                                                          //properly terminate string
-            CALLstatus( WorkDir );                                                                        //show new working /folder
+            CALLstatus( AllGood );                                                                        //done
           } else {
             CALLstatus( DIRNotFound );                                                                    //... no; error                                                    
           }
@@ -463,8 +459,8 @@
             }               
             
             tFile.seek( 0x12 );                                                                           //byte >12 in VIB stores #sides (>01 or >02)
-            write_DSRAM( CALLBF +  15, tFile.read() == 0x01 ? '1' + TIBias : '2' + TIBias  );             //#sides; change to ASCII and add TI screen bias
-            write_DSRAM( CALLBF + 16, tFile.read() == 0x01 ? 'S' + TIBias : 'D' + TIBias);                //byte >13 in VIB stores density (>01/SD or >02/DD) 
+            write_DSRAM( CALLBF + 15, tFile.read() == 0x01 ? '1' + TIBias : '2' + TIBias );               //#sides; change to ASCII and add TI screen bias
+            write_DSRAM( CALLBF + 16, tFile.read() == 0x01 ? 'S' + TIBias : 'D' + TIBias );               //byte >13 in VIB stores density (>01/SD or >02/DD) 
             tFile.seek( 0x11 );                                                                           //byte >11 in VIB stores #tracks
             char tracks[3];                                                                               //ASCII store
             sprintf( tracks, "%2u", tFile.read() );                                                       //convert #tracks to string
