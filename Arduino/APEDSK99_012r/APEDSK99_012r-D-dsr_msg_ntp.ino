@@ -21,7 +21,6 @@ byte currentDSK       = 0;                                                      
 #define DOADexists        6
 #define DIRNotFound       7
 #define DEFNotFound       8
-#define NTPStamp         99
 #define More            0xF0
 #define AllGood         0xFF
 

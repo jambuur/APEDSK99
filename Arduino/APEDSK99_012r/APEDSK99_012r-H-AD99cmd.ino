@@ -289,6 +289,7 @@
             DSKfolder[0] = '\0';                                                                          //... yes; prep global folder variable
             strncpy( DSKfolder, newfolder, 8 );                                                           //copy new folder name
             DSKfolder[7] = '\0';                                                                          //properly terminate string
+            CALLstatus( WorkDir );                                                                        //show new working /folder
           } else {
             CALLstatus( DIRNotFound );                                                                    //... no; error                                                    
           }
@@ -512,7 +513,7 @@
             for ( byte ii = 0; ii < 16; ii++ ) {
               write_DSRAM( CALLBF + ii, TimeDateASC[ii] + TIBias );                                       //copy string to CALL buffer                                   
             }
-            CALLstatus( NTPStamp );                                                                       //done with a one-liner 
+            CALLstatus( AllGood );                                                                        //done
           } else if ( currentA99cmd == 19 ) {                                                             //DSR DSK NTP update (format, write / save file)                                                                           
             currentDSK = ( read_DSRAM( CRUWRI ) >> 1 ) & B00000011;                                       //determine selected disk in DSR command   
             currentDSK--;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes          
@@ -520,9 +521,9 @@
               DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );
               writeFATts();                                                                               //no; update DOAD FAT date/time
             }  
+            CALLstatus( AllGood );                                                                        //done
           }
           EtherStop();                                                                                    //stop Ethernet client
-          CALLstatus( AllGood );
           noExec(); 
         }
         break;
