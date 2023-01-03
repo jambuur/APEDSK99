@@ -4433,10 +4433,10 @@ Asm994a TMS99000 Assembler - v3.010
 3238            *
 3239  5D8E 0202         LI      R2,33                   start 2nd screen line; 1st is lost due to TI BASIC scroll
 3239  5D90 0021  
-3240  5D92 06A0         BL      @VDPWRI                 
+3240  5D92 06A0 H9905   BL      @VDPWRI                 
 3240  5D94 430C  
 3241            *       
-3242  5D96 9820 H9905   CB      @K004,@CALLST           check Arduino LDSK/SDSK/SDIR/AHLP return code
+3242  5D96 9820         CB      @K004,@CALLST           check Arduino LDSK/SDSK/SDIR/AHLP return code
 3242  5D98 432A  
 3242  5D9A 5FC6  
 3243  5D9C 131F         JEQ     QTLSSA                  "More" (>F0); blank "floppy" or done last file / help txt
@@ -4452,7 +4452,7 @@ Asm994a TMS99000 Assembler - v3.010
 3250            *
 3251  5DAC C802         MOV     R2,@RDINT               generates interrupt for next file
 3251  5DAE 5FEA  
-3252  5DB0 10F2         JMP     H9905   
+3252  5DB0 10F0         JMP     H9905   
 3253            *       
 3254  5DB2 0202 NXTPRP  LI      R2,703
 3254  5DB4 02BF  
@@ -4683,7 +4683,7 @@ Asm994a TMS99000 Assembler - v3.010
 3409  5F14 045B         B       *R11                    return to instruction after BL @GPLEXEC DATA statement
 3410            *
 3411            *----------------------------------------------------------------------------------
-3412            * >5F18 - >5FB3: 156 free bytes remaining
+3412            * >5F16 - >5FB3: 158 free bytes remaining
 3413            * >5FC2 - >5FD3 is DSK1-3 parameters storage
 3414            * >5FD4 is the CALL() status byte
 3415            * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
@@ -5018,7 +5018,7 @@ Asm994a TMS99000 Assembler - v3.010
  H9902  ABS:5CFE H9902
  H9903  ABS:5D4A H9903
  H9904  ABS:5D56 H9904
- H9905  ABS:5D96 H9905
+ H9905  ABS:5D92 H9905
  H9906  ABS:5DF0 H9906
  H9907  ABS:5DFA H9907
  H9908  ABS:5E2E H9908

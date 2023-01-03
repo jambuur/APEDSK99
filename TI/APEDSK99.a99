@@ -3237,9 +3237,9 @@ LDNXTS	CLR	R2			clear screen; position 0
 	DATA	704			704 positions to clear
 *
 	LI	R2,33			start 2nd screen line; 1st is lost due to TI BASIC scroll
-	BL	@VDPWRI			
+H9905	BL	@VDPWRI			
 *	
-H9905	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP return code
+	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP return code
 	JEQ	QTLSSA			"More" (>F0); blank "floppy" or done last file / help txt
 *
 	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP output to screen
