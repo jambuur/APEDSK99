@@ -33,7 +33,7 @@ byte gii = 0;
 
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
-char TimeDateASC[16] = "\0";                                                                          //global array ASCII NTP time/date
+char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
 
 //error messages in FLASH memory
 const char CALLerror[9][16] PROGMEM = {                                                               //CALL() error messages
@@ -246,7 +246,7 @@ byte readFATts( void ) {                                                        
 }
 
 void converTD( void ) {
-  sprintf( TimeDateASC, "%02u%02u %02u/%02u/%04u", TimeDateNum[0],                                    //nicely formatted time/date string in global array for SDSK() and TIME()
+  sprintf( TimeDateASC, "%02u:%02u %02u/%02u/%04u", TimeDateNum[0],                                   //nicely formatted time/date string in global array for SDSK() and TIME()
                                                     TimeDateNum[1],
                                                     TimeDateNum[2],
                                                     TimeDateNum[3],
