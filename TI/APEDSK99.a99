@@ -3197,7 +3197,7 @@ ACLBAS	CB	@CALLST,@K004		"More" or "AllGood" received from Arduino?
 	LI	R5,GPLINT		no; GPL routine
 	BL	@GPLXML			
 	DATA	SCROLL			scroll screen
-	LI	R2,738			screen starting position for (error) message
+	LI	R2,736			screen starting position for (error) message
 	BL	@VDPWRI			set VDP address
 	BL	@DISSTS			show (error) message
 	LI	R5,GPLINT		GPL routine
@@ -3236,7 +3236,7 @@ LDNXTS	CLR	R2			clear screen; position 0
 	BL	@VDPRPW
 	DATA	704			704 positions to clear
 *
-	LI	R2,33			start 2nd screen line; 1st is lost due to TI BASIC scroll
+	LI	R2,32			start 2nd screen line; 1st is lost due to TI BASIC scroll
 H9905	BL	@VDPWRI			
 *	
 	CB	@K004,@CALLST		check Arduino LDSK/SDSK/SDIR/AHLP return code
@@ -3245,13 +3245,13 @@ H9905	BL	@VDPWRI
 	BL	@DISSTS			LDSK/SDSK/SDIR/AHLP output to screen
 *
 	AI	R2,32			next screen position
-	CI	R2,641			end of display area?
+	CI	R2,640			end of display area?
 	JEQ	NXTPRP			yes; show "more" symbol
 *
 	MOV	R2,@RDINT		generates interrupt for next file
 	JMP	H9905	
 *	
-NXTPRP	LI	R2,703
+NXTPRP	LI	R2,702
 	BL	@VDPWRI
 	LI	R5,>9E00		">", more files to display
 	MOVB	R5,@-2(R15)

@@ -4370,8 +4370,8 @@ Asm994a TMS99000 Assembler - v3.010
 3198  5D26 06A0         BL      @GPLXML                 
 3198  5D28 5EC0  
 3199  5D2A 56CD         DATA    SCROLL                  scroll screen
-3200  5D2C 0202         LI      R2,738                  screen starting position for (error) message
-3200  5D2E 02E2  
+3200  5D2C 0202         LI      R2,736                  screen starting position for (error) message
+3200  5D2E 02E0  
 3201  5D30 06A0         BL      @VDPWRI                 set VDP address
 3201  5D32 430C  
 3202  5D34 06A0         BL      @DISSTS                 show (error) message
@@ -4431,8 +4431,8 @@ Asm994a TMS99000 Assembler - v3.010
 3236  5D8A 4254  
 3237  5D8C 02C0         DATA    704                     704 positions to clear
 3238            *
-3239  5D8E 0202         LI      R2,33                   start 2nd screen line; 1st is lost due to TI BASIC scroll
-3239  5D90 0021  
+3239  5D8E 0202         LI      R2,32                   start 2nd screen line; 1st is lost due to TI BASIC scroll
+3239  5D90 0020  
 3240  5D92 06A0 H9905   BL      @VDPWRI                 
 3240  5D94 430C  
 3241            *       
@@ -4446,16 +4446,16 @@ Asm994a TMS99000 Assembler - v3.010
 3246            *
 3247  5DA2 0222         AI      R2,32                   next screen position
 3247  5DA4 0020  
-3248  5DA6 0282         CI      R2,641                  end of display area?
-3248  5DA8 0281  
+3248  5DA6 0282         CI      R2,640                  end of display area?
+3248  5DA8 0280  
 3249  5DAA 1303         JEQ     NXTPRP                  yes; show "more" symbol
 3250            *
 3251  5DAC C802         MOV     R2,@RDINT               generates interrupt for next file
 3251  5DAE 5FEA  
 3252  5DB0 10F0         JMP     H9905   
 3253            *       
-3254  5DB2 0202 NXTPRP  LI      R2,703
-3254  5DB4 02BF  
+3254  5DB2 0202 NXTPRP  LI      R2,702
+3254  5DB4 02BE  
 3255  5DB6 06A0         BL      @VDPWRI
 3255  5DB8 430C  
 3256  5DBA 0205         LI      R5,>9E00                ">", more files to display

@@ -33,7 +33,7 @@ byte gii = 0;
 
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
-char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
+char TimeDateASC[16] = "\0";                                                                          //global array ASCII NTP time/date
 
 //error messages in FLASH memory
 const char CALLerror[9][16] PROGMEM = {                                                               //CALL() error messages
@@ -67,8 +67,8 @@ const char CALLhelp[28][29] PROGMEM = {                                         
   { "-                              " },
   { "NDIR(\"1-5C\") = change /DIR   " },
   { "RDSK(\"1-8C\") = delete sd doad" },
-  { "FGET(\"1-8C\") = ftp doad -> sd" },
-  { "FPUT(\"1-8C\") = sd doad -> ftp" },
+  { "FGET(\"1-8C\") = doad ftp -> sd" },
+  { "FPUT(\"1-8C\") = doad sd -> ftp" },
   { "--APEDSK99 v0.12r CALLs 2/2--" },
   { "                             " },
   { "ADSR(\"8C\") = load DSR & reset" },
@@ -136,8 +136,8 @@ void CALLstatus( byte scode ) {
   write_DSRAM( CALLST, scode );                                                                       //update CALL status
   if ( scode < 99  ) {                                                                                //is it an actual error? (if not, no HONK; see DSR source)
     clrCALLbuffer();
-    for ( byte ii = 0; ii < 16; ii++ ) {                                                              //yes; copy error message to CALL buffer
-      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii] ) + TIBias );
+    for ( byte ii = 2; ii < 18; ii++ ) {                                                              //yes; copy error message to CALL buffer
+      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii-2] ) + TIBias );                  //2 leading spaces to mimic TI BASIC error messages
     }
   }
 }
@@ -246,7 +246,7 @@ byte readFATts( void ) {                                                        
 }
 
 void converTD( void ) {
-  sprintf( TimeDateASC, "%02u:%02u %02u/%02u/%04u", TimeDateNum[0],                                   //nicely formatted time/date string in global array for SDSK() and TIME()
+  sprintf( TimeDateASC, "%02u%02u %02u/%02u/%04u", TimeDateNum[0],                                    //nicely formatted time/date string in global array for SDSK() and TIME()
                                                     TimeDateNum[1],
                                                     TimeDateNum[2],
                                                     TimeDateNum[3],

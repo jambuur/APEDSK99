@@ -49,12 +49,13 @@
   
               unsigned int currentPosition = DSKx.position();                                             //remember next FDR pointer
               DSKx.seek( long(FDR * NRBYSECT) );                                                          //locate FDR within DOAD
-              for ( byte ii=0; ii < 10; ii++ ) {                                  
+              for ( byte ii = 1; ii < 11; ii++ ) {                                  
                 write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                         //read/save filename characters in CALL buffer
               }               
   
               char filetype[16] = "\0";                                                                   //ASCII store for display                                                      
               char tfile[6] = "\0";                                                                       //temporary ASCII store
+              boolean PRG = false;
               
               DSKx.seek( DSKx.position() + 2 );                                                           //byte >0C: file type 
               byte ftype = DSKx.read();
@@ -70,6 +71,7 @@
                 strncpy( filetype, "I/V\0", 4);
               } else if ( ftype == 1 ) {                                                                  //0x01 is PROGRAM
                 strncpy( filetype, "PRG\0", 4);
+                PRG = true;              
               } else {
                 strncpy( filetype, " ? \0", 4);                                                           //expect the unexpected
               }
@@ -92,12 +94,23 @@
               strncat( filetype, tfile, 6);
               filetype[16] = '\0';
   
-              for ( byte ii=11; ii < 27; ii++ ) {                                  
-                write_DSRAM( CALLBF + ii, filetype[ii-11] + TIBias );                                     //save file characteristics in CALL buffer for display
+              for ( byte ii = 12; ii < 28; ii++ ) {                                  
+                write_DSRAM( CALLBF + ii, filetype[ii-12] + TIBias );                                     //save file characteristics in CALL buffer for display
               }    
-  
-             if ( protect == true ) {                                                                     //indicate if file is protected 
-                write_DSRAM( CALLBF + 28, 'P' + TIBias);
+/*
+              if ( PRG == true ) {              
+                DSKx.seek( DSKx.position() + 12 );  
+                byte Lbyte = DSKx.read();
+                byte Mbyte = DSKx.read() & 0x0F;
+                DSKx.seek( long( ((Mbyte * 256) + Lbyte) * NRBYSECT ) );
+                unsigned int BorA  = (DSKx.read()  * 256 ) + DSKx.read();
+                if ( (BorA != 0x0000) || (BorA != 0xFFFF) ) {
+                  write_DSRAM( CALLBF + 14, 'B' + TIBias );
+                }
+              }
+*/       
+              if ( protect == true ) {                                                                     //indicate if file is protected 
+                write_DSRAM( CALLBF + 29, 'P' + TIBias);
               }
                                      
               DSKx.seek( currentPosition );                                                               //locate next FDR
@@ -306,8 +319,8 @@
           if ( gii < 6 ) {                                                                                //6 rows               
             if ( !(gii & B00000001) ) {                                                                   //even row?
 
-              write_DSRAM( CALLBF    , '1' + currentDSK + TIBias );                                       //DSK# + TI BASIC bias
-              write_DSRAM( CALLBF + 1, '=' + TIBias );            
+              write_DSRAM( CALLBF + 1   , '1' + currentDSK + TIBias );                                    //DSK# + TI BASIC bias (leading space)
+              write_DSRAM( CALLBF + 2, '=' + TIBias );            
                          
               if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD? ...                                 
 
@@ -326,8 +339,8 @@
                 strncpy( DOADfullpath, " <no map>          ", 20 );                                       //... no; indicate not mapped
               }
  
-              for ( byte ii = 2; ii < 16; ii++ ) {                                  
-                write_DSRAM( CALLBF + (ii), DOADfullpath[ii-1] + TIBias );                                //store mapping characters in CALL buffer
+              for ( byte ii = 3; ii < 17; ii++ ) {                                  
+                write_DSRAM( CALLBF + (ii), DOADfullpath[ii-2] + TIBias );                                //store mapping characters in CALL buffer
                 if ( DOADfullpath[ii] == '.' ) {                                                          //if the next character is a "." we're done
                   break;
                 }
@@ -397,7 +410,7 @@
               gii++;                                                                                      //make sure the above is run only once
             } 
 
-            if ( gii == 8 ) {                                                                            //has empty screen row been displayed? ...
+            if ( gii == 8 ) {                                                                             //has empty screen row been displayed? ...
           
               clrCALLbuffer();                                                                            //... yes; clear CALL buffer       
     
@@ -410,8 +423,8 @@
                     tFile.getName( foldername, 13 );                                                      //copy foldername ... 
                     if ( foldername[5] == 0x00 ) {                                                        //if 6th array character is empty ...
                       byte ii;                                                                            //...we have a valid folder
-                      for ( ii = 0; ii < 5 ; ii++ ) {                                                     //write folder name to CALL buffer
-                        write_DSRAM( CALLBF + ii, foldername[ii] + TIBias );
+                      for ( ii = 1; ii < 6 ; ii++ ) {                                                     //write folder name to CALL buffer
+                        write_DSRAM( CALLBF + ii, foldername[ii-1] + TIBias );
                       }     
                       write_DSRAM( CALLBF + ii, '/' + TIBias );                                           //end folder name with "/"
                       pfolder = true;                                                                     //processed valid folder, escape the while loop
@@ -440,32 +453,32 @@
                  
           File tFile = SDdir.openNextFile();                                                              //get next file
           if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                                //valid file AND !ENTER from DSR?
-            for ( byte ii = 0; ii < 7; ii++ ) {                                                           //yes; write current folder name
-              write_DSRAM( CALLBF + ii, DSKfolder[ii + 1] + TIBias );
+            for ( byte ii = 1; ii < 8; ii++ ) {                                                           //yes; write current folder name
+              write_DSRAM( CALLBF + ii, DSKfolder[ii] + TIBias );
             }
             
             char DOADfilename[13] = "\0";                                                                 //ASCII store
             tFile.getName( DOADfilename, 13 );                                                            //copy filename ... 
-            for ( byte ii = 6; ii < 14 ; ii++ ) {                                                         //... and write to buffer
-              if ( DOADfilename[ii - 6] != '.' ) {
-                write_DSRAM( CALLBF + ii, DOADfilename[ii - 6] + TIBias );
+            for ( byte ii = 7; ii < 15 ; ii++ ) {                                                         //... and write to buffer
+              if ( DOADfilename[ii - 7] != '.' ) {
+                write_DSRAM( CALLBF + ii, DOADfilename[ii - 7] + TIBias );
               } else {
                 break;
               }    
             }  
 
-            for ( byte ii=20; ii < 30; ii++ ) {                                  
+            for ( byte ii=21; ii < 31; ii++ ) {                                  
               write_DSRAM( CALLBF + ii, tFile.read() + TIBias );                                          //read/save DSK name characters in CALL buffer
             }               
             
             tFile.seek( 0x12 );                                                                           //byte >12 in VIB stores #sides (>01 or >02)
-            write_DSRAM( CALLBF + 15, tFile.read() == 0x01 ? '1' + TIBias : '2' + TIBias );               //#sides; change to ASCII and add TI screen bias
-            write_DSRAM( CALLBF + 16, tFile.read() == 0x01 ? 'S' + TIBias : 'D' + TIBias );               //byte >13 in VIB stores density (>01/SD or >02/DD) 
+            write_DSRAM( CALLBF + 16, tFile.read() == 0x01 ? '1' + TIBias : '2' + TIBias );               //#sides; change to ASCII and add TI screen bias
+            write_DSRAM( CALLBF + 17, tFile.read() == 0x01 ? 'S' + TIBias : 'D' + TIBias );               //byte >13 in VIB stores density (>01/SD or >02/DD) 
             tFile.seek( 0x11 );                                                                           //byte >11 in VIB stores #tracks
             char tracks[3];                                                                               //ASCII store
             sprintf( tracks, "%2u", tFile.read() );                                                       //convert #tracks to string
-            write_DSRAM( CALLBF + 17, tracks[0] + TIBias );
-            write_DSRAM( CALLBF + 18, tracks[1] + TIBias );
+            write_DSRAM( CALLBF + 18, tracks[0] + TIBias );
+            write_DSRAM( CALLBF + 19, tracks[1] + TIBias );
               
             tFile.close();                                                                                //prep for next file
           } else {                                                                                        //... no
@@ -485,8 +498,8 @@
           }
 
           if ( gii < 28 && read_DSRAM(CALLST) ==  AllGood ) {                                             //27x29char arrays
-            for ( byte ii = 0; ii < 29; ii++ ) {
-              write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLhelp[gii][ii] ) + TIBias );                   //write PROGMEM array element to CALL buffer (leading space from clrCALLbuffer() )
+            for ( byte ii = 1; ii < 30; ii++ ) {
+              write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLhelp[gii][ii-1] ) + TIBias );                 //write PROGMEM array element to CALL buffer (leading space from clrCALLbuffer() )
             }
             gii++;                                                                                        //next
           } else {
