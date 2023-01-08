@@ -55,8 +55,8 @@
   
               char filetype[16] = "\0";                                                                   //ASCII store for display                                                      
               char tfile[6] = "\0";                                                                       //temporary ASCII store
-              boolean PRG = false;
-              
+              unsigned long tpos;
+             
               DSKx.seek( DSKx.position() + 2 );                                                           //byte >0C: file type 
               byte ftype = DSKx.read();
               boolean protect = (ftype & 0x08) != 0;                                                      //bit 4 set means file is protected
@@ -69,14 +69,22 @@
                 strncpy( filetype, "D/V\0", 4);
               } else if ( ftype == 130 ) {
                 strncpy( filetype, "I/V\0", 4);
-              } else if ( ftype == 1 ) {                                                                  //0x01 is PROGRAM
-                strncpy( filetype, "PRG\0", 4);
-                PRG = true;              
+              } else if ( ftype == 1 ) {                                                                  //0x01 is PROGRAM           
+                tpos = DSKx.position();
+                DSKx.seek( DSKx.position() + 15 );                                                        //temp store current DOAD file position
+                unsigned long BorA = DSKx.read() + ( (DSKx.read() & 0x0F) * 256 );                        //construct first sector with U,M and N nibbles
+                DSKx.seek( BorA * NRBYSECT );                                                             //go to sector ...
+                BorA  = (DSKx.read() * 256) + DSKx.read();                                                //... and read it
+                if ( (BorA > 0x0000) && (BorA < 0xFFFF) ) {                                               //"option" 5 program files have either >FFFF (more segments) or >0000 (last segment) 
+                  strncpy( filetype, "BAS\0", 4);                                                         //most likely a BASIC program
+                } else {
+                  strncpy( filetype, "PRG\0", 4);                                                         //"option 5" program
+                }
               } else {
                 strncpy( filetype, " ? \0", 4);                                                           //expect the unexpected
               }
   
-              DSKx.seek( DSKx.position() + 4 );                                                           //byte >11: record length
+              DSKx.seek( tpos + 4 );                                                                      //back to where we were: byte >11 stores record length
               sprintf( tfile, "%3u", DSKx.read() );                                                       //format record length to 3char ASCII
               if ( ftype != 1 ) {                                                                         //not applicable for PROGRAM files -> spaces
                 strncat( filetype, tfile, 3);
@@ -96,20 +104,9 @@
   
               for ( byte ii = 12; ii < 28; ii++ ) {                                  
                 write_DSRAM( CALLBF + ii, filetype[ii-12] + TIBias );                                     //save file characteristics in CALL buffer for display
-              }    
-/*
-              if ( PRG == true ) {              
-                DSKx.seek( DSKx.position() + 12 );  
-                byte Lbyte = DSKx.read();
-                byte Mbyte = DSKx.read() & 0x0F;
-                DSKx.seek( long( ((Mbyte * 256) + Lbyte) * NRBYSECT ) );
-                unsigned int BorA  = (DSKx.read()  * 256 ) + DSKx.read();
-                if ( (BorA != 0x0000) || (BorA != 0xFFFF) ) {
-                  write_DSRAM( CALLBF + 14, 'B' + TIBias );
-                }
               }
-*/       
-              if ( protect == true ) {                                                                     //indicate if file is protected 
+       
+              if ( protect == true ) {                                                                    //indicate if file is protected 
                 write_DSRAM( CALLBF + 29, 'P' + TIBias);
               }
                                      
