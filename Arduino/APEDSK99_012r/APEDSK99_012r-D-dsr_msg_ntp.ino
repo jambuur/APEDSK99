@@ -21,6 +21,7 @@ byte currentDSK       = 0;                                                      
 #define DOADexists        6
 #define DIRNotFound       7
 #define DEFNotFound       8
+#define Version          99
 #define More            0xF0
 #define AllGood         0xFF
 
@@ -34,6 +35,8 @@ byte gii = 0;
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
 char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
+
+const char AVersion PROGMEM = { "APEDSK99v12r; help: CALL AHLP" };
 
 //error messages in FLASH memory
 const char CALLerror[9][16] PROGMEM = {                                                               //CALL() error messages
@@ -49,35 +52,25 @@ const char CALLerror[9][16] PROGMEM = {                                         
 };
 
 //help messages in FLASH memory
-const char CALLhelp[28][29] PROGMEM = {                                                               //CALL() help text
-  { "--APEDSK99 v0.12r CALLs 1/2--" },
-  { "                             " },
-  { "AHLP = these help screens    " },
+const char CALLhelp[18][29] PROGMEM = {                                                               //CALL() help text
   { "ARST = soft reset APEDSK99   " },
   { "SDIR = show doads on sd card " },
   { "SDSK = show DSK[1-3] mapping " },
   { "TIME = ntp date/time (NTP$)  " },
+  { "ALOW = load real lower case  " },
   { "-                            " },
   { "LDSK(#) = list files on DSK# " },
   { "PDSK(#) = protect DSK#       " },     
-  { "UDSK(#) = remove DSK# protect" },
+  { "UDSK(#) = unprotect DSK#     " },
   { "-                            " },
-  { "MDSK(#,\"1-8C\")=map DSK#->doad" },
-  { "NDSK(#,\"1-8C\")=rename DSK#   " },
-  { "-                              " },
-  { "NDIR(\"1-5C\") = change /DIR   " },
-  { "RDSK(\"1-8C\") = delete sd doad" },
-  { "FGET(\"1-8C\") = doad ftp -> sd" },
-  { "FPUT(\"1-8C\") = doad sd -> ftp" },
-  { "--APEDSK99 v0.12r CALLs 2/2--" },
-  { "                             " },
-  { "ADSR(\"8C\") = load DSR & reset" },
-  { "ALOW       = load lower case " },
+  { "MDSK(#,\"1-8$\")=map DSK#->doad" },
+  { "NDSK(#,\"1-8$\")=rename DSK#   " },
   { "-                            " },
-  { "error flash codes:           " },
-  { " 1=SD card initialisation err" },
-  { " 2=can't open DSR file in SD/" },
-  { " 3=no >AA DSR flag at >4000  " },
+  { "NDIR(\"1-5$\")=change /DIR   " },
+  { "RDSK(\"1-8$\")=delete sd doad  " },
+  { "FGET(\"1-8$\")=doad ftp -> sd  " },
+  { "FPUT(\"1-8$\")=doad sd  -> ftp " },
+  { "ADSR(\" =8$\")=load DSR & reset" }, 
 };
 
 //reset Arduino properly via watchdog timer
