@@ -129,6 +129,7 @@
         case 33:                                                                                          //FGET(): get DOAD from FTP server
         case 34:                                                                                          //FPUT(): save selected DOAD to FTP server                                                                      
         {
+          
           char DOADfullpath[20] = "\0";                                                                   //complete path + filename
           char DOADfilename[13] = "\0";                                                                   //just the filename for the FTP server
           strncpy( DOADfullpath, DSKfolder, 7 );                                                          //save current folder selection
@@ -262,6 +263,8 @@
           DSRtoload[8] = '\0';                                                                        
           strncat( DSRtoload, ".DSR", 4 );                                                                //complete filename
 
+          clrCALLbuffer();                                                                                //clear CALL buffer
+
           if ( !SD.exists(DSRtoload) ) {                                                                  //does new DSR exist?
             CALLstatus( DSRNotFound );                                                                    //nope; error
             noExec();
@@ -270,12 +273,12 @@
             if ( strcmp(DSRcurrent, DSRtoload) != 0) {                                                    //compare to new DSR; same?
               EEPROM.put( EEPROMDSR, DSRtoload );                                                         //no; write new DSR to EEPROM
             }
-            currentA99cmd = 51;                                                                           //valid DSR file; fall through to ARST() to activate
+            currentA99cmd = 52;                                                                           //valid DSR file; fall through to ARST() to activate
           }
         }
-        case 51:                                                                                          //ARST(): reset current DSR    
+        case 52:                                                                                          //ARST(): reset current DSR    
         { 
-          if ( currentA99cmd == 51 ) {                                                                    //seems double-up but is needed for ADSR fall-through
+          if ( currentA99cmd == 52 ) {                                                                    //seems double-up but is needed for ADSR fall-through
             TIgo();                                                                                       //release TI
             APEDSK99reset();                                                                              //reset APEDSK99
           }
@@ -284,22 +287,31 @@
 
         case 36:                                                                                          //NDIR(): change working root folder
         {  
-          char newfolder[8] = "/\0";                                                                      //prep with starting "/"
-          for ( byte ii = 1; ii < 6; ii++ ) {                                                             //add CALL characters
-            newfolder[ii] = read_DSRAM( CALLBF + (ii + 1) );
-          }
-          newfolder[6] = '/';                                                                             //add trailing "/"
-          newfolder[7] = '\0';                                                                            //properly terminate string
+          char newfolder[8] = "/";                                                                        //prep with starting "/"
+          byte ii;
+          for ( ii = 1; ii < 7; ii++ ) {                                                                  //max 5 characters for folder name
+            byte cc = read_DSRAM( CALLBF + (ii + 1) );                                                    //read character from APEDSK99 CALL buffer
+            if ( cc != 0x00 ) {                                                                           //end of filename (>00 added by DSR)? ...
+              newfolder[ii] = cc;                                                                         //... no; add next character to folder name
+            } else {                                                                      
+              break;                                                                                      // ... yes we need to get out
+            }
+          }        
+          
+          newfolder[ii] = '/';                                                                            //add trailing "/"
+          newfolder[ii + 1] = '\0';                                                                       //properly terminate string
+
+          clrCALLbuffer();                                                                                //clear CALL buffer
 
           if ( SD.exists( newfolder ) ) {                                                                 //does folder exist? ...
             DSKfolder[0] = '\0';                                                                          //... yes; prep global folder variable
-            strncpy( DSKfolder, newfolder, 8 );                                                           //copy new folder name
+            strncpy( DSKfolder, newfolder, 7 );                                                           //copy new folder name
             DSKfolder[7] = '\0';                                                                          //properly terminate string
             CALLstatus( AllGood );                                                                        //done
           } else {
             CALLstatus( DIRNotFound );                                                                    //... no; error                                                    
-          }
-          noExec;
+          }          
+          noExec();
         }
         break;
 
@@ -313,8 +325,8 @@
           char DOADfullpath[20];
           clrCALLbuffer();                                                                                //clear CALL buffer
 
-          if ( gii < 6 ) {                                                                                //6 rows               
-            if ( !(gii & B00000001) ) {                                                                   //even row?
+          if ( gii < 8 ) {                                                                                //8 rows               
+            if ( (gii == 0) || (gii == 3) || (gii == 6) ) {                                               //selected rows only
 
               write_DSRAM( CALLBF + 1   , '1' + currentDSK + TIBias );                                    //DSK# + TI BASIC bias (leading space)
               write_DSRAM( CALLBF + 2, '=' + TIBias );            
@@ -339,14 +351,14 @@
                 strncpy( DOADfullpath, " <no map>          ", 20 );                                       //... no; indicate not mapped
               }
  
-              for ( byte ii = 3; ii < 17; ii++ ) {                                  
+              for ( byte ii = 3; ii < 17; ii++ ) {                                
                 write_DSRAM( CALLBF + (ii), DOADfullpath[ii-2] + TIBias );                                //store mapping characters in CALL buffer
-                if ( DOADfullpath[ii] == '.' ) {                                                          //if the next character is a "." we're done
+                if ( DOADfullpath[ii - 1] == '.' ) {                                                      //if the next character is a "." we're done
                   break;
                 }
               }      
             
-            } else {                                                                                      //odd row
+            } else if ( (gii == 1) || (gii == 4) || (gii == 7) ) {                                        //selected rows only
 
               if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD? ... 
                
@@ -401,13 +413,13 @@
 
             clrCALLbuffer();                                                                              //clear CALL buffer
             
-            if ( gii == 6 ) {                                                                             //first run of folder display?
+            if ( gii == 8 ) {                                                                             //first run of folder display?
               DSKx.close();                                                                               //close DSKx before ...
               SDdir = SD.open( "/" );                                                                     //... openening root folder
               gii++;                                                                                      //make sure the above is run only once
             } 
 
-            if ( gii == 8 ) {                                                                             //has empty screen row been displayed? ...
+            if ( gii == 10 ) {                                                                            //has empty screen row been displayed? ...
           
               clrCALLbuffer();                                                                            //... yes; clear CALL buffer       
     
@@ -448,19 +460,19 @@
             SDdir = SD.open( DSKfolder );                                                                 //yes; open directory
             gii=0;
             byte ii;
-            for ( ii = 1; ii < 7; ii++ ) {                                                           //yes; write current folder name
+            for ( ii = 1; ii < 7; ii++ ) {                                                                //yes; write current folder name
               write_DSRAM( CALLBF + ii, DSKfolder[ii] + TIBias );
             }
             write_DSRAM( CALLBF + ii, ':' + TIBias );
           }    
 
           if ( gii > 2 ) {
-            File tFile = SDdir.openNextFile();                                                              //get next file
-            if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                                //valid file AND !ENTER from DSR?            
+            File tFile = SDdir.openNextFile();                                                            //get next file
+            if ( tFile && read_DSRAM(CALLST) ==  AllGood ) {                                              //valid file AND !ENTER from DSR?            
               
-              char DOADfilename[13] = "\0";                                                                 //ASCII store
-              tFile.getName( DOADfilename, 13 );                                                            //copy filename ... 
-              for ( byte ii = 1; ii < 9 ; ii++ ) {                                                          //... and write to buffer
+              char DOADfilename[13] = "\0";                                                               //ASCII store
+              tFile.getName( DOADfilename, 13 );                                                          //copy filename ... 
+              for ( byte ii = 1; ii < 9 ; ii++ ) {                                                        //... and write to buffer
                 if ( DOADfilename[ii - 1] != '.' ) {
                   write_DSRAM( CALLBF + ii, DOADfilename[ii - 1] + TIBias );
                 } else {
@@ -469,27 +481,27 @@
               }  
   
               for ( byte ii=11; ii < 21; ii++ ) {                                  
-                write_DSRAM( CALLBF + ii, tFile.read() + TIBias );                                          //read/save DSK name characters in CALL buffer
+                write_DSRAM( CALLBF + ii, tFile.read() + TIBias );                                        //read/save DSK name characters in CALL buffer
               }               
               
-              tFile.seek( 0x12 );                                                                           //byte >12 in VIB stores #sides (>01 or >02)
-              write_DSRAM( CALLBF + 22, tFile.read() == 0x01 ? '1' + TIBias : '2' + TIBias );               //#sides; change to ASCII and add TI screen bias
+              tFile.seek( 0x12 );                                                                         //byte >12 in VIB stores #sides (>01 or >02)
+              write_DSRAM( CALLBF + 22, tFile.read() == 0x01 ? '1' + TIBias : '2' + TIBias );             //#sides; change to ASCII and add TI screen bias
               write_DSRAM( CALLBF + 23, 'S' + TIBias );
               write_DSRAM( CALLBF + 24, '/' + TIBias );   
-              write_DSRAM( CALLBF + 25, tFile.read() == 0x01 ? 'S' + TIBias : 'D' + TIBias );               //byte >13 in VIB stores density (>01/SD or >02/DD) 
+              write_DSRAM( CALLBF + 25, tFile.read() == 0x01 ? 'S' + TIBias : 'D' + TIBias );             //byte >13 in VIB stores density (>01/SD or >02/DD) 
               write_DSRAM( CALLBF + 26, 'D' + TIBias );
               write_DSRAM( CALLBF + 27, '/' + TIBias );  
-              tFile.seek( 0x11 );                                                                           //byte >11 in VIB stores #tracks
-              char tracks[3];                                                                               //ASCII store
-              sprintf( tracks, "%2u", tFile.read() );                                                       //convert #tracks to string
+              tFile.seek( 0x11 );                                                                         //byte >11 in VIB stores #tracks
+              char tracks[3];                                                                             //ASCII store
+              sprintf( tracks, "%2u", tFile.read() );                                                     //convert #tracks to string
               write_DSRAM( CALLBF + 28, tracks[0] + TIBias );
               write_DSRAM( CALLBF + 29, tracks[1] + TIBias );
               write_DSRAM( CALLBF + 30, 'T' + TIBias );  
                 
-              tFile.close();                                                                                //prep for next file
-            } else {                                                                                        //... no
+              tFile.close();                                                                              //prep for next file
+            } else {                                                                                      //... no
               SDdir.close();
-              CALLstatus( More );                                                                           //done all files
+              CALLstatus( More );                                                                         //done all files
               noExec(); 
             }
           }
@@ -516,36 +528,8 @@
           }
         }
         break;
-
-        case 52:                                                                                          //TIME()
-        case 19:                                                                                          //DSR: update FAT DSK date/time
-        {
-          clrCALLbuffer();                                                                                //clear CALL buffer
-          EtherStart();                                                                                   //start Ethernet client
-          
-          if ( getNTPdt() == FNTPConnect ) {                                                              //check if NTP is available
-            CALLstatus( FNTPConnect );                                                                    //no; report error
-          } else if ( currentA99cmd == 52 ) {                                                             //TIME()
-            converTD();                                                                                   //get full time/date string         
-            for ( byte ii = 0; ii < 16; ii++ ) {
-              write_DSRAM( CALLBF + ii, TimeDateASC[ii] + TIBias );                                       //copy string to CALL buffer                                   
-            }
-            CALLstatus( AllGood );                                                                        //done
-          } else if ( currentA99cmd == 19 ) {                                                             //DSR DSK NTP update (format, write / save file)                                                                           
-            currentDSK = ( read_DSRAM( CRUWRI ) >> 1 ) & B00000011;                                       //determine selected disk in DSR command   
-            currentDSK--;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes          
-            if ( protectDSK[currentDSK] != 0x50 ) {                                                       //DSK protected?
-              DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );
-              writeFATts();                                                                               //no; update DOAD FAT date/time
-            }  
-            CALLstatus( AllGood );                                                                        //done
-          }
-          EtherStop();                                                                                    //stop Ethernet client
-          noExec(); 
-        }
-        break;
-
-        case 53:                                                                                          //ALOW(): load real lowercase character set
+      
+        case 51:                                                                                          //ALOW(): load real lowercase character set
         { 
           boolean cFile = true;                                                                           //assume SD card contains valid char definition file 
           if ( newA99cmd ) {   
@@ -571,6 +555,35 @@
         }
         break;   
 
+        case 53:                                                                                          //TIME()
+        case 19:                                                                                          //DSR: update FAT DSK date/time
+        {
+          clrCALLbuffer();                                                                                //clear CALL buffer
+          EtherStart();                                                                                   //start Ethernet client
+          
+          if ( getNTPdt() == FNTPConnect ) {                                                              //check if NTP is available
+            CALLstatus( FNTPConnect );                                                                    //no; report error
+          } else if ( currentA99cmd == 53 ) {                                                             //TIME()
+            converTD();                                                                                   //get full time/date string         
+            for ( byte ii = 0; ii < 16; ii++ ) {
+              write_DSRAM( CALLBF + ii, TimeDateASC[ii] + TIBias );                                       //copy string to CALL buffer                                   
+            }
+            CALLstatus( AllGood );                                                                        //done
+          } else if ( currentA99cmd == 19 ) {                                                             //DSR DSK NTP update (format, write / save file)                                                                           
+            currentDSK = ( read_DSRAM( CRUWRI ) >> 1 ) & B00000011;                                       //determine selected disk in DSR command   
+            currentDSK--;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes          
+            if ( protectDSK[currentDSK] != 0x50 ) {                                                       //DSK protected?
+              DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );
+              writeFATts();                                                                               //no; update DOAD FAT date/time
+            }  
+            CALLstatus( AllGood );                                                                        //done
+          }
+          EtherStop();                                                                                    //stop Ethernet client
+          noExec(); 
+        }
+        break;
+
+       
         default:                                                                                          //catch-all safety
         {
           noExec();
