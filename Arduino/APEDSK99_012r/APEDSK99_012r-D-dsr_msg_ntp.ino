@@ -12,18 +12,18 @@ byte currentDSK       = 0;                                                      
 //command status and error handling
 #define DSKprm          0x5FB4                                                                        //per DSKx: Mbyte/Lbyte #sectors, #sectors/track, #tracks, #sides
 #define CALLST          0x5FC6                                                                        //CALL() execution status                                                        
-#define DOADNotMapped     0
-#define DOADNotFound      1
-#define FNTPConnect       2
-#define Protected         3
-#define DSRNotFound       4
-#define DOADTooBig        5
-#define DOADexists        6
-#define DIRNotFound       7
-#define DEFNotFound       8
-#define Version          99
-#define More            0xF0
-#define AllGood         0xFF
+#define DOADNotMapped        0
+#define DOADNotFound         1
+#define FNTPConnect          2
+#define Protected            3
+#define DSRNotFound          4
+#define DOADTooBig           5
+#define DOADexists           6
+#define DIRNotFound          7
+#define DEFNotFound          8
+#define AInit                9
+#define More              0xF0
+#define AllGood           0xFF
 
 #define CALLBF          0x5FC8                                                                        //CALL() buffer (data exchange)
 #define TIBias          0x60                                                                          //TI BASIC screen bias
@@ -36,10 +36,8 @@ static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30,
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
 char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
 
-const char AVersion PROGMEM = { "APEDSK99v12r; help: CALL AHLP" };
-
-//error messages in FLASH memory
-const char CALLerror[9][16] PROGMEM = {                                                               //CALL() error messages
+//(error) messages in FLASH memory
+const char CALLerror[10][16] PROGMEM = {                                                              //CALL() (error) messages
   { "* DSK not mapped" },
   { "* DSK not found " }, 
   { "* no FTP or NTP " },
@@ -49,15 +47,16 @@ const char CALLerror[9][16] PROGMEM = {                                         
   { "* DSK exists    " },
   { "* /DIR not found" },
   { "* no char file  " },
+  { "APEDSK99v12r OK " },
 };
 
-//help messages in FLASH memory
-const char CALLhelp[18][29] PROGMEM = {                                                               //CALL() help text
+//help message in FLASH memory
+const char CALLhelp[18][29] PROGMEM = {                                                                 //CALL() help text
   { "ARST = soft reset APEDSK99   " },
-  { "SDIR = show doads on sd card " },
-  { "SDSK = show DSK[1-3] mapping " },
+  { "LDIR = list doads on sd card " },
+  { "SMAP = show DSK[1-3] mapping " },
   { "TIME = ntp date/time (NTP$)  " },
-  { "ALOW = load real lower case  " },
+  { "ACHR = load real lower case  " },
   { "-                            " },
   { "LDSK(#) = list files on DSK# " },
   { "PDSK(#) = protect DSK#       " },     
@@ -66,7 +65,7 @@ const char CALLhelp[18][29] PROGMEM = {                                         
   { "MDSK(#,\"1-8$\")=map DSK#->doad" },
   { "NDSK(#,\"1-8$\")=rename DSK#   " },
   { "-                            " },
-  { "NDIR(\"1-5$\")=change /DIR   " },
+  { "CDIR(\"1-5$\")=change /DIR   " },
   { "RDSK(\"1-8$\")=delete sd doad  " },
   { "FGET(\"1-8$\")=doad ftp -> sd  " },
   { "FPUT(\"1-8$\")=doad sd  -> ftp " },

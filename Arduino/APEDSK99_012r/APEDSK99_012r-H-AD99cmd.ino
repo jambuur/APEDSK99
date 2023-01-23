@@ -33,7 +33,7 @@
         }
         break;      
         
-        case 3:                                                                                           //LDSK(): show files on selected DSK
+        case 3:                                                                                           //LDSK(): list files on selected DSK
         {            
           if ( activeDSK[currentDSK] ) {                                                                  //mapped DSK?
            
@@ -253,7 +253,7 @@
         }
         break;       
 
-        case 35:                                                                                          //ADSR(): load / change default DSR file
+        case 35:                                                                                          //ADSR(): load / change default APEDSK99 DSR file
         {                                                                                 
           char DSRtoload[13] = "\0";                                                                      //filename new DSR
           char DSRcurrent[13] = "\0";                                                                     //filename current DSR in EEPROM
@@ -268,24 +268,31 @@
           if ( !SD.exists(DSRtoload) ) {                                                                  //does new DSR exist?
             CALLstatus( DSRNotFound );                                                                    //nope; error
             noExec();
+            break;
           } else {
             EEPROM.get( EEPROMDSR, DSRcurrent );                                                          //get current DSR from EEPROM
             if ( strcmp(DSRcurrent, DSRtoload) != 0) {                                                    //compare to new DSR; same?
               EEPROM.put( EEPROMDSR, DSRtoload );                                                         //no; write new DSR to EEPROM
             }
-            currentA99cmd = 52;                                                                           //valid DSR file; fall through to ARST() to activate
+            currentA99cmd = 104;                                                                          //valid DSR file; fall through to ARST() to activate
           }
         }
-        case 52:                                                                                          //ARST(): reset current DSR    
+        case 104:                                                                                         //reset current DSR ( ADSR(), ARST() )  
         { 
-          if ( currentA99cmd == 52 ) {                                                                    //seems double-up but is needed for ADSR fall-through
-            TIgo();                                                                                       //release TI
-            APEDSK99reset();                                                                              //reset APEDSK99
-          }
+          TIgo();                                                                                         //release TI
+          APEDSK99reset();                                                                                //reset APEDSK99
         }
         break;
 
-        case 36:                                                                                          //NDIR(): change working root folder
+        //show version information before reset. Ideally should be run after reset but that would mean    //ARST() primary command: version info
+        //TMS9900 code outside the DSR space as the latter is obviously reset ;-)
+        case 52: 
+        {
+          CALLstatus( AInit );
+        }
+        break;
+
+        case 36:                                                                                          //CDIR(): change working root folder
         {  
           char newfolder[8] = "/";                                                                        //prep with starting "/"
           byte ii;
@@ -315,7 +322,7 @@
         }
         break;
 
-        case 48:                                                                                          //SDSK(): show mapped DOAD's + available folders 
+        case 48:                                                                                          //SMAP(): show mapped DOAD's + available folders 
         {
           if ( newA99cmd ) {
             currentDSK = 0;                                                                               //first run make sure we start with DSK1
@@ -433,7 +440,12 @@
                     if ( foldername[5] == 0x00 ) {                                                        //if 6th array character is empty ...
                       byte ii;                                                                            //...we have a valid folder
                       for ( ii = 1; ii < 6 ; ii++ ) {                                                     //write folder name to CALL buffer
-                        write_DSRAM( CALLBF + ii, foldername[ii-1] + TIBias );
+                        byte cc = foldername[ii - 1];
+                        if ( cc != 0x00 ) {                                                               //could be <5 characters
+                          write_DSRAM( CALLBF + ii, cc + TIBias );
+                        } else {
+                          break;
+                        }
                       }     
                       write_DSRAM( CALLBF + ii, '/' + TIBias );                                           //end folder name with "/"
                       pfolder = true;                                                                     //processed valid folder, escape the while loop
@@ -453,7 +465,7 @@
         }                                        
         break;       
 
-        case 49:                                                                                          //SDIR(): Show DOAD's in current folder on SD
+        case 49:                                                                                          //LDIR(): list DOAD's in current folder on SD
         {
           clrCALLbuffer();                                                                                //clear CALL buffer
           if ( newA99cmd ) {                                                                              //first run of SDIR()?
@@ -461,7 +473,12 @@
             gii=0;
             byte ii;
             for ( ii = 1; ii < 7; ii++ ) {                                                                //yes; write current folder name
-              write_DSRAM( CALLBF + ii, DSKfolder[ii] + TIBias );
+              byte cc = DSKfolder[ii];
+              if ( cc != 0x00 ) {                                                                         //could be <5 characters
+                write_DSRAM( CALLBF + ii, cc + TIBias );
+              } else {
+                break;
+              }
             }
             write_DSRAM( CALLBF + ii, ':' + TIBias );
           }    
@@ -529,7 +546,7 @@
         }
         break;
       
-        case 51:                                                                                          //ALOW(): load real lowercase character set
+        case 51:                                                                                          //ACHR(): load real lowercase character set
         { 
           boolean cFile = true;                                                                           //assume SD card contains valid char definition file 
           if ( newA99cmd ) {   
@@ -583,7 +600,6 @@
         }
         break;
 
-       
         default:                                                                                          //catch-all safety
         {
           noExec();
