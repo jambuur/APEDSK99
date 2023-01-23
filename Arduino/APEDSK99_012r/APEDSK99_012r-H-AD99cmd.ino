@@ -288,7 +288,11 @@
         //TMS9900 code outside the DSR space as the latter is obviously reset ;-)
         case 52: 
         {
-          CALLstatus( AInit );
+          CALLstatus( AInit );                                                                            //save version message body in CALL buffer
+          for ( byte ii = 0; ii < 4; ii++ ) {                                                             
+            write_DSRAM( CALLBF + (ii+14), read_DSRAM( AVersion + ii ) + TIBias );                        //add DSR version number
+          }
+          
         }
         break;
 

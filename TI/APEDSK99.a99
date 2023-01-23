@@ -18,7 +18,8 @@ CALLST  EQU	>5FC6                   CALL() execution status: finished, still act
 LSTDRV	EQU	>5FC7			remember last drive accessed for LDSK without argument
 CALLBF	EQU	>5FC8			2-way buffer for TI BASIC CALL's (1 screen line, 32 characters)
 ACOMND	EQU	>5FE8			APEDSK99-specific Command register
-RDINT	EQU	>5FEA			issue read interrupt (R6 counter) 
+ASUBCM	EQU	>5FE9			APEDSK99-specific SubCommand register
+RDINT	EQU	>5FEA			issue read interrupt
 CRUWRI	EQU	>5FEE			emulated 8 CRU output bits
 RSTAT	EQU	>5FF0			read FD1771 Status register
 RDATA	EQU	>5FF6			read FD1771 Data register
@@ -56,7 +57,7 @@ HONK	EQU	>03D6			GROM address for "bad tone"; GROM - different pointers to chara
 	DATA	SUB01			subprograms chain ptr
 	DATA	>0000			ISR chain ptr (none)
 	DATA	>0000			
-*					
+*
 SUB01	DATA	SUB02			link to next subprogram
 	DATA	ESUB01			address of that one
 	DATA	>0110			subprogram name: >10 (sector R/W)
@@ -71,7 +72,6 @@ SUB04	DATA	SUB05
 NTPFAT	DATA	>0113			subprogram >13 (file rename); doubles as FAT update flag
 *
 RTN5C	DATA	>0000			save GPL return address (needs to be @>4028 for XML >5C!)
-PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table; change before calling ALOW from assembly
 *
 SUB05	DATA	SUB06			
 	DATA	ESUB05			
@@ -86,6 +86,9 @@ SUB08	DATA	SUB09
 	DATA	ESUB08			
 	BYTE	>05			
 	TEXT	'FILES'			same as >16, called from Basic
+*
+PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table; change before calling ALOW from assembly
+AVERSN	TEXT	'v12r'			APEDSK99 version string (ARST)
 *
 SUB09	DATA	SUB10
 	DATA	PDSK
@@ -110,7 +113,7 @@ SUB12	DATA	SUB13
 SUB13	DATA	SUB14
 	DATA 	NDSK
 	BYTE	>04
-	TEXT	'NDSK'
+	TEXT	'NDSK'			reName mapped DSKx
 	EVEN
 SUB14	DATA	SUB15
 	DATA	RDSK
@@ -130,22 +133,22 @@ SUB16	DATA	SUB17
 SUB17	DATA	SUB18
 	DATA	ADSR
 	BYTE	>04
-	TEXT	'ADSR'			APEDSK99 load DSR
+	TEXT	'ADSR'			APEDSK99 DSR load / initialise / set default
 	EVEN
 SUB18	DATA	SUB19
-	DATA	NDIR
+	DATA	CDIR
 	BYTE	>04
-	TEXT	'NDIR'
+	TEXT	'CDIR'			Change working /Folder
 	EVEN
 SUB19	DATA	SUB20
-	DATA	SDSK
+	DATA	SMAP
 	BYTE	>04
-	TEXT	'SDSK'			Show DOAD mapping for DSKx
+	TEXT	'SMAP'			Show DOAD mappings for DSK[1-3] + available working /Folders
 	EVEN
 SUB20	DATA	SUB21
-	DATA	SDIR
+	DATA	LDIR
 	BYTE	>04
-	TEXT	'SDIR'			List DOAD files on SD card
+	TEXT	'LDIR'			List DOAD files on SD card
 	EVEN
 SUB21	DATA	SUB22
 	DATA	AHLP
@@ -153,9 +156,9 @@ SUB21	DATA	SUB22
 	TEXT	'AHLP'			APEDSK99 CALL help screen
 	EVEN
 SUB22	DATA	SUB23
-	DATA	ALOW
+	DATA	ACHR
 	BYTE	>04
-	TEXT	'ALOW'			Load real lower case characters
+	TEXT	'ACHR'			Load real lower case characters
 	EVEN
 SUB23	DATA	SUB24
 	DATA	ARST
@@ -243,30 +246,30 @@ SECRW1	MOVB	@K002,@>0050(R9)	APEDSK99: no error
 *
 	MOV	@>004A(R9),R1		sector #
 	CI	R1,>05A0		APEDSK99: max 1440 (DS/DD/40T or DS/SD/80T)?
-	JL	H005			APEDSK99: yes; sector# within range
+	JL	H002			APEDSK99: yes; sector# within range
 	BL	@ERROR1			APEDSK99: no -> "device error"
 	DATA 	>0600	
 
-H005	MOV	R1,@WSECTR		APEDSK99: sector# to FD1771 write sector register (16bits)
+H002	MOV	R1,@WSECTR		APEDSK99: sector# to FD1771 write sector register (16bits)
 *
-H013	MOV	@>004E(R9),R2		data buffer address
+	MOV	@>004E(R9),R2		data buffer address
 	MOVB	@>004D(R9),R0		read or write ?
-	JEQ	H014			write
+	JEQ	H005			write
 	BL	@VDPWRI			read FD = write to VDP buffer
-H015	LI	R6,256			APEDSK99: re-arranged H015 to sync reading sector bytes
+	LI	R6,256			
 	MOV	R6,@RDINT		APEDSK99: interrupt Arduino for read operation 
 	BL	@SNDCMD			send command
 	DATA	>8800			APEDSK99: read sector
 *
-H016	MOVB	@RDATA,R0		get 1 byte from FDC
+H003	MOVB	@RDATA,R0		get 1 byte from FDC
 	MOVB	R0,@-2(R15)		save it to VDP
 	DEC	@RDINT			APEDSK99: interrupt Arduino for read operation
-	JNE	H016			next byte
+	JNE	H003			next byte
 *
-H019	B	@RTURN1			return
+H004	B	@RTURN1			return
 
 *	
-H014	BL	@VDPRD			write to FD = read from VDP buffer
+H005	BL	@VDPRD			write to FD = read from VDP buffer
 	LI	R6,256			256 bytes to write
 *
 * APEDSK99: the first byte to be written needs to be in the data register before the write command is given
@@ -276,15 +279,15 @@ H014	BL	@VDPRD			write to FD = read from VDP buffer
 	BL	@SNDCMD			send command
 	DATA	>A800			APEDSK99: write sector
 *
-H024	MOVB	@-1026(R15),R0		get a byte from data buffer
+H006	MOVB	@-1026(R15),R0		get a byte from data buffer
 	MOVB	R0,@WDATA		pass it to data register
 	DEC	R6			
-	JNE	H024			next byte
+	JNE	H006			next byte
 *
 	BL	@WTCPT1			APEDSK99: check for Write Protect
 	SLA	R0,2			APEDSK99: WP bit in Carry
 	JOC	ERROR3			write protect: error 34
-	JMP	H019			APEDSK99: no need to verify		
+	JMP	H004			APEDSK99: no need to verify		
 *					
 ERROR3	BL	@ERROR1			error 34 (Write Protect)
 	DATA	>3400			
@@ -295,29 +298,29 @@ ERROR3	BL	@ERROR1			error 34 (Write Protect)
 *
 FMTDSK	CLR	@>004A(R9)		called by subprogram >11
 *					
-H027	SZCB	@K004,@>004C(R9)	clear DSR version flags
+	SZCB	@K004,@>004C(R9)	clear DSR version flags
 *
 	BL	@SELDRV			select drive
 *
 	MOVB	@>004D(R9),R0		APEDSK99: get # of tracks
 	CB	@>0051(R9),@K005	APEDSK99: double sided?
-	JNE	H036			APEDSK99: single-side
+	JNE	H007			APEDSK99: single-side
 *
 	SLA	R0,1			times two (since 2 sides)
 *
-H036	SRL	R0,8			APEDSK99: make it a byte
+H007	SRL	R0,8			APEDSK99: make it a byte
 	LI	R6,9			APEDSK99: start with single density
 	CB	@>0050(R9),@K005	APEDSK99: double density required?
-	JNE	H037			APEDSK99: no, leave R6 alone
+	JNE	H008			APEDSK99: no, leave R6 alone
 	SLA	R6,1			APEDSK99: yes, R6*2
 *		
-H037	MPY	R6,R0			APEDSK99: #sectors/track * #tracks
+H008	MPY	R6,R0			APEDSK99: #sectors/track * #tracks
 	CI 	R1,>05A0		APEDSK99: >1440 sectors?
-	JLE	H038			APEDSK99: nope; continue
+	JLE	H009			APEDSK99: nope; continue
 	BL	@ERROR1			APEDSK99: yes; "device error"
 	DATA 	>0600	
 *
-H038	MOV	R1,@>004A(R9)		pass total # of sectors per disk
+H009	MOV	R1,@>004A(R9)		pass total # of sectors per disk
 	SWPB 	R6
 	MOVB 	R6,@>004D(R9)		APEDSK99: pass # of sectors per track
 	MOVB	@K002,@>0050(R9)	no error
@@ -328,9 +331,9 @@ H038	MOV	R1,@>004A(R9)		pass total # of sectors per disk
 *					
 					
 VDPRPW	MOV	*R11+,R6		VDP repeated write
-H044	MOVB	R0,@-2(R15)
+H010	MOVB	R0,@-2(R15)
 	DEC	R6			byte in R0
-	JNE	H044			number of repeats in data word
+	JNE	H010			number of repeats in data word
 	B	*R11			
 *
 WTCPT1	MOVB	@RSTAT,R0		get status. APEDSK99: Not Ready >80 / Write Protect >40
@@ -343,19 +346,19 @@ ERROR4	BL	@ERROR1			exit with error code 6, reseting all drives
 SELDRV	MOV	R11,R7			select a drive
 	MOV	@>0058(R9),R2
 	AI	R2,-10			point to drive info
-H055	CLR	R0			
+	CLR	R0			
 	MOVB	@>004C(R9),R0		get drive #
-	JEQ	H056			can't be >00: error #7
+	JEQ	H011			can't be >00: error #7
 	CI	R0,>0300			
-	JH	H056			drive number can't be higher than 3: error #7
+	JH	H011			drive number can't be higher than 3: error #7
 	BL	@VDPWRI			set VDP to write, address in R2
 	MOVB	R0,@-2(R15)		modify last drive accessed		
 *
-H057	SLA	R0,1			APEDSK99: bit 0 is side select, 1-3 is drive #
+	SLA	R0,1			APEDSK99: bit 0 is side select, 1-3 is drive #
 	MOVB	R0,@CRUWRI		APEDSK99: select drive
-H058	B	*R7			
+	B	*R7			
 *					
-H056	BL	@ERROR1			exit with error #7
+H011	BL	@ERROR1			exit with error #7
 	DATA	>0700			
 *					
 RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK99: reset all drives including side
@@ -364,45 +367,45 @@ RSTDRV	SZCB 	@DSDRVS,@CRUWRI		APEDSK99: reset all drives including side
 	AI	R2,-10			now points to drive info buffer
 	BL	@VDPWRI			set VDP to write to address in R2
 	LI	R0,4			
-H061	MOVB	R0,@-2(R15)		write four >00 (i.e. clear drive info)
+H012	MOVB	R0,@-2(R15)		write four >00 (i.e. clear drive info)
 	DEC	R0			
-	JNE	H061			
+	JNE	H012			
 	MOVB	@K002,@>0050(R9)	no error
 	B	@RTURN1			get return address from stack
 *					
 ERROR1	MOV	*R11,R0			exit with error
 	MOVB	R0,@>0050(R9)		place err code in >8350
 	CI	R0,>0600		check if device error
-	JNE	H064			no: exit
+	JNE	H013			no: exit
 	BL	@SNDCMD			yes: reset drives
 *
 K013	DATA	>0000			APEDSK99: send Restore command
 *
-H064	B	@RTURN1			return to caller (address from stack)
+H013	B	@RTURN1			return to caller (address from stack)
 *				
 SNDCMD	MOV	*R11+,R0		send command to FDC from data word
-H066	MOVB	R0,@WCOMND		send command
+	MOVB	R0,@WCOMND		send command
 	B	*R11			
 *					
 LASTRK	CLR	R0			get last track # for this drive
 	MOVB	@>004C(R9),R0		get drive #
-	JEQ	H068			can't be 0
+	JEQ	H014			can't be 0
 	SWPB	R0			
 	CI	R0,3			
-	JH	H068			can't be higher than 3
+	JH	H014			can't be higher than 3
 	MOV	@>0058(R9),R2			
 	AI	R2,-10			point to last drive accessed
 	A	R0,R2			point to last track for this drive
 	B	@VDPRD			prepare VDP to read from address in R2
 *					
-H068	BL	@ERROR1			exit with error code 7
+H014	BL	@ERROR1			exit with error code 7
 	DATA	>0700			
 *					
 VDPWRI	ORI	R2,>4000		set VDP address to write
 	ANDI	R2,>7FFF		not to a register
-	JMP	H069			
+	JMP	H015			
 VDPRD	ANDI	R2,>3FFF		set VDP address to read
-H069	SWPB	R2			
+H015	SWPB	R2			
 	MOVB	R2,*R15			write address
 	SWPB	R2			
 	MOVB	R2,*R15			
@@ -460,8 +463,8 @@ VECRTN	DATA	SVRVDP			save registers to VDP stack
 	DATA	SVDPWR			set VDP address to write
 *					
 SVRVDP	AI	R10,22			0: save registers in VDP mem
-H072	SRL	R9,1			start with R12
-	JNC	H070			bits in >ppp tell which register to save (R0-R11)
+H016	SRL	R9,1			start with R12
+	JNC	H017			bits in >ppp tell which register to save (R0-R11)
 	DECT	R12			previous address in VDP stack (grows down)
 	MOV	*R10,R8			get register contents
 	SWPB	R12			set VDP address to write
@@ -474,13 +477,13 @@ H072	SRL	R9,1			start with R12
 	SWPB	R8			
 	MOVB	R8,@-2(R11)			
 	MOV	R9,R9			more to come?
-	JEQ	H071			no:return
-H070	DECT	R10			point to previous register
-	JMP	H072			
+	JEQ	H020			no:return
+H017	DECT	R10			point to previous register
+	JMP	H016			
 *				
 RVRVDP	SLA	R9,4			1: retrieve registers from VDP mem
-H074	SLA	R9,1			each bit tells whether to load
-	JNC	H073			don't retrieve that one
+H018	SLA	R9,1			each bit tells whether to load
+	JNC	H019			don't retrieve that one
 	SWPB	R12			set VDP address to read
 	MOVB	R12,*R11		R12 is >8366: VDP stack ptr
 	SWPB	R12			
@@ -493,20 +496,20 @@ H074	SLA	R9,1			each bit tells whether to load
 	MOV	R8,*R10			save it to register
 	INCT	R12			increment ptr (stack grows downwards)
 	MOV	R9,R9			more to come?
-	JEQ	H071			no: return
-H073	INCT	R10			next register
-	JMP	H074			
-H071	RTWP				
+	JEQ	H020			no: return
+H019	INCT	R10			next register
+	JMP	H018			
+H020	RTWP				
 *					
 SVDPWR	A	R13,R9			2: set VDP for a write
 	MOV	*R9,R8			
 	ORI	R8,>4000		get address from reg in >..p2 (*2)
-	JMP	H075			
+	JMP	H021			
 *					
 SVDPRD	A	R13,R9			3: set VDP for a read
 	MOV	*R9,R8
 	ANDI	R8,>3FFF		get register from reg in >..p3 (*2)
-H075	SWPB	R8			set VDP address
+H021	SWPB	R8			set VDP address
 	MOVB	R8,*R11			
 	SWPB	R8			
 	MOVB	R8,*R11			
@@ -531,7 +534,7 @@ PRPRTN	MOV	R11,R10			save return address
 	MOV	R0,@>005A(R9)		put it in >835A
 *					
 	MOV	@>0070(R9),R8		highest free address in VDP mem
-H076	INCT	R8			point to end-of-buffer word
+	INCT	R8			point to end-of-buffer word
 	BL	@VDPR2B			read 2 bytes from VDP address R8, into R0
 	MOV	R8,R2			save current R8
 	MOV	R0,R8			get end-of-buffer word
@@ -562,18 +565,18 @@ CRFIL2	MOV	R4,R4			found?
 	JNE	CRFIL3			no
 	BL	@CALSUB			yes: delete old file
 	DATA	FFSVIB			free file sector in VIB bitmap
-	JMP	H077			clear its FDR
+	JMP	H024			clear its FDR
 *				
 CRFIL3	BL	@INSFDR			new file: insert a FDR in sector 1
 	SETO	R1			
 	BL	@CALSUB			call subroutine
 	DATA	FFSBMP			find a free sector in VIB bitmap
 	MOV	R0,R0			found?
-	JNE	H078			yes: # in R0
+	JNE	H022			yes: # in R0
 	BL	@ERROR5			no: update data, then return with error
-	DATA	>8000			memory full
+	DATA	>8000			memory full (APEDSK99: doubles as subcommand flag)
 *				
-H078	BLWP	@>005A(R9)		set VDP to write
+H022	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0103			address in R8
 	MOVB	R0,@-2(R15)		write sector # for FDR in sector 1
 	SWPB	R0			
@@ -601,7 +604,7 @@ H078	BLWP	@>005A(R9)		set VDP to write
 	MOV	R5,R3			copy filename from compare buffer to FDR
 	AI	R3,257			ptr to file compare buffer
 	LI	R2,10			10 chars per filename
-H079	BLWP	@>005A(R9)		set VDP to read
+H023	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0062			address in R3
 	MOVB	@-1026(R15),R0		get 1 char
 	INC	R3			increment source ptr
@@ -610,38 +613,38 @@ H079	BLWP	@>005A(R9)		set VDP to read
 	MOVB	R0,@-2(R15)		copy 1 char
 	INC	R1			increment destination ptr
 	DEC	R2			# of chars in R2
-	JNE	H079			next
+	JNE	H023			next
 *
-H077	BL	@NTPDT			APEDSK99: update DOAD FAT time/date
+H024	BL	@NTPDT			APEDSK99: update DOAD FAT time/date
 *
 	MOV	@>0056(R9),R1		FDR ptr
 	AI	R1,10			skip filename
 	LI	R2,246			remaining bytes in FDR
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
-H080	MOVB	R2,@-2(R15)		write >00
+H025	MOVB	R2,@-2(R15)		write >00
 	DEC	R2			clear remainder of new FDR
-	JNE	H080			next byte
-	JMP	H081			write FDR to disk return to caller
+	JNE	H025			next byte
+	JMP	H028			write FDR to disk return to caller
 *					
-H082	MOV	@>0056(R9),R5		check if FDR must be updated
+H026	MOV	@>0056(R9),R5		check if FDR must be updated
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>00A2			address in R5
 	MOVB	@-1026(R15),R4		get filename in file ctrl block
-	JLT	H083			flag: FDR was modified, update it
-	JMP	H084			
-H083	ANDI	R4,>7F00		clear flag bit
+	JLT	H027			flag: FDR was modified, update it
+	JMP	H029			
+H027	ANDI	R4,>7F00		clear flag bit
 	BLWP	@>005A(R9)		st VDP to write
 	DATA	>00A3			address in R5
 	MOVB	R4,@-2(R15)		write back filename without flag bit
-H081	CLR	R2			code for write
+H028	CLR	R2			code for write
 	B	@WRFDR			write FDR to disk
-H084	B	@RTURN1			return to caller
+H029	B	@RTURN1			return to caller
 *				
 UPDFDR	BL	@CALSUB			update FDR + data
 	DATA	UPDBF			update data buffer if necessary
 	BL	@CALSUB			call subroutine
-	DATA	H082			update FDR if necessary
+	DATA	H026			update FDR if necessary
 CLRFBT	MOV	@>0056(R9),R5			
 	CLR	R6			
 	BLWP	@>005A(R9)		set VDP to write
@@ -654,9 +657,9 @@ UPDBF	MOV	@>0056(R9),R4		check if data buffer must be updated
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0082			address in R4
 	MOVB	@-1026(R15),R1		get drive #
-	JLT	H085			flag: must be updated
-	JMP	H086			no need to update: return
-H085	ANDI	R1,>7F00		erase flag
+	JLT	H030			flag: must be updated
+	JMP	H031			no need to update: return
+H030	ANDI	R1,>7F00		erase flag
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0083			address in R4
 	MOVB	R1,@-2(R15)		write back drive # without flag
@@ -670,7 +673,7 @@ H085	ANDI	R1,>7F00		erase flag
 	MOV	R4,R7			
 	AI	R7,262			point to data buffer area
 	JMP	WROFSC			
-H086	B	@RTURN1			return to caller
+H031	B	@RTURN1			return to caller
 *				
 FFSVIB	MOV	@>0056(R9),R2		free file sectors in VIB bitmap
 	AI	R2,12			
@@ -678,17 +681,17 @@ FFSVIB	MOV	@>0056(R9),R2		free file sectors in VIB bitmap
 	DATA	>0042			address in R2
 	MOVB	@-1026(R15),R0		get file status byte from FDR
 	ANDI	R0,>0800		write protected?
-	JEQ	H087			no
+	JEQ	H032			no
 	BL	@ERROR5			update data if needed, the return with error
 	DATA	>2000			write protected
 *					
-H087	MOV	@>0056(R9),R8		get ptr to FDR
+H032	MOV	@>0056(R9),R8		get ptr to FDR
 	AI	R8,28			point to clusters list
 	SETO	R4			previous offset
-H089	BL	@DECDCI			decode cluster info: sector in R1, offset in R2
+H033	BL	@DECDCI			decode cluster info: sector in R1, offset in R2
 	AI	R8,3			next cluster ptr
 	MOV	R1,R1			
-	JEQ	H088			sector 0 = no more clusters
+	JEQ	H034			sector 0 = no more clusters
 	MOV	R2,R0			total offset
 	S	R4,R2			minus previous cluster offset = cluster size
 	MOV	R0,R4			new previous cluster offset
@@ -697,20 +700,20 @@ H089	BL	@DECDCI			decode cluster info: sector in R1, offset in R2
 	MOV	R8,R1			
 	S	@>0056(R9),R1			
 	CI	R1,>0100		end of FDR reached?
-	JNE	H089			not yet
-H088	B	@RTURN1			return to caller
+	JNE	H033			not yet
+H034	B	@RTURN1			return to caller
 *					
 RDOFSC	BL	@FDR2B1			read a sector from offset in file
 	DATA	14			get # of sectors
 	C	R0,R3			is desired sector in file?
-	JH	H090			yes
+	JH	H035			yes
 	BL	@ERROR5			no: update data, then return with error
 	DATA	>A000			past end-of-file
-H090	BL	@CALSUB			call subroutine
+H035	BL	@CALSUB			call subroutine
 	DATA	FSCTOF			find sector from cluster list
 	A	R1,R4			put sector in R4
 	SETO	R2			code for read
-H091	MOV	R7,R5			buffer ptr
+H036	MOV	R7,R5			buffer ptr
 	B	@RWSEC			read/write sector
 *					
 WROFSC	BLWP	@>005A(R9)		write sector to offset in file offset in R3
@@ -720,17 +723,17 @@ WROFSC	BLWP	@>005A(R9)		write sector to offset in file offset in R3
 	BLWP	@>005A(R9)		retrieve R0 and R7
 	DATA	>8101			
 	CLR	R2			code for write
-	JMP	H091			write sector
+	JMP	H036			write sector
 *				
 APSCTS	BL	@FDR2B1			append sector(s) to a file to get offset in R3
 	DATA	14			get # of sect from FDR
 *					
 	C	R0,R3			is desired sector in file?
-	JH	H092			yes: find it and return
+	JH	H045			yes: find it and return
 	MOV	R0,R0			
-	JEQ	H093			empty file
+	JEQ	H037			empty file
 	DEC	R0			last sector #
-H093	MOV	R3,R5			save desired sector offset
+H037	MOV	R3,R5			save desired sector offset
 	MOV	R0,R3			last sector in file
 	BL	@CALSUB			call subroutine
 	DATA	FSCTOF			find sector # from offset in file
@@ -738,19 +741,19 @@ H093	MOV	R3,R5			save desired sector offset
 	DATA	>4000			
 	A	R4,R1			# of last sector in cluster
 	MOV	R5,R4			offset of desired sector
-H095	BL	@CALSUB			call subroutine
+H038	BL	@CALSUB			call subroutine
 	DATA	FFSBMP			find free sector in bitmap, starting from R1
 	MOV	R0,R0			found?
-	JNE	H094			yes: # in R0
+	JNE	H039			yes: # in R0
 	MOV	R2,R5			no: save # of sectors
 	BL	@ADDSEC			update FDR
-	JMP	H096			return with memory full
+	JMP	H040			return with memory full
 *					
-H094	MOV	R1,R1			
-	JEQ	H097			empty cluster
+H039	MOV	R1,R1			
+	JEQ	H043			empty cluster
 	INC	R1			one more sector in cluster
 	C	R0,R1			same as the one found in bitmap?
-	JEQ	H098			yes: just increase cluster size
+	JEQ	H042			yes: just increase cluster size
 	BLWP	@>005A(R9)		no: retrieve R1 (sector #)
 	DATA	>4001			
 	BLWP	@>005A(R9)		save R0 + R2
@@ -762,40 +765,40 @@ H094	MOV	R1,R1
 	MOV	R8,R1			
 	S	@>0056(R9),R1		current FDR size
 	CI	R1,>0100		room enough?
-	JNE	H099			yes
+	JNE	H041			yes
 	BL	@CALSUB			no: call subroutine
 	DATA	FFSBM			free sector in bitmap
-H096	B	@ERROR6			return with memory full
+H040	B	@ERROR6			return with memory full
 *					
-H099	MOV	R0,R1			new sector #
+H041	MOV	R0,R1			new sector #
 	BLWP	@>005A(R9)		save R1
 	DATA	>4000			
-H098	JMP	H100			make a new cluster
+H042	JMP	H044			make a new cluster
 *					
-H097	BLWP	@>005A(R9)		retrieve R1
+H043	BLWP	@>005A(R9)		retrieve R1
 	DATA	>4001			
 	BLWP	@>005A(R9)		save R0
 	DATA	>8000			
 	SETO	R2			empty file: start from offset 0
-H100	MOV	R0,R1			sector #
+H044	MOV	R0,R1			sector #
 	INC	R2			increment cluster size
 	C	R2,R4			enough?
-	JNE	H095			no: get one more sector
+	JNE	H038			no: get one more sector
 	MOV	R4,R5			
 	BL	@ADDSEC			add sector to FDR
-	JMP	H101			done
+	JMP	H046			done
 *				
-H092	BL	@CALSUB			call subroutine
+H045	BL	@CALSUB			call subroutine
 	DATA	FSCTOF			find a sector from offset in file
 	A	R1,R4			last sector in cluster
-H101	B	@RTURN1			return to caller
+H046	B	@RTURN1			return to caller
 *					
 ADDSEC	MOV	R11,R10			add sector to FDR
 	MOV	R1,R4			
 	BLWP	@>005A(R9)		retrieve R1
 	DATA	>4001			
 	MOV	R1,R1			sector #
-	JEQ	H102			none: return
+	JEQ	H047			none: return
 	BL	@UPDCLI			write info for R1 cluster
 	MOV	@>0056(R9),R2		pointer to FDR
 	BLWP	@>005A(R9)		set VDP to read
@@ -812,21 +815,21 @@ ADDSEC	MOV	R11,R10			add sector to FDR
 	MOVB	R5,@-2(R15)		update # of sectors
 	SWPB	R5			
 	MOVB	R5,@-2(R15)			
-H102	B	*R10			
+H047	B	*R10			
 *					
 FSCTOF	MOV	@>0056(R9),R8		find sector from offset in file
 	AI	R8,28			cluster list
 	MOV	R3,R4			desired sector offset is in R3
-H105	BL	@DECDCI			decode info: sector in R1, offset in R2
+H048	BL	@DECDCI			decode info: sector in R1, offset in R2
 	C	R2,R3			reached yet?
-	JLT	H103			no
-	JMP	H104			yes: return
-H103	AI	R8,3			point to next cluster info
+	JLT	H049			no
+	JMP	H050			yes: return
+H049	AI	R8,3			point to next cluster info
 	MOV	R3,R4			
 	S	R2,R4			
 	DEC	R4			size of the desired cluster (if it's the next)
-	JMP	H105			keep trying
-H104	B	@RTURN1			return to caller
+	JMP	H048			keep trying
+H050	B	@RTURN1			return to caller
 *
 *---------------------------------
 * Opcode 7: Delete
@@ -843,14 +846,14 @@ H104	B	@RTURN1			return to caller
 DELETE	BL	@CALSUB			delete file
 	DATA	FFFDRV			find file FDR in VDP buffers
 	MOV	R4,R4			found?
-	JEQ	H106			yes
+	JEQ	H051			yes
 	BL	@CALSUB			no: call subroutine
 	DATA	FFDRDK			find FDR on disk
 	MOV	R4,R4			found?
-	JEQ	H107			yes
+	JEQ	H053			yes
 	B	@RTURN1			no: return to caller
 *					
-H106	INC	R1			FDR found, point to it
+H051	INC	R1			FDR found, point to it
 	MOV	R1,@>0056(R9)		save it for other routines
 	BL	@CALSUB			call subroutine
 	DATA	RDSEC1			read sector 1
@@ -858,13 +861,13 @@ H106	INC	R1			FDR found, point to it
 	DATA	-4			i.e. get sector # of FRD in R0
 	MOV	R0,R3			save it for later
 	MOV	R5,R8			ptr to top of sector 1
-H108	BL	@VDPR2B			read 2 bytes from VDP at R8 into R0
+H052	BL	@VDPR2B			read 2 bytes from VDP at R8 into R0
 	INCT	R8			next FDR ptr in sector 1
 	C	R0,R3			is this the one we want?
-	JNE	H108			not yet
+	JNE	H052			not yet
 	DECT	R8			yes: point back to it
 *
-H107	BL	@NTPDT			APEDSK99: update DOAD FAT time/date
+H053	BL	@NTPDT			APEDSK99: update DOAD FAT time/date
 *
 	BLWP	@>005A(R9)		save R8
 	DATA	>0080			
@@ -892,7 +895,7 @@ RMFPTR	MOV	@>0056(R9),R5		remove FDR ptr from sector 1
 	AI	R3,256			point to next ctrl block
 	MOV	R8,R2			shift up FDR list, erasing FDR pointed by R8
 	INCT	R2			point to next FDR ptr in sector 1
-H109	BLWP	@>005A(R9)		set VDP to read
+H054	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0042			address in R2
 	MOVB	@-1026(R15),R0		get 1 byte
 	INC	R2			inc source ptr
@@ -901,7 +904,7 @@ H109	BLWP	@>005A(R9)		set VDP to read
 	MOVB	R0,@-2(R15)		copy 1 byte
 	INC	R8			inc dest pointer
 	C	R2,R3			done?
-	JNE	H109			not yet
+	JNE	H054			not yet
 	B	*R11			
 *					
 INSFDR	MOV	R11,R10			insert a FDR in sector 1
@@ -909,9 +912,9 @@ INSFDR	MOV	R11,R10			insert a FDR in sector 1
 	BL	@FDR2B1			get 2 bytes from VDP at >8356+offset
 	DATA	508			i.e. last FDR slot in sector 1 (list ends with 0)
 	MOV	R0,R0			
-	JEQ	H110			
+	JEQ	H055			
 	B	@ERROR6			memory full error
-H110	DEC	R8			previous byte
+H055	DEC	R8			previous byte
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0102			address in R8
 	MOVB	@-1026(R15),R0		get 1 byte
@@ -921,12 +924,12 @@ H110	DEC	R8			previous byte
 	MOVB	R0,@-2(R15)		copy byte two bytes further down
 	DECT	R8			
 	C	R8,R1			done ?
-	JNE	H110			not yet
+	JNE	H055			not yet
 	B	*R10			
 *				
 CMPFN	MOV	@>0058(R9),R2		compare filenames
 	AI	R2,256			
-H111	BLWP	@>005A(R9)		set VDP to read
+H056	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R1 (ptr to filename)
 	MOVB	@-1026(R15),R0		get 1 char
 	ANDI	R0,>7FFF		clear flag (on drive #)
@@ -934,12 +937,12 @@ H111	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0042			address in R2 (filename compare buffer)
 	MOVB	@-1026(R15),R3		get 1 char
 	CB	R0,R3			compare chars
-	JNE	H112			mismatch
+	JNE	H057			mismatch
 	INC	R1			match: increment pointers
 	INC	R2			
 	DEC	R4			
-	JNE	H111			next char
-H112	B	*R11			if complete match: ret with EQ set
+	JNE	H056			next char
+H057	B	*R11			if complete match: ret with EQ set
 *					
 PABR2B	MOV	@>0054(R9),R8		get two bytes from PAB
 	JMP	FDR2B2			
@@ -961,23 +964,23 @@ FDSKDR	MOV	@>0058(R9),R1		find disk from name (ptr in R3)
 	BLWP	@>005A(R9)		save R2 + R3
 	DATA	>3000			
 	MOV	R0,R0			last char copied
-	JLT	H113			flagged
-	JMP	H114			
-H113	MOV	R0,R6			
+	JLT	H058			flagged
+	JMP	H059			
+H058	MOV	R0,R6			
 	ANDI	R6,>0300			
 	JEQ	ERROR7			return with file error
-	JMP	H115			return to caller
-H114	CLR	R6			don't read any drive
+	JMP	H062			return to caller
+H059	CLR	R6			don't read any drive
 	BL	@CALSUB			call subroutine
 	DATA	RWVIB			save current VIB
-H116	AI	R6,>0100		next drive
+H060	AI	R6,>0100		next drive
 	SETO	R7			error flags
 	SETO	R2			code for read
 	CLR	R4			sector 0
 	BL	@CALSUB			call subroutine
 	DATA	RWSECA			read sector 0
 	MOV	R7,R7			ok?
-	JNE	H118			no: try next drive
+	JNE	H061			no: try next drive
 	LI	R4,10			yes: diskname size
 	MOV	@>0058(R9),R1		VIB ptr
 	BLWP	@>005A(R9)		save R1-R3
@@ -986,7 +989,7 @@ H116	AI	R6,>0100		next drive
 	BLWP	@>005A(R9)			
 	DATA	>7001			retrieve R1-R3
 	MOV	R4,R4			name matched?
-	JNE	H118			no: try next drive
+	JNE	H061			no: try next drive
 	MOV	R6,R0			drive #
 	ORI	R0,>8000		add update flag
 	BLWP	@>005A(R9)		set VDP to write
@@ -996,37 +999,37 @@ H116	AI	R6,>0100		next drive
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
 	MOVB	R6,@-2(R15)		copy drive # before VIB
-	JMP	H115			done
+	JMP	H062			done
 *				
-H118	CI	R6,>0300		did we do all drives?
-	JNE	H116			no: try next on
+H061	CI	R6,>0300		did we do all drives?
+	JNE	H060			no: try next on
 	JMP	ERROR7			return with file error
 *					
-H115	BLWP	@>005A(R9)		retrieve R2 + R3
+H062	BLWP	@>005A(R9)		retrieve R2 + R3
 	DATA	>3001			
 	B	@RTURN1			return to caller
 *				
 CPCKFN	DEC	R2			
-	JH	H119			
+	JH	H063			
 ERROR7	BL	@RETERR			return with error
 	DATA	>E000			file error
 *					
-H119	LI	R0,>2000		copy (+check) filename in VDP from R3 to R1 (space)
+H063	LI	R0,>2000		copy (+check) filename in VDP from R3 to R1 (space)
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
 	LI	R8,10			10 chars per filename
-H120	MOVB	R0,@-2(R15)		fill filename with spaces
+H064	MOVB	R0,@-2(R15)		fill filename with spaces
 	DEC	R8			
-	JNE	H120			
+	JNE	H064			
 	LI	R8,11			11 chars countring drive #
-H122	INC	R3			increment source ptr
+H065	INC	R3			increment source ptr
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0062			address in R3
 	MOVB	@-1026(R15),R0		get a char
 	JEQ	ERROR7			>00: return with file error
-	JLT	H121			flag bit set
+	JLT	H066			flag bit set
 	CI	R0,>2E00			
-	JEQ	H121			'.'
+	JEQ	H066			'.'
 	DEC	R8			
 	JEQ	ERROR7			name to long: return with file error
 	CI	R0,>2000			
@@ -1036,8 +1039,8 @@ H122	INC	R3			increment source ptr
 	MOVB	R0,@-2(R15)		copy 1 char
 	INC	R1			increment destination pointer
 	DEC	R2			more?
-	JNE	H122			yes
-H121	CI	R8,>000B		name can't be 0 chars long
+	JNE	H065			yes
+H066	CI	R8,>000B		name can't be 0 chars long
 	JEQ	ERROR7			else return with file error
 	B	*R11			
 *					
@@ -1050,17 +1053,17 @@ ERROR5	MOV	R11,R0			update data, then error
 	DATA	>0062			address in R3
 	MOVB	@-1026(R15),R2		get 1 byte
 	CB	R2,@K014		is it >AA (disk buffer area mark)
-	JEQ	H123			yes: announce error (code in data word)
+	JEQ	H067			yes: announce error (code in data word)
 	BLWP	@>005A(R9)		no: >8356 points to a FDR. Save R0
 	DATA	>8000			
 	BL	@CALSUB			call subroutine
 	DATA	UPDFDR			update FRD and data buffer if needed
 	BLWP	@>005A(R9)		retrieve R0
 	DATA	>8001			
-H123	MOV	R0,R11			
+H067	MOV	R0,R11			
 *				
 RETERR	MOV	@>0054(R9),R1		annouce error
-	JEQ	H124			no PAB
+	JEQ	H068			no PAB
 	INC	R1			for DSRs: ptr to status byte
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R2
@@ -1069,9 +1072,9 @@ RETERR	MOV	@>0054(R9),R1		annouce error
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R2
 	MOVB	R2,@-2(R15)		write back status byte
-	JMP	H125			
-H124	MOV	*R11+,@>0050(R9)	for subs: error code in >8350
-H125	MOV	@>0058(R9),R8		get stack ptr
+	JMP	H069			
+H068	MOV	*R11+,@>0050(R9)	for subs: error code in >8350
+H069	MOV	@>0058(R9),R8		get stack ptr
 	AI	R8,-12			point back to initial caller
 	MOV	R8,@>0066(R9)		update pointer
 	B	@RTURN1			return to caller
@@ -1087,28 +1090,28 @@ RWVIB	BLWP	@>005A(R9)		read VIB (drive # in R6)
 	CLR	R4			sector 0 for VIB
 	ANDI	R2,>0300		clear flag (>80 = update data)
 	CB	R2,R6			wanted drive?
-	JEQ	H126			yes: return
+	JEQ	H073			yes: return
 	MOV	R3,R3			no: shall we update VIB?
-	JLT	H127			yes
-	JMP	H128			no
-H127	BLWP	@>005A(R9)		set VDP to write
+	JLT	H070			yes
+	JMP	H071			no
+H070	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
 	MOVB	R4,@-2(R15)		clr drive #
 	INC	R5			point back to VIB buffer
 	BL	@CALSUB			call subroutine
 	DATA	RWSECB			write sector 0 to old drive (in R2)
 	DEC	R5			point to drive #
-H128	SETO	R2			flag for read
+H071	SETO	R2			flag for read
 	MOVB	R6,R2			APEDSK99: error in original disassembly (was R5)
-	JEQ	H129			none
+	JEQ	H072			none
 	INC	R5			point at VIB buffer
 	BL	@CALSUB			call subroutine
 	DATA	RWSECA			read sector (in R4) to buffer (in R5)
 	DEC	R5			point at drive #
-H129	BLWP	@>005A(R9)		set VDP to write
+H072	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
 	MOVB	R6,@-2(R15)		write drive # in control block, before FDR
-H126	INC	R5			point back to FDR
+H073	INC	R5			point back to FDR
 	BLWP	@>005A(R9)			
 	DATA	>3001			retrieve R2 + R3 from stack
 	B	@RTURN1			branch to address on stack
@@ -1137,20 +1140,20 @@ RWSECB	BLWP	@>005A(R9)		save R0-R8
 	DATA	>FF81			
 	MOVB	@>0050(R9),R7		get error code | flags
 	SWPB	R7			
-	JEQ	H130			
+	JEQ	H077			
 	MOV	R7,R7			
-	JGT	H131			
-	JMP	H132			
-H131	ANDI	R7,>00FF			
+	JGT	H074			
+	JMP	H076			
+H074	ANDI	R7,>00FF			
 	CI	R7,>0034			
-	JNE	H133			
+	JNE	H075			
 	BL	@ERROR5			
 	DATA	>2000			write protected
-H133	BL	@ERROR5			
+H075	BL	@ERROR5			
 	DATA	>C000			device error
-H132	MOVB	@>004D(R9),@>004D(R9)	read or write?
-	JEQ	H131			write
-H130	ANDI	R7,>00FF			
+H076	MOVB	@>004D(R9),@>004D(R9)	read or write?
+	JEQ	H074			write
+H077	ANDI	R7,>00FF			
 	B	@RTURN1			return to caller
 *				
 FFFDRV	MOV	@>0058(R9),R1		save filename in compare buffer and find its FDR
@@ -1162,7 +1165,7 @@ FFFDRV	MOV	@>0058(R9),R1		save filename in compare buffer and find its FDR
 	BL	@CPCKFN			copy (+ check) filename from R3 to R1
 	MOV	R2,R2			all chars copied (or was there a . or a >00
 	JEQ	FFDRVB			
-H136	B	@ERROR7			return with file error
+H078	B	@ERROR7			return with file error
 *					
 FFDRVB	MOV	@>0056(R9),R1		find filename in buffered FDRs
 	AI	R1,3			
@@ -1172,46 +1175,46 @@ FFDRVB	MOV	@>0056(R9),R1		find filename in buffered FDRs
 	SRL	R2,8			make it a word
 	MOV	R2,R3			save it
 	AI	R1,6			ptr to drive #
-H134	LI	R4,11			compare 11 bytes (drive + filename)
+H079	LI	R4,11			compare 11 bytes (drive + filename)
 	BLWP	@>005A(R9)		save R1-R3
 	DATA	>7000			
 	BL	@CMPFN			compare with name in compare buffer
 	BLWP	@>005A(R9)		retrieve R1-R3
 	DATA	>7001			
 	MOV	R4,R4			fully compared?
-	JEQ	H135			yes: done
+	JEQ	H080			yes: done
 	AI	R1,518			move to next FDR in VDP mem
 	DEC	R2			
-	JNE	H134			next file
-H135	B	@RTURN1			return to caller (R4=0 if successfull)
+	JNE	H079			next file
+H080	B	@RTURN1			return to caller (R4=0 if successfull)
 *				
 FNDFDR	BL	@CALSUB			
 	DATA	FFFDRV			save name in comp buffer, find FDR in VDP buffers
 *					
 FFDROD	MOV	R4,R4			find FDR on disk (from filename)
-	JEQ	H136			file error
+	JEQ	H078			file error
 FFDRDK	MOV	@>0056(R9),R5		ptr to top of disk buffer in VDP mem
 	AI	R5,10			ptr to drive # in first file control block
-H138	BLWP	@>005A(R9)		set VDP to read
+H081	BLWP	@>005A(R9)		set VDP to read
 	DATA	>00A2			address in R5
 	MOVB	@-1026(R15),R2		get drive #
-	JEQ	H137			free control block found
+	JEQ	H082			free control block found
 	AI	R5,518			ptr to file control block
 	DEC	R3			
-	JNE	H138			more files ?
+	JNE	H081			more files ?
 ERROR6	BL	@ERROR5			no:
 	DATA	>8000			memory full
 *				
-H137	MOV	R5,@>0056(R9)		save ptr to free ctrl block (drive #)
+H082	MOV	R5,@>0056(R9)		save ptr to free ctrl block (drive #)
 	BL	@CALSUB			call subroutine
 	DATA	RDSEC1			read sector 1
 FFDRFN	MOV	@>0056(R9),R8		entry point if sector 1 already read
 	AI	R8,382			point to middle of sector 1
 	LI	R2,64			distance: start with 1/4 sector
-H139	SETO	R4			
+H083	SETO	R4			
 	BL	@VDPR2B			read 2 bytes in R0 from VDP address in R8
 	MOV	R0,R0			
-	JEQ	H140			no file here: move up
+	JEQ	H085			no file here: move up
 	BLWP	@>005A(R9)		save R2
 	DATA	>2000			
 	SETO	R2			code for read
@@ -1233,24 +1236,24 @@ H139	SETO	R4
 	BL	@CMPFN			compare filenames
 	BLWP	@>005A(R9)		retrieve R2
 	DATA	>2001			
-	JEQ	H141			compared ok: return
+	JEQ	H084			compared ok: return
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00A3			address in R5
 	MOVB	R4,@-2(R15)		remaining chars to compare
 	C	R0,R3			what kind of mismatch occured?
-	JH	H140			too far down the alphabet
+	JH	H085			too far down the alphabet
 	A	R2,R8			too far up: move half-way down
 	MOV	R2,R2			
-	JNE	H142			then divide distance by 2
+	JNE	H086			then divide distance by 2
 	INCT	R8			already checked: reset EQ
-H141	B	@RTURN1			return (from stack)
+H084	B	@RTURN1			return (from stack)
 *				
-H140	S	R2,R8			move half-way up
+H085	S	R2,R8			move half-way up
 	MOV	R2,R2			
-	JEQ	H141			can't: already checked
-H142	SRL	R2,2			divide distance by 2
+	JEQ	H084			can't: already checked
+H086	SRL	R2,2			divide distance by 2
 	A	R2,R2			but keep it even
-	JMP	H139			
+	JMP	H083			
 *
 * The cluster info list is located in the FDR, bytes >1C to >FF
 * A cluster info consists in 3 bytes, i.e 6 nibbles
@@ -1292,52 +1295,52 @@ FFSBMP	BLWP	@>005A(R9)		find a free sector in bitmap
 	BL	@CALSUB			call subroutine
 	DATA	RWVIB			load VIB for drive in R6
 	MOV	R1,R1			first sector specified in R1 ?
-	JNE	H143			yes
+	JNE	H087			yes
 	LI	R1,33			no: start with sector 34
-H143	INC	R1			
+H087	INC	R1			
 	MOV	R1,R0			
 	SRL	R1,3			div by 8 since 8 sect/byte in bitmap
 	LI	R2,>00FF			
 	ANDI	R0,>0007		bit number in bitmap byte
-	JEQ	H144			
+	JEQ	H088			
 	SLA	R2,0			get that bit
-H144	MOV	R1,R3			byte #
+H088	MOV	R1,R3			byte #
 	A	R5,R3			add VIB ptr
 	AI	R3,56			ptr to sector in bitmap
 	CI	R1,>00C8		end of VIB?
-	JLT	H145			no
+	JLT	H089			no
 	CLR	R1			yes: top of bitmap
-H145	A	R5,R1			
+H089	A	R5,R1			
 	AI	R1,56			make another bitmap ptr
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R1
-H146	SETO	R0			
+H090	SETO	R0			
 	MOVB	@-1026(R15),R0		get bitmap byte
 	MOV	R0,R4			save it
 	SOC	R2,R0			mask previous sectors
 	CLR	R2			
 	INC	R0			get 1 more sector
-	JNE	H147			ok
+	JNE	H092			ok
 	INC	R1			byte full: try next
 	MOV	R1,R0			
 	AI	R0,-256			won't change if byte # became >100
 	C	R0,R5			still in VIB?
-	JNE	H148			yes
+	JNE	H091			yes
 	AI	R1,-200			no: to top of bitmap
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R1
-H148	C	R1,R3			are we back to where we started?
-	JNE	H146			no: seach that byte for a free sector
+H091	C	R1,R3			are we back to where we started?
+	JNE	H090			no: seach that byte for a free sector
 	MOV	R4,R0			get original byte
 	INC	R0			try sectors just before ours (no mask this time)
-	JEQ	H149			full: return with EQ
-H147	DEC	R0			restore original byte
+	JEQ	H095			full: return with EQ
+H092	DEC	R0			restore original byte
 	MOV	R0,R2			
 	CLR	R0			bit counter
 	SWPB	R2			
-H150	INC	R0			increment bit count
+H093	INC	R0			increment bit count
 	SRC	R2,1			find first 0 bit from the right
-	JOC	H150			not yet
+	JOC	H093			not yet
 	LI	R2,>0080			
 	SLA	R2,0			make a mask for that bit
 	DEC	R0			bit # (0-7)
@@ -1351,7 +1354,7 @@ H150	INC	R0			increment bit count
 	SOC	R0,R1			add bit #: = sector #
 	MOV	R1,R0			save it
 *				
-H151	DEC	R5			point to drive #
+H094	DEC	R5			point to drive #
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>00A2			address in R5
 	MOVB	@-1026(R15),R1		get drive #
@@ -1360,7 +1363,7 @@ H151	DEC	R5			point to drive #
 	DATA	>00A3			address in R5
 	MOVB	R1,@-2(R15)		write back flagged drive #
 	INC	R5			point to VIB (& return with NEQ)
-H149	BLWP	@>005A(R9)		retrieve R1-R4
+H095	BLWP	@>005A(R9)		retrieve R1-R4
 	DATA	>7801			
 	B	@RTURN1			return to caller
 *				
@@ -1380,22 +1383,22 @@ FRSCB1	BLWP	@>005A(R9)		entry point if more than 1 sector
 	AI	R0,8			change 0-7 into 8-1
 	LI	R4,>00FF		mask to erase
 	C	R2,R0			how many to erase?
-	JLT	H152			less than in that byte
-	JMP	H153			
+	JLT	H096			less than in that byte
+	JMP	H099			
 *				
-H152	LI	R0,8			free sectors in first byte
+H096	LI	R0,8			free sectors in first byte
 	S	R2,R0			
 	SRC	R4,0			adjust mask
 	MOV	R3,R0			original bit # of starting sector
-	JEQ	H154			
+	JEQ	H097			
 	SLA	R4,0			don't erase before starting sector
-H154	JMP	H155			
+H097	JMP	H098			
 *				
-H155	SWPB	R4			
-	JMP	H158			goto erase last byte
+H098	SWPB	R4			
+	JMP	H102			goto erase last byte
 *					
-H153	SRC	R4,0			adjust mask
-H156	S	R0,R2			that many will be freed
+H099	SRC	R4,0			adjust mask
+H100	S	R0,R2			that many will be freed
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R1
 	MOVB	@-1026(R15),R0		get bitmap byte
@@ -1407,20 +1410,20 @@ H156	S	R0,R2			that many will be freed
 	INC	R1			next byte
 	LI	R0,8			i.e. 8 sectors
 	C	R2,R0			how many more sectors?
-	JLT	H157			less than 8
-	JMP	H156			8 or more: next byte
+	JLT	H101			less than 8
+	JMP	H100			8 or more: next byte
 *					
-H157	MOV	R2,R0			remaining sectors
+H101	MOV	R2,R0			remaining sectors
 	LI	R4,>00FF			
 	SLA	R4,0			coin mask
-H158	BLWP	@>005A(R9)		set VDP to read
+H102	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0022			address in R1
 	MOVB	@-1026(R15),R0		get bitmap byte
 	SZC	R4,R0			mark sectors as free
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
 	MOVB	R0,@-2(R15)		write it back
-	JMP	H151			done: flag drive # and return
+	JMP	H094			done: flag drive # and return
 *
 *===================================
 * DSR entry points
@@ -1430,19 +1433,19 @@ EDSR01	MOV	R11,R7			DSK
 	BL	@PRPFDO			--- prepare file operations
 	BL	@CALSUB			call subroutine
 	DATA	FDSKDR			find disk in drive (name ptr in R3)
-	JMP	H159			
+	JMP	H104			
 *					
 EDSR02	LI	R6,>0100		DSK1
-	JMP	H160			----
+	JMP	H103			----
 *					
 EDSR03	LI	R6,>0200		DSK2
-	JMP	H160			----
+	JMP	H103			----
 *					
 EDSR04	LI	R6,>0300		DSK3
 *					
-H160	MOV	R11,R7			save return address
+H103	MOV	R11,R7			save return address
 	BL	@PRPFDO			prepare file operations
-H159	MOV	@>0054(R9),R0		PAB ptr
+H104	MOV	@>0054(R9),R0		PAB ptr
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0002			address in R0
 	MOVB	@-1026(R15),R1		get opcode
@@ -1450,11 +1453,11 @@ H159	MOV	@>0054(R9),R0		PAB ptr
 	CI	R1,>0009		check range
 	JH	ERROR8			illegal opcode
 	CI	R2,>0001		filename lenght (including . )
-	JNE	H161			no filename: dir
+	JNE	H105			no filename: dir
 	AI	R1,10			only allow open, close and read
 	CI	R1,>000C			
 	JH	ERROR8			others are illegal
-H161	A	R1,R1			make it a word ptr
+H105	A	R1,R1			make it a word ptr
 	MOV	@OPCVEC(R1),R1		get vector
 	B	*R1			branch to it
 *					
@@ -1494,11 +1497,11 @@ OPEN	CLR	R0
 	DATA	>8000			save R0
 	ANDI	R0,>1600		keep fix/var and access mode
 	CI	R0,>0600			
-	JNE	H162			
+	JNE	H106			
 ERROR9	BL	@ERROR5			dis/fix, open as append: return with error
 	DATA	>4000			bad attribute
 *					
-H162	JLE	H163			
+H106	JLE	H107			
 	MOV	R0,R1			var
 	BL	@PABR2B			get 2 bytes from PAB into R0
 	DATA	4			rec len and char count
@@ -1507,11 +1510,11 @@ H162	JLE	H163
 	MOV	R1,R0			retrieve attributes
 	ANDI	R0,>0600		keep only access mode
 *					
-H163	CI	R0,>0200		is it output?
-	JNE	H164			no
+H107	CI	R0,>0200		is it output?
+	JNE	H113			no
 	BL	@CALSUB			call subroutine
 	DATA	CRFIL1			create file
-H165	BL	@PRFDRS			coin status byte in FDR style
+H108	BL	@PRFDRS			coin status byte in FDR style
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0083			address in R4: status byte in FDR buffer
 	MOVB	R2,@-2(R15)		write file status in FDR
@@ -1521,22 +1524,22 @@ H165	BL	@PRFDRS			coin status byte in FDR style
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0062			address in R3
 	MOVB	@-1026(R15),R5		get record length
-	JNE	H166			
+	JNE	H109			
 	LI	R5,>5000		>00: default it 80
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0063			address in R3
 	MOVB	R5,@-2(R15)		write default rec len
-H166	AI	R4,5			point to rec len byte in FDR
+H109	AI	R4,5			point to rec len byte in FDR
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0083			address in R4
 	MOVB	R5,@-2(R15)		write rec len in FDR buffer
 	LI	R1,256			256 bytes/sector
 	MOV	R2,R2			var or dis?
-	JLT	H167			var
-	JMP	H168			dis
-H167	A	R1,R5			var: rec len +1
+	JLT	H110			var
+	JMP	H111			dis
+H110	A	R1,R5			var: rec len +1
 	DEC	R1			254 bytes only (needs size byte)
-H168	SWPB	R5			make it a word
+H111	SWPB	R5			make it a word
 	CLR	R0			
 	DIV	R5,R0			how many times in 254/255 bytes?
 	AI	R4,-4			point to # of rec/sect in FDR
@@ -1558,7 +1561,7 @@ H168	SWPB	R5			make it a word
 	BL	@PABR2B			get 2 bytes from PAB into R0
 	DATA	6			required size in records
 	MOV	R0,R4			
-	JEQ	H169			no size specified
+	JEQ	H112			no size specified
 	JLT	ERROR9			return with bad attribute error
 	A	R1,R4			round up to record size
 	DEC	R4			
@@ -1567,40 +1570,40 @@ H168	SWPB	R5			make it a word
 	DEC	R3			offset start from 0
 	BL	@CALSUB			call subroutine
 	DATA	APSCTS			add sectors to FDR to match offset in R3
-H169	B	@RWIND2			initialise file control block and return to caller
+H112	B	@RWIND2			initialise file control block and return to caller
 *					
-H164	BLWP	@>005A(R9)		not output
+H113	BLWP	@>005A(R9)		not output
 	DATA	>8000			save R0
 	BL	@CALSUB			call subroutine
 	DATA	FNDFDR			find FDR on disk
 	BLWP	@>005A(R9)			
 	DATA	>8001			retrieve R0 (access mode)
 	MOV	R4,R4			found FDR?
-	JEQ	H170			yes
+	JEQ	H115			yes
 	CI	R0,>0400		no: is file open as input?
-	JEQ	H171			yes: must exist
+	JEQ	H114			yes: must exist
 	BL	@CALSUB			no: call subroutine
 	DATA	CRFIL3			create file
-	JMP	H165			
+	JMP	H108			
 *					
-H171	B	@ERROR9			return with bad attribute error
+H114	B	@ERROR9			return with bad attribute error
 *					
-H170	MOV	R0,R7			save access mode
+H115	MOV	R0,R7			save access mode
 	BL	@PRFDRS			prepare status byte for FDR
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0082			address in R4 (status byte in FDR)
 	MOVB	@-1026(R15),R0		get current file status
 	MOV	R0,R3			save it
 	ANDI	R3,>0800		is file write protected?
-	JEQ	H172			no
+	JEQ	H116			no
 	CI	R7,>0400		yes: is it open as input?
-	JEQ	H172			no
+	JEQ	H116			no
 	BL	@ERROR5			yes: return with error
 	DATA	>2000			write protected
 *					
-H172	ANDI	R0,>8300		keep only file type bits (V/F, D/I, Prg/Data)
+H116	ANDI	R0,>8300		keep only file type bits (V/F, D/I, Prg/Data)
 	XOR	R2,R0			compare with new (coined by PRFDRS)
-	JNE	H171			different: bad attribute
+	JNE	H114			different: bad attribute
 	MOV	@>0054(R9),R3		PAB ptr
 	AI	R3,4			ptr to rec len in PAB
 	AI	R4,5			ptr to rec len in FDR
@@ -1610,10 +1613,10 @@ H172	ANDI	R0,>8300		keep only file type bits (V/F, D/I, Prg/Data)
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0062			address in R3
 	MOVB	@-1026(R15),R2		get rec len from PAB
-	JEQ	H173			0 = keep current one
+	JEQ	H117			0 = keep current one
 	CB	R0,R2			are they identical?
-	JNE	H171			no: bad attribute
-H173	BLWP	@>005A(R9)		set VDP to write
+	JNE	H114			no: bad attribute
+H117	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0063			address in R3
 	MOVB	R0,@-2(R15)		update rec len in PAB (in case it was 0)
 	BLWP	@>005A(R9)		retrieve R0 (open mode)
@@ -1622,7 +1625,7 @@ H173	BLWP	@>005A(R9)		set VDP to write
 	CLR	R2			
 	SETO	R3			
 	CI	R0,>0600		is it append
-	JNE	H174			no
+	JNE	H118			no
 	MOV	@>0056(R9),R4		yes: get FDR ptr
 	MOV	R4,R7			save it
 	AI	R4,14			ptr to # of sectors
@@ -1634,7 +1637,7 @@ H173	BLWP	@>005A(R9)		set VDP to write
 	SWPB	R3			
 	MOVB	@-1026(R15),R2		get eof offset
 	DEC	R3			offset starts from 0
-	JLT	H174			file is empty (0 sectors)
+	JLT	H118			file is empty (0 sectors)
 	BLWP	@>005A(R9)			
 	DATA	>3000			save R2 + R3
 	AI	R7,256			ptr to data buffer area for this file
@@ -1642,7 +1645,7 @@ H173	BLWP	@>005A(R9)		set VDP to write
 	DATA	RDOFSC			read a sector, from offset in R3
 	BLWP	@>005A(R9)			
 	DATA	>3001			retrieve R2 + R3
-H174	BL	@UPDFCB			update current record offset in file ctrl block
+H118	BL	@UPDFCB			update current record offset in file ctrl block
 	B	@RTURN1			return to caller
 *					
 PRFDRS	BLWP	@>005A(R9)		prepare file status byte for FDR
@@ -1652,12 +1655,12 @@ PRFDRS	BLWP	@>005A(R9)		prepare file status byte for FDR
 	LI	R2,2			int in FDR status byte
 	MOV	@>0056(R9),R4		FDR pointer
 	SLA	R0,4			fix or var?
-	JNC	H175			fix
+	JNC	H119			fix
 	LI	R2,>0082		int var in FDR
 	MOV	R0,R0			dis or int?
-H175	JLT	H176			int
+H119	JLT	H120			int
 	DECT	R2			dis: remove the int from FDR status
-H176	AI	R4,12			point at file status byte in FDR
+H120	AI	R4,12			point at file status byte in FDR
 	SWPB	R2			
 	B	*R11			
 *					
@@ -1715,21 +1718,21 @@ CLOSE	BL	@CALSUB			call subroutine
 READ	BL	@CALSUB			call subroutine
 	DATA	FFDRVP			find FDR in VDP buffers, get status from PAB
 	ANDI	R0,>0200		what type of access?
-	JEQ	H177			update or input: ok
-H179	B	@ERROR8			append or output: error illegal opcode
-H177	BL	@RFDRST			get status byte in R0, from FDR
-	JLT	H178			var
+	JEQ	H122			update or input: ok
+H121	B	@ERROR8			append or output: error illegal opcode
+H122	BL	@RFDRST			get status byte in R0, from FDR
+	JLT	H125			var
 	BL	@RRNPAB			fix: get rec # compare to # of recs/file
-	JL	H180			ok: in file
-H181	BL	@ERROR5			update data and return with error
+	JL	H124			ok: in file
+H123	BL	@ERROR5			update data and return with error
 	DATA	>A000			eof reached
-H180	BL	@CALSUB			call subroutine
+H124	BL	@CALSUB			call subroutine
 	DATA	RRFDR			load record from disk into FDR data buffer area
-	JMP	H182			
+	JMP	H126			
 *					
-H178	BL	@CALSUB			var: call subroutine
+H125	BL	@CALSUB			var: call subroutine
 	DATA	RRSEC			load proper sector, point to rec in it
-	JMP	H181			skipped if ok: return with eof reached
+	JMP	H123			skipped if ok: return with eof reached
 *					
 	INC	R2			next byte in data buffer
 	A	R4,R0			add rec size to offset
@@ -1741,7 +1744,7 @@ H178	BL	@CALSUB			var: call subroutine
 	DATA	>00A3			address in R5
 	MOVB	R0,@-2(R15)		update var record offset in sector
 	MOV	R4,R0			save # of bytes to be read
-H182	MOV	@>0054(R9),R4		PAB ptr
+H126	MOV	@>0054(R9),R4		PAB ptr
 	AI	R4,5			point to char count
 	SWPB	R0			
 	BLWP	@>005A(R9)		set VDP to write
@@ -1750,8 +1753,8 @@ H182	MOV	@>0054(R9),R4		PAB ptr
 	SWPB	R0			make it a word
 *					
 WFDRPB	MOV	R0,R0			check it
-	JEQ	H183			none: return
-H184	BLWP	@>005A(R9)		set VDP to read
+	JEQ	H128			none: return
+H127	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0042			address in R2
 	MOVB	@-1026(R15),R3		read 1 byte from FDR data buffer area
 	INC	R2			increment source ptr
@@ -1760,17 +1763,17 @@ H184	BLWP	@>005A(R9)		set VDP to read
 	MOVB	R3,@-2(R15)		write the byte in PAB data buffer
 	INC	R1			increment destination ptr
 	DEC	R0			more to read?
-	JNE	H184			yes
-H183	B	@RTURN1			return to caller
+	JNE	H127			yes
+H128	B	@RTURN1			return to caller
 *					
 RRSEC	BL	@RCOFCB			load sector, point to record in it
 	MOV	R3,R3			sector offset
-	JLT	H185			-1: top of file
-	JMP	H186			in file
-H185	MOV	R3,R0			
+	JLT	H129			-1: top of file
+	JMP	H130			in file
+H129	MOV	R3,R0			
 	INC	R0			next sector
 	C	R0,R2			compare to # of sect/file
-	JEQ	H183			end-of-file reached: return to caller (JMP to err)
+	JEQ	H128			end-of-file reached: return to caller (JMP to err)
 	BL	@CALSUB			call subroutine
 	DATA	UPDBF			update data buffer, if needed
 	MOV	R0,R3			desired offset
@@ -1780,13 +1783,13 @@ H185	MOV	R3,R0
 	BL	@CALSUB			call subroutine
 	DATA	RDOFSC			read a sector, from offset in file (in R3)
 	CLR	R0			
-	JMP	H187			
+	JMP	H131			
 *					
-H186	MOV	R0,R0			in file: test var rec offset (from RCOFCB)
-	JNE	H187			inside sector
+H130	MOV	R0,R0			in file: test var rec offset (from RCOFCB)
+	JNE	H131			inside sector
 	C	R0,R2			at beg of sector
-	JEQ	H183			file is empty: return
-H187	MOV	R0,R2			FDR data buffer will be added to R2 by AFDRPT
+	JEQ	H128			file is empty: return
+H131	MOV	R0,R2			FDR data buffer will be added to R2 by AFDRPT
 	BL	@CALSUB			call subroutine
 	DATA	AFDRPT			R2=byte in FDR data buf, R1=top of PAB data buf
 	BLWP	@>005A(R9)		set VDP to read
@@ -1794,13 +1797,13 @@ H187	MOV	R0,R2			FDR data buffer will be added to R2 by AFDRPT
 	MOVB	@-1026(R15),R4		get first byte (rec length)
 	SRL	R4,8			make it a word
 	MOV	R0,R0			var rec offset
-	JEQ	H188			
+	JEQ	H132			
 	CI	R4,>00FF		is it >FF (end of sector mark) ?
-	JNE	H188			no
+	JNE	H132			no
 	BL	@RCOFCB			yes: get sect + rec offsets from control block
-	JMP	H185			try again with next sector
+	JMP	H129			try again with next sector
 *					
-H188	BLWP	@>005A(R9)			
+H132	BLWP	@>005A(R9)			
 	DATA	>0011			retrieve return address from stack in R11
 	INCT	R11			skip the JMP to eof reached error
 	B	*R11			
@@ -1821,11 +1824,11 @@ WRITE	BL	@CALSUB			call subroutine
 	DATA	FFDRVP			find FDR in VDP buffers
 	ANDI	R0,>0600		keep only access mode
 	CI	R0,>0400		is it input
-	JEQ	H179			yes: return with error illegal opcode
+	JEQ	H121			yes: return with error illegal opcode
 	BL	@RFDRST			get file status byte from FDR
-	JLT	H189			var			
+	JLT	H134			var			
 	BL	@RRNPAB			fix: get rec # from PAB, sect # in R0
-	JL	H190			less that total rec/file
+	JL	H133			less that total rec/file
 	BLWP	@>005A(R9)		past eof: expand file
 	DATA	>D800			save R0, R1, R3, R4
 	MOV	R0,R3			desired sector offset
@@ -1835,15 +1838,15 @@ WRITE	BL	@CALSUB			call subroutine
 	DATA	>D801			restore R0, R1, R3, R4
 	BL	@URFFDR			update # of rec/file in FDR
 *					
-H190	BL	@CALSUB			in file: call subroutine
+H133	BL	@CALSUB			in file: call subroutine
 	DATA	RRFDR			fetch rec from disk into FDR data buffer area
-	JMP	H191			set update data flag, write data, return
+	JMP	H138			set update data flag, write data, return
 *					
-H189	BL	@RCOFCB			var: R2=sect/file R3=sect offset R0=rec offset
+H134	BL	@RCOFCB			var: R2=sect/file R3=sect offset R0=rec offset
 	MOV	R3,R3			sector offset in file
-	JLT	H192			-1: top of file
-	JMP	H193			in file
-H192	BLWP	@>005A(R9)		next sector loop
+	JLT	H135			-1: top of file
+	JMP	H136			in file
+H135	BLWP	@>005A(R9)		next sector loop
 	DATA	>3000			save R2 + R3
 	BL	@CALSUB			call subroutine
 	DATA	UPDBF			update data buffer if needed
@@ -1852,8 +1855,8 @@ H192	BLWP	@>005A(R9)		next sector loop
 	INC	R3			next sector
 	CLR	R0			init char offset in sector
 *					
-H193	C	R3,R2			did we reach last sector?
-	JNE	H194			no
+H136	C	R3,R2			did we reach last sector?
+	JNE	H137			no
 	BLWP	@>005A(R9)		yes: expand file
 	DATA	>9000			save R0 + R4
 	BL	@CALSUB			call subroutine
@@ -1861,7 +1864,7 @@ H193	C	R3,R2			did we reach last sector?
 	BLWP	@>005A(R9)			
 	DATA	>9001			retrieve R0 + R4
 *					
-H194	MOV	@>0054(R9),R5		PAB ptr
+H137	MOV	@>0054(R9),R5		PAB ptr
 	AI	R5,5			point to char count
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>00A2			address in R5
@@ -1871,7 +1874,7 @@ H194	MOV	@>0054(R9),R5		PAB ptr
 	A	R0,R5			add current char offset in sector
 	INC	R5			make room for size byte
 	CI	R5,>00FF		past end of sector?
-	JH	H192			yes: not enough room, try next sector
+	JH	H135			yes: not enough room, try next sector
 	SETO	R2			ok: rec will fit in sector
 	MOV	@>0056(R9),R1		FDR ptr
 	A	R5,R1			past-last-byte offset
@@ -1899,7 +1902,7 @@ H194	MOV	@>0054(R9),R5		PAB ptr
 	MOVB	R4,@-2(R15)		write size byte to FDR data buffer
 	INC	R2			increment dest pointer
 *					
-H191	MOV	R2,R3			invert source and dest
+H138	MOV	R2,R3			invert source and dest
 	MOV	R1,R2			so we can use the same read-write loop
 	MOV	R3,R1			than the read opcode
 	MOV	@>0056(R9),R4		FDR ptr
@@ -1938,9 +1941,9 @@ RFDRST	MOV	@>0056(R9),R4		get status byte from FDR
 *					
 RRNPAB	MOVB	@-1026(R15),R5		get record # from PAB, check if valid
 	SRL	R5,8			
-	JNE	H195			get # of rec/sector from FDR
+	JNE	H139			get # of rec/sector from FDR
 	LI	R5,256			0: default to 256
-H195	MOV	@>0054(R9),R3		PAB ptr
+H139	MOV	@>0054(R9),R3		PAB ptr
 	AI	R3,6			point to rec #
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0062			address in R3
@@ -1949,11 +1952,11 @@ H195	MOV	@>0054(R9),R3		PAB ptr
 	MOVB	@-1026(R15),R1			
 	SWPB	R1			
 	MOV	R1,R0			save it
-	JLT	H196			too big
-	JMP	H197			ok
-H196	BL	@ERROR5			update data then return with error
+	JLT	H140			too big
+	JMP	H141			ok
+H140	BL	@ERROR5			update data then return with error
 	DATA	>8000			memory full
-H197	INC	R0			next record
+H141	INC	R0			next record
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0063			address in R3
 	MOVB	R0,@-2(R15)		write back # of future record
@@ -1981,17 +1984,17 @@ RRFDR	BLWP	@>005A(R9)		fetch record into FDR data buffer area
 	SWPB	R5			
 	MOVB	@-1026(R15),R5			
 	SRC	R5,8			
-	JLT	H198			-1: top of file
+	JLT	H142			-1: top of file
 	C	R5,R0			compare with desired offset (from RRNPAB)
-	JEQ	H199			same
+	JEQ	H143			same
 	BL	@CALSUB			call subroutine
 	DATA	UPDBF			update data buffer if needed
-H198	MOV	R0,R3			desired sector offset in file
+H142	MOV	R0,R3			desired sector offset in file
 	BL	@UCOFCB			update sect + rec offsets in control block
 	AI	R7,256			point to data buffer area (R7 set by UCOFCB)
 	BL	@CALSUB			call subroutine
 	DATA	RDOFSC			read a sector from offset in file (in R3)
-H199	BLWP	@>005A(R9)			
+H143	BLWP	@>005A(R9)			
 	DATA	>4001			retrieve R1
 	MOV	@>0056(R9),R3		FDR ptr
 	AI	R3,17			point to record length
@@ -2078,16 +2081,16 @@ RWIND1	BL	@CALSUB			call subroutine
 	BLWP	@>005A(R9)			
 	DATA	>8000			save R0 (status from PAB)
 	ANDI	R0,>0600		keep only access mode
-	JEQ	H200			update is ok
+	JEQ	H144			update is ok
 	CI	R0,>0400		is it input?
-	JEQ	H200			yes: ok
+	JEQ	H144			yes: ok
 	B	@ERROR8			output or append: return with illegal opcode
-H200	BL	@CALSUB			call subroutine
+H144	BL	@CALSUB			call subroutine
 	DATA	UPDBF			update data buffer if needed
 	BLWP	@>005A(R9)			
 	DATA	>8001			retrieve R0 (status from PAB)
 	ANDI	R0,>0100		sequential or reloc?
-	JNE	H201			reloc: don't do anything, return
+	JNE	H145			reloc: don't do anything, return
 *					
 RWIND2	CLR	R2			rewind file: record offset = 0
 	SETO	R3			current record = -1 (none)
@@ -2100,7 +2103,7 @@ RWIND2	CLR	R2			rewind file: record offset = 0
 	MOVB	R0,@-2(R15)		write record #
 	NOP				
 	MOVB	R0,@-2(R15)			
-H201	B	@RTURN1			return to caller
+H145	B	@RTURN1			return to caller
 *
 *------------------------------------
 * Opcode 5: Load
@@ -2117,13 +2120,13 @@ H201	B	@RTURN1			return to caller
 LOAD	BL	@CALSUB			call subroutine
 	DATA	FNDFDR			find FDR on disk
 	MOV	R4,R4			found?
-	JEQ	H203			yes
-H202	BL	@ERROR5			no: return with error
+	JEQ	H147			yes
+H146	BL	@ERROR5			no: return with error
 	DATA	>E000			file error
-H203	BL	@FDR2B1			get 2 bytes from FDR into R0
+H147	BL	@FDR2B1			get 2 bytes from FDR into R0
 	DATA	12			file status byte
 	ANDI	R0,>0100		is it program?
-	JEQ	H202			no: file error
+	JEQ	H146			no: file error
 	INCT	R8			point to # of sect/file in FDR
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0102			address in R8
@@ -2131,7 +2134,7 @@ H203	BL	@FDR2B1			get 2 bytes from FDR into R0
 	SWPB	R1			
 	MOVB	@-1026(R15),R1			
 	SRC	R1,8			
-	JEQ	H202			0=empty file: return with file error
+	JEQ	H146			0=empty file: return with file error
 	BL	@RBANB			get data buffer address in R7, # of sectors in R2
 	INCT	R8			point to eof offset in FDR
 	CLR	R4			
@@ -2139,14 +2142,14 @@ H203	BL	@FDR2B1			get 2 bytes from FDR into R0
 	DATA	>0102			address in R8
 	MOVB	@-1026(R15),R4		get # of bytes in last sector
 	C	R1,R2			compare # of sect with max in PAB
-	JH	H202			file is too big: return with file error
-	JNE	H204			file is smaller
+	JH	H146			file is too big: return with file error
+	JNE	H148			file is smaller
 	C	R0,R4			same # of sect: check bytes in last sector
-	JL	H202			file is too big: file error
-H204	CLR	R3			sector offset in file
+	JL	H146			file is too big: file error
+H148	CLR	R3			sector offset in file
 	SWPB	R4			
-H206	DEC	R1			next sector
-	JEQ	H205			done
+H149	DEC	R1			next sector
+	JEQ	H150			done
 	BLWP	@>005A(R9)			
 	DATA	>D900			save R0, R1, R3, R4, R7
 	BL	@CALSUB			call subroutine
@@ -2155,15 +2158,15 @@ H206	DEC	R1			next sector
 	DATA	>D901			
 	INC	R3			next sector
 	AI	R7,256			256 bytes further in PAB buffer
-	JMP	H206			keep going
+	JMP	H149			keep going
 *					
-H205	MOV	R4,R4			
-	JNE	H207			
+H150	MOV	R4,R4			
+	JNE	H151			
 	BL	@CALSUB			call subroutine
 	DATA	RDOFSC			read a sector from offset in R3
-	JMP	H208			done
+	JMP	H152			done
 *					
-H207	MOV	R7,R5			save PAB data buffer ptr
+H151	MOV	R7,R5			save PAB data buffer ptr
 	MOV	@>0056(R9),R7		FDR ptr
 	AI	R7,256			point to FDR data area
 	BLWP	@>005A(R9)			
@@ -2174,7 +2177,7 @@ H207	MOV	R7,R5			save PAB data buffer ptr
 	DATA	>E001			
 	BL	@CALSUB			call subroutine
 	DATA	WFDRPB			write bytes from FDR data buffer to PAB data buf
-H208	B	@UPDFDR			update FDR, data buffer, VIB and return to caller
+H152	B	@UPDFDR			update FDR, data buffer, VIB and return to caller
 *
 *------------------------------------
 * Opcode 6: Save
@@ -2192,7 +2195,7 @@ SAVE	BL	@CALSUB			call subroutine
 	DATA	CRFIL1			create file
 	BL	@RBANB			get PAB buffer ptr + # of bytes
 	CLR	R3			sector offset 0
-H209	BLWP	@>005A(R9)			
+H153	BLWP	@>005A(R9)			
 	DATA	>B100			save R0, R2, R3, R7
 	BL	@CALSUB			call subroutine
 	DATA	WROFSC			write sector to offset in R3
@@ -2201,7 +2204,7 @@ H209	BLWP	@>005A(R9)
 	INC	R3			next sector
 	AI	R7,256			256 bytes further in PAB data buffer
 	DEC	R2			next sector
-	JNE	H209			more to do
+	JNE	H153			more to do
 *					
 	MOV	@>0056(R9),R1		FDR ptr
 	AI	R1,12			point to file status byte
@@ -2230,9 +2233,9 @@ RBANB	MOV	@>0054(R9),R0		get buffer address + # of bytes
 	SRL	R2,8			make it # of sectors (256 bytes each)
 	CLR	R0			
 	MOVB	@-1026(R15),R0		see if one more is needed
-	JEQ	H210			no
+	JEQ	H154			no
 	INC	R2			yes: one more sector
-H210	B	*R11			
+H154	B	*R11			
 *
 *-------------------------------------
 * Opcode 9: Status
@@ -2259,54 +2262,54 @@ H210	B	*R11
 STATUS	BL	@CALSUB			call subroutine
 	DATA	FFFDRV			save filename in comp buf, then find FDR in VDP
 	MOV	R4,R4			found?
-	JEQ	H211			yes
+	JEQ	H155			yes
 *					
 	BL	@CALSUB			no: call subroutine
 	DATA	FFDRDK			find FDR on disk
 	LI	R0,>8000		value for file not found
 	MOV	R4,R4			found?
-	JNE	H212			no: return with that value
+	JNE	H164			no: return with that value
 	MOV	@>0056(R9),R1		yes: ptr to FDR
 	CLR	R2			
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
 	MOVB	R2,@-2(R15)		invalidate that FDR (file not open)
-	JMP	H213			transfer FDR status to PAB status byte
+	JMP	H162			transfer FDR status to PAB status byte
 *					
-H211	BL	@CALSUB			file is open: call subroutine
+H155	BL	@CALSUB			file is open: call subroutine
 	DATA	AFPGPF			adjust FDR ptr, get PAB file type into R4
 	BL	@RFDRST			get status byte from FDR
-	JLT	H214			var
-	JMP	H215			fix
+	JLT	H156			var
+	JMP	H157			fix
 *					
-H214	BL	@CALSUB			var: call subroutine
+H156	BL	@CALSUB			var: call subroutine
 	DATA	RRSEC			load wanted sector, point to wanted rec in buffer
-	JMP	H216			out of range
+	JMP	H159			out of range
 	CLR	R2			ok: clear flag
-	JMP	H213			copy status byte from FDR into PAB, return
+	JMP	H162			copy status byte from FDR into PAB, return
 *					
-H215	MOVB	@-1026(R15),R5		fix: get rec/sect byte
+H157	MOVB	@-1026(R15),R5		fix: get rec/sect byte
 	SRL	R5,8			make it a word
-	JNE	H217			
+	JNE	H158			
 	LI	R5,>0100		00 (program files) means 256
-H217	BL	@PABR2B			get 2 bytes from PAB into R0
+H158	BL	@PABR2B			get 2 bytes from PAB into R0
 	DATA	6			# of wanted record
 	MOV	R0,R3			save it
-	JLT	H218			too big: set memory full bit in PAB status byte
+	JLT	H161			too big: set memory full bit in PAB status byte
 	BL	@RNFISE			get # recs/file into R2, comp with R3
 	CLR	R2			
-	JL	H213			in file: copy file type bits, return
+	JL	H162			in file: copy file type bits, return
 	DIV	R5,R2			how many sectors do we need?
 	MOV	R2,R3			save result
 *					
-H216	BL	@FDR2B1			get 2 bytes from FDR into R0
+H159	BL	@FDR2B1			get 2 bytes from FDR into R0
 	DATA	14			# of sectors/file
 	INC	R3			plus 1 sector for FDR
 	LI	R2,>0100		value for eof reached in PAB status
 	S	R0,R3			are there enough sectors in file for these recs?
-	JGT	H219			
-	JMP	H213			yes: we reached the eof
-H219	BL	@CALSUB			call subroutine
+	JGT	H160			
+	JMP	H162			yes: we reached the eof
+H160	BL	@CALSUB			call subroutine
 	DATA	RWVIB			load VIB (sector 0)
 	MOV	R3,R4			number of sectors that will be needed
 	MOV	R5,R8			VIB ptr
@@ -2314,18 +2317,18 @@ H219	BL	@CALSUB			call subroutine
 	BL	@CFSVIB			count free sectors in bitmap, into R3
 	LI	R2,>0100		value for eof reached
 	C	R3,R4			are there that many free sectors?
-	JHE	H213			yes
-H218	LI	R2,>0200		value for memory full
+	JHE	H162			yes
+H161	LI	R2,>0200		value for memory full
 *					
-H213	BL	@FDR2B1			get 2 bytes from FDR into R0
+H162	BL	@FDR2B1			get 2 bytes from FDR into R0
 	DATA	12			file status byte
 	ANDI	R0,>8F00		mask irrelevant bits
-	JGT	H220			
+	JGT	H163			
 	ORI	R0,>0080		var: put var bit in PAB status style
-H220	SLA	R0,3			get rid of var bit in FDR style
+H163	SLA	R0,3			get rid of var bit in FDR style
 	SOCB	R2,R0			add eof and mem full bits
 *					
-H212	MOV	@>0054(R9),R1		PAB ptr
+H164	MOV	@>0054(R9),R1		PAB ptr
 	AI	R1,8			point to bias/status return byte
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0023			address in R1
@@ -2362,30 +2365,30 @@ H212	MOV	@>0054(R9),R1		PAB ptr
 OPNDIR	MOVB	@-1026(R15),R0		get file type from PAB
 	ANDI	R0,>1E00		mask irrelavant bits (rel/seq)
 	CI	R0,>0C00		is it int/fix in output mode?
-	JEQ	H221			yes
-H223	BL	@RETERR			return with error
+	JEQ	H166			yes
+H165	BL	@RETERR			return with error
 	DATA	>4000			bad attributes
-H221	BL	@PABR2B			get 2 bytes from PAB into R0
+H166	BL	@PABR2B			get 2 bytes from PAB into R0
 	DATA	4			rec length
 	SRL	R0,8			make it a word
-	JEQ	H222			>00= default: set it to 38
+	JEQ	H167			>00= default: set it to 38
 	CI	R0,>0026		is it 38?
-	JNE	H223			no: return with bad attributes error
-H222	LI	R0,>2600		set rec len to 38
+	JNE	H165			no: return with bad attributes error
+H167	LI	R0,>2600		set rec len to 38
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0103			address in R8 (from PABR2B)
 	MOVB	R0,@-2(R15)		write rec len to PAB
 *					
 	CLR	R7			
 	BL	@FNDRV			find matching drive in file control blocks
-	DATA	H224			go there if not found
+	DATA	H168			go there if not found
 ERRR10	BL	@ERROR5			update data then return with error
 	DATA	>E000			file error
-H224	MOV	R7,R7			did we find a free slot?
-	JNE	H225			yes
+H168	MOV	R7,R7			did we find a free slot?
+	JNE	H169			yes
 	BL	@RETERR			no: return with error
 	DATA	>8000			memory full
-H225	BLWP	@>005A(R9)		set VDP to write
+H169	BLWP	@>005A(R9)		set VDP to write
 	DATA	>00E3			address in R7
 	MOVB	R3,@-2(R15)		write drive #
 	SWPB	R3			
@@ -2422,12 +2425,12 @@ RDDIR	BL	@FNDRV			find matching drive in file control blocks
 	MOVB	R2,@-2(R15)			
 	SLA	R0,1			since two byte per file ptr
 	MOVB	R0,R0			is rec # greater than 128?
-	JEQ	H226			no
+	JEQ	H170			no
 	BL	@ERROR5			yes: update data then return with error
 	DATA	>A000			past eof
-H226	SETO	R2			code for read
+H170	SETO	R2			code for read
 	MOV	R0,R4			record #
-	JEQ	H227			0=disk parameters
+	JEQ	H175			0=disk parameters
 	LI	R4,1			sector #1
 	BL	@CALSUB			call subroutine
 	DATA	RWSEC			read sector into buffer in R5
@@ -2437,7 +2440,7 @@ H226	SETO	R2			code for read
 	A	R0,R8			point to desired file ptr
 	BL	@VDPR2B			get two byte from VDP at R8 into R0
 	MOV	R0,R4			sector where that FDR is to be found
-	JEQ	H228			no more
+	JEQ	H173			no more
 	BL	@CALSUB			call subroutine
 	DATA	RWSEC			read FDR sector into data buffer area
 	BL	@FDR2B1			get 2 bytes from FDR into R0
@@ -2458,22 +2461,22 @@ H226	SETO	R2			code for read
 	SRL	R7,8			make it a word
 	INC	R7			types are numbered from 1
 	CI	R7,>0002		is it a program file?
-	JNE	H229			no
+	JNE	H171			no
 	AI	R7,3			yes: make it type 5
-H229	CI	R7,>0008		is it var?
-	JL	H230			no
+H171	CI	R7,>0008		is it var?
+	JL	H172			no
 	AI	R7,-127			yes: add 1 and clear var bit
-H230	SLA	R0,4			write protect bit will be >80
+H172	SLA	R0,4			write protect bit will be >80
 	SOC	R0,R7			add it to file type
-	JMP	H231			
+	JMP	H174			
 *					
-H228	CLR	R2			no more files: filename size = 0
+H173	CLR	R2			no more files: filename size = 0
 	CLR	R6			file size = 0
 	CLR	R3			rec length = 0
 	CLR	R7			type = 0
-H231	JMP	H232			output that
+H174	JMP	H176			output that
 *					
-H227	AI	R5,255			disk info: point to data buffer area in ctrl block
+H175	AI	R5,255			disk info: point to data buffer area in ctrl block
 	BL	@CALSUB			call subroutine
 	DATA	RWSEC			read sector 0
 	BL	@FDR2B1			get 2 bytes from FDR into R0
@@ -2484,29 +2487,29 @@ H227	AI	R5,255			disk info: point to data buffer area in ctrl block
 	CLR	R7			filetype is not used
 	LI	R2,>0A00		diskname is 10 chars
 *					
-H232	BL	@PABR2B			get 2 bytes from PAB into R0
+H176	BL	@PABR2B			get 2 bytes from PAB into R0
 	DATA	2			APEDSK99: error in source listing (was R2)
 	MOV	R0,R8			duplicate it
 	INC	R8			skip first byte
 	SRL	R2,8			filename length (or diskname)
-	JEQ	H233			0: skip filename copying
+	JEQ	H179			0: skip filename copying
 	CLR	R1			
-H234	BLWP	@>005A(R9)		set VDP to read
+H177	BLWP	@>005A(R9)		set VDP to read
 	DATA	>00A2			address in R5 (FDR ptr)
 	MOVB	@-1026(R15),R1		get 1 char from filename in FDR
 	CI	R1,>2000		is it a space?
-	JEQ	H235			yes: end of name
+	JEQ	H178			yes: end of name
 	BLWP	@>005A(R9)		no: set VDP to write
 	DATA	>0103			address in R8 (PAB data buffer ptr)
 	MOVB	R1,@-2(R15)		copy char in PAB data buffer
 	INC	R5			increment source ptr
 	INC	R8			increment destination ptr
 	DEC	R2			next char
-	JNE	H234			
-H235	NEG	R2			number of trailing spaces
+	JNE	H177			
+H178	NEG	R2			number of trailing spaces
 	AI	R2,10			number of chars in filename
 	SWPB	R2			
-H233	BLWP	@>005A(R9)		set VDP to write
+H179	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0003			address in R0 (beg of PAB data buffer)
 	MOVB	R2,@-2(R15)		write string length byte
 *					
@@ -2531,22 +2534,22 @@ CFSVIB	AI	R8,46			count free sectors in VIB bitmap
 	CLR	R3			free sectors counter
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0102			address in R8
-H236	MOVB	@-1026(R15),R1		get a byte from bitmap
+H180	MOVB	@-1026(R15),R1		get a byte from bitmap
 	AI	R1,256			
 	SRL	R1,8			
-	JEQ	H237			was >FF: no free sectors, next byte
+	JEQ	H184			was >FF: no free sectors, next byte
 	DEC	R1			was it >00?
-	JNE	H238			no: count bits
+	JNE	H181			no: count bits
 	AI	R3,8			yes: 8 more free sectors
-	JMP	H237			next byte
-H238	LI	R0,8			8 bits per byte
-H239	SRL	R1,1			test a bit
-	JOC	H240			was 1: sector is used
+	JMP	H184			next byte
+H181	LI	R0,8			8 bits per byte
+H182	SRL	R1,1			test a bit
+	JOC	H183			was 1: sector is used
 	INC	R3			was 0: one more free sector
-H240	DEC	R0			next bit in byte
-	JNE	H239			more to come
-H237	DEC	R2			next bitmap byte
-	JNE	H236			more to come
+H183	DEC	R0			next bit in byte
+	JNE	H182			more to come
+H184	DEC	R2			next bitmap byte
+	JNE	H180			more to come
 	B	*R11			
 *					
 FNDRV	MOV	*R11+,R10		find drive in file control blocks
@@ -2560,17 +2563,17 @@ FNDRV	MOV	*R11+,R10		find drive in file control blocks
 	AI	R8,6			point to drive # in file ctrl block
 	LI	R3,>0020		filename begin with space (illegal: flag for dir)
 	MOVB	R6,R3			APEDSK99: error in original disassembly (was R5)
-H241	BL	@VDPR2B			read 2 bytes from VDP at R8 into R0
+H185	BL	@VDPR2B			read 2 bytes from VDP at R8 into R0
 	C	R3,R0			match with that control block?
-	JEQ	H242			yes
+	JEQ	H187			yes
 	ANDI	R0,>00FF		keep only first char of filename
-	JNE	H243			valid filename: a FDR is loaded here
+	JNE	H186			valid filename: a FDR is loaded here
 	MOV	R8,R7			this space is free: save ptr
-H243	AI	R8,518			point to next file control block
+H186	AI	R8,518			point to next file control block
 	DEC	R2			next file
-	JNE	H241			more to come
+	JNE	H185			more to come
 	B	*R10			not found: return to address passed in data word
-H242	INC	R8			drive matches: point to FDR
+H187	INC	R8			drive matches: point to FDR
 	MOV	R8,@>0056(R9)		save ptr
 	B	*R5			return to caller after data word
 *
@@ -2598,31 +2601,31 @@ INT2FP	LI	R2,>0800		write an integer in floating point format
 	MOV	R1,R5			integer is in R1: save it for sign processing
 	ANDI	R1,>7FFF		clear sign bit
 	CI	R1,100			is it less than 100?
-	JL	H244			yes
+	JL	H188			yes
 	CLR	R0			100 or over
 	LI	R4,100			
 	DIV	R4,R0			divide by 100
 	ORI	R0,>4100		add exponent 2 to hundreths
-	JMP	H245			
+	JMP	H190			
 *					
-H244	MOV	R1,R0			is it 0?
-	JEQ	H246			yes: exponent is 0
+H188	MOV	R1,R0			is it 0?
+	JEQ	H189			yes: exponent is 0
 	ORI	R0,>4000		no: add exponent 1
-H246	CLR	R1			next digits will be 0
+H189	CLR	R1			next digits will be 0
 *					
-H245	MOV	R5,R5			test sign bit
-	JLT	H247			negative
-	JMP	H248			positive or zero
-H247	NEG	R0			negate first word
-H248	MOVB	R0,@-2(R15)		write exponent to VDP at preset address
+H190	MOV	R5,R5			test sign bit
+	JLT	H191			negative
+	JMP	H192			positive or zero
+H191	NEG	R0			negate first word
+H192	MOVB	R0,@-2(R15)		write exponent to VDP at preset address
 	SWPB	R0			
 	MOVB	R0,@-2(R15)		write first first 2 digits (or hundreths)
 	SWPB	R1			
 	MOVB	R1,@-2(R15)		write last 2 digits (if any)
 	LI	R2,5			the remaining bytes are all 0 with integers
-H249	MOVB	R2,@-2(R15)		write 0 to VDP
+H193	MOVB	R2,@-2(R15)		write 0 to VDP
 	DEC	R2			next byte
-	JNE	H249			more to do
+	JNE	H193			more to do
 	B	*R11			
 *
 *---------------------------------------
@@ -2706,10 +2709,10 @@ ESUB04	MOV	R11,R7
 	BL	@FDR2B1			get 2 bytes from FDR
 	DATA	12			file status byte
 	ANDI	R0,>0800		protected?
-	JEQ	H250			no
+	JEQ	H194			no
 	BL	@ERROR5			yes: return with error
 	DATA	>2000			write protected
-H250	BL	@FDR2B1			get 2 bytes from FDR
+H194	BL	@FDR2B1			get 2 bytes from FDR
 	DATA	-4			sector # of FDR
 	MOV	R0,R1			
 	BLWP	@>005A(R9)		retrieve R0 from stack
@@ -2720,7 +2723,7 @@ H250	BL	@FDR2B1			get 2 bytes from FDR
 	BL	@CALSUB			call subroutine
 	DATA	FFDRFN			find FDR from filename
 	MOV	R4,R4			found?
-	JEQ	H251			yes: return with file error (name already exist)
+	JEQ	H195			yes: return with file error (name already exist)
 	BL	@INSFDR			insert a FDR in sector 1
 	BLWP	@>005A(R9)		retrieve sect # of FDR in R4
 	DATA	>0801			
@@ -2758,10 +2761,10 @@ RFDRVB	CLR	R6			put FDR in VDP buffer
 	BL	@CALSUB			call subroutine
 	DATA	FFDROD			file FDR on disk
 	MOV	R4,R4			found?
-	JEQ	H252			yes
-H251	BL	@RETERR			no: return with error code in >8350
+	JEQ	H196			yes
+H195	BL	@RETERR			no: return with error code in >8350
 	DATA	>E000			file error
-H252	B	@RTURN1			return to caller
+H196	B	@RTURN1			return to caller
 *
 *-------------------------------------
 * Subprogram >14: file raw read
@@ -2785,17 +2788,17 @@ ESUB05	MOV	R11,R7
 	BL	@RFNPTR			load filename and ptrs
 	BL	@FFFDR			find file FDR, load some info
 	MOV	R2,R2			# of sectors to read
-	JEQ	H253			>00: get file info
+	JEQ	H202			>00: get file info
 	S	R3,R0			sectors in file - first sector to read
-	JGT	H254			in file
+	JGT	H197			in file
 	CLR	R2			past eof
-	JMP	H255			
-H254	C	R2,R0			sectors past first one vs sectors to load
-	JL	H256			
+	JMP	H201			
+H197	C	R2,R0			sectors past first one vs sectors to load
+	JL	H198			
 	MOV	R0,R2			load what's left
-H256	BLWP	@>005A(R9)			
+H198	BLWP	@>005A(R9)			
 	DATA	>2000			save R2
-H257	BLWP	@>005A(R9)			
+H199	BLWP	@>005A(R9)			
 	DATA	>3100			save R2, R3, R7
 	BL	@CALSUB			call subroutine
 	DATA	RDOFSC			read sector from offset in file
@@ -2804,20 +2807,20 @@ H257	BLWP	@>005A(R9)
 	INC	R3			next sector
 	AI	R7,256			increment VDP buffer ptr by 256 bytes
 	DEC	R2			more to do?
-	JNE	H257			yes
-H258	BLWP	@>005A(R9)			
+	JNE	H199			yes
+H200	BLWP	@>005A(R9)			
 	DATA	>2001			retrieve R2 (# of sectors read)
-H255	MOV	R2,@>004C(R9)		update # of sectors in parameters
-	JMP	H259			
+H201	MOV	R2,@>004C(R9)		update # of sectors in parameters
+	JMP	H203			
 *					
-H253	MOV	R0,*R4+			get file info: sectors in file
+H202	MOV	R0,*R4+			get file info: sectors in file
 	DECT	R8			
 	INCT	R2			copy 2 bytes (status + recs/sector)
 	BL	@VDP2SP			from VDP at R8 to file info structure
 	LI	R2,4			copy 4 bytes
 	A	R2,R8			
 	BL	@VDP2SP			eof offset, rec len, # of recs (or # of sect)
-H259	BL	@CALSUB			call subroutine
+H203	BL	@CALSUB			call subroutine
 	DATA	UPDFDR			updata FDR (+ data) if needed, read VIB
 	CLR	@>0050(R9)		clear error flag
 	B	@RTURN1			return to caller
@@ -2842,11 +2845,11 @@ H259	BL	@CALSUB			call subroutine
 ESUB06	MOV	R11,R7			
 	BL	@PRPFDO			prepare disk operations
 	BL	@RFNPTR			load drive + filename, + a few info
-	JEQ	H260			sectors to write=0: create file
+	JEQ	H205			sectors to write=0: create file
 	BL	@FFFDR			find file FDR
 	BLWP	@>005A(R9)			
 	DATA	>2000			save R2 (# of sectors to write)
-H261	BLWP	@>005A(R9)			
+H204	BLWP	@>005A(R9)			
 	DATA	>3100			save R2, R3, R7
 	BL	@CALSUB			call subroutine
 	DATA	WROFSC			write sector from offset in file
@@ -2855,10 +2858,10 @@ H261	BLWP	@>005A(R9)
 	INC	R3			next sector
 	AI	R7,256			increment VDP ptr by 256 bytes
 	DEC	R2			more to do?
-	JNE	H261			yes
-	JMP	H258			update # of sectors written, in param. Then return
+	JNE	H204			yes
+	JMP	H200			update # of sectors written, in param. Then return
 *				
-H260	BL	@CALSUB			create file
+H205	BL	@CALSUB			create file
 	DATA	FFDRVB			find file FDR in VDP buffers
 	BL	@CALSUB			call subroutine
 	DATA	FFDROD			find file FDR on disk
@@ -2875,10 +2878,10 @@ H260	BL	@CALSUB			create file
 	BL	@SP2VDP			write 4 bytes in VDP at new R8+4
 	DATA	4			i.e. eof offset, rec len, # of recs (or # of
 	DEC	R3			offset = # of sectors-1 (starts from 0)
-	JLT	H262			create an empty file, FDR only
+	JLT	H206			create an empty file, FDR only
 	BL	@CALSUB			
 	DATA	APSCTS			append enough sectors to reach offset
-H262	B	@UWFLVB			modify FDR, write it, load VIB, return
+H206	B	@UWFLVB			modify FDR, write it, load VIB, return
 *
 *---------------------------------------
 * Subprogram FILES: number of files
@@ -2889,24 +2892,24 @@ ESUB08	MOV	R11,R7
 	AI	R8,7			skip FILES
 	BL	@VDPR2B			get next two bytes in R0
 	CI	R0,>C801		>C8=unquoted string, size=1 char
-	JNE	H263			return (with error) if different
+	JNE	H207			return (with error) if different
 	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two bytes
 	SWPB	R0			
 	AI	R0,>49D0		substact >B630: # of files >B6=closed parenthesis
 	CI	R0,>0009		only 9 files allowed in Basic !
-	JH	H263			return with error if more
+	JH	H207			return with error if more
 	SWPB	R0			
 	MOVB	R0,@>004C(R9)		put new # of files in scratch-pad memory
 	BL	@CALSUB			call subroutine
 	DATA	PESB07			subprogram >16 (private entry point)
 	MOVB	@>0050(R9),@>0050(R9)	test result
-	JNE	H263			error
+	JNE	H207			error
 	MOV	@>002C(R9),R8		ok: get ptr to Basic token
 	AI	R8,12			skip the whole statement
 	MOV	R8,@>002C(R9)		update ptr
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
-H263	B	@RTURN1			return to caller (i.e. Basic)
+H207	B	@RTURN1			return to caller (i.e. Basic)
 *
 *---------------------------------------
 * Subprogram >16: number of files
@@ -2919,7 +2922,7 @@ ESUB07	MOV	R11,R7			entry point from assembly
 	BL	@PRPFDO			prepare disk operations
 PESB07	CLR	R0			entry point from call files
 	MOVB	@>004C(R9),R0		get # of files
-	JEQ	H264			return with error
+	JEQ	H214			return with error
 	MOV	@>0056(R9),R8		ptr to end of buffer word
 	AI	R8,3			point to # of files byte
 	CLR	R3			
@@ -2928,11 +2931,11 @@ PESB07	CLR	R0			entry point from call files
 	MOVB	@-1026(R15),R3		get current # of files
 	LI	R5,518			size of 1 file control block
 	CB	R0,R3			compare required with current
-	JEQ	H265			same: return with no error
-	JLE	H266			less
+	JEQ	H213			same: return with no error
+	JLE	H210			less
 	MOV	R0,R6			more files needed
 	CI	R0,>1000		maximum is 16
-	JH	H264			return with error
+	JH	H214			return with error
 	S	R3,R0			how many to add
 	SRL	R0,8			make it a word
 	MPY	R5,R0			# of bytes to add
@@ -2942,9 +2945,9 @@ PESB07	CLR	R0			entry point from call files
 	MOV	R2,R0			
 	S	R1,R0			what it would become
 	CI	R0,>0800		is there room enough for VDP?
-	JLT	H264			no: return with error
+	JLT	H214			no: return with error
 	MOV	R0,R1			ok: new base
-H267	INC	R2			increment source ptr
+H208	INC	R2			increment source ptr
 	INC	R0			increment destination ptr
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0042			address in R2
@@ -2953,18 +2956,18 @@ H267	INC	R2			increment source ptr
 	DATA	>0003			address in R0
 	MOVB	R3,@-2(R15)		copy a byte
 	C	R2,R8			did we copy the whole header?
-	JNE	H267			not yet
+	JNE	H208			not yet
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0003			address in R0
 	MOVB	R6,@-2(R15)		new # of files
 	CLR	R6			
 	S	R0,R2			
-H268	MOVB	R6,@-2(R15)		clear byte
+H209	MOVB	R6,@-2(R15)		clear byte
 	DEC	R2			
-	JNE	H268			
-	JMP	H269			
+	JNE	H209			
+	JMP	H212			
 *					
-H266	BLWP	@>005A(R9)		less files needed
+H210	BLWP	@>005A(R9)		less files needed
 	DATA	>0103			set VDP to write to address in R8
 	MOVB	R0,@-2(R15)		new # of files in buffer header
 	S	R0,R3			how many to remove
@@ -2973,7 +2976,7 @@ H266	BLWP	@>005A(R9)		less files needed
 	MOV	R4,R1			result in R3:R4
 	A	R8,R1			new address for buffer header
 	MOV	@>0070(R9),R2		highest free address in VDP mem
-H270	BLWP	@>005A(R9)		set VDP to read
+H211	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0102			address in R8
 	MOVB	@-1026(R15),R0		read a byte
 	BLWP	@>005A(R9)		set VDP to write
@@ -2982,13 +2985,13 @@ H270	BLWP	@>005A(R9)		set VDP to read
 	DEC	R1			decrement destination ptr
 	DEC	R8			decrement source ptr
 	C	R8,R2			did we copy the whole header?
-	JNE	H270			not yet
+	JNE	H211			not yet
 *					
-H269	MOV	R1,@>0070(R9)		new first free address					
-H265	CLR	@>0050(R9)		clear error flag
-	JMP	H272			
-H264	SETO	@>0050(R9)		set error flag
-H272	B	@RTURN1			return to caller
+H212	MOV	R1,@>0070(R9)		new first free address					
+H213	CLR	@>0050(R9)		clear error flag
+	JMP	H215			
+H214	SETO	@>0050(R9)		set error flag
+H215	B	@RTURN1			return to caller
 *					
 UFNCB	CLR	@>0054(R9)		write drive # and filename in compare buffer
 	MOV	@>0058(R9),R1		
@@ -2997,7 +3000,7 @@ UFNCB	CLR	@>0054(R9)		write drive # and filename in compare buffer
 	DATA	>0023			address in R1
 	MOVB	R6,@-2(R15)		write drive #
 CFNFDR	LI	R2,10			filename must be exactly 10 chars
-H273	INC	R1			next char in compare buffer
+H216	INC	R1			next char in compare buffer
 	BLWP	@>005A(R9)		set VDP to read
 	DATA	>0002			address in R0
 	MOVB	@-1026(R15),R3		get 1 char from filename
@@ -3006,7 +3009,7 @@ H273	INC	R1			next char in compare buffer
 	DATA	>0023			address in R1
 	MOVB	R3,@-2(R15)		write 1 char to compare buffer
 	DEC	R2			
-	JNE	H273			next char
+	JNE	H216			next char
 	B	*R11			
 *					
 RFNPTR	MOV	R11,R10			load compare buffer and ptrs
@@ -3030,10 +3033,10 @@ FFFDR	BLWP	@>005A(R9)		find file FDR
 	BL	@CALSUB			call subroutine
 	DATA	FFDROD			find FDR on disk
 	MOV	R4,R4			found ?
-	JEQ	H274			yes
+	JEQ	H217			yes
 	BL	@ERROR5			no: return with error
 	DATA	>E000			file error
-H274	BL	@FDR2B1			get two bytes from FDR into R0
+H217	BL	@FDR2B1			get two bytes from FDR into R0
 	DATA	14			# of sectors in file
 	BLWP	@>005A(R9)			
 	DATA	>2011			retrieve R0 in R2 (# of sect to read), and R11
@@ -3045,18 +3048,18 @@ H274	BL	@FDR2B1			get two bytes from FDR into R0
 *					
 VDP2SP	BLWP	@>005A(R9)		copy VDP bytes to scratch-pad
 	DATA	>0102			read from VDP at R8
-H275	MOVB	@-1026(R15),*R4+	read bytes into scratch-pad at R4
+H218	MOVB	@-1026(R15),*R4+	read bytes into scratch-pad at R4
 	DEC	R2			# of byte in R2
-	JNE	H275			next byte
+	JNE	H218			next byte
 	B	*R11			
 *					
 SP2VDP	MOV	*R11+,R2		copy scratch-pad bytes to VDP
 	A	R2,R8			
 	BLWP	@>005A(R9)		set VDP to write
 	DATA	>0103			address in R8 + offset in data word
-H276	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
+H219	MOVB	*R4+,@-2(R15)		write byte from scratch-pad at R4
 	DEC	R2			# of bytes in R2, was in data word
-	JNE	H276			next byte
+	JNE	H219			next byte
 	B	*R11	
 *
 * APEDSK99 CALL subprograms
@@ -3066,7 +3069,7 @@ PDSK	LI	R6,>0100		Protect ACOMND
 	JMP	ACLPRP			generic prep
 UDSK	LI	R6,>0200		Unprotect ACOMND 
 	JMP	ACLPRP			generic prep
-LDSK	LI	R6,>0300		Show Files on DSKx ACOMND 
+LDSK	LI	R6,>0300		List Files on DSKx ACOMND 
 	JMP	ACLPRP			generic prep
 * parameters are single digit + character string -> 1x00; ! >1300 IS RESERVED (BL NTPDT+1) ! 
 MDSK	LI	R6,>1000		Change DSK ACOMND
@@ -3082,31 +3085,35 @@ FPUT	LI	R6,>2200		save DOAD to FTP server ACOMND
 	JMP	ACLPRP			generic prep
 ADSR	LI	R6,>2300		load DSR and reset ACOMND
 	JMP	ACLPRP			generic prep
-NDIR	LI	R6,>2400		change root folder
+CDIR	LI	R6,>2400		change root folder
 	JMP	ACLPRP			generic prep
 * no parameters	->3x00
-SDSK	LI	R6,>3000		Show DSKx mapping ACOMND
+SMAP	LI	R6,>3000		Show DSKx mapping ACOMND
 	JMP	ACLPRP			generic prep
-SDIR	LI	R6,>3100		Show SD dir ACOMND
+LDIR	LI	R6,>3100		List SD dir ACOMND
 	JMP	ACLPRP			generic prep
 AHLP	LI	R6,>3200		display APEDSK99 CALL()'s help screen
 	JMP	ACLPRP			generic prep
-ALOW	LI	R6,>3300		load proper lowercase character set
+ACHR	LI	R6,>3300		load proper lowercase character set
 	JMP	ACLPRP			generic prep
-ARST	LI	R6,>3400		reset APEDSK99 ACOMND
+ARST	LI	R6,>3468		APEDSK99 reset ACOMND
 	JMP	ACLPRP			generic prep
 TIME	LI	R6,>3500		show NTP time and date
 *
 * Generic prep and return to TI BASIC for APEDSK99 CALL's
 *
-ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
+ACLPRP	SWPB	R6			get optional subcommand in MSB
+	MOVB	R6,@ASUBCM		save
+	SWPB	R6			back to primary command
+*
+	MOV	R11,R7			save return-to-TI BASIC address
 	BL	@PRPFDO			prepare TI Controller DSR operations
 *
 	MOV	@>002C(R9),R8		ptr to next basic token
 	AI	R8,4			skip length byte and 3 chars of CALL name
 	BL	@VDPR2B			get CALL last char and "(" or "0" in R0
 	SLA	R0,8			only interested in LSB
-	JEQ	NOPARM			0 = no parameters? SDSK / SDIR / AHLP / ALOW / ARST / TIME (and special guest LDSK)
+	JEQ	NOPARM			0 = no parameters? SMAP / LDIR / AHLP / ACHR / ARST / TIME (and special guest LDSK)
 *
 	AI	R8,2			adjust token pointer
 	BL	@VDPR2B			get next two bytes in R0
@@ -3114,42 +3121,43 @@ ACLPRP	MOV	R11,R7			save return-to-TI BASIC address
 	JEQ	USTRNG			yes: PDSK / UDSK / LDSK / MDSK / NDSK
 *
 	CI	R0,>C701		>C7=quoted string, minimum 1 character?
-	JHE	QSTRNG			yes: RDSK / FGET / FPUT / ADSR / NDIR
+	JL	ACLERR
+	B	@QSTRNG			yes: RDSK / FGET / FPUT / ADSR / CDIR
 *
 ACLERR	B	@RTURN1			expect the unexpected				
 *
-* SDSK / SDIR / AHLP / ALOW / ARST / TIME (and special guest LDSK)
+* SMAP / LDIR / AHLP / ACHR / ARST / TIME (and special guest LDSK)
 *
 NOPARM	CI	R6,>0300		LDSK without parameters is handy (re-use last used DSK#)
 	JEQ	NOPRM2
 	CI	R6,>3000		catch other CALL's without parameters -> error
 	JL	ACLERR
 *
-NOPRM2	MOVB	@LSTDRV,@CALLBF		get last drive accessed for LDSK without parameters
-	MOVB	R6,@ACOMND		execute LDSK / ALOW / ARST / TIME
-	CI	R6,>3300		ALOW / ARST / TIME ?	
-	JL	LDSK2			no; SDSK / SDIR / AHLP use LDSK display routine
+NOPRM2	MOVB	@LSTDRV,@CALLBF		get last drive accessed (LDSK without parameters)
+	MOVB	R6,@ACOMND		execute LDSK / ACHR / ARST / TIME
+	CI	R6,>3300		ACHR / ARST / TIME ?	
+	JL	LDSK2			no; SMAP / LDIR / AHLP use LDSK display routine
 *
 QNOPRM	LI	R8,9			current CALL length
-	CI	R6,>3300		ALOW?
-	JEQ	ALOW2			yes; get some real characters
+	CI	R6,>3300		ACHR?
+	JEQ	ACHR2			yes; get some real characters
 	CI	R6,>0300		LDSK()?
-	JNE	H9901			nope; exit with CALL lenght 9 for SDSK / SDIR / AHLP
+	JNE	A9901			nope; exit with CALL lenght 9 for SMAP / LDIR / AHLP / ARST / TIME
 	AI	R8,3			yep;  exit with CALL length 12 for LDSK
 *
-H9901	B	@ACLBAS	
+A9901	JMP	A9904
 *
-ALOW2	CB	@INT2FP+2,@CALLST
-	JEQ	H9901			>08; no char definition file found
+ACHR2	CB	@INT2FP+2,@CALLST
+	JEQ	A9904			>08; no char definition file found
 *
 	MOV	@PATTBL,R2		get start of <SPACE> pattern table entry (default >0400 for TI BASIC)
 	BL	@VDPWRI			set VPD address
 *			
-H9902	BL	@DISSTS			use existing display routine to write 4 definitions at a time
-	CB	@K004,@CALLST		check Arduino ALOW return code
-	JEQ	H9901			we're done
-	MOV	R2,@RDINT		generates interrupt for next lot
-	JMP	H9902			again
+A9902	BL	@DISSTS			use existing display routine to write 4 definitions at a time
+	CB	@K004,@CALLST		check Arduino ACHR return code
+	JEQ	A9904			we're done
+	INC	@RDINT			generates interrupt for next lot
+	JMP	A9902			again
 *
 * PDSK / UDSK / LDSK / MDSK / NDSK
 *
@@ -3160,10 +3168,10 @@ USTRNG	CI	R6,>2000		only PDSK / UDSK / LDSK / MDSK / NDSK?
 *
 	SWPB	R0
 	AI	R0,>49D0		add 2's complement of >B630: MSB = >B3 / "," or >B6 / ")", LSB= # of files 
-	JGT	H9903			>B6
+	JGT	A9903			>B6
 	AI	R0,768			>B3, adjust R0 to positive range
 *
-H9903	JEQ	ACLERR			DSK0 not valid, * INCORRECT COMMAND
+A9903	JEQ	ACLERR			DSK0 not valid, * INCORRECT COMMAND
 	CI	R0,3			only 3 DSK's allowed
 	JH	ACLERR			DSK4+, * INCORRECT COMMAND
 *
@@ -3180,7 +3188,7 @@ H9903	JEQ	ACLERR			DSK0 not valid, * INCORRECT COMMAND
 	JEQ	LDSK2			yep
 *
 PUDSK2	LI	R8,12			CALL length
-	JMP	ACLBAS			return to BASIC		
+A9904	JMP	ACLBAS			return to BASIC		
 *			
 LDSK2	CB	@K002,@CALLST
 	JEQ	QNOPRM			LDSK: >00; no DOAD mapped
@@ -3193,19 +3201,19 @@ NXTSCR	CLR	R2			clear screen; position 0
 	DATA	704			704 positions to clear
 *
 	LI	R2,32			start 2nd screen line; 1st is lost due to BASIC scroll
-H9904	BL	@VDPWRI			
+A9905	BL	@VDPWRI			
 *	
-	CB	@K004,@CALLST		check Arduino LDSK / SDSK / SDIR / AHLP return code
+	CB	@K004,@CALLST		check Arduino LDSK / SDSK / LDIR / AHLP return code
 	JEQ	QNOPRM			"More" (>F0); blank DSK or done last file / help txt
 *
-	BL	@DISSTS			LDSK / SDSK / SDIR / AHLP output to screen
+	BL	@DISSTS			LDSK / SDSK / LDIR / AHLP output to screen
 *
 	AI	R2,32			next screen position
 	CI	R2,640			end of display area?
 	JEQ	NXTPRP			yes; show "more" symbol
 *
 	INC	@RDINT			generates interrupt for next file / help txt
-	JMP	H9904	
+	JMP	A9905	
 *	
 NXTPRP	LI	R2,702
 	BL	@VDPWRI
@@ -3223,38 +3231,38 @@ MNDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
 *
 QSTRNG	CI	R6,>1000		further check on RDSK / FGET / FPUT / ADSR
-	JL	ACLERR			no -> sneaky PDSK / UDSK don't belong here	
+	JL	A9907			no -> sneaky PDSK / UDSK don't belong here	
 	AI	R0,>3900		add 2's complement of >C700 =  only keep # of characters
-	JEQ	H9906			0 characters / empty string -> * INCORRECT COMMAND
+	JEQ	A9907			0 characters / empty string -> * INCORRECT COMMAND
 	CI	R0,8			max 8 characters?
-	JH	H9906			no -> * INCORRECT COMMAND
+	JH	A9907			no -> * INCORRECT COMMAND
 *
 	MOV	R0,R4			save # of characters
 	LI	R5,CALLBF+2		pointer to DOAD / DSR name	
 	INCT	R8			increment pointer
 	MOV	R8,R2			for VDPRD, address must be in R2
 	BL	@VDPRD			set VDP READ address
-H9905	MOVB	@-1026(R15),*R5+	get character and save in CALL buffer
+A9906	MOVB	@-1026(R15),*R5+	get character and save in CALL buffer
 	DEC	R0			one less to go
-	JNE	H9905	
+	JNE	A9906	
 	MOVB	@K002,*R5		mark end of string with >00 (Arduino check for < 8 characters)
 *
 	MOVB	@-1026(R15),R0		get next token
 	CI      R0,>B600                is it a ")" ?
-	JEQ	H9907
-H9906	B	@ACLERR	                * INCORRECT COMMAND
+	JEQ	A9908
+A9907	B	@ACLERR	                * INCORRECT COMMAND
 *
-H9907	LI	R8,13			prep RDSK / FGET / FPUT / ADSR CALL length ( CALL_XXXX("") )
+A9908	LI	R8,13			prep RDSK / FGET / FPUT / ADSR CALL length ( CALL_XXXX("") )
 	A	R4,R8			add # of characters in string
 	
 	CI	R6,>1100		MDSK or NDSK?
-	JH	H9908			no; jump and execute RDSK / FGET / FPUT / ADSR
+	JH	A9909			no; jump and execute RDSK / FGET / FPUT / ADSR
 	INCT	R8			adjust MDSK and NDSK CALL length
 *
-H9908	MOVB	R6,@ACOMND		command to Arduino
+A9909	MOVB	R6,@ACOMND		command to Arduino
 *
 ACLBAS	CB	@CALLST,@K004		"More" or "AllGood" received from Arduino?	
-	JHE	H9909			yep
+	JHE	A9910			yep
 *	
 	LI	R5,GPLINT		no; GPL routine
 	BL	@GPLXML			
@@ -3266,19 +3274,22 @@ ACLBAS	CB	@CALLST,@K004		"More" or "AllGood" received from Arduino?
 	BL	@GPLXML	
 	DATA	SCROLL			scroll screen
 *
-	CB	@CALLST,@K007		error?
-	JH	H9909			no; be silent	
+	CB	@CALLST,@K007		error (status code 0 - 9)?
+	JHE	A9910			no, informational; be silent	
 *
 	LI	R5,GPLINT		yes: let's make some noise
 	BL	@GPLXML
 	DATA	HONK			GPL routine"bad tone"
-	JMP	H9910
 *
-H9909	CI	R6,>3500		TIME() ?
-	JNE	H9910			no, end the party
-	JMP  	TIME2			yes; see if we can assign date/time to NTP$ 
+A9910	CI	R6,>3500		TIME() ?
+	JEQ	TIME2			yes; see if we can assign date/time to NTP$
 *
-H9910	CLR	@>0050(R9)		clear error flag		
+A9911	CLR	R6
+	MOVB	@ASUBCM,R6		any subcommand to execute?
+	JEQ 	A9912			no
+	MOVB	R6,@ACOMND		yes; execute (currently only ARST)
+*
+A9912	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
 	B	@RTURN1			return to caller (i.e. TI-BASIC)
@@ -3287,9 +3298,9 @@ H9910	CLR	@>0050(R9)		clear error flag
 *
 DISSTS	LI	R5,CALLBF		start of file name buffer
 	LI	R6,32			32 bytes / 1 screen row of data to display
-H9911	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
+A9913	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
 	DEC	R6
-	JNE	H9911
+	JNE	A9913
 	B	*R11
 *
 * Quick key test to display next screen after ">"
@@ -3299,19 +3310,19 @@ H9911	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
 CHKKEY	MOV	R12,R4 			save R12
 	CLR  	R1                  	test column 0
      	LI   	R12,>0024           	address for column selection
-H9912  	LDCR 	R1,3               	select column
+A9914  	LDCR 	R1,3               	select column
 	TB	-14			test R12 address >0008
-	JNE	H9913			<SPACE>
+	JNE	A9915			<SPACE>
 	TB	-13			test R12 address >000A
-	JEQ	H9912			no key; test again
+	JEQ	A9914			no key; test again
 *
-	MOVB	@K004,@CALLST		signal ENTER to SDIR() command
+	MOVB	@K004,@CALLST		signal ENTER to LDIR() command
 	LI	R11,QNOPRM		leave without clearing screen
 *
-H9913	MOV	R4,R12 			restore R12
+A9915	MOV	R4,R12 			restore R12
 	SLA	R4,2			debounce delay
-H9914	DEC	R4			key debounce
-	JNE	H9914			debounce some more
+A9916	DEC	R4			key debounce
+	JNE	A9916			debounce some more
 *
 	B    	*R11               	we got one; return for next screen
 *
@@ -3320,10 +3331,10 @@ H9914	DEC	R4			key debounce
 VARINF	TEXT	'NTP$'
 TIME2	LI	R4,VARINF		variable name for XML >16 in FAC
 	MOV	R9,R5			get scratchpad start address
-H9915	MOVB	*R4+,@>004A(R5)		variable name in FAC
+A9917	MOVB	*R4+,@>004A(R5)		variable name in FAC
 	INC	R5
 	CI	R4,VARINF+4		done all chars?
-	JNE	H9915			
+	JNE	A9917			
 *
 	LI	R5,>0400		variable length for XML >16 in @>8359
 	MOVB	R5,@>0059(R9)		
@@ -3334,7 +3345,7 @@ H9915	MOVB	*R4+,@>004A(R5)		variable name in FAC
 	DATA	XMLRTN			GPL "RTN", escaping GPL interpreter
 *
 	CB	@VARINF,@>004A(R9)	found NTP$ in VDP symbol table?
-	JEQ	H9917			no symbol table pointer; back to BASIC
+	JEQ	A9919			no symbol table pointer; back to BASIC
 *
 	BL	@XML14			ROM routine: get NTP$ VDP address and string length (returns through RT)
 	STWP	R9			restore scratchpad pointer
@@ -3342,18 +3353,18 @@ H9915	MOVB	*R4+,@>004A(R5)		variable name in FAC
 *	
 	MOV	@>0050(R9),R5		get string length
 	CI	R5,16			16 chars?
-	JNE	H9917			no NTP$ assignment for you
+	JNE	A9919			no NTP$ assignment for you
 *
 	MOV	@>834E,R2		yes
 	BL	@VDPWRI			set VDP write address
 	LI	R5,CALLBF		CALL TIME data still in buffer
-H9916	MOVB	*R5+,R2			read character
+A9918	MOVB	*R5+,R2			read character
 	AI	R2,>A000		remove TI BASIC bias
 	MOVB	R2,@-2(R15)		save to NTP$ value space
 	CI	R5,CALLBF+16		done all 16 chars?
-	JNE	H9916			no; one more
+	JNE	A9918			no; one more
 *
-H9917	B	@H9910			yes; back to BASIC
+A9919	JMP	A9911			yes; back to BASIC
 *
 * execute GROM or XML routine (SCROLL, "bad sound" / HONK and XML >16)
 * DSR and GPL interpreter use same workspace (>83E0) so we need to save a few things
@@ -3399,7 +3410,7 @@ NTPDT	MOVB	@NTPFAT+1,@ACOMND	"DSK NTP date/time update" command to Arduino
 	B	*R11			return to Format / Close
 *
 *----------------------------------------------------------------------------------
-* >5F22 - >5FB3: 145 free bytes remaining
+* >5F36 - >5FB3: 126 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
