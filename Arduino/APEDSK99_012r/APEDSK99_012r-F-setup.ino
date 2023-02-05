@@ -18,25 +18,24 @@ void setup() {
   pinAsOutput(DS);
  
   //read DSR binary from SD and write into DSR RAM
-  if ( EEPROM.read(EEPROMDSR) == 0xFF ) {                               //invalid DSR (i.e. virgin Uno EEPROM or invalid DSR filename)?
-    EEPROM.put( EEPROMDSR, "APEDSK99.DSR\0" );                          //yes, put default in EEPROM ...
+  if ( EEPROM.read(EEPROM_DSR) == 0xFF ) {                              //invalid DSR (i.e. virgin Uno EEPROM or invalid DSR filename)?
+    EEPROM.put( EEPROM_DSR, "APEDSK99.DSR\0" );                         //yes, put default in EEPROM ...
   }
   char DSRtoload[13] = "\0";                                            //fresh char array
-  EEPROM.get( EEPROMDSR, DSRtoload );                                   //get DSR filename from EEPROM
+  EEPROM.get( EEPROM_DSR, DSRtoload );                                  //get DSR filename from EEPROM
   if ( SD.exists(DSRtoload) ) {                                         //does it exist? ...
     File fileDSR = SD.open( DSRtoload, FILE_READ );                     //yes; write DSR data to APEDSK99 RAM
     for ( unsigned int ii = 0x4000; ii < 0x6000; ii++ ) {
       write_DSRAM( ii, fileDSR.read() );                                                
     }
-    
     fileDSR.close();
   } else {
-    EEPROM.write( EEPROMDSR, 0xFF);                                     //... no; mark DSR invalid so default gets restored at next boot
+    EEPROM.write( EEPROM_DSR, 0xFF);                                    //... no; mark DSR invalid so default gets restored at next boot
     Flasher( 2 );                                                       //flash error 2
   }
   
   if ( read_DSRAM(0x4000) != 0xAA ) {                                   //valid DSR mark (>AA) at first DSR RAM byte?  
-    EEPROM.write( EEPROMDSR, 0xFF);                                     //no; mark DSR invalid
+    EEPROM.write( EEPROM_DSR, 0xFF);                                    //no; mark DSR invalid
     Flasher( 3 );                                                       //loading DSR unsuccessful -> flash error 3
   }
 
@@ -52,7 +51,9 @@ void setup() {
       DSKx.close();                                                     //close current SD DOAD file
     }
   } 
-  
+
+  EEPROM.get( EEPROM_CFG,  ACFG );
+   
   //"initialize FD1771"
   FD1771reset();                                                        //"Restore" command
   noExec();                                                             //"no command" as default

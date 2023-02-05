@@ -28,7 +28,18 @@ byte currentDSK       = 0;                                                      
 
 #define CALLBF          0x5FC8                                                                        //CALL() buffer (data exchange)
 #define TIBias          0x60                                                                          //TI BASIC screen bias
-#define EEPROMDSR       499                                                                           //EEPROM starting address for storing DSR filename (including \0)
+
+#define EEPROM_DSR      499                                                                           //EEPROM starting address for storing DSR filename (including \0)
+#define EEPROM_CFG        0                                                                           //EEPROM starting address for APEDSK99 configuration
+
+struct AD99Config {                                                                                   //struct for saving/loading APEDSK99 configuration
+  byte ipaddress[4];                                                                                  //current Ethernet Shield IP address
+  byte ftpserver[4];                                                                                  //current FTP server IP address
+  char ntpserver[16];                                                                                 //current NTP server IP address (including terminating \0)
+  char ftpuser[9];                                                                                    //current FTP server user name (including terminating \0)
+  char ftpass[9];                                                                                     //current FTP server password (including terminating \0)
+  signed char TZ;                                                                                     //current timezone value (hours difference with UTC)
+} ACFG;                                                                                               //ACFG is stored in and loaded from EEPROM
 
 //global counter (remember value in between successive calls of same APEDSK99 command)
 byte gii = 0;
@@ -144,9 +155,9 @@ void clrCALLbuffer( void ) {
 }
 
 void EtherStart( void ) {
-  pinAsOutput(ETH_CS);                                                                                //enable EthernetShield CS (shared with TI_INT)
-  Ethernet.init(ETH_CS);                                                                              //activate Ethernet ...
-  Ethernet.begin(MAC, IP);                                                                            //... with set MAC address and IP address
+  pinAsOutput( ETH_CS );                                                                              //enable EthernetShield CS (shared with TI_INT)
+  Ethernet.init( ETH_CS );                                                                            //activate Ethernet ...
+  Ethernet.begin( MAC, ACFG.ipaddress );                                                              //... with set MAC address and IP address
 }
 
 void EtherStop( void ) {
@@ -160,7 +171,7 @@ byte getNTPdt( void ) {
   long unsigned int UNIXepoch, Hours, Minutes, Day, Month, Year;
 
   ntp.begin();                                                                                        //start NTP client
-  if ( !ntp.request(ntpserver) ) {                                                                    //NTP server available?
+  if ( !ntp.request(ACFG.ntpserver) ) {                                                               //NTP server available?
     return ( FNTPConnect );                                                                           //no; report error
   } else {                                                                                            //yes; wait for NTP service availability
                                                                                        
@@ -170,7 +181,7 @@ byte getNTPdt( void ) {
       ii++;
     } while ( !ntp.available() && ii < 25 );                                                          //wait a bit more if NTP is not available yet
     
-    UNIXepoch = ntp.read() + TZ;                                                                      //get NTP UNIX timestamp and adjust for local time zone
+    UNIXepoch = ntp.read() + ( long(ACFG.TZ) * long(3600) );                                          //get NTP UNIX timestamp and adjust for local time zone
       
     Minutes  = UNIXepoch  / 60;                                                                       //calculate minutes
     Hours    = Minutes    / 60;                                                                       //calculate hours

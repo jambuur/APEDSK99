@@ -1,6 +1,6 @@
 /* APEDISK99
   This sketch emulates 3 TI99/4a DS/DD/80tracks disk drives, including the ability to load and save Disk-On-A-Disk (DOAD) files 
-  via the FTP protocol. It also provides TI (EXTENDED) BASIC access to NTP date/time information.
+  via the FTP protocol. It also provides TI (EXTENDED) BASIC access to NTP date/time information. Bonus CALL: real lower case characters
   
   Shopping list:
   - Arduino Uno
@@ -32,15 +32,13 @@
   https://github.com/greiman/SdFat
 
   $Author: Jochen Buur $
-  $Date: November 2022 $
+  $Date: January 2023 $
   $Revision: 0.12r $
   
   This software is freeware and can be modified, re-used or thrown away without any restrictions.
   Use this code at your own risk.
   I'm not responsible for any bad effect or damages caused by this software
 */
-
-//*****
 
 //SPI functions
 #include <SPI.h>
@@ -60,7 +58,7 @@ SdFat SD;
 SdFile file;
 
 #include <Ethernet.h>
-byte MAC[] =    { 0x06, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE };                       //EthernetShield MAC address
+byte MAC[] =    { 0x06, 0xAA, 0xBB, 0xCC, 0xDD, 0x99 };                       //EthernetShield MAC address
 EthernetClient  client;
 EthernetClient  ftpControl;
 EthernetClient  ftpData;
@@ -78,9 +76,7 @@ EthernetUDP udp;
 NTP ntp(udp);
 
 //store DSR filename in EEPROM to survive boot
-#include <EEPROM.h>                                                           //EEPROM access: save DSR filename to load at powerup / reset
-
-//*****
+#include <EEPROM.h>                                                           //EEPROM access: save DSR filename to load at powerup / reset and network config parameters
 
 //faster digitalRead / digitalWrite definitions
 #define portOfPin(P)\

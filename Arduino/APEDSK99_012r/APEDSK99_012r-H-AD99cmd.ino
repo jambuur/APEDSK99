@@ -218,7 +218,7 @@
           } else {                                                                                        //FGET() and FPUT()         
             EtherStart();                                                                                 //start Ethernet client
 
-            if ( !ftp.connect(ftpserver, user, pass) ) {                                                  //if we can't connect to FTP server ...
+            if ( !ftp.connect(ACFG.ftpserver, ACFG.ftpuser, ACFG.ftpass) ) {                              //if we can't connect to FTP server ...
               CALLstatus( FNTPConnect );                                                                  //... flag error ...     
               currentA99cmd = 0;                                                                          //... and cancel further command execution
             }
@@ -255,7 +255,7 @@
 
         case 35:                                                                                          //ADSR(): load / change default APEDSK99 DSR file
         {                                                                                 
-          char DSRtoload[13] = "\0";                                                                      //filename new DSR
+          char DSRtoload[13]  = "\0";                                                                     //filename new DSR
           char DSRcurrent[13] = "\0";                                                                     //filename current DSR in EEPROM
           for ( byte ii = 2; ii < 10; ii++ ) {                                                            //read file name from CALL buffer
             DSRtoload[ii - 2] = read_DSRAM( CALLBF + ii );                                                //get new DSR from CALL buffer
@@ -270,13 +270,11 @@
             noExec();
             break;
           } else {
-            EEPROM.get( EEPROMDSR, DSRcurrent );                                                          //get current DSR from EEPROM
-            if ( strcmp(DSRcurrent, DSRtoload) != 0) {                                                    //compare to new DSR; same?
-              EEPROM.put( EEPROMDSR, DSRtoload );                                                         //no; write new DSR to EEPROM
-            }
-            currentA99cmd = 104;                                                                          //valid DSR file; fall through to ARST() to activate
+            EEPROM.put( EEPROM_DSR, DSRtoload );                                                          //no; write new DSR to EEPROM (only changes will be written)
           }
+          currentA99cmd = 104;                                                                            //valid DSR file; fall through to ARST() to activate
         }
+
         case 104:                                                                                         //reset current DSR ( ADSR(), ARST() )  
         { 
           TIgo();                                                                                         //release TI
@@ -602,6 +600,76 @@
           EtherStop();                                                                                    //stop Ethernet client
           noExec(); 
         }
+        break;
+        
+        case  54:                                                                                         //ACFG(): configure network
+        {  
+          DSKx = SD.open( nameDSK[0], FILE_READ );                                                        //expect ACFG.DSK mapped to DSK1
+          DSKx.seek( 0 );                                                                                 //TI DSK name location
+
+          byte ii;                                                                  
+          char tStr[] = "ACFG";                                                                           //TI DSK name should be this                                                             
+          for ( ii = 0; ii < 4; ii++ ) {                                                                  //check if so
+            if ( DSKx.read() != tStr[ii] ) {
+              break;
+            }
+          }
+         
+          if ( ii < 3 ) {                                                                                 //not all characters matched so ...
+            CALLstatus( DOADNotMapped );                                                                  //... no genuine ACFG DOAD mapped at DSK1
+            break;  
+          } else {
+            
+            DSKx.seek( 0x21FF );                                                                          //ok genuine enough, go to config data
+
+            byte cc = 0;                                                                                  //reset cc
+            byte octet;
+            for ( byte ii = 0; ii < 8; ii++ ) {                                                           //8 octets in total
+              while ( cc != 0x08 ) {                                                                      //check for 0x08 delimiter
+                cc = DSKx.read();
+              }
+              cc = ( DSKx.read() & B00000011 );                                                           //check for 0x4x
+              if ( cc  == 0 ) {                                                                           //x=0 so octet[0-16]
+                octet = DSKx.read();                                                                      //store octet
+              } else {
+                octet = cc * (DSKx.read() * 100) + DSKx.read();                                           //octet = x * (next byte * 100) + next byte
+              } 
+              if ( ii < 4 ) {                                                                             //first 4 values are the Ethernet Shield IP address ...
+               ACFG.ipaddress[ii] = octet;
+              } else {
+                ACFG.ftpserver[ii-4] = octet;                                                             //... second 4 values are the FTP server address
+              }
+            }
+ 
+            cc = 0;                                                                                       //reset cc to ...
+            while ( cc == 0x00 ) {                                                                        //... check for next delimiter (string length)
+              cc = DSKx.read();
+            }
+            for ( byte ii = 0; ii < cc; ii ++ ) {                                                         //store NTP IP address string
+              ACFG.ntpserver[ii] = DSKx.read();
+            } 
+            ACFG.ntpserver[cc] = '\0';                                                                    //NTP server string delimiter        
+
+            cc = DSKx.read();                                                                             //read string length
+            for ( byte ii = 0; ii < cc; ii++ ) {                                                          //store FTP user name; cc has #characters
+              ACFG.ftpuser[ii] = DSKx.read();
+            }
+            ACFG.ftpuser[cc] = '\0';                                                                      //FTP username string delimiter
+            
+            cc = DSKx.read();                                                                             //read string length
+            for ( byte ii = 0; ii < cc; ii++ ) {                                                          //store FTP password; cc has #characters
+              ACFG.ftpass[ii] = DSKx.read();
+            }  
+            ACFG.ftpass[cc] = '\0';                                                                       //FTP password string delimiter
+            
+            DSKx.seek( DSKx.position() + 2 );                                                             //skip 0x4x (not used for 0-15 values)   
+            ACFG.TZ = DSKx.read();                                                                        //store timezone value
+
+            EEPROM.put( EEPROM_CFG,  ACFG );                                                              //save configuration struct to EEPROM
+
+            noExec();                                                                                     //done
+          }
+        }     
         break;
 
         default:                                                                                          //catch-all safety

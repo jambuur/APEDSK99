@@ -30,23 +30,15 @@ WDATA	EQU	>5FFE			write FD1771 Data register
 XML14	EQU	>164E			ROM address for XML >14
 XML16	EQU	>15D6			ROM address for XML >16
 *
-*!!! CHECK GROM ADDRESS CONTENTS, NEEDS TO BE >0F5C; UNCOMMENT RELEVANT LINE (different GROM 0 versions)
-*
-*XML5C	EQU	>1039			GROM address for XML >5C; GROM v2.2 consoles
-*XML5C	EQU	>1058			GROM address for XML >5C; GROM - Heiner Martin version
-XML5C	EQU	>105C			GROM address for XML >5C; GROM - different pointers to character blocks
+XMLBC	EQU	>4409			GROM address for XML >BC 
+RTNBC	EQU	>A018			return address for XML >BC in high memory expansion
 *
 GPLINT	EQU	>006A			jump to GROM interpreter for SCROLL / HONK
 XMLRTN	EQU	>2244 			jump to GROM interpreter for RTN (after executing XML >14 / >16 routine)
 SCROLL	EQU	>56CD			GROM address for scroll routine
+HONK	EQU	>0036			GROM address for bad sound / HONK routine
 *
-*!!! CHECK GROM ADDRESS CONTENTS, NEEDS TO BE >BF58; UNCOMMENT RELEVANT LINE (different GROM 0 versions)
-*
-*HONK	EQU	>03AF			GROM address for "bad tone"; GROM v2.2 consoles
-*HONK	EQU	>03D3			GROM address for "bad tone"; GROM - Heiner Martin version
-HONK	EQU	>03D6			GROM address for "bad tone"; GROM - different pointers to character blocks
-*
-	AORG	>4000
+	AORG	>4000			DSR memory block
 *
 	BYTE	>AA			standard header mark
 	BYTE	>02			version 2
@@ -71,8 +63,6 @@ SUB04	DATA	SUB05
 	DATA	ESUB04			
 NTPFAT	DATA	>0113			subprogram >13 (file rename); doubles as FAT update flag
 *
-RTN5C	DATA	>0000			save GPL return address (needs to be @>4028 for XML >5C!)
-*
 SUB05	DATA	SUB06			
 	DATA	ESUB05			
 	DATA	>0114			subprogram >14 (file direct input)		
@@ -87,8 +77,9 @@ SUB08	DATA	SUB09
 	BYTE	>05			
 	TEXT	'FILES'			same as >16, called from Basic
 *
-PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table; change before calling ALOW from assembly
+PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table; change before calling ACHR from assembly
 AVERSN	TEXT	'v12r'			APEDSK99 version string (ARST)
+XBASRT	DATA	>0000			CALL LINK return address (Extended Basic)
 *
 SUB09	DATA	SUB10
 	DATA	PDSK
@@ -165,10 +156,15 @@ SUB23	DATA	SUB24
 	BYTE	>04
 	TEXT	'ARST'			APEDSK99 Reset
 	EVEN
-SUB24	DATA	>0000
+SUB24	DATA	SUB25
 	DATA	TIME
 	BYTE	>04
 	TEXT	'TIME'			NTP date/time display / assign to NTP$
+	EVEN
+SUB25	DATA	>0000			APEDSK99 configuration (IP address etc)
+	DATA	ACFG
+	BYTE	>04
+	TEXT	'ACFG'
 	EVEN
 *
 PWRUP	DATA	>0000			power-up chain (no more)
@@ -431,7 +427,11 @@ CALSUB	DECT	@>0066(R9)		call subroutine, return address in stack
 	MOVB	R11,@-2(R15)			
 	B	*R10			branch to address in data word
 *				
-RTURN1	MOV	@>0066(R9),R11		get return address from VDP stack
+RTURN1	MOV	@XBASRT,R11		APEDSK99: CALL LINK from Extended Basic?
+	JEQ	H015A			nope
+	B	*R11			yes; return to ExBas program
+*
+H015A	MOV	@>0066(R9),R11		get return address from VDP stack
 	BLWP	@>005A(R9)		
 	DATA	>0162			set VDP to read from address in R11
 	MOVB	@-1026(R15),R11			
@@ -3099,10 +3099,13 @@ ACHR	LI	R6,>3300		load proper lowercase character set
 ARST	LI	R6,>3468		APEDSK99 reset ACOMND
 	JMP	ACLPRP			generic prep
 TIME	LI	R6,>3500		show NTP time and date
+	JMP	ACLPRP			generic prep
+ACFG	LI	R6,>3600		APEDSK99 configuration
 *
 * Generic prep and return to TI BASIC for APEDSK99 CALL's
 *
-ACLPRP	SWPB	R6			get optional subcommand in MSB
+ACLPRP	CLR	@XBASRT			return to TI BASIC, not EXBAS
+	SWPB	R6			get optional subcommand in MSB
 	MOVB	R6,@ASUBCM		save
 	SWPB	R6			back to primary command
 *
@@ -3113,7 +3116,7 @@ ACLPRP	SWPB	R6			get optional subcommand in MSB
 	AI	R8,4			skip length byte and 3 chars of CALL name
 	BL	@VDPR2B			get CALL last char and "(" or "0" in R0
 	SLA	R0,8			only interested in LSB
-	JEQ	NOPARM			0 = no parameters? SMAP / LDIR / AHLP / ACHR / ARST / TIME (and special guest LDSK)
+	JEQ	NOPARM			0 = no parameters? SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG (and special guest LDSK)
 *
 	AI	R8,2			adjust token pointer
 	BL	@VDPR2B			get next two bytes in R0
@@ -3126,7 +3129,7 @@ ACLPRP	SWPB	R6			get optional subcommand in MSB
 *
 ACLERR	B	@RTURN1			expect the unexpected				
 *
-* SMAP / LDIR / AHLP / ACHR / ARST / TIME (and special guest LDSK)
+* SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG (and special guest LDSK)
 *
 NOPARM	CI	R6,>0300		LDSK without parameters is handy (re-use last used DSK#)
 	JEQ	NOPRM2
@@ -3134,15 +3137,15 @@ NOPARM	CI	R6,>0300		LDSK without parameters is handy (re-use last used DSK#)
 	JL	ACLERR
 *
 NOPRM2	MOVB	@LSTDRV,@CALLBF		get last drive accessed (LDSK without parameters)
-	MOVB	R6,@ACOMND		execute LDSK / ACHR / ARST / TIME
-	CI	R6,>3300		ACHR / ARST / TIME ?	
+	MOVB	R6,@ACOMND		execute LDSK / ACHR / ARST / TIME / ACFG
+	CI	R6,>3300		ACHR / ARST / TIME / ACFG?	
 	JL	LDSK2			no; SMAP / LDIR / AHLP use LDSK display routine
 *
 QNOPRM	LI	R8,9			current CALL length
 	CI	R6,>3300		ACHR?
 	JEQ	ACHR2			yes; get some real characters
 	CI	R6,>0300		LDSK()?
-	JNE	A9901			nope; exit with CALL lenght 9 for SMAP / LDIR / AHLP / ARST / TIME
+	JNE	A9901			nope; exit with CALL lenght 9 for SMAP / LDIR / AHLP / ARST / TIME / ACFG
 	AI	R8,3			yep;  exit with CALL length 12 for LDSK
 *
 A9901	JMP	A9904
@@ -3225,38 +3228,38 @@ NXTPRP	LI	R2,702
 	INC	@RDINT			generates interrupt for next file / help txt
 	JMP	NXTSCR
 *
-* MDSK / NDSK / RDSK / FGET / FPUT / ADSR / NDIR
+* MDSK / NDSK / RDSK / FGET / FPUT / ADSR / CDIR
 *
 MNDSK2	INCT	R8			increment pointer
 	BL	@VDPR2B			get next two digits
 *
-QSTRNG	CI	R6,>1000		further check on RDSK / FGET / FPUT / ADSR
+QSTRNG	CI	R6,>1000		further check on RDSK / FGET / FPUT / ADSR / CDIR
 	JL	A9907			no -> sneaky PDSK / UDSK don't belong here	
 	AI	R0,>3900		add 2's complement of >C700 =  only keep # of characters
 	JEQ	A9907			0 characters / empty string -> * INCORRECT COMMAND
 	CI	R0,8			max 8 characters?
 	JH	A9907			no -> * INCORRECT COMMAND
 *
-	MOV	R0,R4			save # of characters
-	LI	R5,CALLBF+2		pointer to DOAD / DSR name	
+	MOV	R0,R4			save #characters
+	LI	R5,CALLBF+2		buffer pointer to DOAD / DSR name	
 	INCT	R8			increment pointer
 	MOV	R8,R2			for VDPRD, address must be in R2
 	BL	@VDPRD			set VDP READ address
 A9906	MOVB	@-1026(R15),*R5+	get character and save in CALL buffer
 	DEC	R0			one less to go
 	JNE	A9906	
-	MOVB	@K002,*R5		mark end of string with >00 (Arduino check for < 8 characters)
+	MOVB	@K002,*R5		mark end of string with >00 (Arduino check for end of string)
 *
 	MOVB	@-1026(R15),R0		get next token
 	CI      R0,>B600                is it a ")" ?
 	JEQ	A9908
 A9907	B	@ACLERR	                * INCORRECT COMMAND
 *
-A9908	LI	R8,13			prep RDSK / FGET / FPUT / ADSR CALL length ( CALL_XXXX("") )
+A9908	LI	R8,13			prep RDSK / FGET / FPUT / ADSR / CDIR CALL length ( CALL_XXXX("") )
 	A	R4,R8			add # of characters in string
 	
 	CI	R6,>1100		MDSK or NDSK?
-	JH	A9909			no; jump and execute RDSK / FGET / FPUT / ADSR
+	JH	A9909			no; jump and execute RDSK / FGET / FPUT / ADSR / CDIR
 	INCT	R8			adjust MDSK and NDSK CALL length
 *
 A9909	MOVB	R6,@ACOMND		command to Arduino
@@ -3383,13 +3386,13 @@ GPLXML	MOVB	@>9802,@SAVGRA		save current GROM address
 	MOV	R11,@SAVR11		save final DSR return address
 *
 	LI	R11,GXRTN		DSR return address after GPL routine
-	MOV	R11,@RTN5C		@>4028 is where XML >5C returns to
+	MOV	R11,@RTNBC		@>A018 is where XML >BC returns to
 *
 	INCT	@>8373			increase stack pointer
 	SWPB	R9			
 	MOVB	@>8373,R9
 	SWPB	R9			complete stack pointer in R9
-	LI	R11,XML5C		GROM pointer to >0F5C (= XML >5C)
+	LI	R11,XMLBC		GROM pointer to >0FBC (= XML >BC)
 	MOV 	R11,*R9			save GROM pointer on stack
 *
 	B	*R5			execute GROM/ROM routine, return through GPL interpreter
