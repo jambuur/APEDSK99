@@ -3374,6 +3374,7 @@ A9919	JMP	A9911			yes; back to BASIC
 *
 SAVGRA	BSS	2			save current GROM address so we can return to BASIC
 SAVR11	BSS	2			GPL interpreter uses R11
+SAVMEX	BSS	2			save current >A018 value
 *
 GPLXML	MOVB	@>9802,@SAVGRA		save current GROM address
 	NOP
@@ -3385,6 +3386,7 @@ GPLXML	MOVB	@>9802,@SAVGRA		save current GROM address
 	MOVB	*R11+,@>9C02
 	MOV	R11,@SAVR11		save final DSR return address
 *
+	MOV	@RTNBC,@SAVMEX		save >A018
 	LI	R11,GXRTN		DSR return address after GPL routine
 	MOV	R11,@RTNBC		@>A018 is where XML >BC returns to
 *
@@ -3401,6 +3403,8 @@ GXRTN	MOVB	@SAVGRA,@>9C02		and ... we're back; restore saved GROM address
 	NOP
 	MOVB	@SAVGRA+1,@>9C02
 *
+	MOV	@SAVMEX,@RTNBC		restore original >A018 value
+*
 	STWP	R9			restore scratchpad pointer
 	AI	R9,-224
 *
@@ -3413,7 +3417,7 @@ NTPDT	MOVB	@NTPFAT+1,@ACOMND	"DSK NTP date/time update" command to Arduino
 	B	*R11			return to Format / Close
 *
 *----------------------------------------------------------------------------------
-* >5F36 - >5FB3: 126 free bytes remaining
+* >5F60 - >5FB3: 54 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's

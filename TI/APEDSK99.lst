@@ -430,7 +430,7 @@ Asm994a TMS99000 Assembler - v3.010
  322  4258 0050  
  323            *
  324  425A 06A0         BL      @NTPDT                  APEDSK99: update DOAD FAT time/date
- 324  425C 5F4A  
+ 324  425C 5F58  
  325            *
  326  425E 0460         B       @RTURN1                 return
  326  4260 435A  
@@ -832,7 +832,7 @@ Asm994a TMS99000 Assembler - v3.010
  616  4516 16F2         JNE     H023                    next
  617            *
  618  4518 06A0 H024    BL      @NTPDT                  APEDSK99: update DOAD FAT time/date
- 618  451A 5F4A  
+ 618  451A 5F58  
  619            *
  620  451C C069         MOV     @>0056(R9),R1           FDR ptr
  620  451E 0056  
@@ -1181,7 +1181,7 @@ Asm994a TMS99000 Assembler - v3.010
  868  4792 0648         DECT    R8                      yes: point back to it
  869            *
  870  4794 06A0 H053    BL      @NTPDT                  APEDSK99: update DOAD FAT time/date
- 870  4796 5F4A  
+ 870  4796 5F58  
  871            *
  872  4798 0429         BLWP    @>005A(R9)              save R8
  872  479A 005A  
@@ -4488,7 +4488,7 @@ Asm994a TMS99000 Assembler - v3.010
 3270  5DFC 0205         LI      R5,GPLINT               no; GPL routine
 3270  5DFE 006A  
 3271  5E00 06A0         BL      @GPLXML                 
-3271  5E02 5EF4  
+3271  5E02 5EF6  
 3272  5E04 56CD         DATA    SCROLL                  scroll screen
 3273  5E06 0202         LI      R2,736                  screen starting position for (error) message
 3273  5E08 02E0  
@@ -4499,7 +4499,7 @@ Asm994a TMS99000 Assembler - v3.010
 3276  5E12 0205         LI      R5,GPLINT               GPL routine
 3276  5E14 006A  
 3277  5E16 06A0         BL      @GPLXML 
-3277  5E18 5EF4  
+3277  5E18 5EF6  
 3278  5E1A 56CD         DATA    SCROLL                  scroll screen
 3279            *
 3280  5E1C 9820         CB      @CALLST,@K007           error (status code 0 - 9)?
@@ -4510,7 +4510,7 @@ Asm994a TMS99000 Assembler - v3.010
 3283  5E24 0205         LI      R5,GPLINT               yes: let's make some noise
 3283  5E26 006A  
 3284  5E28 06A0         BL      @GPLXML
-3284  5E2A 5EF4  
+3284  5E2A 5EF6  
 3285  5E2C 0036         DATA    HONK                    GPL routine"bad tone"
 3286            *
 3287  5E2E 0286 A9910   CI      R6,>3500                TIME() ?
@@ -4597,7 +4597,7 @@ Asm994a TMS99000 Assembler - v3.010
 3346  5EAC 0205         LI      R5,XML16                ROM routine: find NTP$ in VDP symbol table (returns to GPL interpreter)
 3346  5EAE 15D6  
 3347  5EB0 06A0         BL      @GPLXML
-3347  5EB2 5EF4  
+3347  5EB2 5EF6  
 3348  5EB4 2244         DATA    XMLRTN                  GPL "RTN", escaping GPL interpreter
 3349            *
 3350  5EB6 9A60         CB      @VARINF,@>004A(R9)      found NTP$ in VDP symbol table?
@@ -4639,78 +4639,86 @@ Asm994a TMS99000 Assembler - v3.010
 3374            *
 3375  5EF0 0000 SAVGRA  BSS     2                       save current GROM address so we can return to BASIC
 3376  5EF2 0000 SAVR11  BSS     2                       GPL interpreter uses R11
-3377            *
-3378  5EF4 D820 GPLXML  MOVB    @>9802,@SAVGRA          save current GROM address
-3378  5EF6 9802  
-3378  5EF8 5EF0  
-3379  5EFA 1000         NOP
-3380  5EFC D820         MOVB    @>9802,@SAVGRA+1
-3380  5EFE 9802  
-3380  5F00 5EF1  
-3381  5F02 0620         DEC     @SAVGRA                 GRMWA returns address + 1; decrease for correct address
-3381  5F04 5EF0  
-3382            *
-3383  5F06 D83B         MOVB    *R11+,@>9C02            set GPL routine address
-3383  5F08 9C02  
-3384  5F0A 1000         NOP
-3385  5F0C D83B         MOVB    *R11+,@>9C02
-3385  5F0E 9C02  
-3386  5F10 C80B         MOV     R11,@SAVR11             save final DSR return address
-3386  5F12 5EF2  
-3387            *
-3388  5F14 020B         LI      R11,GXRTN               DSR return address after GPL routine
-3388  5F16 5F30  
-3389  5F18 C80B         MOV     R11,@RTNBC              @>A018 is where XML >BC returns to
-3389  5F1A A018  
-3390            *
-3391  5F1C 05E0         INCT    @>8373                  increase stack pointer
-3391  5F1E 8373  
-3392  5F20 06C9         SWPB    R9                      
-3393  5F22 D260         MOVB    @>8373,R9
-3393  5F24 8373  
-3394  5F26 06C9         SWPB    R9                      complete stack pointer in R9
-3395  5F28 020B         LI      R11,XMLBC               GROM pointer to >0FBC (= XML >BC)
-3395  5F2A 4409  
-3396  5F2C C64B         MOV     R11,*R9                 save GROM pointer on stack
-3397            *
-3398  5F2E 0455         B       *R5                     execute GROM/ROM routine, return through GPL interpreter
+3377  5EF4 0000 SAVMEX  BSS     2                       save current >A018 value
+3378            *
+3379  5EF6 D820 GPLXML  MOVB    @>9802,@SAVGRA          save current GROM address
+3379  5EF8 9802  
+3379  5EFA 5EF0  
+3380  5EFC 1000         NOP
+3381  5EFE D820         MOVB    @>9802,@SAVGRA+1
+3381  5F00 9802  
+3381  5F02 5EF1  
+3382  5F04 0620         DEC     @SAVGRA                 GRMWA returns address + 1; decrease for correct address
+3382  5F06 5EF0  
+3383            *
+3384  5F08 D83B         MOVB    *R11+,@>9C02            set GPL routine address
+3384  5F0A 9C02  
+3385  5F0C 1000         NOP
+3386  5F0E D83B         MOVB    *R11+,@>9C02
+3386  5F10 9C02  
+3387  5F12 C80B         MOV     R11,@SAVR11             save final DSR return address
+3387  5F14 5EF2  
+3388            *
+3389  5F16 C820         MOV     @RTNBC,@SAVMEX          save >A018
+3389  5F18 A018  
+3389  5F1A 5EF4  
+3390  5F1C 020B         LI      R11,GXRTN               DSR return address after GPL routine
+3390  5F1E 5F38  
+3391  5F20 C80B         MOV     R11,@RTNBC              @>A018 is where XML >BC returns to
+3391  5F22 A018  
+3392            *
+3393  5F24 05E0         INCT    @>8373                  increase stack pointer
+3393  5F26 8373  
+3394  5F28 06C9         SWPB    R9                      
+3395  5F2A D260         MOVB    @>8373,R9
+3395  5F2C 8373  
+3396  5F2E 06C9         SWPB    R9                      complete stack pointer in R9
+3397  5F30 020B         LI      R11,XMLBC               GROM pointer to >0FBC (= XML >BC)
+3397  5F32 4409  
+3398  5F34 C64B         MOV     R11,*R9                 save GROM pointer on stack
 3399            *
-3400  5F30 D820 GXRTN   MOVB    @SAVGRA,@>9C02          and ... we're back; restore saved GROM address
-3400  5F32 5EF0  
-3400  5F34 9C02  
-3401  5F36 1000         NOP
-3402  5F38 D820         MOVB    @SAVGRA+1,@>9C02
-3402  5F3A 5EF1  
+3400  5F36 0455         B       *R5                     execute GROM/ROM routine, return through GPL interpreter
+3401            *
+3402  5F38 D820 GXRTN   MOVB    @SAVGRA,@>9C02          and ... we're back; restore saved GROM address
+3402  5F3A 5EF0  
 3402  5F3C 9C02  
-3403            *
-3404  5F3E 02A9         STWP    R9                      restore scratchpad pointer
-3405  5F40 0229         AI      R9,-224
-3405  5F42 FF20  
-3406            *
-3407  5F44 C2E0         MOV     @SAVR11,R11             restore R11
-3407  5F46 5EF2  
-3408  5F48 045B         B       *R11                    return to instruction after BL @GPLEXEC DATA statement
-3409            *               
-3410            * update FAT time/date for current DOAD after DSR Write / Format / Save
-3411            *
-3412  5F4A D820 NTPDT   MOVB    @NTPFAT+1,@ACOMND       "DSK NTP date/time update" command to Arduino           
-3412  5F4C 4027  
-3412  5F4E 5FE8  
-3413  5F50 045B         B       *R11                    return to Format / Close
-3414            *
-3415            *----------------------------------------------------------------------------------
-3416            * >5F36 - >5FB3: 126 free bytes remaining
-3417            * >5FC2 - >5FD3 is DSK1-3 parameters storage
-3418            * >5FD4 is the CALL() status byte
-3419            * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
-3420            * >5FE8 is the Arduino Command Register (TI BASIC CALL support)
-3421            * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
-3422            * Bytes >5FEE maps to the CRU emulation write register
-3423            * Bytes >5FF0 to >5FFE map to the FDC emulation registers
-3424            *-----------------------------------------------------------------------------------                                    
-3425            *
-3426  5F52 0000         END
-3426            
+3403  5F3E 1000         NOP
+3404  5F40 D820         MOVB    @SAVGRA+1,@>9C02
+3404  5F42 5EF1  
+3404  5F44 9C02  
+3405            *
+3406  5F46 C820         MOV     @SAVMEX,@RTNBC          restore original >A018 value
+3406  5F48 5EF4  
+3406  5F4A A018  
+3407            *
+3408  5F4C 02A9         STWP    R9                      restore scratchpad pointer
+3409  5F4E 0229         AI      R9,-224
+3409  5F50 FF20  
+3410            *
+3411  5F52 C2E0         MOV     @SAVR11,R11             restore R11
+3411  5F54 5EF2  
+3412  5F56 045B         B       *R11                    return to instruction after BL @GPLEXEC DATA statement
+3413            *               
+3414            * update FAT time/date for current DOAD after DSR Write / Format / Save
+3415            *
+3416  5F58 D820 NTPDT   MOVB    @NTPFAT+1,@ACOMND       "DSK NTP date/time update" command to Arduino           
+3416  5F5A 4027  
+3416  5F5C 5FE8  
+3417  5F5E 045B         B       *R11                    return to Format / Close
+3418            *
+3419            *----------------------------------------------------------------------------------
+3420            * >5F60 - >5FB3: 54 free bytes remaining
+3421            * >5FC2 - >5FD3 is DSK1-3 parameters storage
+3422            * >5FD4 is the CALL() status byte
+3423            * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
+3424            * >5FE8 is the Arduino Command Register (TI BASIC CALL support)
+3425            * Word >5FEA maps to the read counter (R6, to generate interrupts when reading data) 
+3426            * Bytes >5FEE maps to the CRU emulation write register
+3427            * Bytes >5FF0 to >5FFE map to the FDC emulation registers
+3428            *-----------------------------------------------------------------------------------                                    
+3429            *
+3430  5F60 0000         END
+3430            
 
 
  Assembly Complete - Errors: 0,  Warnings: 0
@@ -4822,8 +4830,8 @@ Asm994a TMS99000 Assembler - v3.010
  FRSCB1 ABS:4CAE FRSCB1
  FSCTOF ABS:4736 FSCTOF
  GPLINT ABS:006A GPLINT
- GPLXML ABS:5EF4 GPLXML
- GXRTN  ABS:5F30 GXRTN
+ GPLXML ABS:5EF6 GPLXML
+ GXRTN  ABS:5F38 GXRTN
  H001   ABS:4148 H001
  H002   ABS:41AC H002
  H003   ABS:41CC H003
@@ -5066,7 +5074,7 @@ Asm994a TMS99000 Assembler - v3.010
  NOCRU  ABS:418E NOCRU
  NOPARM ABS:5CB8 NOPARM
  NOPRM2 ABS:5CC4 NOPRM2
- NTPDT  ABS:5F4A NTPDT
+ NTPDT  ABS:5F58 NTPDT
  NTPFAT ABS:4026 NTPFAT
  NXTPRP ABS:5D88 NXTPRP
  NXTSCR ABS:5D54 NXTSCR
@@ -5133,6 +5141,7 @@ Asm994a TMS99000 Assembler - v3.010
  RWVIB  ABS:49BE RWVIB
  SAVE   ABS:545A SAVE
  SAVGRA ABS:5EF0 SAVGRA
+ SAVMEX ABS:5EF4 SAVMEX
  SAVR11 ABS:5EF2 SAVR11
  SCROLL ABS:56CD SCROLL
  SECRW1 ABS:4192 SECRW1
