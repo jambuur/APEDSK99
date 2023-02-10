@@ -77,9 +77,14 @@ SUB08	DATA	SUB09
 	BYTE	>05			
 	TEXT	'FILES'			same as >16, called from Basic
 *
-PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table; change before calling ACHR from assembly
+PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table
 AVERSN	TEXT	'v12r'			APEDSK99 version string (ARST)
+*
 XBASRT	DATA	>0000			CALL LINK return address (Extended Basic)
+XBPFDO	DATA 	PRPFDO			CALL LINK jump table (Extended Basic only): 
+XBJUMP	DATA	XBUSTR			  PDSK / UDSK/ LDSK entry point
+	DATA	A9909			  MDSK / NDSK / RDSK / FGET / FPUT / ADSR / CDIR entry point
+	DATA	NOPRM2			  SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG entry point
 *
 SUB09	DATA	SUB10
 	DATA	PDSK
@@ -3185,7 +3190,7 @@ A9903	JEQ	ACLERR			DSK0 not valid, * INCORRECT COMMAND
 	CI	R6,>1000		MDSK or NDSK?
 	JHE	MNDSK2			yep
 *
-	MOVB	R6,@ACOMND		send PDSK / UDSK / LDSK command to Arduino
+XBUSTR	MOVB	R6,@ACOMND		send PDSK / UDSK / LDSK command to Arduino
 
 	CI 	R6,>0300		LDSK?
 	JEQ	LDSK2			yep
@@ -3417,7 +3422,7 @@ NTPDT	MOVB	@NTPFAT+1,@ACOMND	"DSK NTP date/time update" command to Arduino
 	B	*R11			return to Format / Close
 *
 *----------------------------------------------------------------------------------
-* >5F60 - >5FB3: 54 free bytes remaining
+* >5F68 - >5FB3: 46 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
