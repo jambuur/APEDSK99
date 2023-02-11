@@ -10,7 +10,7 @@ byte protectDSK[3]    = {0x20, 0x20, 0x20};                                     
 byte currentDSK       = 0;                                                                            //current selected DSK
 
 //command status and error handling
-#define AVersion        0x4048                                                                        //DSR version string
+#define AVersion        0x4046                                                                        //DSR version string
 #define DSKprm          0x5FB4                                                                        //per DSKx: Mbyte/Lbyte #sectors, #sectors/track, #tracks, #sides
 #define CALLST          0x5FC6                                                                        //CALL() execution status                                                        
 #define DOADNotMapped        0
