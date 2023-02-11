@@ -1,8 +1,8 @@
 # APEDSK99
 
-###February 2023: MAJOR UPDATE in progress
+### *February 2023: MAJOR UPDATE in progress*
 
-check the TI Italian User Club for a review of the new version: https://www.ti99iuc.it/web/index.php?pagina=articoli&artid=219#.Y-gqDi9BxaS
+Check the TI Italian User Club for a review of the new version: https://www.ti99iuc.it/web/index.php?pagina=articoli&artid=219#.Y-gqDi9BxaS
 
 I am working on updating this page, youtube channel etc; stay tuned. Biggest takeaway is that APEDSK99 is now pretty much plug and play. I am thinking of
 supplying pre-assembled APEDSK99 shields only and leave the user to source a cheap Arduino UNO + Ethernet Shield combo. I have also been approached by a web shop
