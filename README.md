@@ -1,4 +1,13 @@
 # APEDSK99
+
+###February 2023: MAJOR UPDATE in progress
+
+check the TI Italian User Club for a review of the new version: https://www.ti99iuc.it/web/index.php?pagina=articoli&artid=219#.Y-gqDi9BxaS
+
+I am working on updating this page, youtube channel etc; stay tuned. Biggest takeaway is that APEDSK99 is now pretty much plug and play. I am thinking of
+supplying pre-assembled APEDSK99 shields only and leave the user to source a cheap Arduino UNO + Ethernet Shield combo. I have also been approached by a web shop
+interested in selling complete kits. Stay tuned :-) 
+
 ### *Arduino DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
 APEDSK99 is an Arduino shield that emulates 3 DS/DD/80T floppy drives for the TI99/4a home computer. Combined with a Ethernet / SD shield it allows you to load and save Disk-On-A-Disk (DOAD) floppy images on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
@@ -15,7 +24,7 @@ The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the T
 A status LED indicates APEDSK99 access as well as showing possible error codes.
 
 The DSR is still very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
-DSR code optimisation made enough RAM available to include some useful _BASIC_ CALL routines. I think it's rather nice that most of the orginal programmers' blood, sweat and tears lives on.
+DSR code optimisation made enough RAM available to include some useful BASIC CALL routines. I think it's rather nice that most of the orginal programmers' blood, sweat and tears lives on.
 
 ### *How does it work?*
 
@@ -27,42 +36,11 @@ When the TI issues disk controller commands by writing to the various FD1771 reg
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
-### *APEDSK99 construction*
-
-Putting the APEDSK99 shield together is straightforward. 
-
-The KiCad files can be sent to your favourite online PCB maker (I use [JCLPCB](https://jlcpcb.com/)). 
-
-The three things that need a little bit of attention are: 
-
-#### 1. mounting the [edge connector](img/CONN22x2P44P25401.jpg)
-- The bottom row of pins need to be [bent 90 degrees downwards and the top row slightly bent upwards](img/APEDSK99conn.jpg)
-- [Rough up](img/SPAPER.jpg) the bottom side of the connector housing and the PCB area it will sit on (between PCB edge and white line)
-- Clean the 2 surfaces and [apply dots of superglue](img/GLUE.jpg) across the length of 1 area
-- Line up the bottom connector pins with the row of PCB holes marked 1-43 and press the connector firmly on the PCB, making sure all connector pins stick through to the soldering side. After clamping it for a bit to let the glue dry, the bottom row pins can now be soldered. 
-- The top row pins are soldered to the PCB via a [suitable length of standard header](img/APEDSK99connsold.jpg).
-
-#### 2. installing the RAM IC 
-The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slimline+. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at an angle under the chip and then bend the very end of the pins back straight (needlenose pliers). Without too much fiddling the IC will fit the smaller hole pattern and leave plenty of pin material sticking through for soldering. Alternatively, you can also mount the RAM in a (machined) IC socket the same way.
-
-The [Arduino shield sandwich](img/SANDWICH.jpg) (UNO - APEDSK99 - ETHERNET/SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
-
-One other thing to note is that the Arduino [stackable headers](img/SHEADER.jpg) seem to come in a long and a short version. The short version won't let the APEDSK99 shield fit properly on the Arduino UNO as it interferes with the USB type B and the power adapter connectors. Make sure you etiher get the long version or use an UNO with a micro-USB connector and de-solder its power adapter connector. 
-
-#### 3. Ethernet / SD shield modifcations
-Depending on your Ethernet / SD shield version some minor surgery may be necessary. My version has SPI available through a separate 6 pin header only, not at the familiair D11-D14 (why? why?). If this is the case with your shield, you will need to extend the SPI signals to D11-D14 with some [extra wiring](img/ESHIELDMOD.jpg).
-
-Most Ethernet / SD shields use D4 for the SD CS pin. This also happens to be APEDSK99 D3 (as in databus, not in Arduino digital pin) and this combo function doesn't work. Bend D10 and D4 inwards and connect [2 jumper wires](img/JUMPER.jpg): D10 to D2 (moves Ethernet CS to D2) and D4 to APEDSK99 D10 (moves SD CS to D10). 
-
-### *GAL*
-
-Memory decoding and interrupt generation is done through a 16V8 GAL. It was my first experience with these magic devices and needless to say I am hooked (yes I know they are sort of obsolete). You will need a suitable programmer to program the GAL with the supplied PLD file.
-
 ### *DOAD's*
 
-DOAD's need to be stored in a /DISKS/ folder on the SD card or on a FTP server. DOAD filenames must follow the DOS 8.3 format and have a ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's (see below).
+DOAD's are stored in a root folders on the SD card or on a FTP server. Default APEDSK99 files include a DISKS folder including a bunch of useful images to get you started. DOAD filenames must follow the DOS 8.3 format and have a ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's (see below).
 
-Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. Single-sided formatting takes about 15 seconds and verifying is unnecesary. Fun fact: single-sided DOAD's automagically become double-sided by formatting them accordingly. Reverse is also true but the DOAD will still take DD / 180KB of disk space (not that it matters with likely plenty of SD or FTP GB's to spare).
+Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. 
 
 On my setup (a Linux server with VSFTP within the same LAN segment) I get about 20Kbyte upload and 30Kbyte download speed. In practice it means 5-10 seconds between the TI-BASIC FTP CALL and back to the friendly flashing cursor.
 
