@@ -4,9 +4,9 @@
 
 Check the TI Italian User Club for a review of the new version: https://www.ti99iuc.it/web/index.php?pagina=articoli&artid=219#.Y-gqDi9BxaS
 
-I am working on updating this page, youtube channel etc; stay tuned. Biggest takeaway is that APEDSK99 is now pretty much plug and play. I am thinking of
-supplying pre-assembled APEDSK99 shields only and leave the user to source a cheap Arduino UNO + Ethernet Shield combo. I have also been approached by a web shop
-interested in selling complete kits. Stay tuned :-) 
+I am working on updating this Github page, Youtube channel etc. Biggest takeaway is that APEDSK99 is now pretty much plug and play. I am thinking of
+supplying pre-assembled APEDSK99 shields only, with the user sourcing a cheap Arduino UNO + Ethernet Shield combo from Ebay, AliExpress. 
+Alternatively, I could supply complete kits; I have also been approached by a web shop interested in the same. Stay tuned :-) 
 
 ### *Arduino DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
