@@ -1,13 +1,13 @@
 # APEDSK99
 ### *Arduino DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/SD floppy drives for the TI99/4a home computer. Combined with a Ethernet / SD shield it allows you to load and save Disk-On-A-Disk (DOAD) single and double sided floppy images on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to TI-BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
+APEDSK99 is an Arduino shield that emulates 3 DS/DD/80T floppy drives for the TI99/4a home computer. Combined with a Ethernet / SD shield it allows you to load and save Disk-On-A-Disk (DOAD) floppy images on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/TRIO.jpg)
 
-Like the TI, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day and it can be put together by anybody with basic soldering skills.
+Like the TI, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day and it can be put together by anybody with basic soldering skills. 
 
-The TI<->shield interface is the familiar design, with 74LS541 buffers for address lines and a bi-directional 74LS245 buffer for the databus.  A 64Kx8 RAM stores the DSR code and provides the 32K RAM expansion. CRU is emulated through memory mapped addresses, simplifying shield design. 
+The TI<->shield interface is the familiar design, with 74HCT541 buffers for address lines and a bi-directional 74LS245 buffer for the databus.  A 64Kx8 RAM stores the DSR code and provides the 32K RAM expansion. CRU is emulated through memory mapped addresses, simplifying shield design. 
 A user-selectable binary DSR file is loaded into RAM by the Arduino at powerup / reset. 
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. As GPIO pins are in rather short supply, Arduino RAM addressing is serial-to-parallel through 74HC595 shift registers. 
@@ -15,9 +15,7 @@ The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the T
 A status LED indicates APEDSK99 access as well as showing possible error codes.
 
 The DSR is still very much the original TI Disk Controller ROM, but adapted to interface with a reliable SD card instead of wonky floppies. 
-DSR code optimisation made enough RAM available to include some useful _TI BASIC_ CALL routines. 
-
-I have left the orginal program code in the DSR source and commented the changes I have made to make it work with SD cards. I think it's rather nice that most of the orginal programmers' blood, sweat and tears lives on.
+DSR code optimisation made enough RAM available to include some useful _BASIC_ CALL routines. I think it's rather nice that most of the orginal programmers' blood, sweat and tears lives on.
 
 ### *How does it work?*
 
@@ -45,7 +43,7 @@ The three things that need a little bit of attention are:
 - The top row pins are soldered to the PCB via a [suitable length of standard header](img/APEDSK99connsold.jpg).
 
 #### 2. installing the RAM IC 
-The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slimline+. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at a slight angle under the chip and then bend the very end of the pins back straight (needlenose pliers). Without too much fiddling the IC will fit the smaller hole pattern and leave plenty of pin material sticking through for soldering. Alternatively, you can also mount the RAM in a (machined) IC socket the same way.
+The initial APEDSK99 version used a slimline 8Kx8 RAM and little did I know that the 32Kx8 RAM would be slimline+. I decided against a major PCB redesign so you have to make the RAM fit. This is not that difficult: bend the pins at an angle under the chip and then bend the very end of the pins back straight (needlenose pliers). Without too much fiddling the IC will fit the smaller hole pattern and leave plenty of pin material sticking through for soldering. Alternatively, you can also mount the RAM in a (machined) IC socket the same way.
 
 The [Arduino shield sandwich](img/SANDWICH.jpg) (UNO - APEDSK99 - ETHERNET/SD) is attached to the TI sideport. I suggest you use some sort of padding between the UNO and your desk etc to prevent the stack from flapping in the breeze. It shouldn't be too hard to fit the stack into a neat little jiffy case.
 
