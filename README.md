@@ -43,7 +43,7 @@ DOAD's are stored in a root folders on the SD card or on a FTP server. Default A
 
 Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. 
 
-On my setup (a Linux server with VSFTP within the same LAN segment) I get about 20Kbyte upload and 30Kbyte download speed. In practice it means 5-10 seconds between the TI-BASIC FTP CALL and back to the friendly flashing cursor.
+Regarding FTP, on my setup (a Linux server with VSFTP within the same LAN segment) I get about ~22Kbyte upload / download speed. In practice it means 6-7 seconds between the TI-BASIC FTP CALL for a SS/SD image and back to the friendly flashing cursor.
 
 ### *TI BASIC support*
 
