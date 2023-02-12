@@ -48,14 +48,18 @@ Regarding FTP, on my setup (a Linux server with VSFTP within the same LAN segmen
 ### *TI BASIC support*
 
 The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's CALL AHLP; it shows the following help screen:
-
 <p align="center">
   <img width="576" src=img/AHLPv2.jpg>
 </p>
- 
 - CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
-- CALL SDIR list the DOAD's in the /DISKS/ directory on the SD card including single sided (1S) or double sided (2S)
-- CALL SDSK shows the current DSK->DOAD mappings, Protect/Unprotect status and # of free sectors
+- CALL LDIR list the DOAD's in the current selected directory on the SD card and includes DOS DOAD name, TI DISK NAME and DSK characteristics:
+<p align="center">
+  <img width="576" src=img/LDIR.jpg>
+</p>
+- CALL SMAP shows the current DSK->DOAD mappings, Protect/Unprotect status and # of free sectors:
+<p align="center">
+  <img width="576" src=img/SMAP.jpg>
+</p>
 - CALL TIME gets the current date and time from your NTP server of choice for display in TI-BASIC. The CONFIG sketch only requires a couple of parameters changed to get it going. If a BASIC variable NTP$ (16 chars) exists prior to the CALL, it will get assigned the NTP data. This command is also handy to check basic network connectivity is available.
 - CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
 - CALL LDSK list the files on a DOAD including the type (P)rogram / (D)isplay / (I)nternal and size in sectors. I always thought that was a really nice feature the C64 had.
