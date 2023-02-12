@@ -49,7 +49,9 @@ Regarding FTP, on my setup (a Linux server with VSFTP within the same LAN segmen
 
 The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's CALL AHLP; it shows the following help screen:
 
+<p align="center">
 ![KiCAD 3D view](img/AHLPv2.jpg)
+</p>
 
 - CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 - CALL SDIR list the DOAD's in the /DISKS/ directory on the SD card including single sided (1S) or double sided (2S)
