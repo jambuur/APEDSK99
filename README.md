@@ -55,16 +55,18 @@ The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really on
 <p align="center">
   <img width="576" src=img/LDIR.jpg>
 </p>
+
 **CALL SMAP** shows the current DSKx -> DOAD mappings plus extended info and the available directories on the SD Card:
 <p align="center">
   <img width="576" src=img/SMAP2.jpg>
 </p>
+
 **CALL TIME** gets the current date and time from an NTP server for display in BASIC. If a BASIC variable NTP$ with exactly 16 chars in size exists prior to the CALL, it will get assigned the NTP data:
 <p align="center">
   <img width="576" src=img/TIME4.jpg>
 </p>
 
-**CALL ACHR** redefines the "lower captial" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can only enjoy lower case characters in a running program (NB see Extended Basic below). This is the output of 10 CALl ACHR - 20 CALL AHLP - 30 GOTO 30:
+**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters in a running program (NB see Extended Basic below). This is the output of 10 CALl ACHR - 20 CALL AHLP - 30 GOTO 30:
 <p align="center">
   <img width="576" src=img/ACHR.jpg>
 </p>
