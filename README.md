@@ -58,12 +58,15 @@ CALL LDIR list the DOAD's in the current selected directory on the SD card:
 <p align="center">
   <img width="576" src=img/LDIR.jpg>
 </p>
-
-CALL SMAP shows the working directory, the current DSKx -> DOAD mappings plus extended info and the available directories:
+CALL SMAP shows the current DSKx -> DOAD mappings plus extended info and the available directories. Next screen is selected by <SPACE>, back to the prompt by <ENTER>:
 <p align="center">
   <img width="576" src=img/SMAP.jpg>
 </p>
-- CALL TIME gets the current date and time from your NTP server of choice for display in TI-BASIC. The CONFIG sketch only requires a couple of parameters changed to get it going. If a BASIC variable NTP$ (16 chars) exists prior to the CALL, it will get assigned the NTP data. This command is also handy to check basic network connectivity is available.
+CALL TIME gets the current date and time from an NTP server for display in BASIC. If a BASIC variable NTP$ with exactly 16 chars in size exists prior to the CALL, it will get assigned the NTP data:
+<p align="center">
+  <img width="576" src=img/TIME.jpg>
+</p>
+  
 - CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
 - CALL LDSK list the files on a DOAD including the type (P)rogram / (D)isplay / (I)nternal and size in sectors. I always thought that was a really nice feature the C64 had.
 - CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
