@@ -49,7 +49,7 @@ The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really on
   <img width="576" src=img/AHLPv2.jpg>
 </p>
 
-_CALL ARST_ resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
+*CALL ARST* resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
 *CALL LDIR* list the DOAD's in the current selected directory on the SD card (next screen = SPACE, back to the prompt = ENTER):
 <p align="center">
