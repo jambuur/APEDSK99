@@ -59,6 +59,7 @@ CALL LDIR list the DOAD's in the current selected directory on the SD card (next
   <img width="576" src=img/LDIR.jpg>
 </p>
 CALL SMAP shows the current DSKx -> DOAD mappings plus extended info and the available directories on the SD Card:
+</br>
 <p align="center">
   <img width="576" src=img/SMAP2.jpg>
 </p>
