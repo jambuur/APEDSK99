@@ -44,25 +44,31 @@ Regarding FTP, on my setup (a Linux server with VSFTP within the same LAN segmen
 
 ### *BASIC support*
 
-The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's *CALL AHLP*; it shows the following help screen:
+The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's **CALL AHLP**; it shows the following help screen:
 <p align="center">
   <img width="576" src=img/AHLPv2.jpg>
 </p>
 
-*CALL ARST* resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
+**CALL ARST** resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
-*CALL LDIR* list the DOAD's in the current selected directory on the SD card (next screen = SPACE, back to the prompt = ENTER):
+**CALL LDIR** list the DOAD's in the current selected directory on the SD card (next screen = SPACE, back to the prompt = ENTER):
 <p align="center">
   <img width="576" src=img/LDIR.jpg>
 </p>
-*CALL SMAP* shows the current DSKx -> DOAD mappings plus extended info and the available directories on the SD Card:
+**CALL SMAP** shows the current DSKx -> DOAD mappings plus extended info and the available directories on the SD Card:
 <p align="center">
   <img width="576" src=img/SMAP2.jpg>
 </p>
-CALL TIME gets the current date and time from an NTP server for display in BASIC. If a BASIC variable NTP$ with exactly 16 chars in size exists prior to the CALL, it will get assigned the NTP data:
+**CALL TIME** gets the current date and time from an NTP server for display in BASIC. If a BASIC variable NTP$ with exactly 16 chars in size exists prior to the CALL, it will get assigned the NTP data:
 <p align="center">
   <img width="576" src=img/TIME4.jpg>
 </p>
+
+**CALL ACHR** redefines the "lower captial" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can only enjoy lower case characters in a running program (NB see Extended Basic below). This is the output of 10 CALl ACHR - 20 CALL AHLP - 30 GOTO 30:
+<p align="center">
+  <img width="576" src=img/ACHR.jpg>
+</p>
+
   
 CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset:
 
