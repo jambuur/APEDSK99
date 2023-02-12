@@ -45,7 +45,7 @@ Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (b
 
 Regarding FTP, on my setup (a Linux server with VSFTP within the same LAN segment) I get about ~22Kbyte upload / download speed. In practice it means 6-7 seconds between the TI-BASIC FTP CALL for a SS/SD image and back to the friendly flashing cursor.
 
-### *TI BASIC support*
+### *BASIC support*
 
 The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's CALL AHLP; it shows the following help screen:
 <p align="center">
@@ -58,7 +58,7 @@ CALL LDIR list the DOAD's in the current selected directory on the SD card (next
 <p align="center">
   <img width="576" src=img/LDIR.jpg>
 </p>
-CALL SMAP shows the current DSKx -> DOAD mappings plus extended info and the available directories:
+CALL SMAP shows the current DSKx -> DOAD mappings plus extended info and the available directories on the SD Card:
 <p align="center">
   <img width="576" src=img/SMAP.jpg>
 </p>
@@ -67,7 +67,9 @@ CALL TIME gets the current date and time from an NTP server for display in BASIC
   <img width="576" src=img/TIME2.jpg>
 </p>
   
-- CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
+CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset:
+
+
 - CALL LDSK list the files on a DOAD including the type (P)rogram / (D)isplay / (I)nternal and size in sectors. I always thought that was a really nice feature the C64 had.
 - CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
 - CALL RDSK removes a DOAD from the SD card. In line with BOFH standards no confirmation is required :-)
