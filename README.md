@@ -43,13 +43,13 @@ DOAD's are stored in a root folders on the SD card or on a FTP server. Default A
 
 Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. 
 
-On my setup (a Linux server with VSFTP within the same LAN segment) I get about 20Kbyte upload and 30Kbyte download speed. In practice it means 5-10 seconds between the TI-BASIC FTP CALL and back to the friendly flashing cursor.
+Regarding FTP, on my setup (a Linux server with VSFTP within the same LAN segment) I get about ~22Kbyte upload / download speed. In practice it means 6-7 seconds between the TI-BASIC FTP CALL for a SS/SD image and back to the friendly flashing cursor.
 
 ### *TI BASIC support*
 
 The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really only one to remember and that's CALL AHLP; it shows the following help screen:
 
-![KiCAD 3D view](img/AHLP.jpg)
+(img/AHLP.jpg)
 
 - CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 - CALL SDIR list the DOAD's in the /DISKS/ directory on the SD card including single sided (1S) or double sided (2S)
