@@ -15,10 +15,7 @@ APEDSK99 is an Arduino shield that emulates 3 DS/DD/80T floppy drives for the TI
 
 ![KiCAD 3D view](img/TRIO.jpg)
 
-Like the TI, APEDSK99 is based on good old through-hole technology. No risk of sneezing ruining your SMD day and it can be put together by anybody with basic soldering skills. 
-
-The TI<->shield interface is the familiar design, with 74HCT541 buffers for address lines and a bi-directional 74LS245 buffer for the databus.  A 64Kx8 RAM stores the DSR code and provides the 32K RAM expansion. CRU is emulated through memory mapped addresses, simplifying shield design. 
-A user-selectable binary DSR file is loaded into RAM by the Arduino at powerup / reset. 
+Like the TI, APEDSK99 is based on good old through-hole technology. The TI<->shield interface is the familiar design, with 74HCT541 buffers for address lines and a bi-directional 74LS245 buffer for the databus.  A 64Kx8 RAM stores the DSR code and provides the 32K RAM expansion. CRU is emulated through memory mapped addresses, simplifying shield design. A user-selectable binary DSR file is loaded into RAM by the Arduino at powerup / reset. 
 
 The Arduino UNO controls the TI interface, has R/W access to RAM, can halt the TI and tries to act as a FD1771. As GPIO pins are in rather short supply, Arduino RAM addressing is serial-to-parallel through 74HC595 shift registers. 
 
@@ -52,7 +49,7 @@ The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really on
   <img width="576" src=img/AHLPv2.jpg>
 </p>
 
-*CALL ARST* resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
+_CALL ARST_ resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
 *CALL LDIR* list the DOAD's in the current selected directory on the SD card (next screen = SPACE, back to the prompt = ENTER):
 <p align="center">
