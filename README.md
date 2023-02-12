@@ -64,7 +64,7 @@ CALL SMAP shows the current DSKx -> DOAD mappings plus extended info and the ava
 </p>
 CALL TIME gets the current date and time from an NTP server for display in BASIC. If a BASIC variable NTP$ with exactly 16 chars in size exists prior to the CALL, it will get assigned the NTP data:
 <p align="center">
-  <img width="576" src=img/TIME3.jpg>
+  <img width="576" src=img/TIME4.jpg>
 </p>
   
 CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset:
