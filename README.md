@@ -39,7 +39,7 @@ When the TI issues disk controller commands by writing to the various FD1771 reg
 
 ### *DOAD's*
 
-DOAD's are stored in a root folders on the SD card or on a FTP server. Default APEDSK99 files include a DISKS folder including a bunch of useful images to get you started. DOAD filenames must follow the DOS 8.3 format and have a ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's (see below).
+DOAD's are stored in root folders on the SD card or on a FTP server. Default APEDSK99 files include a DISKS folder with a bunch of useful images to get you started. DOAD filenames must follow the DOS 8.3 format and have a ".DSK" extension. At powerup or reset the Arduino looks for optional "__APEDSK1.DSK" / "_APEDSK2.DSK" / "_APEDSK3.DSK" files and maps them accordingly so you can have your favourite apps ready to go. The DSR has support for DOAD management through TI BASIC CALL's (see below).
 
 Once a DOAD is mapped to a particular DSK, it behaves very much like a normal (but rather speedy) floppy. 
 
@@ -54,17 +54,17 @@ The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really on
 
 CALL ARST resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their initial state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
-CALL LDIR list the DOAD's in the current selected directory on the SD card:
+CALL LDIR list the DOAD's in the current selected directory on the SD card (next screen = SPACE, back to the prompt = ENTER):
 <p align="center">
   <img width="576" src=img/LDIR.jpg>
 </p>
-CALL SMAP shows the current DSKx -> DOAD mappings plus extended info and the available directories. Next screen is selected by <SPACE>, back to the prompt by <ENTER>:
+CALL SMAP shows the current DSKx -> DOAD mappings plus extended info and the available directories:
 <p align="center">
   <img width="576" src=img/SMAP.jpg>
 </p>
 CALL TIME gets the current date and time from an NTP server for display in BASIC. If a BASIC variable NTP$ with exactly 16 chars in size exists prior to the CALL, it will get assigned the NTP data:
 <p align="center">
-  <img width="576" src=img/TIME.jpg?>
+  <img width="576" src=img/TIME2.jpg>
 </p>
   
 - CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset.
