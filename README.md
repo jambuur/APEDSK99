@@ -66,14 +66,15 @@ The DSR includes additional TI BASIC CALL's to manage DOAD's. There is really on
   <img width="576" src=img/TIME4.jpg>
 </p>
 
-**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters in a running program (NB see Extended Basic below). This is the output of 10 CALl ACHR - 20 CALL AHLP - 30 GOTO 30:
+**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters in a running program (**NB** see the notes on _Extended Basic_ further below): 
 <p align="center">
   <img width="576" src=img/ACHR.jpg>
 </p>
-
   
-CALL PDSK and CALL UDSK apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DOAD. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset:
-
+**CALL PDSK** and **CALL UDSK** apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DSK. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset:
+<p align="center">
+  <img width="576" src=img/PUDSK.jpg>
+</p>
 
 - CALL LDSK list the files on a DOAD including the type (P)rogram / (D)isplay / (I)nternal and size in sectors. I always thought that was a really nice feature the C64 had.
 - CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
