@@ -53,7 +53,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
 
 **CALL LDIR** list the DOAD's in the current selected directory on the SD card (next screen press SPACE, back to the prompt press ENTER):
 <p align="center">
-  <img width="576" src=img/LDIR.jpg>
+  <img width="576" src=img/LDIR2.jpg>
 </p>
 
 **CALL SMAP** shows the current DSKx -> DOAD mappings, extended info and the available directories on the SD Card:
