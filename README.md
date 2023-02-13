@@ -66,12 +66,12 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/TIME4.jpg>
 </p>
 
-**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters in a running program. What has this feature  to do with DSK's I hear you ask? Well, nothing really but it shows the ability of developing useful CALL's with APEDSK99: 
+**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters in a running program. What has this feature  to do with DSK's I hear you ask? Well, nothing really but it gives you an example of developing useful CALL's with APEDSK99: 
 <p align="center">
   <img width="576" src=img/ACHR.jpg>
 </p>
 
-**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. Like **CALL LDIR** if there are multilple screens to look at, SPACE and ENTER are your friend. Another user-friendly feature is that LDSK uses the last DSK that was accessed if you ommit the [1-3] parameter:
+**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. Again, if there are multilple screens to look at, SPACE and ENTER are your friend. Another user-friendly feature is that LDSK uses the last DSK that was accessed if you ommit the [1-3] parameter:
 <p align="center">
   <img width="576" src=img/LDSK.jpg>
 </p>
