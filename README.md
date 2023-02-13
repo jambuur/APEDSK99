@@ -51,7 +51,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
 
 **CALL ARST** resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their default state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
-**CALL LDIR** list the DOAD's in the current selected directory on the SD card. Multiple screens can be navigated with SPACE, ENTER returns to the prompt:
+**CALL LDIR** list the DOAD's in the current selected directory on the SD card:
 <p align="center">
   <img width="576" src=img/LDIR2.jpg>
 </p>
@@ -71,7 +71,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/ACHR.jpg>
 </p>
 
-**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. Again, if there are multilple screens to look at, SPACE and ENTER are your friend. Another user-friendly feature is that LDSK uses the last DSK that was accessed if you ommit the [1-3] parameter:
+**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. LDSK uses the last DSK that was accessed if you ommit the [1-3] parameter:
 <p align="center">
   <img width="576" src=img/LDSK.jpg>
 </p>
@@ -81,20 +81,17 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/PUDSK.jpg>
 </p>
 
+**CALL MDSK** maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension (see **CALL LDIR** above).  
 
-- CALL MDSK maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension.  
-- CALL RDSK removes a DOAD from the SD card. In line with BOFH standards no confirmation is required :-)
-- CALL FGET and CALL FPUT load or save a DOAD from your FTP server of choice. Configuration on the APEDSK99 side is straightforward, with again just a couple of parameters in the CONFIG sketch. The FTP server side can be a bit more involved, especially regarding rights of the relevant FTP user for reading and writing in the /DISKS folder. FTP server logging is your friend here. 
-- CALL ADSR loads a DSR file from / on the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns. ADSR may require a soft-reset to execute any DSR powerup routines. 
+**CALL RDSK** removes a DOAD from the SD card. In line with BOFH standards no confirmation is required but the DSK in question needs to be Unprotected.
 
-SDIR and LDSK may generate multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
+**CALL FGET** and **CALL FPUT** load or save a DOAD from your FTP server of choice. Similar to **RDSK**, to overwrite an existing DSK on the SD card, it needs to be Unprotected.
 
-Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name etc.
+**CALL ADSR** loads a DSR file from the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns. After loading a DSR, a soft-reset may be required to execute any DSR powerup routines. 
 
-All CALLs use a simple 2-way 18 byte buffer for data exchange at @>5FD6 in the DSR address space. It allows you to manipulate the buffer from assembly or BASIC's CALL LOAD and execute the relevant Arduino routine directly (see "*direct call examples*" in the documentation).
-This lets _TI EXTENDED BASIC_ join the running program party as it only supports DSR CALL's from the "command prompt"
-
-See the CALLs in action at ?
+Other useful info: 
+- **LDIR** and **LDSK** may generate multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
+- Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name etc.
 
 ### *Updating the DSR*
 
