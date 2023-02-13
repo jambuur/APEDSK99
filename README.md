@@ -61,7 +61,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/SMAP2.jpg>
 </p>
 
-**CALL TIME** gets the current date and time from an NTP server for display in BASIC. If you define a BASIC variable NTP$ of exactly 16 chars before the CALL, the NTP data will be stored for you to use in your programs:
+**CALL TIME** gets the current date and time from an NTP server. If you define a BASIC variable NTP$ of exactly 16 chars before the CALL, the NTP data will be stored for use in your programs:
 <p align="center">
   <img width="576" src=img/TIME4.jpg>
 </p>
@@ -71,7 +71,10 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/ACHR.jpg>
 </p>
 
-**CALL LDSK** list the files on a DSK including the type (P)rogram / (D)isplay / (I)nternal and size in sectors. I always thought that was a really nice feature the C64 had.
+**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. Like **CALL LDIR** if there are multilple screens to look at, SPACE and ENTER are your friend:
+<p align="center">
+  <img width="576" src=img/LDSK.jpg>
+</p>
 
 **CALL PDSK** and **CALL UDSK** apply or remove a virtual "sticker tab" (remember those?). With the "tab" applied, APEDSK99 can't write to the DSK. Under the hood the Protected flag at 0x10 in the Volume Information Block is set/reset:
 <p align="center">
