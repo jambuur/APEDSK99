@@ -71,7 +71,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/ACHR.jpg>
 </p>
 
-**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. Like **CALL LDIR** if there are multilple screens to look at, SPACE and ENTER are your friend:
+**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. Like **CALL LDIR** if there are multilple screens to look at, SPACE and ENTER are your friend. Another user-friendly feature is that LDSK uses the last DSK that was accessed if you ommit the [1-3] parameter:
 <p align="center">
   <img width="576" src=img/LDSK.jpg>
 </p>
