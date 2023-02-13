@@ -51,7 +51,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
 
 **CALL ARST** resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their default state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
-**CALL LDIR** list the DOAD's in the current selected directory on the SD card (next screen press SPACE, back to the prompt press ENTER):
+**CALL LDIR** list the DOAD's in the current selected directory on the SD card. Multiple screens can be navigated with SPACE, ENTER returns to the prompt:
 <p align="center">
   <img width="576" src=img/LDIR2.jpg>
 </p>
@@ -66,7 +66,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/TIME4.jpg>
 </p>
 
-**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters in a running program (**NB** see the notes on _Extended Basic_ further below): 
+**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters in a running program. What has this feature  to do with DSK's I hear you ask? Well, nothing really but it shows the ability of developing useful CALL's with APEDSK99: 
 <p align="center">
   <img width="576" src=img/ACHR.jpg>
 </p>
