@@ -99,7 +99,7 @@ NTP is also used in the background to update a DSK's timestamp when creating/cha
 **CALL ADSR** loads a DSR file from the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns. After loading a DSR, a soft-reset may be required to execute any DSR powerup routines. 
 
 NB: 
-- **LDIR** and **LDSK** can generate multiple screens of info. A ">" will show up at the bottom right for you to press either \<SPACE\> for the next screen or \<ENTER\> to go back to the BASIC prompt.
+**LDIR** and **LDSK** can generate multiple screens of info. A ">" will show up at the bottom right for you to press either \<SPACE\> for the next screen or \<ENTER\> to go back to the BASIC prompt.
 
 ### *APEDSK99 configuration*
 Configuring APEDSK99 is easy. All it takes is to run a BASIC program called ACFG from DSK1:
@@ -123,22 +123,11 @@ The new configuration is then applied to APEDSK99. If NTP is successfully config
 Yes, good question as I take it EXBAS is used over TI BASIC by the majority TI enthusiasts. Obviously I wanted to support vanilla console users (like the ones re-entering the hobby after xx years such as myself). But that doesn't explain why EXBAS couldn't be used to run the configuration program. Well, the problem is that EXBAS doesn't support external CALL's in programs, only from the command line. This would mean you have to type in a set of commands instead of a more or less automated setup. Not a good idea I thought.
 
 However, I am working on a solution to run APEDSK99 CALL's within EXBAS programs. It uses CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). I will keep the AtariAge forum posted.
-  
-### *Updating the DSR*
-
-I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/) and then use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
-
-### *Uploading Sketches*
-
-You should switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a good chance the Arduino bootloader gets corrupted and you'll need a second Arduino to restore it. Yes I have been there ... several times.  
-
-Alternatively you could connect [_Analog 1_ to _+5V_](img/A15V.jpg) with a jumper wire before uploading; this disables the APEDSK99 sideport buffer IC's so you can leave the TI powered on. In fact, if you intend to put APEDSK99 in some sort of case, plan a switch for this. It's not only handy for uploading sketches but also for temporarily circumventing _TI EXTENDED BASIC_'s LOAD feature or preventing unintentional DSR RAM writes (see _**Ignition Sequence**_ below)
 
 ### *Ignition sequence*
 
-Unlike the original TI Disk Controller ROM, the APEDSK99 DSR sits in RAM and is permanently enabled within the TI's address space. Any unintentional write from the TI can potentially corrupt the DSR code. This is likley to happen when you switch the TI on (spurious signals on the sideport).
-
-So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (short flash from the LED) and then soft-reset the TI with FCTN-QUIT to execute the DSR power-up routines.
+The DSR containes a powerup routine (the original TI DISK Controller routine if fact) that needs to be executed before you can properly use DSK's.
+So switch on the TI first, apply power to APEDSK99, wait a second for APEDSK99 to load the DSR (short flash from the LED) and then soft-reset the TI with \<FCTN\>-\>QUIT\> to execute the DSR powerup routine.
 
 ### *Error codes*
 
@@ -148,6 +137,20 @@ The LED can flash in the following intricate error patterns:
 2. *flash-flash*      : can't read DSR binary image (/xxxxxxxx.DSR)
 3. *flash-flash-flash*: no valid DSR header (>AA) at DSR RAM >4000
 
+### *Uploading Sketches*
+
+You should make sure APEDSK99 is idle or even better, switch off the TI before uploading the APEDSK99 sketch from the Arduino IDE. If you don't, there is a slight chance the Arduino bootloader gets corrupted and you'll need a second Arduino to restore it. Yes I have been there.  
+
+Alternatively you could connect [_Analog 1_ to _+5V_](img/A15V.jpg) with a jumper wire before uploading; this disables the APEDSK99 sideport buffer IC's so you can leave the TI powered on. In fact, if you intend to put APEDSK99 in some sort of case, plan a switch for this. It's not only handy for uploading sketches but also for temporarily circumventing _TI Extended BASIC_'s LOAD feature.
+
+### *Updating the DSR*
+
+I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/) and then use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
+
+### Feeling Brave - DIY from scratch
+
+If you decide to build one yourself, I have compiled a handy document to get you started. Just ping me with any questions through Github, YouTube or AtariAge (JJB).
+
 ### *I know*
 
 Writing software is a hobby, not my profession. No doubt some gurus would achieve the same functionality with half the code. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
@@ -156,11 +159,15 @@ Feel free to improve and share!
 
 ### *Bugs*
 
-If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines (including low level sector R/W) there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math or weird copy protection schemes will likely fail. 
+If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math or weird copy protection schemes will likely fail. 
+
+Not so much a bug but an annoyance is that the FAT format (as used on the SD Card) doesn't support any sorting whatsover; so if you have been actively **FGET**'ing images from your FTP server you might find the **SDIR** list slightly out of alphabetical order. There are a number of "FAT Sorter" programs for different OS's that can restore the order for you.
+
+And yes, if I had thought it through a bit more I would have designed APEDSK99 with the USB and Ethernet connectors facing backwards. Anyway what's done is done and unless there is a push for a major revision (unlikely) you'll (we) have to live with this minor inconvenience.
 
 ### *Future*
 
-After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic interrupt-driven DSR interface to a substantial catalogue of available Arduino shields. Also, the Arduino has full access to the 32K RAM expansion so there is potential for fast data sharing between networked devices and the TI.
+After (of course) I came up with the name APEDSK99 I realised that DSK emulation is just a first application. The APEDSK99 shield is actually a generic interrupt-driven DSR interface to a substantial catalogue of available Arduino shields. Also, the Arduino has full access to the 32K RAM expansion and since it uses a 64Kx8 RAM chip there is an additional 24K available for additional DSR, program code or device data sharing.
 
 ### *Acknowledgements*
 
