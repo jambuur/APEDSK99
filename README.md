@@ -68,6 +68,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/TIME4.jpg>
 </p>
 NTP is also used in the background to update a DSK's timestamp when creating/changing files or formatting.
+<br/>
 
 **CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters while running a BASIC program. What has this feature  to do with DSK's I hear you ask? Well, nothing really but it gives you an example of developing useful CALL's with APEDSK99: 
 <p align="center">
