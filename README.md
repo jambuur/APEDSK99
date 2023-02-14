@@ -76,7 +76,7 @@ NTP is also used in the background to update a DSK's timestamp when creating/cha
   <img width="576" src=img/ACHR.jpg>
 </p>
 
-**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. LDSK uses the last DSK that was accessed if you ommit the [1-3] parameter:
+**CALL LDSK** list the files on a DSK; I always thought that was a really nice feature of the C64 so here it is. LDSK uses the last DSK\# that was accessed if you ommit the [1-3] parameter:
 <p align="center">
   <img width="576" src=img/LDSK.jpg>
 </p>
