@@ -63,10 +63,11 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/SMAP2.jpg>
 </p>
 
-**CALL TIME** gets the current date and time from an NTP server. BTW NTP is also used when creating/changing files or formatting a DSK to update its timestamp.If you define a BASIC variable NTP$ of exactly 16 chars before the CALL, the NTP data will be stored for use in your programs:
+**CALL TIME** gets the current date and time from an NTP server. If you define a BASIC variable NTP$ of exactly 16 chars before the CALL, the NTP data will be stored for use in your programs:
 <p align="center">
   <img width="576" src=img/TIME4.jpg>
 </p>
+NTP is also used in the background to update a DSK's timestamp when creating/changing files or formatting.
 
 **CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters while running a BASIC program. What has this feature  to do with DSK's I hear you ask? Well, nothing really but it gives you an example of developing useful CALL's with APEDSK99: 
 <p align="center">
