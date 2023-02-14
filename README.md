@@ -90,7 +90,7 @@ NTP is also used in the background to update a DSK's timestamp when creating/cha
 
 **CALL NDSK** renames a mapped DOAD. The TI DISK name is set to match the DOAD 8 character name. With renaming the DSK, the current mapping is deleted as the DOAD has now a new name. This command is handy for quickly creating a freshly formatted DSK. Just map an existing clean image (I use either FLOPPYSS.DSK or FLOPPYDS.DSK from a /BLANK directory) and rename accordingly.
 
-**CALL CDIR** changes the working directory. The SD Card image contains a /DISKS folder with lots of goodies and a /BLANK directory with the abovementioned clean images. One restriction is that a directory name can't be longer that 5 characters although this may change in the future to support the full 8 characters.
+**CALL CDIR** changes the working directory. The SD Card image contains a /DISKS folder with lots of goodies and a /BLANK directory with the abovementioned clean images. One restriction is that a directory name can't be longer that 5 characters although this may change in the future to support the full 8 characters. Another restriction is that you have to create additional directories on an external system as there is no CALL for that. 
 
 **CALL RDSK** removes a DOAD from the SD card. In line with BOFH standards no confirmation is required but the DSK in question needs to be UNprotected.
 
