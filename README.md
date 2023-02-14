@@ -1,4 +1,4 @@
-# APEDSK99 (Arduino Peripheral Expansion)
+# APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
 ### *February 2023: MAJOR UPDATE in progress*
 
@@ -91,7 +91,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
 
 Other useful info: 
 - **LDIR** and **LDSK** may generate multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
-- Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name etc.
+- Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" or "SYNTAX ERROR" so check syntax, DOAD name etc.
 
 ### *APEDSK99 configuration*
 Configuring APEDSK99 is easy. All it takes is to run a BASIC program called ACFG from DSK1:
@@ -99,18 +99,22 @@ Configuring APEDSK99 is easy. All it takes is to run a BASIC program called ACFG
   <img width="576" src=img/ACFG1.jpg>
 </p>
 
-The program has to run from TI BASIC as Extended BASIC doesn't support external CALL's in programs (I am working on a solution for that, see _What about Extended Basic_ below):
+The program has to run from TI BASIC (why? see _What about Extended BASIC_ below):
 <p align="center">
   <img width="576" src=img/ACFG2.jpg>
 </p>
   
-After showing the current configuration it's asking you to input the updated details after which they are applied to APEDSK99:
+The programs shows the current configuration before asking for updates. 
+
+The new configuration is then applied to APEDSK99. If NTP is successfully configured the program shows the local date and time. The configuration is saved in EEPROM and used with every reset / powerup:
 <p align="center">
   <img width="576" src=img/ACFG3.jpg>
 </p>
 
-The configuration is saved in EEPROM and used with every reset / powerup. If NTP is successfully configured the program shows the local date and time. 
+### *What about Extended BASIC*
+Yes, good question as I take it EXBAS is used over TI BASIC by the majority TI enthusiasts. Obviously I wanted to support vanilla console users (most likely the ones re-entering the hobby after xx years like myself). But that doesn't explain why EXBAS couldn't be used to run the configuration program. Well, the problem is that EXBAS doesn't support external CALL's in programs although from the command line everything is hunky dory.This would mean you have to type in a set of commands instead of a more or less automated setup. Not a good idea.
 
+However, I am working on a solution so APEDSK99 CALL's can be run from EXBAS. It uses CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). I will keep the AtariAge forum posted.
   
 ### *Updating the DSR*
 
