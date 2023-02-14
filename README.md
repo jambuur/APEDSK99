@@ -63,7 +63,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/SMAP2.jpg>
 </p>
 
-**CALL TIME** gets the current date and time from an NTP server. If you define a BASIC variable NTP$ of exactly 16 chars before the CALL, the NTP data will be stored for use in your programs:
+**CALL TIME** gets the current date and time from an NTP server. If you define a BASIC variable NTP$ of exactly 16 characters before the CALL, the NTP data will be stored for use in your programs:
 <p align="center">
   <img width="576" src=img/TIME4.jpg>
 </p>
