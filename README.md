@@ -83,9 +83,9 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
 
 **CALL MDSK** maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension (see **CALL LDIR** above).  
 
-**CALL RDSK** removes a DOAD from the SD card. In line with BOFH standards no confirmation is required but the DSK in question needs to be Unprotected.
+**CALL RDSK** removes a DOAD from the SD card. In line with BOFH standards no confirmation is required but the DSK in question needs to be UNprotected.
 
-**CALL FGET** and **CALL FPUT** load or save a DOAD from your FTP server of choice. Similar to **RDSK**, to overwrite an existing DSK on the SD card, it needs to be Unprotected.
+**CALL FGET** and **CALL FPUT** load or save a DOAD from your FTP server of choice. Similar to **RDSK**, to overwrite an existing DSK on the SD card it needs to be UNprotected. To prevent overwriting images on your FTP server simply make them read-only.
 
 **CALL ADSR** loads a DSR file from the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns. After loading a DSR, a soft-reset may be required to execute any DSR powerup routines. 
 
