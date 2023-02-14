@@ -1,6 +1,6 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
-### *February 2023: MAJOR UPDATE in progress*
+### *February 2023 Newsflash: Major Update in progress*
 
 Check the TI Italian User Club for a review of the new version: https://www.ti99iuc.it/web/index.php?pagina=articoli&artid=219#.Y-gqDi9BxaS
 
