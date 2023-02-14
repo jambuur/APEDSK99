@@ -34,6 +34,8 @@ When the TI issues disk controller commands by writing to the various FD1771 reg
 4. executes the command including updating the relevant FD1771 and CRU "registers"
 5. executes the opposite of steps 3, 2 and 1
 
+The GAL also does the memory decoding for the 32K memory expansion.
+
 ### *DOAD's*
 
 DOAD's are stored in root folders on the SD card or on a FTP server. Default APEDSK99 files include a DISKS folder with a bunch of useful images to get you started. DOAD filenames must follow the DOS 8.3 format and have a ".DSK" extension. At powerup or reset the Arduino looks for optional \_APEDSK1.DSK / \_APEDSK2.DSK / \_APEDSK3.DSK_ files and maps them accordingly so you can have your favourite apps ready to go. The DSR includes all necessary CALL's for DOAD and DSK management.
@@ -51,7 +53,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
 
 **CALL ARST** resets APEDSK99 including reloading the current DSR. It is a handy way to get your DOAD mappings to their default state. It is functionally the same as pressing the Arduino reset button and sort of the same but not really as power cycling. 
 
-**CALL LDIR** list the DOAD's in the current selected directory on the SD card:
+**CALL LDIR** list the DOAD's in the current selected directory on the SD card. It lists the DOAD name and the TI DISK name:
 <p align="center">
   <img width="576" src=img/LDIR2.jpg>
 </p>
@@ -66,7 +68,7 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
   <img width="576" src=img/TIME4.jpg>
 </p>
 
-**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters in a running program. What has this feature  to do with DSK's I hear you ask? Well, nothing really but it gives you an example of developing useful CALL's with APEDSK99: 
+**CALL ACHR** redefines the "lower capital" character definitions to true lower case. It's a bit of a bummer that BASIC constantly reloads the original definitions in command mode so you can really only enjoy lower case characters while running a BASIC program. What has this feature  to do with DSK's I hear you ask? Well, nothing really but it gives you an example of developing useful CALL's with APEDSK99: 
 <p align="center">
   <img width="576" src=img/ACHR.jpg>
 </p>
@@ -83,15 +85,18 @@ The DSR includes some 15 additional BASIC CALL's but there is really only one to
 
 **CALL MDSK** maps DSK[1-3] to a DOAD. The DOAD file name is the DOS max 8 character part without the extension (see **CALL LDIR** above).  
 
+**CALL NDSK** renames a mapped DOAD. The TI DISK name is set to match the DOAD 8 character name. With renaming the DSK, the current mapping is deleted as the DOAD has now a new name. This command is handy for quickly creating a freshly formatted DSK. Just map an existing clean image (I use either FLOPPYSS.DSK or FLOPPYDS.DSK from a /BLANK directory) and rename accordingly.
+
+**CALL CDIR** changes the working directory. The SD Card image contains a /DISKS folder with lots of goodies and a /BLANK directory with the abovementioned clean images. One restriction is that a directory name can't be longer that 5 characters although this may change in the future to support the full 8 characters.
+
 **CALL RDSK** removes a DOAD from the SD card. In line with BOFH standards no confirmation is required but the DSK in question needs to be UNprotected.
 
 **CALL FGET** and **CALL FPUT** load or save a DOAD from your FTP server of choice. Similar to **RDSK**, to overwrite an existing DSK on the SD card it needs to be UNprotected. To prevent overwriting images on your FTP server simply make them read-only.
 
 **CALL ADSR** loads a DSR file from the SD card and resets APEDSK99. If the DSR file doens't exist or is invalid the default file APEDSK99.DSR will be loaded instead. The current DSR filename is stored in EEPROM so will survive resets and powerdowns. After loading a DSR, a soft-reset may be required to execute any DSR powerup routines. 
 
-Other useful info: 
-- **LDIR** and **LDSK** may generate multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
-- Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" or "SYNTAX ERROR" so check syntax, DOAD name etc.
+NB: 
+- **LDIR** and **LDSK** can generate multiple screens of info. A ">" will show up at the bottom right for you to press either \<SPACE\> for the next screen or \<ENTER\> to go back to the BASIC prompt.
 
 ### *APEDSK99 configuration*
 Configuring APEDSK99 is easy. All it takes is to run a BASIC program called ACFG from DSK1:
@@ -112,9 +117,9 @@ The new configuration is then applied to APEDSK99. If NTP is successfully config
 </p>
 
 ### *What about Extended BASIC*
-Yes, good question as I take it EXBAS is used over TI BASIC by the majority TI enthusiasts. Obviously I wanted to support vanilla console users (most likely the ones re-entering the hobby after xx years like myself). But that doesn't explain why EXBAS couldn't be used to run the configuration program. Well, the problem is that EXBAS doesn't support external CALL's in programs although from the command line everything is hunky dory.This would mean you have to type in a set of commands instead of a more or less automated setup. Not a good idea.
+Yes, good question as I take it EXBAS is used over TI BASIC by the majority TI enthusiasts. Obviously I wanted to support vanilla console users (like the ones re-entering the hobby after xx years such as myself). But that doesn't explain why EXBAS couldn't be used to run the configuration program. Well, the problem is that EXBAS doesn't support external CALL's in programs, only from the command line. This would mean you have to type in a set of commands instead of a more or less automated setup. Not a good idea I thought.
 
-However, I am working on a solution so APEDSK99 CALL's can be run from EXBAS. It uses CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). I will keep the AtariAge forum posted.
+However, I am working on a solution to run APEDSK99 CALL's within EXBAS programs. It uses CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). I will keep the AtariAge forum posted.
   
 ### *Updating the DSR*
 
