@@ -46,7 +46,7 @@ Regarding FTP, on my setup (a Linux server with VSFTP within the same LAN segmen
 
 ### *BASIC support*
 
-The DSR includes some 15 additional BASIC CALL's but there is really only one to remember: **CALL AHLP**:
+The DSR includes some 15 additional BASIC CALL's but there is really only one to remember, **CALL AHLP**:
 <p align="center">
   <img width="576" src=img/AHLPv2.jpg>
 </p>
