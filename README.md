@@ -1,4 +1,4 @@
-# APEDSK99
+# APEDSK99 (Arduino Peripheral Expansion)
 
 ### *February 2023: MAJOR UPDATE in progress*
 
@@ -9,9 +9,9 @@ I am thinking of either supplying pre-assembled APEDSK99 shields, leaving it to 
 Alternatively, I could supply complete kits; I have also been approached by a web shop interested in the same. 
 Stay tuned :-) 
 
-### *Arduino DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
+### *Arduino-based DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/DD/80T floppy drives for the TI99/4a home computer. Combined with a Ethernet / SD shield it allows you to load and save Disk-On-A-Disk (DOAD) floppy images on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
+APEDSK99 is an Arduino shield that emulates 3 DS/DD/80T floppy drives for the TI99/4a home computer. Combined with a Arduino UNO and an Ethernet / SD shield it allows you to load, save and use disk floppy images (DOAD) on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/TRIO.jpg)
 
@@ -93,6 +93,25 @@ Other useful info:
 - **LDIR** and **LDSK** may generate multiple screens of info. A ">" will show up at the bottom right for you to press either <SPACE> for the next screen or <ENTER> to go back to the TI-BASIC prompt.
 - Any unsuccessful CALL returns a generic "INCORRECT STATEMENT" error (or "SYNTAX ERROR" in _TI EXTENDED BASIC_) so check syntax, DOAD name etc.
 
+### *APEDSK99 configuration*
+Configuring APEDSK99 is easy. All it takes is to run a BASIC program called ACFG from DSK1:
+<p align="center">
+  <img width="576" src=img/ACFG1.jpg>
+</p>
+
+The program has to run from TI BASIC as Extended BASIC doesn't support external CALL's in programs (I am working on a solution for that, see _What about Extended Basic_ below):
+<p align="center">
+  <img width="576" src=img/ACFG2.jpg>
+</p>
+  
+After showing the current configuration it's asking you to input the updated details after which they are applied to APEDSK99:
+<p align="center">
+  <img width="576" src=img/ACFG3.jpg>
+</p>
+
+The configuration is saved in EEPROM and used with every reset / powerup. If NTP is successfully configured the program shows the local date and time. 
+
+  
 ### *Updating the DSR*
 
 I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://endlos99.github.io/xdt99/) and then use [this hex editor](https://mh-nexus.de/en/hxd/) for padding the binary file with zero's to the full 8KB. After that it's just a matter of saving the binary file as APEDSK99.DSR in the root of the SD.
