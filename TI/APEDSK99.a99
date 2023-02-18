@@ -81,10 +81,9 @@ PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table
 AVERSN	TEXT	'v12r'			APEDSK99 version string (ARST)
 *
 XBASRT	DATA	>0000			CALL LINK return address (Extended Basic)
-XBPFDO	DATA 	PRPFDO			CALL LINK jump table (Extended Basic only): 
-XBJUMP	DATA	XBUSTR			  PDSK / UDSK/ LDSK entry point
-	DATA	A9909			  MDSK / NDSK / RDSK / FGET / FPUT / ADSR / CDIR entry point
-	DATA	NOPRM2			  SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG entry point
+XBJUMP	DATA	XBUSTR			EXBAS PDSK / UDSK/ LDSK entry point
+	DATA	A9909			EXBAS MDSK / NDSK / RDSK / FGET / FPUT / ADSR / CDIR entry point
+	DATA	NOPRM2			EXBAS SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG entry point
 *
 SUB09	DATA	SUB10
 	DATA	PDSK
@@ -432,11 +431,7 @@ CALSUB	DECT	@>0066(R9)		call subroutine, return address in stack
 	MOVB	R11,@-2(R15)			
 	B	*R10			branch to address in data word
 *				
-RTURN1	MOV	@XBASRT,R11		APEDSK99: CALL LINK from Extended Basic?
-	JEQ	H015A			nope
-	B	*R11			yes; return to ExBas program
-*
-H015A	MOV	@>0066(R9),R11		get return address from VDP stack
+RTURN1	MOV	@>0066(R9),R11		get return address from VDP stack
 	BLWP	@>005A(R9)		
 	DATA	>0162			set VDP to read from address in R11
 	MOVB	@-1026(R15),R11			
@@ -3297,7 +3292,11 @@ A9911	CLR	R6
 	JEQ 	A9912			no
 	MOVB	R6,@ACOMND		yes; execute (currently only ARST)
 *
-A9912	CLR	@>0050(R9)		clear error flag		
+A9912	MOV	@XBASRT,R11		APEDSK99: CALL LINK from Extended Basic?
+	JEQ	A9913			nope
+	B	*R11			yes; return to ExBas program
+*
+A9913	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		
 	SZCB	@>0042(R9),@>0042(R9)	clear current token
 	B	@RTURN1			return to caller (i.e. TI-BASIC)
@@ -3306,9 +3305,9 @@ A9912	CLR	@>0050(R9)		clear error flag
 *
 DISSTS	LI	R5,CALLBF		start of file name buffer
 	LI	R6,32			32 bytes / 1 screen row of data to display
-A9913	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
+A9914	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
 	DEC	R6
-	JNE	A9913
+	JNE	A9914
 	B	*R11
 *
 * Quick key test to display next screen after ">"
@@ -3318,19 +3317,19 @@ A9913	MOVB	*R5+,@-2(R15)		store character in VDP screen memory
 CHKKEY	MOV	R12,R4 			save R12
 	CLR  	R1                  	test column 0
      	LI   	R12,>0024           	address for column selection
-A9914  	LDCR 	R1,3               	select column
+A9915  	LDCR 	R1,3               	select column
 	TB	-14			test R12 address >0008
-	JNE	A9915			<SPACE>
+	JNE	A9916			<SPACE>
 	TB	-13			test R12 address >000A
-	JEQ	A9914			no key; test again
+	JEQ	A9915			no key; test again
 *
 	MOVB	@K004,@CALLST		signal ENTER to LDIR() command
 	LI	R11,QNOPRM		leave without clearing screen
 *
-A9915	MOV	R4,R12 			restore R12
+A9916	MOV	R4,R12 			restore R12
 	SLA	R4,2			debounce delay
-A9916	DEC	R4			key debounce
-	JNE	A9916			debounce some more
+A9917	DEC	R4			key debounce
+	JNE	A9917			debounce some more
 *
 	B    	*R11               	we got one; return for next screen
 *
@@ -3339,10 +3338,10 @@ A9916	DEC	R4			key debounce
 VARINF	TEXT	'NTP$'
 TIME2	LI	R4,VARINF		variable name for XML >16 in FAC
 	MOV	R9,R5			get scratchpad start address
-A9917	MOVB	*R4+,@>004A(R5)		variable name in FAC
+A9918	MOVB	*R4+,@>004A(R5)		variable name in FAC
 	INC	R5
 	CI	R4,VARINF+4		done all chars?
-	JNE	A9917			
+	JNE	A9918			
 *
 	LI	R5,>0400		variable length for XML >16 in @>8359
 	MOVB	R5,@>0059(R9)		
@@ -3353,7 +3352,7 @@ A9917	MOVB	*R4+,@>004A(R5)		variable name in FAC
 	DATA	XMLRTN			GPL "RTN", escaping GPL interpreter
 *
 	CB	@VARINF,@>004A(R9)	found NTP$ in VDP symbol table?
-	JEQ	A9919			no symbol table pointer; back to BASIC
+	JEQ	A9920			no symbol table pointer; back to BASIC
 *
 	BL	@XML14			ROM routine: get NTP$ VDP address and string length (returns through RT)
 	STWP	R9			restore scratchpad pointer
@@ -3361,18 +3360,18 @@ A9917	MOVB	*R4+,@>004A(R5)		variable name in FAC
 *	
 	MOV	@>0050(R9),R5		get string length
 	CI	R5,16			16 chars?
-	JNE	A9919			no NTP$ assignment for you
+	JNE	A9920			no NTP$ assignment for you
 *
 	MOV	@>834E,R2		yes
 	BL	@VDPWRI			set VDP write address
 	LI	R5,CALLBF		CALL TIME data still in buffer
-A9918	MOVB	*R5+,R2			read character
+A9919	MOVB	*R5+,R2			read character
 	AI	R2,>A000		remove TI BASIC bias
 	MOVB	R2,@-2(R15)		save to NTP$ value space
 	CI	R5,CALLBF+16		done all 16 chars?
-	JNE	A9918			no; one more
+	JNE	A9919			no; one more
 *
-A9919	JMP	A9911			yes; back to BASIC
+A9920	JMP	A9911			yes; back to BASIC
 *
 * execute GROM or XML routine (SCROLL, "bad sound" / HONK and XML >16)
 * DSR and GPL interpreter use same workspace (>83E0) so we need to save a few things
@@ -3422,7 +3421,7 @@ NTPDT	MOVB	@NTPFAT+1,@ACOMND	"DSK NTP date/time update" command to Arduino
 	B	*R11			return to Format / Close
 *
 *----------------------------------------------------------------------------------
-* >5F68 - >5FB3: 46 free bytes remaining
+* >5F66 - >5FB3: 48 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
