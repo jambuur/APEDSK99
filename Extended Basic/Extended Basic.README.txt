@@ -11,3 +11,10 @@ Some examples:
 	30 CALL MDSK(1,"AD99XB")	30 CALL LINK("MDSK",1,"AD99XB")
 	40 CALL FGET("ACFG")		40 CALL LINK("FGET","ACFG")
 
+To use, map AD99XB.DSK to any drive (this example uses DSK3) and load the object file:
+
+	>CALL MDSK(3,"AD99XB")
+	>CALL INIT
+	>CALL LOAD("DSK3.AD99XB")
+
+
