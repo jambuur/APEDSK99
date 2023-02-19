@@ -168,8 +168,8 @@ void EtherStop( void ) {
 //get UNIX timestamp from NTP server and return "HH:mm DD/MM/YYYY" to CALL buffer
 byte getNTPdt( void ) {
  
-  long unsigned int UNIXepoch, Hours, Minutes, Day, Month, Year;
-
+  unsigned long UNIXepoch, Hours, Minutes, Day, Month, Year;
+ 
   ntp.begin();                                                                                        //start NTP client
   if ( !ntp.request(ACFG.ntpserver) ) {                                                               //NTP server available?
     return ( FNTPConnect );                                                                           //no; report error

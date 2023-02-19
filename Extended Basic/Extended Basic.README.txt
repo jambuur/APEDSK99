@@ -1,0 +1,13 @@
+Unlike TI BASIC, EXBAS can't execute DSR ROM CALL's in a running program (command mode is fine).
+This DSK has a convenient workaround. By loading an assembly object file you will get
+CALL LINK hooks to all APEDSK99 CALL's.
+
+Some examples:
+
+	TI BASIC			TI Extended BASIC
+	--------			-----------------
+	10 CALL "AHLP"			10 CALL LINK("AHLP")
+	20 CALL PDSK(1)			20 CALL LINK("PDSK",1)
+	30 CALL MDSK(1,"AD99XB")	30 CALL LINK("MDSK",1,"AD99XB")
+	40 CALL FGET("ACFG")		40 CALL LINK("FGET","ACFG")
+

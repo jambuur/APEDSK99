@@ -81,9 +81,10 @@ PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table
 AVERSN	TEXT	'v12r'			APEDSK99 version string (ARST)
 *
 XBASRT	DATA	>0000			CALL LINK return address (Extended Basic)
-XBJUMP	DATA	XBUSTR			EXBAS PDSK / UDSK/ LDSK entry point
-	DATA	A9909			EXBAS MDSK / NDSK / RDSK / FGET / FPUT / ADSR / CDIR entry point
-	DATA	NOPRM2			EXBAS SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG entry point
+XBJUMP	DATA	XBUSTR			EXBAS PDSK / UDSK/ LDSK
+	DATA	A9909			EXBAS MDSK / NDSK		
+	DATA	A9909			EXBAS RDSK / FGET / FPUT / ADSR / CDIR
+	DATA	NOPRM2			EXBAS SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG
 *
 SUB09	DATA	SUB10
 	DATA	PDSK
@@ -3345,7 +3346,6 @@ A9918	MOVB	*R4+,@>004A(R5)		variable name in FAC
 *
 	LI	R5,>0400		variable length for XML >16 in @>8359
 	MOVB	R5,@>0059(R9)		
-	CLR 	@>0089(R9)	
 *
 	LI	R5,XML16		ROM routine: find NTP$ in VDP symbol table (returns to GPL interpreter)
 	BL	@GPLXML
@@ -3421,7 +3421,7 @@ NTPDT	MOVB	@NTPFAT+1,@ACOMND	"DSK NTP date/time update" command to Arduino
 	B	*R11			return to Format / Close
 *
 *----------------------------------------------------------------------------------
-* >5F66 - >5FB3: 48 free bytes remaining
+* >5F64 - >5FB3: 50 free bytes remaining
 * >5FC2 - >5FD3 is DSK1-3 parameters storage
 * >5FD4 is the CALL() status byte
 * >5FD6 - >5FE7 is buffer storage for APEDSK99 CALL's
