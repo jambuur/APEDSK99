@@ -256,7 +256,6 @@
         case 35:                                                                                          //ADSR(): load / change default APEDSK99 DSR file
         {                                                                                 
           char DSRtoload[13]  = "\0";                                                                     //filename new DSR
-          char DSRcurrent[13] = "\0";                                                                     //filename current DSR in EEPROM
           for ( byte ii = 2; ii < 10; ii++ ) {                                                            //read file name from CALL buffer
             DSRtoload[ii - 2] = read_DSRAM( CALLBF + ii );                                                //get new DSR from CALL buffer
           }                                                          
