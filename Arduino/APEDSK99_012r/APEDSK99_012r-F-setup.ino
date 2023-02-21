@@ -52,7 +52,7 @@ void setup() {
     }
   } 
 
-  EEPROM.get( EEPROM_CFG,  ACFG );
+  EEPROM.get( EEPROM_CFG,  ACFG );                                      //read current configuration from EEPROM
    
   //"initialize FD1771"
   FD1771reset();                                                        //"Restore" command

@@ -60,6 +60,7 @@
               byte ftype = DSKx.read();
               boolean protect = (ftype & 0x08) != 0;                                                      //bit 4 set means file is protected
               ftype &= 0x83;                                                                              //strip protection indication
+        
               if ( ftype == 0 ) {                                                                         //0x00 is DISPLAY
                 strncpy( filetype, "D/F\0", 4);
               } else if ( ftype == 2 ) {                                                                  //0x02 is INTERNAL
@@ -469,7 +470,7 @@
         case 49:                                                                                          //LDIR(): list DOAD's in current folder on SD
         {
           clrCALLbuffer();                                                                                //clear CALL buffer
-          if ( newA99cmd ) {                                                                              //first run of SDIR()?
+          if ( newA99cmd ) {                                                                              //first run of LDIR()?
             SDdir = SD.open( DSKfolder );                                                                 //yes; open directory
             gii=0;
             byte ii;
@@ -529,16 +530,16 @@
 
         case 50:                                                                                          //AHLP()
         {
-          
-          clrCALLbuffer();                                                                                //clear CALL buffer
           if ( newA99cmd ) {                                                                              //first run make sure we start with 1st message
+            clrCALLbuffer();                                                                              //clear CALL buffer
+            DSKx = SD.open( "/CALLhlp.txt", FILE_READ );                                                  //first run, open help file
             gii = 0;
           }
 
-          if ( gii < 18 && read_DSRAM(CALLST) ==  AllGood ) {                                             //27x29char arrays
+          if ( gii < 18 && read_DSRAM(CALLST) ==  AllGood ) {                                             //18 rows x 29 characters
             for ( byte ii = 1; ii < 30; ii++ ) {
-              write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLhelp[gii][ii-1] ) + TIBias );                 //write PROGMEM array element to CALL buffer (leading space from clrCALLbuffer() )
-            }
+              write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );                                           //copy help text to CALL buffer
+            }  
             gii++;                                                                                        //next
           } else {
             CALLstatus( More );                                                                           //done all help messages
@@ -546,28 +547,21 @@
           }
         }
         break;
-      
+     
         case 51:                                                                                          //ACHR(): load real lowercase character set
         { 
-          boolean cFile = true;                                                                           //assume SD card contains valid char definition file 
           if ( newA99cmd ) {   
-            cFile = (DSKx = SD.open( "/tilcchar.bin", FILE_READ) );                                       //first run, try to open it
+            DSKx = SD.open( "/tilcchar.bin", FILE_READ );                                                 //first run, open definition file
             gii = 0;                                                                                      //initialise global counter 
           }
 
-          if ( cFile ) {                                                                                  //char file successfully opened? ...
-            if ( gii < 23 ) {                                                                             //... yes; more character definition to go? ...
-              DSKx.seek( gii * 32 );                                                                      //... yes; next 32byte chunk from file
-              for ( byte ii = 0; ii < 32; ii++ ) {  
-                write_DSRAM( CALLBF + ii, DSKx.read() );                                                  //DSR display routine to write them to VDP pattern table
-              }
-              gii++;                                                                                      //next lot
-            } else {
-              CALLstatus( More );                                                                         //... no; all done
-              noExec();                                                                                   //end it all
+          if ( gii < 23 ) {                                                                               //more definitions to go? ...
+            for ( byte ii = 0; ii < 32; ii++ ) {                                                          //... yes; next 32byte chunk from file
+              write_DSRAM( CALLBF + ii, DSKx.read() );                                                    //DSR display routine to write them to VDP pattern table
             }
+            gii++;                                                                                        //next lot
           } else {
-            CALLstatus( DEFNotFound );                                                                    //... no; error: can't find || open char definition file
+            CALLstatus( More );                                                                           //... no; all done
             noExec();                                                                                     //end it all
           }
         }

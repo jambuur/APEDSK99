@@ -21,24 +21,24 @@ byte currentDSK       = 0;                                                      
 #define DOADTooBig           5
 #define DOADexists           6
 #define DIRNotFound          7
-#define DEFNotFound          8
+#define FileNotFound         8                                                                        //not used currently
 #define AInit                9
 #define More              0xF0
 #define AllGood           0xFF
 
 #define CALLBF          0x5FC8                                                                        //CALL() buffer (data exchange)
-#define TIBias          0x60                                                                          //TI BASIC screen bias
-
-#define EEPROM_DSR      499                                                                           //EEPROM starting address for storing DSR filename (including \0)
-#define EEPROM_CFG        0                                                                           //EEPROM starting address for APEDSK99 configuration
+#define TIBias            0x60                                                                        //TI BASIC screen bias
+  
+#define EEPROM_DSR         499                                                                        //EEPROM starting address for storing DSR filename (including \0)
+#define EEPROM_CFG           0                                                                        //EEPROM starting address for APEDSK99 configuration
 
 struct AD99Config {                                                                                   //struct for saving/loading APEDSK99 configuration
-  byte ipaddress[4];                                                                                  //current Ethernet Shield IP address
-  byte ftpserver[4];                                                                                  //current FTP server IP address
-  char ntpserver[16];                                                                                 //current NTP server IP address (including terminating \0)
-  char ftpuser[9];                                                                                    //current FTP server user name (including terminating \0)
-  char ftpass[9];                                                                                     //current FTP server password (including terminating \0)
-  signed char TZ;                                                                                     //current timezone value (hours difference with UTC)
+  byte ipaddress[4];                                                                                  //  current Ethernet Shield IP address
+  byte ftpserver[4];                                                                                  //  current FTP server IP address
+  char ntpserver[16];                                                                                 //  current NTP server IP address (including terminating \0)
+  char ftpuser[9];                                                                                    //  current FTP server user name (including terminating \0)
+  char ftpass[9];                                                                                     //  current FTP server password (including terminating \0)
+  signed char TZ;                                                                                     //  current timezone value (hours difference with UTC)
 } ACFG;                                                                                               //ACFG is stored in and loaded from EEPROM
 
 //global counter (remember value in between successive calls of same APEDSK99 command)
@@ -46,43 +46,8 @@ byte gii = 0;
 
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
+//unsigned byte TimeDateNum[5] = { 0, 0, 1, 1, 70 };
 char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
-
-//(error) messages in FLASH memory
-const char CALLerror[10][16] PROGMEM = {                                                              //CALL() (error) messages
-  { "* DSK not mapped" },
-  { "* DSK not found " }, 
-  { "* no FTP or NTP " },
-  { "* DSK protected " },
-  { "* DSR not found " },
-  { "* DSK size error" },
-  { "* DSK exists    " },
-  { "* /DIR not found" },
-  { "* no char file  " },
-  { "APEDSK99 OK     " },
-};
-
-//help message in FLASH memory
-const char CALLhelp[18][29] PROGMEM = {                                                                 //CALL() help text
-  { "ARST = soft reset APEDSK99   " },
-  { "LDIR = list doads on sd card " },
-  { "SMAP = show DSK[1-3] mapping " },
-  { "TIME = ntp date/time (NTP$)  " },
-  { "ACHR = load real lower case  " },
-  { "-                            " },
-  { "LDSK(#) = list files on DSK# " },
-  { "PDSK(#) = protect DSK#       " },     
-  { "UDSK(#) = unprotect DSK#     " },
-  { "-                            " },
-  { "MDSK(#,\"1-8$\")=map DSK#->doad" },
-  { "NDSK(#,\"1-8$\")=rename DSK#   " },
-  { "-                            " },
-  { "CDIR(\"1-5$\")=change /DIR   " },
-  { "RDSK(\"1-8$\")=delete sd doad  " },
-  { "FGET(\"1-8$\")=doad ftp -> sd  " },
-  { "FPUT(\"1-8$\")=doad sd  -> ftp " },
-  { "ADSR(\" =8$\")=load DSR & reset" }, 
-};
 
 //reset Arduino properly via watchdog timer
 void APEDSK99reset ( void ) {
@@ -135,22 +100,24 @@ boolean getDSKparms( byte cDSK ) {
   return tooBig;
 }
 
-//transfer relevant error message from FLASH memory to CALL buffer 
-void CALLstatus( byte scode ) {
-  write_DSRAM( CALLST, scode );                                                                       //update CALL status
-  if ( scode < 99  ) {                                                                                //is it an actual error? (if not, no HONK; see DSR source)
-    clrCALLbuffer();
-    for ( byte ii = 2; ii < 18; ii++ ) {                                                              //yes; copy error message to CALL buffer
-      write_DSRAM( CALLBF + ii, pgm_read_byte( &CALLerror[scode][ii-2] ) + TIBias );                  //2 leading spaces to mimic TI BASIC error messages
-    }
-  }
-}
-
 //fill CALL() buffer with " " for clean parameter-passing without left-over crap 
 //i.e. shorter DOAD name following a longer one
 void clrCALLbuffer( void ) {
   for ( byte ii = 0; ii < 32; ii++ ) {       
-    write_DSRAM( CALLBF + ii, 0x20 + TIBias );                                                        //clear CALL buffer
+    write_DSRAM( CALLBF + ii, 0x20 + TIBias );                                                        //clear any leftover rubbish 
+  }
+}
+
+//transfer relevant error message from error file to CALL buffer 
+void CALLstatus( byte scode ) {
+  write_DSRAM( CALLST, scode );                                                                       //update CALL status
+  if ( scode < 99  ) {                                                                                //is it an actual error? (if not, no HONK; see DSR source)
+    DSKx = SD.open( "/CALLerr.txt", FILE_READ );                                                    //open error text file
+    clrCALLbuffer();                                                                                  //clear any leftover rubbish
+    DSKx.seek( DSKx.position() + (scode * 16) );                                                      //seek proper error message position in file
+    for ( byte ii = 2; ii < 18; ii++ ) {                                                            //copy error message to CALL buffer
+      write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );
+    }
   }
 }
 
