@@ -32,7 +32,7 @@ Asm994a TMS99000 Assembler - v3.010
   11            * adapted for APEDSK99 by Jochen Buur
   12            * github.com/jambuur/APEDSK99
   13            *
-  14            * v12r: support for Double Density / 80 tracks (max 1440 AU's)
+  14            * v12s: support for Double Density / 80 tracks (max 1440 AU's); CALL LINK for XB, E/A and MM
   15            *================================================================================================================
   16  0000 5FB4 DSKPRM  EQU     >5FB4                   per DSKx: Mbyte #sectors, Lbyte #sectors, #sectors/track, #tracks, #sides
   17  0000 5FC6 CALLST  EQU     >5FC6                   CALL() execution status: finished, still active, error
@@ -101,8 +101,8 @@ Asm994a TMS99000 Assembler - v3.010
   78  4043 53    
   79            *
   80  4044 0400 PATTBL  DATA    >0400                   TI BASIC VDP RAM address for Pattern Table
-  81  4046 7631 AVERSN  TEXT    'v12r'                  APEDSK99 version string (ARST)
-  81  4048 3272  
+  81  4046 7631 AVERSN  TEXT    'v12s'                  APEDSK99 version string (ARST)
+  81  4048 3273  
   82            *
   83  404A 0000 XEMRET  DATA    >0000                   CALL LINK return address
   84  404C 5D3C XEMJMP  DATA    XEMUST                  XBAS, E/A, MM: PDSK / UDSK/ LDSK

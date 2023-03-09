@@ -11,7 +11,7 @@
 * adapted for APEDSK99 by Jochen Buur
 * github.com/jambuur/APEDSK99
 *
-* v12r: support for Double Density / 80 tracks (max 1440 AU's)
+* v12s: support for Double Density / 80 tracks (max 1440 AU's); CALL LINK for XB, E/A and MM
 *================================================================================================================
 DSKPRM	EQU     >5FB4                   per DSKx: Mbyte #sectors, Lbyte #sectors, #sectors/track, #tracks, #sides
 CALLST  EQU	>5FC6                   CALL() execution status: finished, still active, error
@@ -78,7 +78,7 @@ SUB08	DATA	SUB09
 	TEXT	'FILES'			same as >16, called from Basic
 *
 PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table
-AVERSN	TEXT	'v12r'			APEDSK99 version string (ARST)
+AVERSN	TEXT	'v12s'			APEDSK99 version string (ARST)
 *
 XEMRET	DATA	>0000			CALL LINK return address
 XEMJMP	DATA	XEMUST			XBAS, E/A, MM: PDSK / UDSK/ LDSK
