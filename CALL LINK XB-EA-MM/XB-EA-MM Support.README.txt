@@ -1,0 +1,24 @@
+Unlike TI BASIC, EXBAS can't execute DSR ROM CALL's in a running program (command mode is fine).
+This DSK has a convenient workaround. By loading an assembly object file you will get
+CALL LINK hooks to all APEDSK99 CALL's.
+
+A member of the Italian TI user group pointed out that with CALL LINK you can use variables for any APEDSK99 CALL values (e.g. CALL LINK(CMD$,VAL$) instead of CALL LINK("LDSK",1). 
+This is a major benefit so I added CALL LINK support for Editor/Assembler and Mini Memory as well.
+
+Some examples:
+
+	TI BASIC			XB / EA / MM
+	--------			-----------------
+	10 CALL "AHLP"			10 CALL LINK("AHLP")
+	20 CALL PDSK(1)			20 CALL LINK("PDSK",1)
+	30 CALL MDSK(1,"AD99SUP")	30 CALL LINK("MDSK",1,"AD99SUP")
+	40 CALL FGET("AD99SUP")		40 CALL LINK("FGET","AD99SUP")
+
+To use, map AD99SSUP.DSK to any drive (this example uses DSK1) and load the object file (NB: for E/A you will need to load the BASIC support routines first):
+
+	>CALL MDSK(1,"AD99SUP")
+	>CALL INIT
+	>CALL LOAD("DSK1.BSCSUP")	<- only for E/A
+	>CALL LOAD("DSK1.AD99XB")
+
+
