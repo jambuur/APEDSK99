@@ -1,6 +1,6 @@
 /* APEDISK99
   This sketch emulates 3 TI99/4a DS/DD/80tracks disk drives, including the ability to load and save Disk-On-A-Disk (DOAD) files 
-  via the FTP protocol. It also provides TI (EXTENDED) BASIC access to NTP date/time information. Bonus CALL: real lower case characters
+  via the FTP protocol. It also provides BASIC access to NTP date/time information. Bonus CALL: real lower case characters
   
   Shopping list:
   - Arduino Uno
@@ -32,8 +32,8 @@
   https://github.com/greiman/SdFat
 
   $Author: Jochen Buur $
-  $Date: January 2023 $
-  $Revision: 0.12r $
+  $Date: February 2023 $
+  $Revision: 0.12s $
   
   This software is freeware and can be modified, re-used or thrown away without any restrictions.
   Use this code at your own risk.
@@ -96,22 +96,3 @@ NTP ntp(udp);
 #define isHigh(P)((*(pinOfPin(P))& pinMask(P))>0)
 #define isLow(P)((*(pinOfPin(P))& pinMask(P))==0)
 #define digitalState(P)((uint8_t)isHigh(P))
-
-//74HC595 shift-out definitions
-#define CLOCK     17                                                          //PC3
-#define LATCH     18                                                          //PC4
-#define DS        19                                                          //PC5
-
-//IO lines for Arduino RAM control
-#define CE  14                                                                //PC0  LED flashes for both Arduino and TI RAM access
-#define WE  16	                                                              //PC2
-
-//IO lines for TI99/4a control
-#define TI_READY       3                                                      //PD0; manage READY and enable/disable 74HC595 shift registers
-#define TI_INT      	 2                                                      //PD2; GAL16V8 flag (DSR write & A15); shared with Ethernet CS (ETH_CS) 
-#define TI_BUFFERS    15                                                      //PC1; 74HCT541 and GAL output bufers enable/disable
-
-//error blinking parameters
-#define LED_ON       500                                                      //on
-#define LED_OFF      250                                                      //off
-#define LED_REPEAT  1500                                                      //delay between sequence

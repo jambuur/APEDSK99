@@ -104,11 +104,11 @@ Asm994a TMS99000 Assembler - v3.010
   81  4046 7631 AVERSN  TEXT    'v12r'                  APEDSK99 version string (ARST)
   81  4048 3272  
   82            *
-  83  404A 0000 XBASRT  DATA    >0000                   CALL LINK return address (Extended Basic)
-  84  404C 5D3C XBJUMP  DATA    XBUSTR                  EXBAS PDSK / UDSK/ LDSK
-  85  404E 5DF0         DATA    A9909                   EXBAS MDSK / NDSK               
-  86  4050 5DF0         DATA    A9909                   EXBAS RDSK / FGET / FPUT / ADSR / CDIR
-  87  4052 5CC4         DATA    NOPRM2                  EXBAS SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG
+  83  404A 0000 XEMRET  DATA    >0000                   CALL LINK return address
+  84  404C 5D3C XEMJMP  DATA    XEMUST                  XBAS, E/A, MM: PDSK / UDSK/ LDSK
+  85  404E 5DF0         DATA    A9909                   XBAS, E/A, MM: MDSK / NDSK              
+  86  4050 5DF0         DATA    A9909                   XBAS, E/A, MM: RDSK / FGET / FPUT / ADSR / CDIR
+  87  4052 5CC4         DATA    NOPRM2                  XBAS, E/A, MM: SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG
   88            *
   89  4054 405E SUB09   DATA    SUB10
   90  4056 5C16         DATA    PDSK
@@ -4246,7 +4246,7 @@ Asm994a TMS99000 Assembler - v3.010
 3105            *
 3106            * Generic prep and return to TI BASIC for APEDSK99 CALL's
 3107            *
-3108  5C7A 04E0 ACLPRP  CLR     @XBASRT                 return to TI BASIC, not EXBAS
+3108  5C7A 04E0 ACLPRP  CLR     @XEMRET                 return to BASIC command prompt, not running BASIC program
 3108  5C7C 404A  
 3109  5C7E 06C6         SWPB    R6                      get optional subcommand in MSB
 3110  5C80 D806         MOVB    R6,@ASUBCM              save
@@ -4365,7 +4365,7 @@ Asm994a TMS99000 Assembler - v3.010
 3186  5D38 1000  
 3187  5D3A 1433         JHE     MNDSK2                  yep
 3188            *
-3189  5D3C D806 XBUSTR  MOVB    R6,@ACOMND              send PDSK / UDSK / LDSK command to Arduino
+3189  5D3C D806 XEMUST  MOVB    R6,@ACOMND              send PDSK / UDSK / LDSK command to Arduino
 3189  5D3E 5FE8  
 3190            
 3191  5D40 0286         CI      R6,>0300                LDSK?
@@ -4524,10 +4524,10 @@ Asm994a TMS99000 Assembler - v3.010
 3294  5E3C D806         MOVB    R6,@ACOMND              yes; execute (currently only ARST)
 3294  5E3E 5FE8  
 3295            *
-3296  5E40 C2E0 A9912   MOV     @XBASRT,R11             APEDSK99: CALL LINK from Extended Basic?
+3296  5E40 C2E0 A9912   MOV     @XEMRET,R11             APEDSK99: CALL LINK?
 3296  5E42 404A  
 3297  5E44 1301         JEQ     A9913                   nope
-3298  5E46 045B         B       *R11                    yes; return to ExBas program
+3298  5E46 045B         B       *R11                    yes; return to BASIC program
 3299            *
 3300  5E48 04E9 A9913   CLR     @>0050(R9)              clear error flag                
 3300  5E4A 0050  
@@ -5209,9 +5209,9 @@ Asm994a TMS99000 Assembler - v3.010
  WRSEC1 ABS:4A22 WRSEC1
  WSECTR ABS:5FFC WSECTR
  WTCPT1 ABS:4276 WTCPT1
- XBASRT ABS:404A XBASRT
- XBJUMP ABS:404C XBJUMP
- XBUSTR ABS:5D3C XBUSTR
+ XEMJMP ABS:404C XEMJMP
+ XEMRET ABS:404A XEMRET
+ XEMUST ABS:5D3C XEMUST
  XML14  ABS:164E XML14
  XML16  ABS:15D6 XML16
  XMLBC  ABS:4409 XMLBC

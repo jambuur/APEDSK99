@@ -1,3 +1,35 @@
+//74HC595 shift-out definitions
+#define CLOCK     17                                                          //PC3
+#define LATCH     18                                                          //PC4
+#define DS        19                                                          //PC5
+
+//IO lines for Arduino RAM control
+#define CE  14                                                                //PC0  LED flashes for both Arduino and TI RAM access
+#define WE  16                                                                //PC2
+
+//IO lines for TI99/4a control
+#define TI_READY       3                                                      //PD0; manage READY and enable/disable 74HC595 shift registers
+#define TI_INT         2                                                      //PD2; GAL16V8 flag (DSR write & A15); shared with Ethernet CS (ETH_CS) 
+#define TI_BUFFERS    15                                                      //PC1; 74HCT541 and GAL output bufers enable/disable
+
+//error blinking parameters
+#define LED_ON       500                                                      //on
+#define LED_OFF      250                                                      //off
+#define LED_REPEAT  1500                                                      //delay between sequence
+
+//Short delay function to let bus/signals settle. 
+//Probably not necessary in most cases but conservative timing ensures most consoles work with APEDSK99 "out of the box"
+inline void NOP() __attribute__((always_inline));
+void NOP(){
+  delayMicroseconds(6);  
+}
+
+//Short delay function to let TI finish the Instruction Acquisition (IAQ) cycle before READY is made inactive
+inline void IAQ() __attribute__((always_inline));
+void IAQ(){
+  delayMicroseconds(4);  
+}
+
 //databus:
 //D0,0,PD0 / D1,1,PD1 / D2,4,PD4 / D3,5,PD5 / D4,6,PD6 / D5,7,PD7 / D6,8,PD8 / D7,9,PD9
 //switch databus to INPUT state for reading from RAM

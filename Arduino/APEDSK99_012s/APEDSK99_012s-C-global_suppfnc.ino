@@ -46,8 +46,6 @@ byte gii = 0;
 
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
-//unsigned byte TimeDateNum[5] = { 0, 0, 1, 1, 70 };
-char TimeDateASC[17] = "\0";                                                                          //global array ASCII NTP time/date
 
 //reset Arduino properly via watchdog timer
 void APEDSK99reset ( void ) {
@@ -132,7 +130,7 @@ void EtherStop( void ) {
   pinAsInput(TI_INT);                                                                                 //disable EthernetShield SS / enable TI_INT  
 }
 
-//get UNIX timestamp from NTP server and return "HH:mm DD/MM/YYYY" to CALL buffer
+//get UNIX timestamp from NTP server and store time/date in array
 byte getNTPdt( void ) {
  
   unsigned long UNIXepoch, Hours, Minutes, Day, Month, Year;
@@ -191,22 +189,21 @@ byte getNTPdt( void ) {
   ntp.stop();                                                                                         //stop ntp client
 }
 
+//write NTP date/time data from array to FAT
 void writeFATts( void ) {                                                                             //update FAT MODIFY time/date
-  byte chkNTPdt = getNTPdt();
-  if ( chkNTPdt != FNTPConnect ) {                                                                    //if valid NTP time ...
+  if ( getNTPdt() != FNTPConnect ) {                                                                  //if valid NTP time ...
     DSKx.timestamp(T_WRITE, TimeDateNum[4],                                                           //... update FAT data
-                                       TimeDateNum[3],
-                                       TimeDateNum[2],
-                                       TimeDateNum[0],
-                                       TimeDateNum[1],
-                                                    0 ); 
+                            TimeDateNum[3],
+                            TimeDateNum[2],
+                            TimeDateNum[0],
+                            TimeDateNum[1],
+                                        0 ); 
   }
 }
 
+//read FAT time/date data into array
 byte readFATts( void ) {                                                                              //read FAT MODIFY time/date
   dir_t DIR;
-  TimeDateASC[0] = '\0';
-  
   if ( DSKx.dirEntry(&DIR) ) {                                                                        //only read FAT time/date if valid directory entry                 
     TimeDateNum[4] = (int)FAT_YEAR  (DIR.lastWriteDate);                                              //store FAT date and time in global array   
     TimeDateNum[3] = (int)FAT_MONTH (DIR.lastWriteDate);
@@ -216,10 +213,93 @@ byte readFATts( void ) {                                                        
   } 
 }
 
-void converTD( void ) {
-  sprintf( TimeDateASC, "%02u:%02u %02u/%02u/%04u", TimeDateNum[0],                                   //nicely formatted time/date string in global array for SDSK() and TIME()
-                                                    TimeDateNum[1],
-                                                    TimeDateNum[2],
-                                                    TimeDateNum[3],
-                                                    TimeDateNum[4] );  
+//convert NTP array to a nice string format and write to CALL buffer
+void converTD( byte CBstartcol, boolean sYear ) {
+  rJust( CBstartcol,  CBstartcol + 2, TimeDateNum[0] );                                               //write right-justified hours to CALL buffer
+  write_DSRAM( CALLBF + (CBstartcol +  2), ':' + TIBias );                                            //write delimiter to CALL buffer
+  rJust( CBstartcol + 3, CBstartcol + 5, TimeDateNum[1] );                                            //minutes 
+
+  rJust( CBstartcol +  6, CBstartcol + 8, TimeDateNum[2] );                                           //day
+  write_DSRAM( CALLBF + (CBstartcol +  8), '/' + TIBias ); 
+  if ( sYear ) {                                                                                      //short year?
+    rJust( CBstartcol + 10, CBstartcol + 14, TimeDateNum[4] );                                        //yes, century overwritten by month
+  } else {
+    rJust( CBstartcol + 12, CBstartcol + 16, TimeDateNum[4] );                                        //nope, full year (TIME)
+  }
+  rJust( CBstartcol +  9, CBstartcol + 11, TimeDateNum[3] );                                          //month
+  write_DSRAM( CALLBF + (CBstartcol + 11), '/' + TIBias );
+
+  for ( byte ii = CBstartcol; ii < CBstartcol + 12; ii += 3 ) {                                       //fill in the blanks; add leading zero to 1 digit hour, minute, day and month
+    if ( read_DSRAM( CALLBF + ii ) == ' ' + TIBias ) {
+      write_DSRAM( CALLBF + ii, '0' + TIBias );
+    }
+  }
+}
+
+//homegrown (read simple) sprintf; ASCII version of value is displayed right-justified 
+//usage: display column start, display column end+1, value to be displayed
+void rJust( byte CBstartcol, byte CBendcol, long lval ) {                                          
+  char valChar[11];
+  memset( valChar, 0x20, 10 );                                                                        //clear array ...
+  ltoa( lval, valChar, 10 );                                                                          //... and store long value in ASCII
+  byte valIndex = 0;
+  for ( byte ii = CBstartcol; ii < CBendcol; ii++ ) {                                                 //print ASCII value to CALL buffer ...
+    write_DSRAM( CALLBF + ii, (valChar[CBendcol-ii] != 0x20 ? valChar[valIndex++] : ' ') + TIBias );  //... checking from end to start for space (save ' ' -> next) or !space (ASCII char -> next)
+  }
+}
+
+//homegrown (read simple) mix of strncpy and strncat. 
+//WARNING: only works with char/byte arrays and NOT MUCH ERROR CHECKING is done.
+//expects destination array insertion point to be 0x00 
+//in case of a literal string, nrchars += 1 (e.g. for ".DSK" nrchars = 5)
+//usage: destination array, destination array size, source array||string, source start character, # of characters to transfer   
+void Acatpy( char Adest[], byte dSize, char Asrc[], byte start, byte nrchars ) {
+  byte ii;                                                                                            
+  dSize--;                                                                                            //adjust max destination array index
+  for ( ii = 0; ii < dSize; ii++ ) {                                                                  //find 0x00 delimiter; will be [0] if cleared array
+    if ( Adest[ii] == 0x00 ) {
+      break;
+    } 
+  }
+  
+  nrchars += start;
+  for ( byte jj = start; jj < nrchars; jj++ ) {                                                       //add source array[start]-[limit-1] to destination array ...
+    if ( Asrc[jj] != 0x00 ) {                                                                         //... but make sure we don't go past max src array ...
+      if ( ii < dSize ) {                                                                             //... and dest array sizes
+        Adest[ii++] = Asrc[jj];
+      }
+    } else {
+      break;
+    }
+  }
+  Adest[++ii] = '\0';                                                                                 //terminate array
+  return ii;                                                                                          //could be useful, not used currently
+}
+
+//homegrown (read simple) version of strncmp
+//usage: array to check, size of array to check, array to be checked against
+boolean Acomp( char Achk[], byte dSize, char Asrc[] ) {
+  boolean same =  true;
+  for ( byte ii = 0; ii < dSize; ii++ ) {                                                             //check array elements one by one
+    if ( Achk[ii] != Asrc[ii] ) {                                                                     //any difference -> set flag
+      same = false; 
+    }
+  }
+  return same;
+}
+
+//generic function to write display data (and character definitions for ACHR) to the CALL buffer.
+//usage: display column start, display column end+1, source array ("\0" if source = DSK), array index offset (0=no offset), 
+//       source is DSK || array (true || false), break when cval is read (true || false), cval ('\0' when not used);
+byte writeCBuffer( byte start, byte limit, char Asrc[], char SAoffset, boolean rDSK, boolean check, char cval ) {
+  byte cc;
+  while ( start < limit ) {
+    rDSK ? cc = DSKx.read() : cc = Asrc[start + SAoffset];                                              //read next DSK byte || next array value
+    write_DSRAM( CALLBF + (start), cc + TIBias );                                                       //write to CALL buffer including  
+    if ( check && cc == cval ) {
+      break;
+    }
+    start++;
+  }
+  return start;                                                                                         //handy for adding info in next column
 }

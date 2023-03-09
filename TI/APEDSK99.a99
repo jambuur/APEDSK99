@@ -80,11 +80,11 @@ SUB08	DATA	SUB09
 PATTBL	DATA	>0400			TI BASIC VDP RAM address for Pattern Table
 AVERSN	TEXT	'v12r'			APEDSK99 version string (ARST)
 *
-XBASRT	DATA	>0000			CALL LINK return address (Extended Basic)
-XBJUMP	DATA	XBUSTR			EXBAS PDSK / UDSK/ LDSK
-	DATA	A9909			EXBAS MDSK / NDSK		
-	DATA	A9909			EXBAS RDSK / FGET / FPUT / ADSR / CDIR
-	DATA	NOPRM2			EXBAS SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG
+XEMRET	DATA	>0000			CALL LINK return address
+XEMJMP	DATA	XEMUST			XBAS, E/A, MM: PDSK / UDSK/ LDSK
+	DATA	A9909			XBAS, E/A, MM: MDSK / NDSK		
+	DATA	A9909			XBAS, E/A, MM: RDSK / FGET / FPUT / ADSR / CDIR
+	DATA	NOPRM2			XBAS, E/A, MM: SMAP / LDIR / AHLP / ACHR / ARST / TIME / ACFG
 *
 SUB09	DATA	SUB10
 	DATA	PDSK
@@ -3105,7 +3105,7 @@ ACFG	LI	R6,>3600		APEDSK99 configuration
 *
 * Generic prep and return to TI BASIC for APEDSK99 CALL's
 *
-ACLPRP	CLR	@XBASRT			return to TI BASIC, not EXBAS
+ACLPRP	CLR	@XEMRET			return to BASIC command prompt, not running BASIC program
 	SWPB	R6			get optional subcommand in MSB
 	MOVB	R6,@ASUBCM		save
 	SWPB	R6			back to primary command
@@ -3186,7 +3186,7 @@ A9903	JEQ	ACLERR			DSK0 not valid, * INCORRECT COMMAND
 	CI	R6,>1000		MDSK or NDSK?
 	JHE	MNDSK2			yep
 *
-XBUSTR	MOVB	R6,@ACOMND		send PDSK / UDSK / LDSK command to Arduino
+XEMUST	MOVB	R6,@ACOMND		send PDSK / UDSK / LDSK command to Arduino
 
 	CI 	R6,>0300		LDSK?
 	JEQ	LDSK2			yep
@@ -3293,9 +3293,9 @@ A9911	CLR	R6
 	JEQ 	A9912			no
 	MOVB	R6,@ACOMND		yes; execute (currently only ARST)
 *
-A9912	MOV	@XBASRT,R11		APEDSK99: CALL LINK from Extended Basic?
+A9912	MOV	@XEMRET,R11		APEDSK99: CALL LINK?
 	JEQ	A9913			nope
-	B	*R11			yes; return to ExBas program
+	B	*R11			yes; return to BASIC program
 *
 A9913	CLR	@>0050(R9)		clear error flag		
 	A	R8, @>002C(R9)		add call length to token pointer		

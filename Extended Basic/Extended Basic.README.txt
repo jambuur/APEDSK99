@@ -2,6 +2,8 @@ Unlike TI BASIC, EXBAS can't execute DSR ROM CALL's in a running program (comman
 This DSK has a convenient workaround. By loading an assembly object file you will get
 CALL LINK hooks to all APEDSK99 CALL's.
 
+Although the two other relevant modules (Editor/Assembler and Mini Memory) have no problem using APEDSK99 CALL's from a running program, you can't use variables a 
+
 Some examples:
 
 	TI BASIC			TI Extended BASIC
