@@ -295,10 +295,10 @@ byte writeCBuffer( byte start, byte limit, char Asrc[], char SAoffset, boolean r
   byte cc;
   while ( start < limit ) {
     rDSK ? cc = DSKx.read() : cc = Asrc[start + SAoffset];                                              //read next DSK byte || next array value
-    write_DSRAM( CALLBF + (start), cc + TIBias );                                                       //write to CALL buffer including  
-    if ( check && cc == cval ) {
-      break;
+    if ( check && cc == cval ) {                                                                        //have we come across the delimiter?
+      break;                                                                                            //yes, we're done
     }
+    write_DSRAM( CALLBF + (start), cc + TIBias );                                                       //nope, write character to CALL buffer
     start++;
   }
   return start;                                                                                         //handy for adding info in next column
