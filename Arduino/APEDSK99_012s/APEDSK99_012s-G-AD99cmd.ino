@@ -116,9 +116,7 @@
           clrCALLbuffer();                                                                                //clear CALL buffer
           
           Acatpy( DOADfilename, sizeof(DOADfilename), ".DSK", 4);                                         //stick file extension at the back       
-          byte diag = Acatpy( DOADfullpath, sizeof(DOADfullpath), DOADfilename, sizeof(DOADfilename) );               //finalise full path
-
-          write_DSRAM( 0x3000, diag );
+          Acatpy( DOADfullpath, sizeof(DOADfullpath), DOADfilename, sizeof(DOADfilename) );               //finalise full path
 
           boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
           byte protectDOAD;                                                                               //Protected flag
