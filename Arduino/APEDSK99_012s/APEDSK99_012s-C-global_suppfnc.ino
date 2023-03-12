@@ -251,19 +251,17 @@ void rJust( byte CBstartcol, byte CBendcol, long lval ) {
 //homegrown (read simple) mix of strncpy and strncat. 
 //WARNING: only works with char/byte arrays and NOT MUCH ERROR CHECKING is done.
 //expects destination array insertion point to be 0x00 
-//in case of a literal string, nrchars += 1 (e.g. for ".DSK" nrchars = 5)
-//usage: destination array, destination array size, source array||string, source start character, # of characters to transfer   
-void Acatpy( char Adest[], byte dSize, char Asrc[], byte start, byte nrchars ) {
+//usage: destination array, destination array size, source array||string, # of characters to transfer   
+byte Acatpy( char Adest[], byte dSize, char Asrc[], byte sSize ) {
   byte ii;                                                                                            
-  dSize--;                                                                                            //adjust max destination array index
+  dSize--;                                                                                            //adjust max destination array index (need to add at least 1 character)
   for ( ii = 0; ii < dSize; ii++ ) {                                                                  //find 0x00 delimiter; will be [0] if cleared array
     if ( Adest[ii] == 0x00 ) {
       break;
     } 
   }
   
-  nrchars += start;
-  for ( byte jj = start; jj < nrchars; jj++ ) {                                                       //add source array[start]-[limit-1] to destination array ...
+  for ( byte jj = 0; jj < sSize; jj++ ) {                                                             //add source array to destination array ...
     if ( Asrc[jj] != 0x00 ) {                                                                         //... but make sure we don't go past max src array ...
       if ( ii < dSize ) {                                                                             //... and dest array sizes
         Adest[ii++] = Asrc[jj];
@@ -272,7 +270,6 @@ void Acatpy( char Adest[], byte dSize, char Asrc[], byte start, byte nrchars ) {
       break;
     }
   }
-  Adest[++ii] = '\0';                                                                                 //terminate array
   return ii;                                                                                          //could be useful, not used currently
 }
 

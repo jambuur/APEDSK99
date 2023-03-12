@@ -102,7 +102,7 @@
           memset( DOADfullpath, 0x00, 20 );                                                               //clear path array
           char DOADfilename[13];                                                                          //just the filename NDSK, RDSK, FGET and FPUT
           memset( DOADfilename, 0x00, 13 );                                                               //clear filename array  
-          Acatpy( DOADfullpath, sizeof(DOADfullpath), DSKfolder, 0, sizeof(DSKfolder) );                  //full file path starts with /FOLDER
+          Acatpy( DOADfullpath, sizeof(DOADfullpath), DSKfolder, sizeof(DSKfolder) );                     //full file path starts with /FOLDER
 
           byte ii;
           for ( ii = 0; ii < 8; ii++ ) {                                                                  //JB max 8 characters for MSDOS filename
@@ -114,11 +114,12 @@
             }
           }
           clrCALLbuffer();                                                                                //clear CALL buffer
+          
+          Acatpy( DOADfilename, sizeof(DOADfilename), ".DSK", 4);                                         //stick file extension at the back       
+          byte diag = Acatpy( DOADfullpath, sizeof(DOADfullpath), DOADfilename, sizeof(DOADfilename) );               //finalise full path
 
-          DOADfilename[ii] = '\0';                                                                        //properly terminate filename
-          Acatpy( DOADfilename, sizeof(DOADfilename), ".DSK", 0, 4);                                      //stick file extension at the back
-          Acatpy( DOADfullpath, sizeof(DOADfullpath), DOADfilename, 0, sizeof(DOADfilename) );            //finalise full path
-    
+          write_DSRAM( 0x3000, diag );
+
           boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
           byte protectDOAD;                                                                               //Protected flag
           if ( existDOAD ) {                                                                              //does DOAD exist?
@@ -132,7 +133,7 @@
               if ( !getDSKparms( currentDSK ) ) {                                                         //check DOAD size and if OK store DSK parameters 
                 memset( nameDSK[currentDSK], 0x00, 20 );
                 Acatpy( nameDSK[currentDSK], sizeof(nameDSK[currentDSK]),                                 //we're good; assign to requested DSKx   
-                        DOADfullpath, 0, sizeof(DOADfullpath) );  
+                        DOADfullpath, sizeof(DOADfullpath) );  
                 activeDSK[currentDSK] = true;                                                             //flag as active
                 protectDSK[currentDSK] = protectDOAD;                                                     //set Protected status: 0x50 || "P", 0x20 || " "
               } else {
@@ -196,11 +197,11 @@
             
             if ( currentA99cmd == 34 ) {                                                                  //FPUT()?
               if ( existDOAD ) {                                                                          //yep; does DOAD exist ...
-                DSKx.seek(0);                                                                             //go to start of file (we were at 0x10)
+                DSKx.seek(0);                                                                             //go to start of file (we were at 0x10)                        
                 ftp.store( DOADfilename, DSKx );                                                          //yep; send DOAD to ftp server
-              } else {
+              } else { 
                 CALLstatus( DOADNotFound );                                                               //no; report error to CALL()
-              }
+              } 
             } else if ( currentA99cmd == 33 ) {                                                           //FGET()?
               if ( existDOAD && protectDOAD == 0x50) {                                                    //yep; is existing DOAD Protected?
                 CALLstatus( Protected );                                                                  //yes; report error to CALL()
@@ -219,7 +220,7 @@
               }    
             }   
             EtherStop();                                                                                  //stop Ethernet client
-          }                                      
+          }                                     
           noExec();                                                                                       //we're done
         }
         break;       
@@ -235,7 +236,7 @@
           }                                                          
 
           DSRtoload[9] = '\0';                                                                            //terminate filename to ...                                                                     
-          Acatpy( DSRtoload, sizeof(DSRtoload), ".DSR", 0, 4);                                            //... complete filename
+          Acatpy( DSRtoload, sizeof(DSRtoload), ".DSR", 4);                                               //... complete filename
        
           clrCALLbuffer();                                                                                //clear CALL buffer
 
@@ -291,7 +292,7 @@
 
           if ( SD.exists( newfolder ) ) {                                                                 //does folder exist? ...
             memset( DSKfolder, 0x00, 8 );                                                                 //... yes; clear global folder variable ...
-            Acatpy( DSKfolder, sizeof(DSKfolder), newfolder, 0, sizeof(newfolder) );                      //... and copy new folder name
+            Acatpy( DSKfolder, sizeof(DSKfolder), newfolder, sizeof(newfolder) );                         //... and copy new folder name
             CALLstatus( AllGood );                                                                        //done
           } else {
             CALLstatus( DIRNotFound );                                                                    //... no; error                                                    
@@ -521,14 +522,14 @@
           DSKx.seek( 0 );                                                                                 //TI DSK name location
 
           byte ii;                                                                  
-          char tStr[] = "ACFG";                                                                           //TI DSK name should be this                                                             
-          for ( ii = 0; ii < 4; ii++ ) {                                                                  //check if so
+          char tStr[] = "AD99SUP";                                                                        //TI DSK name should be this                                                             
+          for ( ii = 0; ii < 7; ii++ ) {                                                                  //check if so
             if ( DSKx.read() != tStr[ii] ) {
               break;
             }
           }
          
-          if ( ii < 3 ) {                                                                                 //not all characters matched so ...
+          if ( ii < 6 ) {                                                                                 //not all characters matched so ...
             CALLstatus( DOADNotMapped );                                                                  //... no genuine ACFG DOAD mapped at DSK1
             break;  
           } else {
