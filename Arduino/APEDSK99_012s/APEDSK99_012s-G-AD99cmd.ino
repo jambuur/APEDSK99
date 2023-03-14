@@ -53,15 +53,10 @@
 
               ftype &= 0x83;                                                                              //strip protection bit
               if ( ftype != 1 ) {                                                                         //PROGRAM?
-                if ( ftype == 0 || ftype == 128 ) {                                                       //no; DISPLAY?
-                  write_DSRAM( CALLBF + 12, 'D' + TIBias );                                               //yes
-                  write_DSRAM( CALLBF + 14, (ftype == 128 ? 'V' : 'F') + TIBias );                        //indicate FIXED(=0) or VARIABLE(=128)    
-                } else {
-                  write_DSRAM( CALLBF + 12, 'I' + TIBias );                                               //must be INTERNAL
-                  write_DSRAM( CALLBF + 14, (ftype == 130 ? 'V' : 'F') + TIBias );                        //indicate FIXED(=2) or VARIABLE(=130)
-                } 
-                
+                write_DSRAM( CALLBF + 12, ( ftype & 0x0F ? 'I' : 'D') + TIBias );                         //DISPLAY (0) or INTERNAL (2)?
                 write_DSRAM( CALLBF + 13, '/' + TIBias );                                                 //"/" as in "D/V"
+                write_DSRAM( CALLBF + 14, ( ftype & 0xF0 ? 'V' : 'F') + TIBias );                         //VARIABLE (128) or FIXED (0)?
+                 
                 DSKx.seek( DSKx.position() + 4 );                                                         //byte >11 stores record length
                 rJust( 15, 18, DSKx.read() );                                                             //write right-justified record length to CALL buffer
                 DSKx.seek( DSKx.position() - 4 );                                                         //re-position to bytes >0E, >0F: #sectors
@@ -93,147 +88,127 @@
         break;
     
         case 16:                                                                                          //MDSK(): map DSKx to DOAD
-        case 17:                                                                                          //NDSK(): rename selected DOAD (DSK name is changed to the same)
-        case 32:                                                                                          //RDSK(): remove DOAD
+        {            
+          if ( prepDSK(currentA99cmd) ) {                                                                 //does DOAD exist? ...
+            if ( !getDSKparms( currentDSK ) ) {                                                           //check DOAD size and if OK store DSK parameters 
+              memset( nameDSK[currentDSK], 0x00, 19 );                                                    //clear current DSK innfo
+              Acatpy( nameDSK[currentDSK], sizeof(nameDSK[currentDSK]),                                   //assign MDSK info to requested DSKx   
+                      DOADfullpath, sizeof(DOADfullpath) );  
+              activeDSK[currentDSK] = true;                                                               //flag as active
+              protectDSK[currentDSK] = protectDOAD;                                                       //set Protected status: 0x50 || "P", 0x20 || " "
+            } else {
+              CALLstatus( DOADTooBig );                                                                   //... flag error ...
+            }           
+          } else {
+            CALLstatus( DOADNotFound );                                                                   //... no; return error flag
+          } 
+          noExec();
+        }
+        break;
+        
+        case 17:                                                                                          //NDSK(): rename selected DOAD (TI DSK name is changed to the same)
+        {
+          if ( !prepDSK(currentA99cmd) ) {                                                                //does DOAD exist? ...
+            if ( activeDSK[currentDSK] ) {                                                                //is the requested disk mapped to a DOAD? ...   
+              if ( protectDSK[currentDSK] == 0x20 ) {                                                     //is DOAD unProtected? ...
+                DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );                                        //yes; safe to rename
+                DSKx.seek ( 0x00 );                                                                       //go to start of file
+
+                byte ii = 0;
+                while ( ii < 8 && DOADfilename[ii] != '.' ) {
+                  DSKx.write( DOADfilename[ii++] );                                                       //write new DSK name (max 8 characters || until we hit ".")
+                }                     
+                while ( DSKx.position() < 0x0A ) {                                                        //... and fill rest (max 10 TI DSK characters) with spaces
+                  DSKx.write( 0x20 );
+                }                  
+
+                DSKx.flush();                                                                             //make sure changes are saved to SD ...
+                DSKx.rename( DOADfullpath );                                                              //... before renaming the file
+                activeDSK[currentDSK] = false;                                                            //flag as inactive to lose old mapping
+              } else {
+                CALLstatus( Protected );                                                                  //... no; can't rename a protected DOAD
+              }
+            } else {
+              CALLstatus( DOADNotMapped );                                                                //... no; can't rename a non-mapped DOAD
+            }
+          } else {
+            CALLstatus( DOADexists );                                                                     //... yes; can't rename to an existing filename
+          }
+          noExec();
+        }
+        break;
+        
+        case 32:                                                                                          //RDSK(): remove DSK
+        {
+          if ( prepDSK(currentA99cmd) ) {                                                                 //does DOAD exist? ...
+            if ( protectDOAD == 0x20 ) {                                                                  //yes; is DOAD unProtected? ...
+              for ( byte ii = 0; ii < 3; ii++ ) {                                                         //yes ...
+                if ( Acomp(DOADfullpath, sizeof(DOADfullpath), nameDSK[ii]) ) {                           //... check if DSK is already mounted ...
+                  activeDSK[ii] = false;                                                                  //... flag DSKx non-active 
+                }
+              }
+              SD.remove( DOADfullpath );                                                                  //yes; delete DOAD from SD card  
+            } else {
+              CALLstatus( Protected );                                                                    //... no; Protected, report error to CALL()
+            }
+          } else {
+            CALLstatus( DOADNotFound );                                                                   //... no; return error flag
+          }
+          noExec();
+        }
+        break;
+        
         case 33:                                                                                          //FGET(): get DOAD from FTP server
         case 34:                                                                                          //FPUT(): save selected DOAD to FTP server                                                                      
         {
-          char DOADfullpath[20];                                                                          //complete path + filename
-          memset( DOADfullpath, 0x00, 20 );                                                               //clear path array
-          char DOADfilename[13];                                                                          //just the filename NDSK, RDSK, FGET and FPUT
-          memset( DOADfilename, 0x00, 13 );                                                               //clear filename array  
-          Acatpy( DOADfullpath, sizeof(DOADfullpath), DSKfolder, sizeof(DSKfolder) );                     //full file path starts with /FOLDER
+          EtherStart();                                                                                   //start Ethernet client
 
-          byte ii;
-          for ( ii = 0; ii < 8; ii++ ) {                                                                  //JB max 8 characters for MSDOS filename
-            byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                    //read character from APEDSK99 CALL buffer
-            if ( cc != 0x00 ) {                                                                           //end of filename (>00 added by DSR)? ...
-              DOADfilename[ii] = cc;                                                                      //... no; add next character to filename                                                                   
-            } else {                                                                      
-              break;                                                                                      // ... yes we need to get out
-            }
-          }
-          clrCALLbuffer();                                                                                //clear CALL buffer
-          
-          Acatpy( DOADfilename, sizeof(DOADfilename), ".DSK", 4);                                         //stick file extension at the back       
-          Acatpy( DOADfullpath, sizeof(DOADfullpath), DOADfilename, sizeof(DOADfilename) );               //finalise full path
-
-          boolean existDOAD = SD.exists( DOADfullpath );                                                  //existing DOAD flag
-          byte protectDOAD;                                                                               //Protected flag
-          if ( existDOAD ) {                                                                              //does DOAD exist?
-            DSKx = SD.open( DOADfullpath, FILE_READ);                                                     //yes; open DOAD file
-            DSKx.seek(0x10);                                                                              //byte 0x10 in Volume Information Block stores status
-            protectDOAD = DSKx.read();                                                                    //store Protected flag
+          if ( !ftp.connect(ACFG.ftpserver, ACFG.ftpuser, ACFG.ftpass) ) {                                //if we can't connect to FTP server ...
+            CALLstatus( FNTPConnect );                                                                    //... flag error ...     
+            currentA99cmd = 0;                                                                            //... and cancel further command execution
           }
 
-          if ( currentA99cmd == 16 ) {                                                                    //MDSK: map a DOAD to DSK1-3
-            if ( existDOAD ) {                                                                            //does DOAD exist? ...
-              if ( !getDSKparms( currentDSK ) ) {                                                         //check DOAD size and if OK store DSK parameters 
-                memset( nameDSK[currentDSK], 0x00, 20 );
-                Acatpy( nameDSK[currentDSK], sizeof(nameDSK[currentDSK]),                                 //we're good; assign to requested DSKx   
-                        DOADfullpath, sizeof(DOADfullpath) );  
-                activeDSK[currentDSK] = true;                                                             //flag as active
-                protectDSK[currentDSK] = protectDOAD;                                                     //set Protected status: 0x50 || "P", 0x20 || " "
-              } else {
-                CALLstatus( DOADTooBig );                                                                 //... flag error ...
-              }           
-            } else {
-              CALLstatus( DOADNotFound );                                                                 //... no; return error flag
-            }
-
-          } else if ( currentA99cmd == 17 ) {                                                             //NDSK: rename a mapped DOAD
-              if ( !existDOAD ) {                                                                         //does DOAD exist? ...
-                if ( activeDSK[currentDSK] ) {                                                            //is the requested disk mapped to a DOAD? ...   
-                  if ( protectDSK[currentDSK] == 0x20 ) {                                                 //is DOAD unProtected? ...
-                    DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );                                    //yes; safe to rename
-                    DSKx.seek ( 0x00 );                                                                   //go to start of file
-
-                    byte ii = 0;
-                    while ( ii < 8 && DOADfilename[ii] != '.' ) {
-                      DSKx.write( DOADfilename[ii++] );                                                   //write new DSK name (max 8 characters || until we hit ".")
-                    }                     
-                    while ( DSKx.position() < 0x0A ) {                                                    //... and fill rest (max 10 characters) with spaces
-                      DSKx.write( 0x20 );
-                    }                  
-
-                    DSKx.flush();                                                                         //make sure changes are saved to SD ...
-                    DSKx.rename( DOADfullpath );                                                          //... before renaming the file
-                    activeDSK[currentDSK] = false;                                                        //flag as inactive to lose old mapping
-                  } else {
-                    CALLstatus( Protected );                                                              //... no; can't rename a protected DOAD
-                  }
-                } else {
-                  CALLstatus( DOADNotMapped );                                                            //... no; can't rename a non-mapped DOAD
-                }
-              } else {
-              CALLstatus( DOADexists );                                                                   //... yes; can't rename to an existing filename
-            }
-              
-          } else if ( currentA99cmd == 32 ) {                                                             //RDSK() ?                                                                                     
-            if ( existDOAD ) {                                                                            //does DOAD exist? ...
-              if ( protectDOAD == 0x20 ) {                                                                //yes; is DOAD unProtected? ...
-                for ( byte ii = 0; ii < 3; ii++ ) {                                                       //yes ...
-                  if ( Acomp(DOADfullpath, sizeof(DOADfullpath), nameDSK[ii]) ) {                         //... check if DSK is already mounted ...
-                    activeDSK[ii] = false;                                                                //... flag DSKx non-active 
-                  }
-                }
-                SD.remove( DOADfullpath );                                                                //yes; delete DOAD from SD card  
-              } else {
-                CALLstatus( Protected );                                                                  //... no; Protected, report error to CALL()
-              }
-            } else {
-              CALLstatus( DOADNotFound );                                                                 //... no; return error flag
-            }
-
-          } else {                                                                                        //FGET() and FPUT()         
-            EtherStart();                                                                                 //start Ethernet client
-
-            if ( !ftp.connect(ACFG.ftpserver, ACFG.ftpuser, ACFG.ftpass) ) {                              //if we can't connect to FTP server ...
-              CALLstatus( FNTPConnect );                                                                  //... flag error ...     
-              currentA99cmd = 0;                                                                          //... and cancel further command execution
-            }
+          boolean existDOAD = prepDSK(currentA99cmd);                                                     //check if DOAD exists and save Protected status
             
-            if ( currentA99cmd == 34 ) {                                                                  //FPUT()?
-              if ( existDOAD ) {                                                                          //yep; does DOAD exist ...
-                DSKx.seek(0);                                                                             //go to start of file (we were at 0x10)                        
-                ftp.store( DOADfilename, DSKx );                                                          //yep; send DOAD to ftp server
-              } else { 
-                CALLstatus( DOADNotFound );                                                               //no; report error to CALL()
-              } 
-            } else if ( currentA99cmd == 33 ) {                                                           //FGET()?
-              if ( existDOAD && protectDOAD == 0x50) {                                                    //yep; is existing DOAD Protected?
-                CALLstatus( Protected );                                                                  //yes; report error to CALL()
-              } else {
-                DSKx.close();                                                                             //DOAD exists so is currently open. Need to close ...
-                DSKx = SD.open( "/_FT", FILE_WRITE );                                                     //... as we are opening a temporary FTP file
-                ftp.retrieve( DOADfilename, DSKx );                                                       //get DOAD from FTP server
-                if ( DSKx.size() != 0 ) {                                                                 //size > 0 = transfer successful? ...
-                  if ( existDOAD ) {                                                                      //yes; does DOAD already exist?
-                    SD.remove( DOADfullpath );                                                            //yes -> delete
-                  }
-                  DSKx.rename( DOADfullpath );                                                            //rename temp FTP file to proper DOAD
-                } else {     
-                  CALLstatus( DOADNotFound );                                                             //report transfer error (check ownership/group/rights on FTP server)
+          if ( currentA99cmd == 34 ) {                                                                    //FPUT()?
+            if ( existDOAD ) {                                                                            //yep; does DOAD exist ...
+              DSKx.seek(0);                                                                               //... yes go to start of file (we were at 0x10)                        
+              ftp.store( DOADfilename, DSKx );                                                            //send DOAD to ftp server
+            } else { 
+              CALLstatus( DOADNotFound );                                                                 //no; report error to CALL()
+            } 
+          } else if ( currentA99cmd == 33 ) {                                                             //FGET()
+            if ( existDOAD && protectDOAD == 0x50) {                                                      //is existing DOAD Protected?
+              CALLstatus( Protected );                                                                    //yes; report error to CALL()
+            } else {
+              DSKx.close();                                                                               //DOAD exists so is currently open. Need to close ...
+              DSKx = SD.open( "/_FT", FILE_WRITE );                                                       //... as we are opening a temporary FTP file
+              ftp.retrieve( DOADfilename, DSKx );                                                         //get DOAD from FTP server
+              if ( DSKx.size() != 0 ) {                                                                   //size > 0 = transfer successful? ...
+                if ( existDOAD ) {                                                                        //yes; does DOAD already exist?
+                  SD.remove( DOADfullpath );                                                              //yes -> delete
                 }
-              }    
-            }   
-            EtherStop();                                                                                  //stop Ethernet client
-          }                                     
+                DSKx.rename( DOADfullpath );                                                              //rename temp FTP file to proper DOAD
+              } else {     
+                CALLstatus( DOADNotFound );                                                               //report transfer error (check ownership/group/rights on FTP server)
+              }
+            }  
+          }  
+          EtherStop();                                                                                    //stop Ethernet client
           noExec();                                                                                       //we're done
         }
         break;       
 
         case 35:                                                                                          //ADSR(): load / change default APEDSK99 DSR file
         {                                                                                 
-          char DSRtoload[13];                                                                             //new DSR filename
-          memset( DSRtoload, 0x00, 13 );                                                                  //clear array
-          DSRtoload[0] = "/";
+          char DSRtoload[12];                                                                             //new DSR filename
+          memset( DSRtoload, 0x00, 12 );                                                                  //clear array
 
-          for ( byte ii = 2; ii < 10; ii++ ) {                                                            //read file name from CALL buffer
-            DSRtoload[ii - 1] = read_DSRAM( CALLBF + ii );                                                //get new DSR from CALL buffer
+          for ( byte ii = 0; ii < 8; ii++ ) {                                                            //read file name from CALL buffer
+            DSRtoload[ii] = read_DSRAM( CALLBF + (ii + 2) );                                                //get new DSR from CALL buffer
           }                                                          
 
-          DSRtoload[9] = '\0';                                                                            //terminate filename to ...                                                                     
+          DSRtoload[8] = '\0';                                                                            //terminate filename to ...                                                                     
           Acatpy( DSRtoload, sizeof(DSRtoload), ".DSR", 4);                                               //... complete filename
        
           clrCALLbuffer();                                                                                //clear CALL buffer
@@ -268,28 +243,17 @@
         break;
 
         case 36:                                                                                          //CDIR(): change working root folder
-        {  
-          char newfolder[8];                                                                              //new folder name
-          memset( newfolder, 0x00, 8);                                                                    //clear array         
-          newfolder[0] = '/';                                                                             //prep with starting "/"
-
-          byte ii;
-          for ( ii = 0; ii < 7; ii++ ) {                                                                  //JB max 5 characters for folder name
-            byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                    //read character from APEDSK99 CALL buffer
-            if ( cc != 0x00 ) {                                                                           //end of filename (>00 added by DSR)? ...
-              newfolder[ii+1] = cc;                                                                       //... no; add next character to folder name
-            } else {                                                                      
-              break;                                                                                      // ... yes we need to get out
-            }
-          }        
+        {           
+          char newfolder[7];                                                                              //new folder name
+          memset( newfolder, 0x00, 7);                                                                    //clear array         
+          prepDSK(currentA99cmd);
+          byte ii = Acatpy( newfolder, sizeof(newfolder), DOADfilename, 5 );                              //max 5 characters for folder name
           
-          newfolder[++ii] = '/';                                                                          //add trailing "/"
-          newfolder[++ii] = '\0';                                                                         //properly terminate string
-
-          clrCALLbuffer();                                                                                //clear CALL buffer
+          newfolder[ii] = '/';                                                                            //add trailing "/"
+          newfolder[++ii] = '\0';                                                                         //properly terminate string for Acatpy()
 
           if ( SD.exists( newfolder ) ) {                                                                 //does folder exist? ...
-            memset( DSKfolder, 0x00, 8 );                                                                 //... yes; clear global folder variable ...
+            memset( DSKfolder, 0x00, 7 );                                                                 //... yes; clear global folder variable ...
             Acatpy( DSKfolder, sizeof(DSKfolder), newfolder, sizeof(newfolder) );                         //... and copy new folder name
             CALLstatus( AllGood );                                                                        //done
           } else {
@@ -326,7 +290,7 @@
                   write_DSRAM( CALLBF + 30, 'u' + TIBias );                                               //... Unprotected
                 }          
                 
-                writeCBuffer( 3, 17, nameDSK[currentDSK], -2, false, true, '.' );                         //store mapping characters in CALL buffer
+                writeCBuffer( 3, 17, nameDSK[currentDSK], -3, false, true, '.' );                         //store mapping characters in CALL buffer
 
               } else {
                 writeCBuffer( 3, 12, "<no map>", -3, false, false, '\0' );                                //DSK not mapped
@@ -390,7 +354,8 @@
                 DSKx = SDdir.openNextFile();                                                              //next file entry
                 if ( DSKx ) {                                                                             //valid file entry ?
                   if ( DSKx.isDirectory() ) {                                                             //is it a folder (!regular file)?
-                    char foldername[13] = "\0";                                                           //ASCII store 
+                    char foldername[13];                                                                  //ASCII store 
+                    memset( foldername, 0x00, 13 );                                                       //clear for next entry
                     DSKx.getName( foldername, 13 );                                                       //copy foldername ... 
                     if ( foldername[5] == 0x00 ) {                                                        //if 6th array character is empty ...
                       nPos  = writeCBuffer( 1, 6, foldername, -1, false, true, 0x00 );                    //... we have a valid folder
@@ -418,8 +383,7 @@
           if ( newA99cmd ) {                                                                              //first run of LDIR()?
             SDdir = SD.open( DSKfolder );                                                                 //yes; open directory
             gii=0;
-            byte nPos;
-            nPos  = writeCBuffer( 1, 7, DSKfolder, 0, false, true, 0x00 );                                //yes; write current folder name to CALL buffer
+            byte nPos  = writeCBuffer( 1, 7, DSKfolder, -1, false, true, 0x00 );                           //yes; write current folder name to CALL buffer
             write_DSRAM( CALLBF + nPos, ':' + TIBias );
           }    
 
@@ -427,7 +391,8 @@
             DSKx = SDdir.openNextFile();                                                                  //get next file
             if ( DSKx && read_DSRAM(CALLST) ==  AllGood ) {                                               //valid file AND !ENTER from DSR?            
               
-              char DOADfilename[13] = "\0";                                                               //ASCII store
+              char DOADfilename[13];                                                                      //ASCII store
+              memset( DOADfilename, 0x00, 13 );                                                           //clear for next entry
               DSKx.getName( DOADfilename, 13 );                                                           //copy filename ... 
               writeCBuffer( 1, 9, DOADfilename, -1, false, true, '.' );                                   //... and write to CALL buffer
               writeCBuffer( 11, 21, "\0", 0, true, false, '\0' );                                         //write TI DSK name to CALL buffer   

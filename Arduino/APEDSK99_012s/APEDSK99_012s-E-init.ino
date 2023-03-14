@@ -21,7 +21,7 @@ void setup() {
   if ( EEPROM.read(EEPROM_DSR) == 0xFF ) {                              //invalid DSR (i.e. virgin Uno EEPROM or invalid DSR filename)?
     EEPROM.put( EEPROM_DSR, "APEDSK99.DSR\0" );                         //yes, put default in EEPROM ...
   }
-  char DSRtoload[13] = "\0";                                            //fresh char array
+  char DSRtoload[13];                                                   //char array
   EEPROM.get( EEPROM_DSR, DSRtoload );                                  //get DSR filename from EEPROM
   if ( SD.exists(DSRtoload) ) {                                         //does it exist? ...
     File fileDSR = SD.open( DSRtoload, FILE_READ );                     //yes; write DSR data to APEDSK99 RAM

@@ -26,10 +26,10 @@ unsigned int TNSECTS =  0;                                                      
 #define READ    1                                                                                     //read sector flag
 #define WRITE   0                                                                                     //write sector flag
 
-byte currentFD1771cmd       = 0;                                                                      //current FD1771 command
+byte currentFD1771cmd       = 0;                                                                      //current FD1771 command being executed
 byte lastFD1771cmd          = 0;                                                                      //last FD1771 command
 boolean newFD1771cmd        = false;                                                                  //flag new FD1771 command
-byte currentA99cmd          = 0;                                                                      //current APEDSK99 command
+byte currentA99cmd          = 0;                                                                      //current APEDSK99 command being executed
 byte lastA99cmd             = 0;                                                                      //last APEDSK99 command
 boolean newA99cmd           = false;                                                                  //flag new APEDSK99 command
 unsigned long DOADidx       = 0;                                                                      //absolute DOAD sector or byte index

@@ -4,10 +4,13 @@ File SDdir;                                                                     
 
 //flags for "drives" (aka DOAD files) available 
 boolean activeDSK[3]  = {false, false, false};                                                        //DSKx active flag
-char DSKfolder[8]     = "/DISKS/\0";                                                                  //root folder name
-char nameDSK[3][20]   = {"/DISKS/_APEDSK1.DSK", "/DISKS/_APEDSK2.DSK", "/DISKS/_APEDSK3.DSK"};        //DOAD file names; startup defaults
+char DSKfolder[7]     = "DISKS/\0";                                                                   //root folder name
+char nameDSK[3][19]   = {"DISKS/_APEDSK1.DSK", "DISKS/_APEDSK2.DSK", "DISKS/_APEDSK3.DSK"};           //DOAD file names; startup defaults
 byte protectDSK[3]    = {0x20, 0x20, 0x20};                                                           //DOAD write protect status
 byte currentDSK       = 0;                                                                            //current selected DSK
+char DOADfullpath[19];                                                                                //complete path + filename
+char DOADfilename[13];                                                                                //filename for DSK, DSR and /FOLDER
+byte protectDOAD;                                                                                     //DSK image Protected flag
 
 //command status and error handling
 #define AVersion        0x4046                                                                        //DSR version string
@@ -98,6 +101,33 @@ boolean getDSKparms( byte cDSK ) {
   return tooBig;
 }
 
+boolean prepDSK( byte Acmd ) {
+  
+  memset( DOADfilename, 0x00, 13 );                                                                   //clear filename array  
+  for ( byte ii = 0; ii < 8; ii++ ) {                                                                 //max 8 characters for MSDOS filename
+    byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                        //read character from APEDSK99 CALL buffer
+    cc != 0x00 ?  DOADfilename[ii] = cc : ii = 8;                                                     //either add character or finish if read complete name
+  }
+
+  boolean existDOAD;
+  if ( Acmd != 36 ) { 
+    memset( DOADfullpath, 0x00, 19 );                                                                 //clear path array
+    Acatpy( DOADfullpath, sizeof(DOADfullpath), DSKfolder, sizeof(DSKfolder) );                       //full file path starts with /FOLDER
+    Acatpy( DOADfilename, sizeof(DOADfilename), ".DSK", 4);                                           //stick default file extension at the back       
+    Acatpy( DOADfullpath, sizeof(DOADfullpath), DOADfilename, sizeof(DOADfilename) );                 //finalise full path
+  
+    existDOAD = SD.exists( DOADfullpath );
+    if ( existDOAD ) { 
+      DSKx = SD.open( DOADfullpath, FILE_READ);                                                       //yes; open DOAD file
+      DSKx.seek(0x10);                                                                                //byte 0x10 in Volume Information Block stores status
+      protectDOAD = DSKx.read();                                                                      //store Protected flag
+    } 
+  }
+  
+  clrCALLbuffer();                                                                                    //clear CALL buffer for next one
+  return existDOAD;                                                                                   //indicate DOAD exists or not
+}
+
 //fill CALL() buffer with " " for clean parameter-passing without left-over crap 
 //i.e. shorter DOAD name following a longer one
 void clrCALLbuffer( void ) {
@@ -110,10 +140,10 @@ void clrCALLbuffer( void ) {
 void CALLstatus( byte scode ) {
   write_DSRAM( CALLST, scode );                                                                       //update CALL status
   if ( scode < 99  ) {                                                                                //is it an actual error? (if not, no HONK; see DSR source)
-    DSKx = SD.open( "/CALLerr.txt", FILE_READ );                                                    //open error text file
+    DSKx = SD.open( "/CALLerr.txt", FILE_READ );                                                      //open error text file
     clrCALLbuffer();                                                                                  //clear any leftover rubbish
     DSKx.seek( DSKx.position() + (scode * 16) );                                                      //seek proper error message position in file
-    for ( byte ii = 2; ii < 18; ii++ ) {                                                            //copy error message to CALL buffer
+    for ( byte ii = 2; ii < 18; ii++ ) {                                                              //copy error message to CALL buffer
       write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );
     }
   }
