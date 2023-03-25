@@ -4,11 +4,11 @@ File SDdir;                                                                     
 
 //flags for "drives" (aka DOAD files) available 
 boolean activeDSK[3]  = {false, false, false};                                                        //DSKx active flag
-char DSKfolder[7]     = "DISKS/\0";                                                                   //root folder name
-char nameDSK[3][19]   = {"DISKS/_APEDSK1.DSK", "DISKS/_APEDSK2.DSK", "DISKS/_APEDSK3.DSK"};           //DOAD file names; startup defaults
+char DSKfolder[10]     = "DISKS/\0";                                                                   //root folder name
+char nameDSK[3][22]   = {"DISKS/_APEDSK1.DSK", "DISKS/_APEDSK2.DSK", "DISKS/_APEDSK3.DSK"};           //DOAD file names; startup defaults
 byte protectDSK[3]    = {0x20, 0x20, 0x20};                                                           //DOAD write protect status
 byte currentDSK       = 0;                                                                            //current selected DSK
-char DOADfullpath[19];                                                                                //complete path + filename
+char DOADfullpath[22];                                                                                //complete path + filename
 char DOADfilename[13];                                                                                //filename for DSK, DSR and /FOLDER
 byte protectDOAD;                                                                                     //DSK image Protected flag
 
@@ -50,32 +50,15 @@ byte gii = 0;
 static const byte PROGMEM DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};         //used in NTP month and day calculation
 unsigned int TimeDateNum[5] = { 0, 0, 1, 1, 70 };                                                     //global array numeric NTP time/date
 
-//reset Arduino properly via watchdog timer
-void APEDSK99reset ( void ) {
-  wdt_disable();                                                                                      //disable Watchdog (just to be sure)                              
-  wdt_enable(WDTO_15MS);                                                                              //enable it and set delay to 15ms
-  while( true ) {}                                                                                    //self-destruct in 15ms
+void EtherStart( void ) {
+  pinAsOutput( ETH_CS );                                                                              //enable EthernetShield CS (shared with TI_INT)
+  Ethernet.init( ETH_CS );                                                                            //activate Ethernet ...
+  Ethernet.begin( MAC, ACFG.ipaddress );                                                              //... with set MAC address and IP address
 }
 
-//unrecoverable errors: flash error code until reset (TI still usable)
-//  flash             : SPI, SD Card fault / not ready
-//  flash-flash       : no valid DSR binary image
-//  flash-flash-flash : no valid DSR header (0xAA) at DSR RAM 0x0000)
-void Flasher( byte errorcode ) {                                                                      //error routine: stuck in code flashing loop until reset
-  //"no APEDSK99 for you"
-  TIstop();                                                                                           //stop TI ...
-  digitalHigh(TI_READY);                                                                              //... but let user enjoy vanilla console
-  
-  while ( true ) { 
-    for ( byte flash = 0; flash < errorcode; flash++ ) {
-      digitalLow(CE);                                                                                 //set RAM CE* LOW, turns on LED
-      delay(LED_ON);                                                                                  //LED is on for a bit
-      
-      digitalHigh(CE);                                                                                //turn it off
-      delay(LED_OFF);                                                                                 //LED is off for a bit
-    }
-    delay(LED_REPEAT);                                                                                //allow human interpretation
-  }
+void EtherStop( void ) {
+  client.stop();                                                                                      //stop Ethernet client
+  pinAsInput(TI_INT);                                                                                 //disable EthernetShield SS / enable TI_INT  
 }
 
 //per DSKx: Mbyte/Lbyte #sectors, #sectors/track, #tracks, #sides
@@ -101,28 +84,31 @@ boolean getDSKparms( byte cDSK ) {
   return tooBig;
 }
 
-boolean prepDSK( byte Acmd ) {
-  
+//read filename portion (without extension) into array
+byte readCBuffer( void ) {
   memset( DOADfilename, 0x00, 13 );                                                                   //clear filename array  
-  for ( byte ii = 0; ii < 8; ii++ ) {                                                                 //max 8 characters for MSDOS filename
-    byte cc = read_DSRAM( CALLBF + (ii + 2) );                                                        //read character from APEDSK99 CALL buffer
-    cc != 0x00 ?  DOADfilename[ii] = cc : ii = 8;                                                     //either add character or finish if read complete name
-  }
+  byte ii = 0;                                                                                        //start at DOADfilename[0]
+  byte cc = 0xFF;                                                                                     //if cc becomes 0 loop ends
+  while ( cc != 0x00 ) {                                                                              //max 8 characters for MSDOS filename                                                                                
+    cc = read_DSRAM( CALLBF + (ii + 2) );                                                             //read character from APEDSK99 CALL buffer
+    DOADfilename[ii++] = cc;                                                                          //add character
+  }    
+  return ii - 1;
+}
 
-  boolean existDOAD;
-  if ( Acmd != 36 ) { 
-    memset( DOADfullpath, 0x00, 19 );                                                                 //clear path array
-    Acatpy( DOADfullpath, sizeof(DOADfullpath), DSKfolder, sizeof(DSKfolder) );                       //full file path starts with /FOLDER
-    Acatpy( DOADfilename, sizeof(DOADfilename), ".DSK", 4);                                           //stick default file extension at the back       
-    Acatpy( DOADfullpath, sizeof(DOADfullpath), DOADfilename, sizeof(DOADfilename) );                 //finalise full path
+boolean prepDSK( void ) {
+  readCBuffer();                                                                                      //get filename  
+  memset( DOADfullpath, 0x00, 22 );                                                                   //clear path array
+  Acatpy( DOADfullpath, sizeof(DOADfullpath), DSKfolder, sizeof(DSKfolder) );                         //full file path starts with /FOLDER
+  Acatpy( DOADfilename, sizeof(DOADfilename), ".DSK", 4);                                             //stick default file extension at the back       
+  Acatpy( DOADfullpath, sizeof(DOADfullpath), DOADfilename, sizeof(DOADfilename) );                   //finalise full path
   
-    existDOAD = SD.exists( DOADfullpath );
-    if ( existDOAD ) { 
-      DSKx = SD.open( DOADfullpath, FILE_READ);                                                       //yes; open DOAD file
-      DSKx.seek(0x10);                                                                                //byte 0x10 in Volume Information Block stores status
-      protectDOAD = DSKx.read();                                                                      //store Protected flag
-    } 
-  }
+  boolean existDOAD = SD.exists( DOADfullpath );
+  if ( existDOAD ) { 
+    DSKx = SD.open( DOADfullpath, FILE_READ);                                                         //yes; open DOAD file
+    DSKx.seek(0x10);                                                                                  //byte 0x10 in Volume Information Block stores status
+    protectDOAD = DSKx.read();                                                                        //store Protected flag
+  } 
   
   clrCALLbuffer();                                                                                    //clear CALL buffer for next one
   return existDOAD;                                                                                   //indicate DOAD exists or not
@@ -131,7 +117,7 @@ boolean prepDSK( byte Acmd ) {
 //fill CALL() buffer with " " for clean parameter-passing without left-over crap 
 //i.e. shorter DOAD name following a longer one
 void clrCALLbuffer( void ) {
-  for ( byte ii = 0; ii < 32; ii++ ) {       
+  for ( byte ii = 0; ii < 32; ++ii ) {       
     write_DSRAM( CALLBF + ii, 0x20 + TIBias );                                                        //clear any leftover rubbish 
   }
 }
@@ -143,21 +129,24 @@ void CALLstatus( byte scode ) {
     DSKx = SD.open( "/CALLerr.txt", FILE_READ );                                                      //open error text file
     clrCALLbuffer();                                                                                  //clear any leftover rubbish
     DSKx.seek( DSKx.position() + (scode * 16) );                                                      //seek proper error message position in file
-    for ( byte ii = 2; ii < 18; ii++ ) {                                                              //copy error message to CALL buffer
-      write_DSRAM( CALLBF + ii, DSKx.read() + TIBias );
-    }
+    writeCBuffer( 2, 18, "\0", 0, true, false, '\0' );
   }
 }
 
-void EtherStart( void ) {
-  pinAsOutput( ETH_CS );                                                                              //enable EthernetShield CS (shared with TI_INT)
-  Ethernet.init( ETH_CS );                                                                            //activate Ethernet ...
-  Ethernet.begin( MAC, ACFG.ipaddress );                                                              //... with set MAC address and IP address
-}
-
-void EtherStop( void ) {
-  client.stop();                                                                                      //stop Ethernet client
-  pinAsInput(TI_INT);                                                                                 //disable EthernetShield SS / enable TI_INT  
+//generic function to write display data (and character definitions for ACHR) to the CALL buffer.
+//usage: display column start, display column end+1, source array ("\0" if source = DSK), array index offset (0=no offset), 
+//       source is DSK || array (true || false), break when cval is read (true || false), cval ('\0' when not used);
+byte writeCBuffer( byte start, byte limit, char Asrc[], char SAoffset, boolean rDSK, boolean check, char cval ) {
+  char cc;
+  while ( start < limit ) {
+    rDSK ? cc = DSKx.read() : cc = Asrc[start + SAoffset];                                            //read next DSK byte || next array value
+    if ( check && cc == cval ) {                                                                      //have we come across the delimiter?
+      break;                                                                                          //yes, we're done
+    }
+    write_DSRAM( CALLBF + (start), cc + TIBias );                                                     //nope, write character to CALL buffer
+    start++;
+  }
+  return start;                                                                                       //handy for adding info in next column
 }
 
 //get UNIX timestamp from NTP server and store time/date in array
@@ -222,11 +211,11 @@ byte getNTPdt( void ) {
 //write NTP date/time data from array to FAT
 void writeFATts( void ) {                                                                             //update FAT MODIFY time/date
   if ( getNTPdt() != FNTPConnect ) {                                                                  //if valid NTP time ...
-    DSKx.timestamp(T_WRITE, TimeDateNum[4],                                                           //... update FAT data
-                            TimeDateNum[3],
-                            TimeDateNum[2],
-                            TimeDateNum[0],
-                            TimeDateNum[1],
+    DSKx.timestamp( T_WRITE, TimeDateNum[4],                                                          //... update FAT data
+                             TimeDateNum[3],
+                             TimeDateNum[2],
+                             TimeDateNum[0],
+                             TimeDateNum[1],
                                         0 ); 
   }
 }
@@ -246,18 +235,18 @@ byte readFATts( void ) {                                                        
 //convert NTP array to a nice string format and write to CALL buffer
 void converTD( byte CBstartcol, boolean sYear ) {
   rJust( CBstartcol,  CBstartcol + 2, TimeDateNum[0] );                                               //write right-justified hours to CALL buffer
-  write_DSRAM( CALLBF + (CBstartcol +  2), ':' + TIBias );                                            //write delimiter to CALL buffer
-  rJust( CBstartcol + 3, CBstartcol + 5, TimeDateNum[1] );                                            //minutes 
+  write_DSRAM( CALLBF +  (CBstartcol +  2), ':' + TIBias );                                           //write delimiter to CALL buffer
+  rJust( CBstartcol +  3, CBstartcol +  5, TimeDateNum[1] );                                          //minutes 
 
-  rJust( CBstartcol +  6, CBstartcol + 8, TimeDateNum[2] );                                           //day
-  write_DSRAM( CALLBF + (CBstartcol +  8), '/' + TIBias ); 
+  rJust( CBstartcol +  6, CBstartcol +  8, TimeDateNum[2] );                                          //day
+  write_DSRAM( CALLBF + ( CBstartcol +  8), '/' + TIBias ); 
   if ( sYear ) {                                                                                      //short year?
     rJust( CBstartcol + 10, CBstartcol + 14, TimeDateNum[4] );                                        //yes, century overwritten by month
   } else {
     rJust( CBstartcol + 12, CBstartcol + 16, TimeDateNum[4] );                                        //nope, full year (TIME)
   }
   rJust( CBstartcol +  9, CBstartcol + 11, TimeDateNum[3] );                                          //month
-  write_DSRAM( CALLBF + (CBstartcol + 11), '/' + TIBias );
+  write_DSRAM( CALLBF + ( CBstartcol + 11), '/' + TIBias );
 
   for ( byte ii = CBstartcol; ii < CBstartcol + 12; ii += 3 ) {                                       //fill in the blanks; add leading zero to 1 digit hour, minute, day and month
     if ( read_DSRAM( CALLBF + ii ) == ' ' + TIBias ) {
@@ -273,7 +262,7 @@ void rJust( byte CBstartcol, byte CBendcol, long lval ) {
   memset( valChar, 0x20, 10 );                                                                        //clear array ...
   ltoa( lval, valChar, 10 );                                                                          //... and store long value in ASCII
   byte valIndex = 0;
-  for ( byte ii = CBstartcol; ii < CBendcol; ii++ ) {                                                 //print ASCII value to CALL buffer ...
+  for ( byte ii = CBstartcol; ii < CBendcol; ++ii ) {                                                 //print ASCII value to CALL buffer ...
     write_DSRAM( CALLBF + ii, (valChar[CBendcol-ii] != 0x20 ? valChar[valIndex++] : ' ') + TIBias );  //... checking from end to start for space (save ' ' -> next) or !space (ASCII char -> next)
   }
 }
@@ -285,13 +274,13 @@ void rJust( byte CBstartcol, byte CBendcol, long lval ) {
 byte Acatpy( char Adest[], byte dSize, char Asrc[], byte sSize ) {
   byte ii;                                                                                            
   dSize--;                                                                                            //adjust max destination array index (need to add at least 1 character)
-  for ( ii = 0; ii < dSize; ii++ ) {                                                                  //find 0x00 delimiter; will be [0] if cleared array
+  for ( ii = 0; ii < dSize; ++ii ) {                                                                  //find 0x00 delimiter; will be [0] if cleared array
     if ( Adest[ii] == 0x00 ) {
       break;
     } 
   }
   
-  for ( byte jj = 0; jj < sSize; jj++ ) {                                                             //add source array to destination array ...
+  for ( byte jj = 0; jj < sSize; ++jj ) {                                                             //add source array to destination array ...
     if ( Asrc[jj] != 0x00 ) {                                                                         //... but make sure we don't go past max src array ...
       if ( ii < dSize ) {                                                                             //... and dest array sizes
         Adest[ii++] = Asrc[jj];
@@ -307,26 +296,10 @@ byte Acatpy( char Adest[], byte dSize, char Asrc[], byte sSize ) {
 //usage: array to check, size of array to check, array to be checked against
 boolean Acomp( char Achk[], byte dSize, char Asrc[] ) {
   boolean same =  true;
-  for ( byte ii = 0; ii < dSize; ii++ ) {                                                             //check array elements one by one
+  for ( byte ii = 0; ii < dSize; ++ii ) {                                                             //check array elements one by one
     if ( Achk[ii] != Asrc[ii] ) {                                                                     //any difference -> set flag
       same = false; 
     }
   }
   return same;
-}
-
-//generic function to write display data (and character definitions for ACHR) to the CALL buffer.
-//usage: display column start, display column end+1, source array ("\0" if source = DSK), array index offset (0=no offset), 
-//       source is DSK || array (true || false), break when cval is read (true || false), cval ('\0' when not used);
-byte writeCBuffer( byte start, byte limit, char Asrc[], char SAoffset, boolean rDSK, boolean check, char cval ) {
-  byte cc;
-  while ( start < limit ) {
-    rDSK ? cc = DSKx.read() : cc = Asrc[start + SAoffset];                                              //read next DSK byte || next array value
-    if ( check && cc == cval ) {                                                                        //have we come across the delimiter?
-      break;                                                                                            //yes, we're done
-    }
-    write_DSRAM( CALLBF + (start), cc + TIBias );                                                       //nope, write character to CALL buffer
-    start++;
-  }
-  return start;                                                                                         //handy for adding info in next column
 }

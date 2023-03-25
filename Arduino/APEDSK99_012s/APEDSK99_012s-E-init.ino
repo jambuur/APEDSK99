@@ -21,14 +21,14 @@ void setup() {
   if ( EEPROM.read(EEPROM_DSR) == 0xFF ) {                              //invalid DSR (i.e. virgin Uno EEPROM or invalid DSR filename)?
     EEPROM.put( EEPROM_DSR, "APEDSK99.DSR\0" );                         //yes, put default in EEPROM ...
   }
-  char DSRtoload[13];                                                   //char array
+  char DSRtoload[13];                                                   //DSR filename store
   EEPROM.get( EEPROM_DSR, DSRtoload );                                  //get DSR filename from EEPROM
   if ( SD.exists(DSRtoload) ) {                                         //does it exist? ...
-    File fileDSR = SD.open( DSRtoload, FILE_READ );                     //yes; write DSR data to APEDSK99 RAM
-    for ( unsigned int ii = 0x4000; ii < 0x6000; ii++ ) {
-      write_DSRAM( ii, fileDSR.read() );                                                
+    File DSR = SD.open( DSRtoload, FILE_READ );                         //yes; write DSR data to APEDSK99 RAM
+    for ( unsigned int ii = 0x4000; ii < 0x6000; ++ii ) {
+      write_DSRAM( ii, DSR.read() );                                                
     }
-    fileDSR.close();
+    DSR.close();
   } else {
     EEPROM.write( EEPROM_DSR, 0xFF);                                    //... no; mark DSR invalid so default gets restored at next boot
     Flasher( 2 );                                                       //flash error 2
@@ -40,7 +40,7 @@ void setup() {
   }
 
   //initialise DSKx Active / Protect flags and save key parameters
-  for ( byte ii = 0; ii < 3; ii++ ) {
+  for ( byte ii = 0; ii < 3; ++ii ) {
     if ( SD.exists( nameDSK[ii] ) ) {                                   //does DOAD exist?
       DSKx = SD.open( nameDSK[ii], FILE_READ );                         //yes; open DOAD file to check various parameters
       if ( !getDSKparms( ii ) ) {                                       //check DOAD size and if OK store DSK parameters

@@ -4414,8 +4414,8 @@ Asm994a TMS99000 Assembler - v3.010
 3219  5D84 5FEA  
 3220  5D86 10F0         JMP     A9905   
 3221            *       
-3222  5D88 0202 NXTPRP  LI      R2,702
-3222  5D8A 02BE  
+3222  5D88 0202 NXTPRP  LI      R2,703
+3222  5D8A 02BF  
 3223  5D8C 06A0         BL      @VDPWRI
 3223  5D8E 4322  
 3224  5D90 0205         LI      R5,>9E00                show ">", more file / help txt to display

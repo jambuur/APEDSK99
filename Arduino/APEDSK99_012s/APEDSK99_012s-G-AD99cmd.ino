@@ -60,18 +60,17 @@
                 DSKx.seek( DSKx.position() + 4 );                                                         //byte >11 stores record length
                 rJust( 15, 18, DSKx.read() );                                                             //write right-justified record length to CALL buffer
                 DSKx.seek( DSKx.position() - 4 );                                                         //re-position to bytes >0E, >0F: #sectors
-              } else {
-                write_DSRAM( CALLBF + 12, 'P' + TIBias );                                                 //must be "PRG"; write to CALL buffer
-                write_DSRAM( CALLBF + 13, 'R' + TIBias );
-                write_DSRAM( CALLBF + 14, 'G' + TIBias );
+              } else {  
+                writeCBuffer( 12, 15, "PRG", -12, false, false, '\0' );                                   //must be "PRG"; write to CALL buffer
+                DSKx.seek( DSKx.position() + 1 );                                                         //re-position to bytes >0E, >0F: #sectors
               }   
 
-              long tSectors = (DSKx.read() * 256) + (DSKx.read() + 1);                                    //read # of sectors used by this file
+              long tSectors = ( DSKx.read() * 256) + (DSKx.read() + 1 );                                  //read # of sectors used by this file
               rJust( 20, 23, tSectors );                                                                  //right-justified #sectors in CALL buffer
-              rJust( 24, 29, tSectors * 256 );                                                            //right-justified equivalent in bytes to CALL buffer
+              rJust( 24, 29, ( tSectors * 256 ) - ( 256 - DSKx.read() ) );                                //right-justified equivalent in bytes (- unused #bytes in last sector) to CALL buffer
 
               if ( protect == true ) {                                                                    //indicate if file is protected 
-                write_DSRAM( CALLBF + 30, 'P' + TIBias);
+                write_DSRAM( CALLBF + 30, 'p' + TIBias);
               }
                                    
               DSKx.seek( currentPosition );                                                               //locate next FDR
@@ -89,9 +88,9 @@
     
         case 16:                                                                                          //MDSK(): map DSKx to DOAD
         {            
-          if ( prepDSK(currentA99cmd) ) {                                                                 //does DOAD exist? ...
+          if ( prepDSK() ) {                                                                              //does DOAD exist? ...
             if ( !getDSKparms( currentDSK ) ) {                                                           //check DOAD size and if OK store DSK parameters 
-              memset( nameDSK[currentDSK], 0x00, 19 );                                                    //clear current DSK innfo
+              memset( nameDSK[currentDSK], 0x00, 22 );                                                    //clear current DSK innfo
               Acatpy( nameDSK[currentDSK], sizeof(nameDSK[currentDSK]),                                   //assign MDSK info to requested DSKx   
                       DOADfullpath, sizeof(DOADfullpath) );  
               activeDSK[currentDSK] = true;                                                               //flag as active
@@ -108,7 +107,7 @@
         
         case 17:                                                                                          //NDSK(): rename selected DOAD (TI DSK name is changed to the same)
         {
-          if ( !prepDSK(currentA99cmd) ) {                                                                //does DOAD exist? ...
+          if ( !prepDSK() ) {                                                                             //does DOAD exist? ...
             if ( activeDSK[currentDSK] ) {                                                                //is the requested disk mapped to a DOAD? ...   
               if ( protectDSK[currentDSK] == 0x20 ) {                                                     //is DOAD unProtected? ...
                 DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );                                        //yes; safe to rename
@@ -140,9 +139,9 @@
         
         case 32:                                                                                          //RDSK(): remove DSK
         {
-          if ( prepDSK(currentA99cmd) ) {                                                                 //does DOAD exist? ...
+          if ( prepDSK() ) {                                                                              //does DOAD exist? ...
             if ( protectDOAD == 0x20 ) {                                                                  //yes; is DOAD unProtected? ...
-              for ( byte ii = 0; ii < 3; ii++ ) {                                                         //yes ...
+              for ( byte ii = 0; ii < 3; ++ii ) {                                                         //yes ...
                 if ( Acomp(DOADfullpath, sizeof(DOADfullpath), nameDSK[ii]) ) {                           //... check if DSK is already mounted ...
                   activeDSK[ii] = false;                                                                  //... flag DSKx non-active 
                 }
@@ -168,7 +167,7 @@
             currentA99cmd = 0;                                                                            //... and cancel further command execution
           }
 
-          boolean existDOAD = prepDSK(currentA99cmd);                                                     //check if DOAD exists and save Protected status
+          boolean existDOAD = prepDSK();                                                                  //check if DOAD exists and save Protected status
             
           if ( currentA99cmd == 34 ) {                                                                    //FPUT()?
             if ( existDOAD ) {                                                                            //yep; does DOAD exist ...
@@ -181,7 +180,7 @@
             if ( existDOAD && protectDOAD == 0x50) {                                                      //is existing DOAD Protected?
               CALLstatus( Protected );                                                                    //yes; report error to CALL()
             } else {
-              DSKx.close();                                                                               //DOAD exists so is currently open. Need to close ...
+              DSKx.close();                                                                               //DOAD exists so is currently open. Need to close ...                
               DSKx = SD.open( "/_FT", FILE_WRITE );                                                       //... as we are opening a temporary FTP file
               ftp.retrieve( DOADfilename, DSKx );                                                         //get DOAD from FTP server
               if ( DSKx.size() != 0 ) {                                                                   //size > 0 = transfer successful? ...
@@ -200,29 +199,20 @@
         break;       
 
         case 35:                                                                                          //ADSR(): load / change default APEDSK99 DSR file
-        {                                                                                 
-          char DSRtoload[12];                                                                             //new DSR filename
-          memset( DSRtoload, 0x00, 12 );                                                                  //clear array
+        {                                                                                       
+          readCBuffer();                                                                                  //get filename  
+          Acatpy( DOADfilename, sizeof(DOADfilename), ".DSR", 4);                                         //stick extension at the back
 
-          for ( byte ii = 0; ii < 8; ii++ ) {                                                            //read file name from CALL buffer
-            DSRtoload[ii] = read_DSRAM( CALLBF + (ii + 2) );                                                //get new DSR from CALL buffer
-          }                                                          
-
-          DSRtoload[8] = '\0';                                                                            //terminate filename to ...                                                                     
-          Acatpy( DSRtoload, sizeof(DSRtoload), ".DSR", 4);                                               //... complete filename
-       
-          clrCALLbuffer();                                                                                //clear CALL buffer
-
-          if ( !SD.exists(DSRtoload) ) {                                                                  //does new DSR exist?
+          if ( SD.exists(DOADfilename) ) {                                                                //does new DSR exist?
+            EEPROM.put( EEPROM_DSR, DOADfilename );                                                       //yes; update DSR info in EEPROM ...
+            currentA99cmd = 104;                                                                          //... and fall through to ARST() to activate
+          } else {
             CALLstatus( DSRNotFound );                                                                    //nope; error
             noExec();
             break;
-          } else {
-            EEPROM.put( EEPROM_DSR, DSRtoload );                                                          //no; write new DSR to EEPROM (only changes will be written)
           }
-          currentA99cmd = 104;                                                                            //valid DSR file; fall through to ARST() to activate
         }
-
+        
         case 104:                                                                                         //reset current DSR ( ADSR(), ARST() )  
         { 
           TIgo();                                                                                         //release TI
@@ -235,7 +225,7 @@
         case 52: 
         {
           CALLstatus( AInit );                                                                            //save version message body in CALL buffer
-          for ( byte ii = 0; ii < 4; ii++ ) {                                                             
+          for ( byte ii = 0; ii < 4; ++ii ) {                                                             
             write_DSRAM( CALLBF + (ii+14), read_DSRAM( AVersion + ii ) + TIBias );                        //add DSR version number
           }
           
@@ -244,17 +234,12 @@
 
         case 36:                                                                                          //CDIR(): change working root folder
         {           
-          char newfolder[7];                                                                              //new folder name
-          memset( newfolder, 0x00, 7);                                                                    //clear array         
-          prepDSK(currentA99cmd);
-          byte ii = Acatpy( newfolder, sizeof(newfolder), DOADfilename, 5 );                              //max 5 characters for folder name
-          
-          newfolder[ii] = '/';                                                                            //add trailing "/"
-          newfolder[++ii] = '\0';                                                                         //properly terminate string for Acatpy()
+          byte nPos = readCBuffer();                                                                      //get folder name
+          DOADfilename[nPos] = '/';
 
-          if ( SD.exists( newfolder ) ) {                                                                 //does folder exist? ...
-            memset( DSKfolder, 0x00, 7 );                                                                 //... yes; clear global folder variable ...
-            Acatpy( DSKfolder, sizeof(DSKfolder), newfolder, sizeof(newfolder) );                         //... and copy new folder name
+          if ( SD.exists( DOADfilename ) ) {                                                              //does folder exist? ...
+            memset( DSKfolder, 0x00, 10 );                                                                 //... yes; clear global folder variable ...
+            Acatpy( DSKfolder, sizeof(DSKfolder), DOADfilename, sizeof(DOADfilename) );                   //... and copy new folder name
             CALLstatus( AllGood );                                                                        //done
           } else {
             CALLstatus( DIRNotFound );                                                                    //... no; error                                                    
@@ -283,13 +268,11 @@
                 DSKx = SD.open( nameDSK[currentDSK], FILE_READ );                                         //open DOAD   
                 DSKx.seek( 0 );                                                                           //go to start of DSK               
                 writeCBuffer( 18, 28, "\0", 0, true, false, '\0' );                                       //read/save DSK name characters in CALL buffer
-                             
+                            
                 if ( protectDSK[currentDSK] == 0x50 ) {
-                  write_DSRAM( CALLBF + 30, 'p' + TIBias );                                               //indicate DOAD is Protected or ...
-                } else {
-                  write_DSRAM( CALLBF + 30, 'u' + TIBias );                                               //... Unprotected
-                }          
-                
+                  write_DSRAM( CALLBF + 30, 'p' + TIBias );                                               //indicate DOAD is Protected
+                }      
+                                   
                 writeCBuffer( 3, 17, nameDSK[currentDSK], -3, false, true, '.' );                         //store mapping characters in CALL buffer
 
               } else {
@@ -311,19 +294,15 @@
                 unsigned int countOnes = 0;   
   
                 DSKx.seek( 0x38 );                                                                        //1st Sector Bitmap byte
-                for ( byte ii = 0; ii < maxbitmap - 1; ii++ ) {                                           //sum all set bits (=sectors used) for all Sector Bitmap bytes
+                for ( byte ii = 0; ii < maxbitmap - 1; ++ii ) {                                           //sum all set bits (=sectors used) for all Sector Bitmap bytes
                   byte bitmap = DSKx.read();
                   for ( byte jj = 0; jj < 8; jj++ ) {                                       
                     countOnes += ( bitmap >> jj ) & 0x01;                                                 //"on the One you hear what I'm sayin'"
                   }
                 }
-
-                write_DSRAM( CALLBF + 18, 't' + TIBias );
-                write_DSRAM( CALLBF + 19, '=' + TIBias );
+                
+                writeCBuffer( 18, 27, "t=     f=", -18, false, false, '\0' );
                 rJust( 20, 24, tSectors );                                                                //right-justified #sectors in CALL buffer
-
-                write_DSRAM( CALLBF + 25, 'f' + TIBias );
-                write_DSRAM( CALLBF + 26, '=' + TIBias );
                 rJust( 27, 31, (maxbitmap * 8) - countOnes );                                             //right-justified free sectors in CALL buffer   
               }
   
@@ -354,11 +333,10 @@
                 DSKx = SDdir.openNextFile();                                                              //next file entry
                 if ( DSKx ) {                                                                             //valid file entry ?
                   if ( DSKx.isDirectory() ) {                                                             //is it a folder (!regular file)?
-                    char foldername[13];                                                                  //ASCII store 
-                    memset( foldername, 0x00, 13 );                                                       //clear for next entry
-                    DSKx.getName( foldername, 13 );                                                       //copy foldername ... 
-                    if ( foldername[5] == 0x00 ) {                                                        //if 6th array character is empty ...
-                      nPos  = writeCBuffer( 1, 6, foldername, -1, false, true, 0x00 );                    //... we have a valid folder
+                    memset( DOADfilename, 0x00, 13 );                                                     //clear for next entry
+                    DSKx.getName( DOADfilename, 13 );                                                     //copy foldername ... 
+                    if ( !Acomp(DOADfilename, 9, "SYSTEM~1") ) {                                          //skip SD system folder
+                      nPos  = writeCBuffer( 1, 9, DOADfilename, -1, false, true, 0x00 );                  //... we have a valid folder
                       write_DSRAM( CALLBF + nPos, '/' + TIBias );                                         //end folder name with "/"
                       pfolder = true;                                                                     //processed valid folder, escape the while loop
                     }        
@@ -383,30 +361,27 @@
           if ( newA99cmd ) {                                                                              //first run of LDIR()?
             SDdir = SD.open( DSKfolder );                                                                 //yes; open directory
             gii=0;
-            byte nPos  = writeCBuffer( 1, 7, DSKfolder, -1, false, true, 0x00 );                           //yes; write current folder name to CALL buffer
+            byte nPos  = writeCBuffer( 1, 9, DSKfolder, -1, false, true, 0x00 );                           //yes; write current folder name to CALL buffer
             write_DSRAM( CALLBF + nPos, ':' + TIBias );
           }    
 
           if ( gii > 2 ) {
             DSKx = SDdir.openNextFile();                                                                  //get next file
-            if ( DSKx && read_DSRAM(CALLST) ==  AllGood ) {                                               //valid file AND !ENTER from DSR?            
-              
-              char DOADfilename[13];                                                                      //ASCII store
+            if ( DSKx && read_DSRAM(CALLST) ==  AllGood ) {                                               //valid file AND !ENTER from DSR?
               memset( DOADfilename, 0x00, 13 );                                                           //clear for next entry
               DSKx.getName( DOADfilename, 13 );                                                           //copy filename ... 
               writeCBuffer( 1, 9, DOADfilename, -1, false, true, '.' );                                   //... and write to CALL buffer
               writeCBuffer( 11, 21, "\0", 0, true, false, '\0' );                                         //write TI DSK name to CALL buffer   
-              
-              DSKx.seek( 0x12 );                                                                          //byte >12 in VIB stores #sides (>01 or >02)
-              write_DSRAM( CALLBF + 22, (DSKx.read() == 0x01 ? '1' : '2') + TIBias );                     //#sides; change to ASCII and add TI screen bias
-              write_DSRAM( CALLBF + 23, 'S' + TIBias );
-              write_DSRAM( CALLBF + 24, '/' + TIBias );   
+
+              DSKx.seek(0x10); 
+              if ( DSKx.read() == 0x50 ) {
+                write_DSRAM( CALLBF + 31, 'p' + TIBias );                                                 //byte >10 in VIB stores density (Un)Protected status
+              }  
+              rJust( 28, 30, DSKx.read() );                                                               //byte >11 in VIB stores #tracks
+              write_DSRAM( CALLBF + 22, (DSKx.read() == 0x01 ? '1' : '2') + TIBias );                     //byte >12 in VIB stores #sides (>01 or >02)
+              writeCBuffer( 23, 28, "S/ D/", -23, false, false, '\0' );
               write_DSRAM( CALLBF + 25, (DSKx.read() == 0x01 ? 'S' : 'D') + TIBias );                     //byte >13 in VIB stores density (>01/SD or >02/DD) 
-              write_DSRAM( CALLBF + 26, 'D' + TIBias );
-              write_DSRAM( CALLBF + 27, '/' + TIBias );  
-              DSKx.seek( 0x11 );                                                                          //byte >11 in VIB stores #tracks
-              rJust( 28, 30, DSKx.read() );                                                               //right-justified #tracks in CALL buffer 
-              write_DSRAM( CALLBF + 30, 'T' + TIBias );  
+
             } else {                                                                                      //... no
               SDdir.close();
               CALLstatus( More );                                                                         //done all files
@@ -442,10 +417,8 @@
             gii = 0;                                                                                      //initialise global counter 
           }
 
-          if ( gii < 23 ) {                                                                               //more definitions to go? ...
-            for ( byte ii = 0; ii < 32; ii++ ) {                                                          //... yes; next 32byte chunk from file
-              write_DSRAM( CALLBF + ii, DSKx.read() );                                                    //DSR display routine to write them to VDP pattern table
-            }
+          if ( gii < 23 ) {                                                                               //more definitions to go? ...          
+            writeCBuffer( 0, 32, "\0", 0, true, false, '\0' );                                            //... yes, write next chunk of 32 definition bytes to CALL buffer
             gii++;                                                                                        //next lot
           } else {
             CALLstatus( More );                                                                           //... no; all done
@@ -480,72 +453,59 @@
         break;
         
         case  54:                                                                                         //ACFG(): configure network
-        {  
+        {            
           DSKx = SD.open( nameDSK[0], FILE_READ );                                                        //expect ACFG.DSK mapped to DSK1
           DSKx.seek( 0 );                                                                                 //TI DSK name location
 
-          byte ii;                                                                  
-          char tStr[] = "AD99SUP";                                                                        //TI DSK name should be this                                                             
-          for ( ii = 0; ii < 7; ii++ ) {                                                                  //check if so
-            if ( DSKx.read() != tStr[ii] ) {
-              break;
-            }
-          }
-         
+          byte ii = 0;    
+          char tStr[] = "AD99SUP";                                                               
+          while ( DSKx.read() == tStr[ii++] ) {
+          }   
           if ( ii < 6 ) {                                                                                 //not all characters matched so ...
             CALLstatus( DOADNotMapped );                                                                  //... no genuine ACFG DOAD mapped at DSK1
+            noExec();                                                                                     //we kappen ermee
             break;  
-          } else {
-            
-            DSKx.seek( 0x21FF );                                                                          //ok genuine enough, go to config data
-
-            byte cc = 0;                                                                                  //reset cc
-            byte octet;
-            for ( byte ii = 0; ii < 8; ii++ ) {                                                           //8 octets in total
-              while ( cc != 0x08 ) {                                                                      //check for 0x08 delimiter
-                cc = DSKx.read();
-              }
-              cc = ( DSKx.read() & B00000011 );                                                           //check for 0x4x
-              if ( cc  == 0 ) {                                                                           //x=0 so octet[0-16]
-                octet = DSKx.read();                                                                      //store octet
-              } else {
-                octet = cc * (DSKx.read() * 100) + DSKx.read();                                           //octet = x * (next byte * 100) + next byte
-              } 
-              if ( ii < 4 ) {                                                                             //first 4 values are the Ethernet Shield IP address ...
-               ACFG.ipaddress[ii] = octet;
-              } else {
-                ACFG.ftpserver[ii-4] = octet;                                                             //... second 4 values are the FTP server address
-              }
-            }
- 
-            cc = 0;                                                                                       //reset cc to ...
-            while ( cc == 0x00 ) {                                                                        //... check for next delimiter (string length)
-              cc = DSKx.read();
-            }
-            for ( byte ii = 0; ii < cc; ii ++ ) {                                                         //store NTP IP address string
-              ACFG.ntpserver[ii] = DSKx.read();
-            } 
-            ACFG.ntpserver[cc] = '\0';                                                                    //NTP server string delimiter        
-
-            cc = DSKx.read();                                                                             //read string length
-            for ( byte ii = 0; ii < cc; ii++ ) {                                                          //store FTP user name; cc has #characters
-              ACFG.ftpuser[ii] = DSKx.read();
-            }
-            ACFG.ftpuser[cc] = '\0';                                                                      //FTP username string delimiter
-            
-            cc = DSKx.read();                                                                             //read string length
-            for ( byte ii = 0; ii < cc; ii++ ) {                                                          //store FTP password; cc has #characters
-              ACFG.ftpass[ii] = DSKx.read();
-            }  
-            ACFG.ftpass[cc] = '\0';                                                                       //FTP password string delimiter
-            
-            DSKx.seek( DSKx.position() + 2 );                                                             //skip 0x4x (not used for 0-15 values)   
-            ACFG.TZ = DSKx.read();                                                                        //store timezone value
-
-            EEPROM.put( EEPROM_CFG,  ACFG );                                                              //save configuration struct to EEPROM
-
-            noExec();                                                                                     //done
+          } 
+     
+          DSKx.seek( 0x21FF );                                                                            //ok genuine enough, get config data
+          memset(&ACFG, 0, sizeof(AD99Config) );                                                          //clear configuration struct
+          
+          byte cc, octet;        
+          for ( byte ii = 0; ii < 8; ii++ ) {                                                             //8 octets in total
+            while ( DSKx.read() != 0x08 ) {                                                               //check for 0x08 delimiter
+            }              
+            cc = ( DSKx.read() & B00000011 );                                                             //check for 0x4x
+            cc == 0 ? octet = DSKx.read() : octet = cc * (DSKx.read() * 100) + DSKx.read();               //x=0 so octet[0-16] || octet = x * (next byte * 100) + next byte            
+            ii < 4 ? ACFG.ipaddress[ii] = octet : ACFG.ftpserver[ii-4] = octet;
           }
+          
+          while ( DSKx.read() == 0x00 ) {                                                                 //check for next delimiter (string length)
+          }               
+          DSKx.seek( DSKx.position() - 1 );                                                               //minus 1 to be able to re-read sring length (universal for() loop)
+  
+          char *ndevice;                                                                                  //pointer to relevant ACFG array
+          for ( byte ii = 0; ii < 3; ++ii ) {                                                             //3 arrays in total:
+
+            if ( ii == 0 ) {                                                                              //ntpserver = 0, ftpuser =1 and ftpass = 2
+              ndevice = ACFG.ntpserver;
+            } else {
+              ii == 1 ? ndevice = ACFG.ftpuser : ndevice = ACFG.ftpass;
+            }
+
+            cc = DSKx.read();                                                                             //read string length ...
+            byte jj;
+            for ( jj = 0; jj < cc; ++jj ) {                                                               //... and save configuration string to relevant array 
+              *(ndevice + jj) = DSKx.read();  
+            }
+            *(ndevice + jj) = '\0';                                                                       //terminate strings
+          }
+
+          DSKx.seek( DSKx.position() + 2 );                                                               //skip 0x4x (not used for 0-15 values)   
+          ACFG.TZ = DSKx.read();                                                                          //store timezone value
+
+          EEPROM.put( EEPROM_CFG,  ACFG );                                                                //save configuration struct to EEPROM
+
+          noExec();                                                                                       //done
         }     
         break;
 

@@ -3219,7 +3219,7 @@ A9905	BL	@VDPWRI
 	INC	@RDINT			generates interrupt for next file / help txt
 	JMP	A9905	
 *	
-NXTPRP	LI	R2,702
+NXTPRP	LI	R2,703
 	BL	@VDPWRI
 	LI	R5,>9E00		show ">", more file / help txt to display
 	MOVB	R5,@-2(R15)

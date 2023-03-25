@@ -164,3 +164,31 @@ void TIgo( void ) {
   digitalLow(TI_BUFFERS);                                                                                   //enables 74HCT541 address buffers and GAL outputs  
   digitalHigh(TI_READY);                                                                                    //disables 74HC595 shift registers and wakes up TI                                                                     
 } 
+
+//reset Arduino properly via watchdog timer
+void APEDSK99reset ( void ) {
+  wdt_disable();                                                                                      //disable Watchdog (just to be sure)                              
+  wdt_enable(WDTO_15MS);                                                                              //enable it and set delay to 15ms
+  while( true ) {}                                                                                    //self-destruct in 15ms
+}
+
+//unrecoverable errors: flash error code until reset (TI still usable)
+//  flash             : SPI, SD Card fault / not ready
+//  flash-flash       : no valid DSR binary image
+//  flash-flash-flash : no valid DSR header (0xAA) at DSR RAM 0x0000)
+void Flasher( byte errorcode ) {                                                                      //error routine: stuck in code flashing loop until reset
+  //"no APEDSK99 for you"
+  TIstop();                                                                                           //stop TI ...
+  digitalHigh(TI_READY);                                                                              //... but let user enjoy vanilla console
+  
+  while ( true ) { 
+    for ( byte flash = 0; flash < errorcode; flash++ ) {
+      digitalLow(CE);                                                                                 //set RAM CE* LOW, turns on LED
+      delay(LED_ON);                                                                                  //LED is on for a bit
+      
+      digitalHigh(CE);                                                                                //turn it off
+      delay(LED_OFF);                                                                                 //LED is off for a bit
+    }
+    delay(LED_REPEAT);                                                                                //allow human interpretation
+  }
+}
