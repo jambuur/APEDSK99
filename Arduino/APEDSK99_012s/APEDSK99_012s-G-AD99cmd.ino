@@ -44,7 +44,7 @@
               clrCALLbuffer();                                                                            //clear CALL buffer for next entry to display
   
               unsigned int currentPosition = DSKx.position();                                             //remember next FDR pointer
-              DSKx.seek( long(FDR * NRBYSECT) );                                                          //locate FDR within DOAD
+              DSKx.seek( long(FDR) * NRBYSECT );                                                          //locate FDR within DOAD
               writeCBuffer( 1, 11, "\0", 0, true, false, '\0' );                                          //read/save filename characters in CALL buffer
             
               DSKx.seek( DSKx.position() + 2 );                                                           //byte >0C: file type 
