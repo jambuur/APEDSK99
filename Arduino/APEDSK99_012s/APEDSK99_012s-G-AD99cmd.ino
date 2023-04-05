@@ -7,7 +7,7 @@
         lastA99cmd = currentA99cmd;                                                                       //new; remember new command for next compare
         currentDSK = read_DSRAM( CALLBF );                                                                //read target DSKx
         if ( currentDSK > 0 ) {
-          currentDSK--;                                                                                   //DSK1-3 -> DSK0-2 to reduce array sizes
+          --currentDSK;                                                                                   //DSK1-3 -> DSK0-2 to reduce array sizes
         }
         CALLstatus( AllGood );                                                                            //start with clean execution slate
       }
@@ -260,7 +260,7 @@
           if ( gii < 8 ) {                                                                                //8 rows               
             if ( (gii == 0) || (gii == 3) || (gii == 6) ) {                                               //selected rows only
 
-              write_DSRAM( CALLBF + 1   , '1' + currentDSK + TIBias );                                    //DSK# + TI BASIC bias (leading space)
+              write_DSRAM( CALLBF + 1, '1' + currentDSK + TIBias );                                       //DSK# + TI BASIC bias (leading space)
               write_DSRAM( CALLBF + 2, '=' + TIBias );            
                          
               if ( activeDSK[currentDSK] ) {                                                              //is the requested disk mapped to a DOAD? ...                                 
@@ -315,7 +315,7 @@
   
           } else {                                                                                        //done DSK1-3, now show available /folders
 
-            clrCALLbuffer();                                                                              //clear CALL buffer
+            clrCALLbuffer();                                                                              //print row of spaces
             
             if ( gii == 8 ) {                                                                             //first run of folder display?
               DSKx.close();                                                                               //close DSKx before ...
@@ -441,6 +441,7 @@
           } else if ( currentA99cmd == 19 ) {                                                             //DSR DSK NTP update (format, write / save file)                                                                           
             currentDSK = ( read_DSRAM( CRUWRI ) >> 1 ) & B00000011;                                       //determine selected disk in DSR command   
             currentDSK--;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes          
+            --currentDSK;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes          
             if ( protectDSK[currentDSK] != 0x50 ) {                                                       //DSK protected?
               DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );
               writeFATts();                                                                               //no; update DOAD FAT date/time
