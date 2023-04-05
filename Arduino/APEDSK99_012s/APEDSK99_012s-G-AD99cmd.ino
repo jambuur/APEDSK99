@@ -440,7 +440,6 @@
             CALLstatus( AllGood );                                                                        //done
           } else if ( currentA99cmd == 19 ) {                                                             //DSR DSK NTP update (format, write / save file)                                                                           
             currentDSK = ( read_DSRAM( CRUWRI ) >> 1 ) & B00000011;                                       //determine selected disk in DSR command   
-            currentDSK--;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes          
             --currentDSK;                                                                                 //DSK1-3 -> DSK0-2 to reduce array sizes          
             if ( protectDSK[currentDSK] != 0x50 ) {                                                       //DSK protected?
               DSKx = SD.open( nameDSK[currentDSK], FILE_WRITE );
