@@ -1,5 +1,8 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
+### *January 2024 Newsflash: Case 3D design files will be available shortly *
+With the the help of an Industrial Design student I have finalised a case for APEDSK99, (loosely) following the style of the Speech Synthesizer. 
+
 ### *February 2023 Newsflash: Major Update in progress*
 
 Check the TI Italian User Club for a review of the new version: https://www.ti99iuc.it/web/index.php?pagina=articoli&artid=219#.Y-gqDi9BxaS
