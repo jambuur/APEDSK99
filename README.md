@@ -1,7 +1,8 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
-### *January 2024 Newsflash: Case 3D design files will be available shortly *
+### *January 2024 Newsflash: Case 3D design files will be available shortly*
 With the the help of an Industrial Design student I have finalised a case for APEDSK99, (loosely) following the style of the Speech Synthesizer. 
+On a side note, I have been able to lay my hands on a Myarc Geneve card. As I don't have a PE Box I am building a standalone system including a modified APEDSK99 for booting and floppy / HD emulation. 
 
 ### *February 2023 Newsflash: Major Update in progress*
 
