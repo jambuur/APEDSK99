@@ -1,7 +1,7 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
 ### *January 2024 Newsflash: Case 3D design files will be available shortly*
-With the the help of an Industrial Design student I have finalised a case for APEDSK99, (loosely) following the style of the Speech Synthesizer. 
+With the help of an Industrial Design student I have finalised a case for APEDSK99, (loosely) following the style of the Speech Synthesizer. 
 On a side note, I have been able to lay my hands on a Myarc Geneve card. As I don't have a PE Box I am building a standalone system including a modified APEDSK99 for booting and floppy / HD emulation. 
 
 ### *February 2023 Newsflash: Major Update in progress*
@@ -15,7 +15,7 @@ Stay tuned :-)
 
 ### *Arduino-based DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/DD/80T floppy drives for the TI99/4a home computer. Combined with a Arduino UNO and an Ethernet / SD shield it allows you to load, save and use disk floppy images (DOAD) on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
+APEDSK99 is an Arduino shield that emulates 3 DS/SD/80T floppy drives for the TI99/4a home computer. Combined with a Arduino UNO and an Ethernet / SD shield it allows you to load, save and use disk floppy images (DOAD) on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/TRIO.jpg)
 
