@@ -1,5 +1,9 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
+### *January 2024 Newsflash: Case 3D design files will be available shortly*
+With the help of an Industrial Design student I have finalised a case for APEDSK99, (loosely) following the style of the Speech Synthesizer. 
+On a side note, I have been able to lay my hands on a Myarc Geneve card. As I don't have a PE Box I am building a standalone system including a modified APEDSK99 for booting and floppy / HD emulation. 
+
 ### *February 2023 Newsflash: Major Update in progress*
 
 Check the TI Italian User Club for a review of the new version: https://www.ti99iuc.it/web/index.php?pagina=articoli&artid=219#.Y-gqDi9BxaS
@@ -11,7 +15,7 @@ Stay tuned :-)
 
 ### *Arduino-based DSKx emulator / 32K / FTP / NTP shield for the TI99/4a*
 
-APEDSK99 is an Arduino shield that emulates 3 DS/DD/80T floppy drives for the TI99/4a home computer. Combined with a Arduino UNO and an Ethernet / SD shield it allows you to load, save and use disk floppy images (DOAD) on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
+APEDSK99 is an Arduino shield that emulates 3 DS/SD/80T floppy drives for the TI99/4a home computer. Combined with a Arduino UNO and an Ethernet / SD shield it allows you to load, save and use disk floppy images (DOAD) on a SD card or FTP server. It includes the necessary 32K RAM expansion and adds NTP date and time to BASIC. The APEDSK99 shield plugs directly into the side port and is powered separately from a USB cable. 
 
 ![KiCAD 3D view](img/TRIO.jpg)
 
@@ -90,7 +94,7 @@ NTP is also used in the background to update a DSK's timestamp when creating/cha
 
 **CALL NDSK** renames a mapped DOAD. The TI DISK name is set to match the DOAD 8 character name. With renaming the DSK, the current mapping is deleted as the DOAD has now a new name. This command is handy for quickly creating a freshly formatted DSK. Just **FGET** a clean image (I use either FLOPPYSS.DSK or FLOPPYDS.DSK) and rename accordingly.
 
-**CALL CDIR** changes the working directory. The SD Card image contains a /DISKS folder with lots of goodies and a /BLANK directory with the abovementioned clean images. One restriction is that a directory name can't be longer that 5 characters although this may change in the future to support the full 8 characters. Another restriction is that you have to create additional directories on an external system as there is no CALL for that. 
+**CALL CDIR** changes the working directory. The SD Card image contains a /DISKS folder with lots of goodies and a /BLANK directory with the abovementioned clean images. One restriction is that you have to create additional directories on an external system as there is no CALL for that. 
 
 **CALL RDSK** removes a DOAD from the SD card. In line with BOFH standards no confirmation is required but the DSK in question needs to be UNprotected.
 
@@ -122,7 +126,7 @@ The new configuration is then applied to APEDSK99. If NTP is successfully config
 ### *What about Extended BASIC*
 Yes, good question as I take it EXBAS is used over TI BASIC by the majority TI enthusiasts. Obviously I wanted to support vanilla console users (like the ones re-entering the hobby after xx years such as myself). But that doesn't explain why EXBAS couldn't be used to run the configuration program. Well, the problem is that EXBAS doesn't support external CALL's in programs, only from the command line. This would mean you have to type in a set of commands instead of a more or less automated setup. Not a good idea I thought.
 
-However, I am working on a solution to run APEDSK99 CALL's within EXBAS programs. It uses CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). I will keep the AtariAge forum posted.
+UPDATE 16/1/2024: I now have provided EXBAS support through CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). Adapting the configuration program to EXBAS is left as an exercise to the reader.
 
 ### *Ignition sequence*
 
@@ -161,7 +165,7 @@ Feel free to improve and share!
 
 If a particular program or module behaves nicely by accessing disks solely through the regular DSR routines there shouldn't be any new ones (are there any existing disk controller bugs?) In other words, any funky index hole math or weird copy protection schemes will likely fail. 
 
-Not so much a bug but an annoyance is that the FAT format (as used on the SD Card) doesn't support any sorting whatsover; so if you have been actively **FGET**'ing images from your FTP server you might find the **SDIR** list slightly out of alphabetical order. There are a number of "FAT Sorter" programs for different OS's that can restore the order for you.
+Not so much a bug but an annoyance is that the FAT format (as used on the SD Card) doesn't support any sorting whatsover; so if you have been actively **FGET**'ing images from your FTP server you might find the **SDIR** list slightly out of alphabetical order. There are a number of "FAT Sorter" programs for different OS's that can restore the order for you (the one I use is included in the repository).
 
 And yes, if I had thought it through a bit more I would have designed APEDSK99 with the USB and Ethernet connectors facing backwards. Anyway what's done is done and unless there is a push for a major revision (unlikely) you'll (we) have to live with this minor inconvenience.
 
