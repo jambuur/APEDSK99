@@ -156,7 +156,10 @@ I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://en
 If you decide to build one yourself, I have compiled a handy document to get you started. Just ping me with any questions through Github, YouTube or AtariAge (JJB).
 
 ### A suitable case
-<p align="left">
+
+I have teamed up with an Industrial Design student from a local university and have come up with the design below. It (very) roughly follows the design of the Speech Synthesizer and has a handy hatch to access the SD card and reset button:
+
+<p align="center">
   <img width="1280" src=img/CASE.jpg>
 </p>
 
