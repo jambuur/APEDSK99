@@ -157,7 +157,7 @@ If you decide to build one yourself, I have compiled a handy document to get you
 
 ### A suitable case
 <p align="center">
-  <img width="576" src=img/CASE.jpg>
+  <src=img/CASE.jpg>
 </p>
 
 ### *I know*
