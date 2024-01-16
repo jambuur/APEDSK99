@@ -157,7 +157,7 @@ If you decide to build one yourself, I have compiled a handy document to get you
 
 ### A suitable case
 
-(img/CASE.jpg>
+![bogus](img/CASE.jpg>
 
 ### *I know*
 
