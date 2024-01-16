@@ -155,6 +155,11 @@ I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://en
 
 If you decide to build one yourself, I have compiled a handy document to get you started. Just ping me with any questions through Github, YouTube or AtariAge (JJB).
 
+### A suitable case
+<p align="center">
+  <img width="576" src=img/CASE.jpg>
+</p>
+
 ### *I know*
 
 Writing software is a hobby, not my profession. No doubt some gurus would achieve the same functionality with half the code. But I dare to say that at least the basic DSR I/O routines in the sketch are reasonably efficient, useful and fast. Anyway I am content with dusting off that stack of virtual floppies, have a beer and admire my work. 
