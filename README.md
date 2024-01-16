@@ -156,8 +156,9 @@ I compile the DSR .a99 file with [xtd99 TI99 cross development tools](https://en
 If you decide to build one yourself, I have compiled a handy document to get you started. Just ping me with any questions through Github, YouTube or AtariAge (JJB).
 
 ### A suitable case
-
-![bogus](img/CASE.jpg)
+<p align="center">
+  <img width="1280" src=img/CASE.jpg>
+</p>
 
 ### *I know*
 
