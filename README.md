@@ -126,7 +126,7 @@ The new configuration is then applied to APEDSK99. If NTP is successfully config
 ### *What about Extended BASIC*
 Yes, good question as I take it EXBAS is used over TI BASIC by the majority TI enthusiasts. Obviously I wanted to support vanilla console users (like the ones re-entering the hobby after xx years such as myself). But that doesn't explain why EXBAS couldn't be used to run the configuration program. Well, the problem is that EXBAS doesn't support external CALL's in programs, only from the command line. This would mean you have to type in a set of commands instead of a more or less automated setup. Not a good idea I thought.
 
-UPDATE 16/1/2024: I now have provided EXBAS support through CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). Adapting the configuration program to EXBAS is left as an exercise to the reader.
+*UPDATE 16/1/2024:* I now have provided EXBAS support through CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). Adapting the configuration program to EXBAS is left as an exercise to the reader.
 
 ### *Ignition sequence*
 
