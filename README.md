@@ -126,7 +126,7 @@ The new configuration is then applied to APEDSK99. If NTP is successfully config
 ### *What about Extended BASIC*
 Yes, good question as I take it EXBAS is used over TI BASIC by the majority TI enthusiasts. Obviously I wanted to support vanilla console users (like the ones re-entering the hobby after xx years such as myself). But that doesn't explain why EXBAS couldn't be used to run the configuration program. Well, the problem is that EXBAS doesn't support external CALL's in programs, only from the command line. This would mean you have to type in a set of commands instead of a more or less automated setup. Not a good idea I thought.
 
-*UPDATE 16/1/2024:* I now have provided EXBAS support through CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). Adapting the configuration program to EXBAS is left as an exercise to the reader.
+**UPDATE 16/1/2024**: I now have provided EXBAS support through CALL LINK as an alternative to execute DSR CALL code, for example CALL LINK("MDSK",1,"ACFG"). Adapting the configuration program to EXBAS is left as an exercise to the reader.
 
 ### *Ignition sequence*
 
@@ -185,7 +185,7 @@ After (of course) I came up with the name APEDSK99 I realised that DSK emulation
 
 This project owes a lot to Thierry Nouspikel's marvelous [TI Tech Pages website](http://www.unige.ch/medecine/nouspikel/ti99/disks.htm) which has a wealth of information on the TI Disk Controller, including a commented disassembly of its DSR ROM.
 
-Another great source of information has been Monty Schmidt's excellent book [Technical Drive](img/MSTDrive.jpg). Monty went on to do great things, check out [SoundForge](https://www.magix.com/us/music/sound-forge/).
+Another great source of information has been Monty Schmidt's excellent book [Technical Drive](img/MSTDrive.jpg). Monty went on to do great things, check out [SoundForge](https://www.magix.com/us/music/sound-forge/). Monty has now made his book publically availabe: https://github.com/wuntusk/technical-drive
 
 The Arduino's serial-to-parallel RAM addressing scheme is neither new or mine but I have gratefully used part of [this excellent project](https://github.com/mkeller0815/MEEPROMMER) by Mario Keller.
 
