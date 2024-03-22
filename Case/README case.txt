@@ -1,0 +1,1 @@
+The Ethernet port cutout may seem (too) large but this is to cater for different versions of Ethernet Shields that differ in interconnect pin length.
