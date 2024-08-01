@@ -1,5 +1,8 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
+### *July 2024 Newsflash: IDEDSR adaption*
+I am currently trying to adapt Fred Kaal's version of the DSR for Thierry Nouspikel's IDE card to APEDSK99. Not sure of a successful outcome yet as there are major design and hardware differences to take into account; the first experiments are encouraging though. If it works it will be a valuable addition to APEDSK99 as you would be able to mount and use existing MAME HD images on your TI. It will also save me from the big headache of trying to define APEDSK99 as a new device in MDOS (see below).
+
 ### *January 2024 Newsflash: Case 3D design files available*
 With the help of an Industrial Design student I have finalised a case for APEDSK99, (loosely) following the style of the Speech Synthesizer. 
 On a side note, I have been able to lay my hands on a Myarc Geneve card. As I don't have a PE Box I am building a standalone system including a modified APEDSK99 for booting and floppy / HD emulation. 
