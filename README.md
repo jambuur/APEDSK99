@@ -1,4 +1,6 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
+### *June 2025 Newsflash: WiFi option*
+I did get a number of questions regarding a WiFi option using the Arduino WiFi shield. Initial investigation suggested a lack of memory so to make it fit I had to reduce other functionality. This I didn't want to do. However, there is a simple solution. There are devices that accept a wired Ethernet connection and bridges this to a WiFi network of your choice. It works a treat. Check out IOGEAR etc.
 
 ### *July 2024 Newsflash: IDEDSR adaption*
 I am currently trying to adapt Fred Kaal's version of the DSR for Thierry Nouspikel's IDE card to APEDSK99. Not sure of a successful outcome yet as there are major design and hardware differences to take into account; the first experiments are encouraging though. If it works it will be a valuable addition to APEDSK99 as you would be able to mount and use existing MAME HD images on your TI. It will also save me from the big headache of trying to define APEDSK99 as a new device in MDOS (see below).
