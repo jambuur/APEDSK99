@@ -1,7 +1,7 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
 ### *November 2026 Newsflash: PIO / RS232 implementation, 4ADOS support*
-Have a look at these great APEDSK99 extensions from fablug-wq at https://github.com/fablug-wq/apedsk99_mod\
+Have a look at these great APEDSK99 extensions from fablug-wq at https://github.com/fablug-wq/apedsk99_mod \
 PS recently picked up working on IDEDSR (v18) support again 
 
 ### *July 2025 Newsflash: WiFi suggestion*
