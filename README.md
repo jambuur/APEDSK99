@@ -1,5 +1,9 @@
 # APEDSK99 (Arduino Peripheral Expansion for the TI-99/4a)
 
+### *November 2026 Newsflash: RS232 and PIO emulation, 4ADOS support*
+Have a look at these great APEDSK99 extensions by Fabrizio: https://github.com/fablug-wq/apedsk99_mod
+PS: still working on IDEDSR (currently v18) support
+
 ### *July 2025 Newsflash: WiFi suggestion*
 I did get a number of questions regarding a WiFi option using the Arduino WiFi shield. Initial investigation suggested a lack of memory so to make it fit I had to reduce other functionality. This I didn't want to do. However, there is a simple solution. There are devices that accept a wired Ethernet connection and bridges this to a WiFi network of your choice. It works a treat. Check out IOGEAR etc.
 
